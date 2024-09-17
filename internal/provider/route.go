@@ -1,0 +1,256 @@
+package provider
+
+import (
+	"context"
+	"fmt"
+
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	client "github.com/pomerium/enterprise-client-go"
+	"github.com/pomerium/enterprise-client-go/pb"
+)
+
+// Ensure provider defined types fully satisfy framework interfaces.
+var _ resource.Resource = &RouteResource{}
+var _ resource.ResourceWithImportState = &RouteResource{}
+
+func NewRouteResource() resource.Resource {
+	return &RouteResource{}
+}
+
+// RouteResource defines the resource implementation.
+type RouteResource struct {
+	client *client.Client
+}
+
+// RouteResourceModel describes the resource data model.
+type RouteResourceModel struct {
+	From        types.String `tfsdk:"from"`
+	To          types.List   `tfsdk:"to"`
+	Name        types.String `tfsdk:"name"`
+	Id          types.String `tfsdk:"id"`
+	NamespaceID types.String `tfsdk:"namespace_id"`
+	Policies    types.List   `tfsdk:"policies"`
+}
+
+func (r *RouteResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = req.ProviderTypeName + "_route"
+}
+
+func (r *RouteResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		// This description is used by the documentation generator and the language server.
+		MarkdownDescription: "Route",
+
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed:    true,
+				Description: "Route ID",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"name": schema.StringAttribute{
+				Description: "Route name",
+				Required:    true,
+			},
+			"from": schema.StringAttribute{
+				Description: "From URL",
+				Required:    true,
+			},
+			"to": schema.ListAttribute{
+				ElementType: types.StringType,
+				Description: "To URL",
+				Required:    true,
+			},
+			"namespace_id": schema.StringAttribute{
+				Description: "ID of the namespace the route belongs to",
+				Required:    true,
+			},
+			"policies": schema.ListAttribute{
+				ElementType: types.StringType,
+				Description: "List of policy IDs to associate with the route",
+				Optional:    true,
+			},
+		},
+	}
+}
+
+func (r *RouteResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+	if req.ProviderData == nil {
+		return
+	}
+
+	c, ok := req.ProviderData.(*client.Client)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Resource Configure Type",
+			fmt.Sprintf("Expected Config, got: %T.", req.ProviderData),
+		)
+
+		return
+	}
+
+	r.client = c
+}
+
+func (r *RouteResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan RouteResourceModel
+
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	pbRoute, diags := ConvertRouteToPB(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
+		return
+	}
+
+	respRoute, err := r.client.RouteService.SetRoute(ctx, &pb.SetRouteRequest{
+		Route: pbRoute,
+	})
+	if err != nil {
+		resp.Diagnostics.AddError("set route", err.Error())
+		return
+	}
+
+	plan.Id = types.StringValue(respRoute.Route.Id)
+
+	tflog.Trace(ctx, "Created a route", map[string]interface{}{
+		"id":   plan.Id.ValueString(),
+		"name": plan.Name.ValueString(),
+	})
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+func (r *RouteResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state RouteResourceModel
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	respRoute, err := r.client.RouteService.GetRoute(ctx, &pb.GetRouteRequest{
+		Id: state.Id.ValueString(),
+	})
+	if err != nil {
+		resp.Diagnostics.AddError("get route", err.Error())
+		return
+	}
+
+	diags := ConvertRouteFromPB(&state, respRoute.Route)
+	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+func (r *RouteResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan RouteResourceModel
+
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	pbRoute, diags := ConvertRouteToPB(ctx, &plan)
+	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
+		return
+	}
+
+	_, err := r.client.RouteService.SetRoute(ctx, &pb.SetRouteRequest{
+		Route: pbRoute,
+	})
+	if err != nil {
+		resp.Diagnostics.AddError("set route", err.Error())
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+func (r *RouteResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var data RouteResourceModel
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	_, err := r.client.RouteService.DeleteRoute(ctx, &pb.DeleteRouteRequest{
+		Id: data.Id.ValueString(),
+	})
+	if err != nil {
+		resp.Diagnostics.AddError("delete route", err.Error())
+		return
+	}
+
+	resp.State.RemoveResource(ctx)
+}
+
+func (r *RouteResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func ConvertRouteToPB(
+	ctx context.Context,
+	src *RouteResourceModel,
+) (*pb.Route, diag.Diagnostics) {
+	pbRoute := new(pb.Route)
+	var diagnostics diag.Diagnostics
+
+	pbRoute.Id = src.Id.ValueString()
+	pbRoute.Name = src.Name.ValueString()
+	pbRoute.From = src.From.ValueString()
+	pbRoute.NamespaceId = src.NamespaceID.ValueString()
+
+	diags := src.To.ElementsAs(ctx, &pbRoute.To, false)
+	diagnostics.Append(diags...)
+
+	if !src.Policies.IsNull() {
+		diags = src.Policies.ElementsAs(ctx, &pbRoute.PolicyIds, false)
+		diagnostics.Append(diags...)
+	}
+	return pbRoute, diagnostics
+}
+
+func ConvertRouteFromPB(
+	dst *RouteResourceModel,
+	src *pb.Route,
+) diag.Diagnostics {
+	var diagnostics diag.Diagnostics
+
+	dst.Id = types.StringValue(src.Id)
+	dst.Name = types.StringValue(src.Name)
+	dst.From = types.StringValue(src.From)
+	dst.NamespaceID = types.StringValue(src.NamespaceId)
+
+	toList := make([]attr.Value, len(src.To))
+	for i, v := range src.To {
+		toList[i] = types.StringValue(v)
+	}
+	dst.To = types.ListValueMust(types.StringType, toList)
+
+	policiesList := make([]attr.Value, len(src.PolicyIds))
+	for i, v := range src.PolicyIds {
+		policiesList[i] = types.StringValue(v)
+	}
+	dst.Policies = types.ListValueMust(types.StringType, policiesList)
+
+	return diagnostics
+}
