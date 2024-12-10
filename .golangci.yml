@@ -47,15 +47,11 @@ issues:
     ## Defaults we want from golangci-lint
     # errcheck: Almost all programs ignore errors on these functions and in most cases it's ok
     - Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*printf?|os\.(Un)?Setenv). is not checked
-    - empty-block
-
-    # go sec : we want to allow skipping tls auth
-    - "TLS InsecureSkipVerify set true."
     - "SA1019"
 
   exclude-rules:
     # Exclude some linters from running on test files.
-    - path: _test\.go$|^tests/|^integration/|^samples/|^internal/testutil/|templates\.go$
+    - path: _test\.go$|^test/|^examples/|templates\.go$
       linters:
         - bodyclose
         - errcheck
@@ -69,13 +65,6 @@ issues:
         - scopelint
         - gosec
         - gosimple
-    - path: internal/identity/oauth/github/github.go
-      text: "Potential hardcoded credentials"
-      linters:
-        - gosec
     - text: "G112:"
-      linters:
-        - gosec
-    - text: "G402: TLS MinVersion too low."
       linters:
         - gosec
