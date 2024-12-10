@@ -1,0 +1,70 @@
+run:
+  deadline: 20m
+
+linters-settings:
+  gci:
+    custom-order: true
+    sections:
+      - standard
+      - default
+      - prefix(github.com/pomerium)
+
+linters:
+  disable-all: true
+  enable:
+    - asasalint
+    - bodyclose
+    - dogsled
+    - errcheck
+    - errorlint
+    - exportloopref
+    # - gci # https://github.com/daixiang0/gci/issues/209
+    - gocheckcompilerdirectives
+    - gofumpt
+    - goimports
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - ineffassign
+    - misspell
+    - nakedret
+    - nolintlint
+    - revive
+    - staticcheck
+    - stylecheck
+    - tenv
+    - unconvert
+    - unused
+    - usestdlibvars
+
+issues:
+  # List of regexps of issue texts to exclude, empty list by default.
+  # But independently from this option we use default exclude patterns,
+  # it can be disabled by `exclude-use-default: false`. To list all
+  # excluded by default patterns execute `golangci-lint run --help`
+  exclude:
+    ## Defaults we want from golangci-lint
+    # errcheck: Almost all programs ignore errors on these functions and in most cases it's ok
+    - Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*printf?|os\.(Un)?Setenv). is not checked
+    - "SA1019"
+
+  exclude-rules:
+    # Exclude some linters from running on test files.
+    - path: _test\.go$|^test/|^examples/|templates\.go$
+      linters:
+        - bodyclose
+        - errcheck
+        - gomnd
+        - gosec
+        - lll
+        - maligned
+        - staticcheck
+        - unparam
+        - unused
+        - scopelint
+        - gosec
+        - gosimple
+    - text: "G112:"
+      linters:
+        - gosec
