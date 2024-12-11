@@ -32,6 +32,7 @@ type PomeriumProvider struct {
 type PomeriumProviderModel struct {
 	APIURL                types.String `tfsdk:"api_url"`
 	ServiceAccountToken   types.String `tfsdk:"service_account_token"`
+	SharedSecretB64       types.String `tfsdk:"shared_secret_b64"`
 	TLSInsecureSkipVerify types.Bool   `tfsdk:"tls_insecure_skip_verify"`
 }
 
@@ -49,7 +50,12 @@ func (p *PomeriumProvider) Schema(_ context.Context, _ provider.SchemaRequest, r
 			},
 			"service_account_token": schema.StringAttribute{
 				MarkdownDescription: "Pomerium Enterprise Service Account Token",
-				Required:            true,
+				Optional:            true,
+				Sensitive:           true,
+			},
+			"shared_secret_b64": schema.StringAttribute{
+				MarkdownDescription: "Pomerium Shared Secret (base64 encoded)",
+				Optional:            true,
 				Sensitive:           true,
 			},
 			"tls_insecure_skip_verify": schema.BoolAttribute{
@@ -88,13 +94,21 @@ func (p *PomeriumProvider) Configure(ctx context.Context, req provider.Configure
 		port = "443"
 	}
 
-	if data.ServiceAccountToken.IsNull() {
-		resp.Diagnostics.AddError("service_account_token is required", "service_account_token is required")
+	tlsConfig := &tls.Config{InsecureSkipVerify: data.TLSInsecureSkipVerify.ValueBool()}
+	var token string
+	if !data.ServiceAccountToken.IsNull() {
+		token = data.ServiceAccountToken.ValueString()
+	} else if !data.SharedSecretB64.IsNull() {
+		token, err = generateBootstrapServiceAccountToken(data.SharedSecretB64.ValueString())
+		if err != nil {
+			resp.Diagnostics.AddError("failed to decode shared_secret_b64", err.Error())
+			return
+		}
+	} else {
+		resp.Diagnostics.AddError("service_account_token or shared_secret_b64 is required", "service_account_token or shared_secret_b64 is required")
 		return
 	}
-
-	tlsConfig := &tls.Config{InsecureSkipVerify: data.TLSInsecureSkipVerify.ValueBool()}
-	c, err := client.NewClient(ctx, net.JoinHostPort(host, port), data.ServiceAccountToken.ValueString(), client.WithTlsConfig(tlsConfig))
+	c, err := client.NewClient(ctx, net.JoinHostPort(host, port), token, client.WithTlsConfig(tlsConfig))
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create Pomerium Enterprise API client", err.Error())
 		return
