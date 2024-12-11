@@ -18,8 +18,10 @@ import (
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
-var _ resource.Resource = &RouteResource{}
-var _ resource.ResourceWithImportState = &RouteResource{}
+var (
+	_ resource.Resource                = &RouteResource{}
+	_ resource.ResourceWithImportState = &RouteResource{}
+)
 
 func NewRouteResource() resource.Resource {
 	return &RouteResource{}
@@ -35,16 +37,16 @@ type RouteResourceModel struct {
 	From        types.String `tfsdk:"from"`
 	To          types.List   `tfsdk:"to"`
 	Name        types.String `tfsdk:"name"`
-	Id          types.String `tfsdk:"id"`
+	ID          types.String `tfsdk:"id"`
 	NamespaceID types.String `tfsdk:"namespace_id"`
 	Policies    types.List   `tfsdk:"policies"`
 }
 
-func (r *RouteResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *RouteResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_route"
 }
 
-func (r *RouteResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		// This description is used by the documentation generator and the language server.
 		MarkdownDescription: "Route",
@@ -83,7 +85,7 @@ func (r *RouteResource) Schema(ctx context.Context, req resource.SchemaRequest, 
 	}
 }
 
-func (r *RouteResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *RouteResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -124,10 +126,10 @@ func (r *RouteResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	plan.Id = types.StringValue(respRoute.Route.Id)
+	plan.ID = types.StringValue(respRoute.Route.Id)
 
 	tflog.Trace(ctx, "Created a route", map[string]interface{}{
-		"id":   plan.Id.ValueString(),
+		"id":   plan.ID.ValueString(),
 		"name": plan.Name.ValueString(),
 	})
 
@@ -143,7 +145,7 @@ func (r *RouteResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	respRoute, err := r.client.RouteService.GetRoute(ctx, &pb.GetRouteRequest{
-		Id: state.Id.ValueString(),
+		Id: state.ID.ValueString(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("get route", err.Error())
@@ -193,7 +195,7 @@ func (r *RouteResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 	}
 
 	_, err := r.client.RouteService.DeleteRoute(ctx, &pb.DeleteRouteRequest{
-		Id: data.Id.ValueString(),
+		Id: data.ID.ValueString(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("delete route", err.Error())
@@ -214,7 +216,7 @@ func ConvertRouteToPB(
 	pbRoute := new(pb.Route)
 	var diagnostics diag.Diagnostics
 
-	pbRoute.Id = src.Id.ValueString()
+	pbRoute.Id = src.ID.ValueString()
 	pbRoute.Name = src.Name.ValueString()
 	pbRoute.From = src.From.ValueString()
 	pbRoute.NamespaceId = src.NamespaceID.ValueString()
@@ -235,7 +237,7 @@ func ConvertRouteFromPB(
 ) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 
-	dst.Id = types.StringValue(src.Id)
+	dst.ID = types.StringValue(src.Id)
 	dst.Name = types.StringValue(src.Name)
 	dst.From = types.StringValue(src.From)
 	dst.NamespaceID = types.StringValue(src.NamespaceId)

@@ -1,6 +1,3 @@
-// Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
-
 package provider
 
 import (
@@ -18,9 +15,10 @@ import (
 	client "github.com/pomerium/enterprise-client-go"
 )
 
-// Ensure ScaffoldingProvider satisfies various provider interfaces.
-var _ provider.Provider = &PomeriumProvider{}
-var _ provider.ProviderWithFunctions = &PomeriumProvider{}
+var (
+	_ provider.Provider              = &PomeriumProvider{}
+	_ provider.ProviderWithFunctions = &PomeriumProvider{}
+)
 
 // PomeriumProvider defines the provider implementation.
 type PomeriumProvider struct {
@@ -32,17 +30,17 @@ type PomeriumProvider struct {
 
 // PomeriumProviderModel describes the provider data model.
 type PomeriumProviderModel struct {
-	ApiURL                types.String `tfsdk:"api_url"`
+	APIURL                types.String `tfsdk:"api_url"`
 	ServiceAccountToken   types.String `tfsdk:"service_account_token"`
 	TLSInsecureSkipVerify types.Bool   `tfsdk:"tls_insecure_skip_verify"`
 }
 
-func (p *PomeriumProvider) Metadata(ctx context.Context, req provider.MetadataRequest, resp *provider.MetadataResponse) {
+func (p *PomeriumProvider) Metadata(_ context.Context, _ provider.MetadataRequest, resp *provider.MetadataResponse) {
 	resp.TypeName = "pomerium"
 	resp.Version = p.version
 }
 
-func (p *PomeriumProvider) Schema(ctx context.Context, req provider.SchemaRequest, resp *provider.SchemaResponse) {
+func (p *PomeriumProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"api_url": schema.StringAttribute{
@@ -71,12 +69,12 @@ func (p *PomeriumProvider) Configure(ctx context.Context, req provider.Configure
 		return
 	}
 
-	if data.ApiURL.IsNull() {
+	if data.APIURL.IsNull() {
 		resp.Diagnostics.AddError("api_url is required", "api_url is required")
 		return
 	}
 
-	apiURL, err := url.Parse(data.ApiURL.ValueString())
+	apiURL, err := url.Parse(data.APIURL.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError("failed to parse api_url", err.Error())
 		return
@@ -105,7 +103,7 @@ func (p *PomeriumProvider) Configure(ctx context.Context, req provider.Configure
 	resp.ResourceData = c
 }
 
-func (p *PomeriumProvider) Resources(ctx context.Context) []func() resource.Resource {
+func (p *PomeriumProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewNamespaceResource,
 		NewRouteResource,
@@ -113,11 +111,11 @@ func (p *PomeriumProvider) Resources(ctx context.Context) []func() resource.Reso
 	}
 }
 
-func (p *PomeriumProvider) DataSources(ctx context.Context) []func() datasource.DataSource {
+func (p *PomeriumProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{}
 }
 
-func (p *PomeriumProvider) Functions(ctx context.Context) []func() function.Function {
+func (p *PomeriumProvider) Functions(_ context.Context) []func() function.Function {
 	return []func() function.Function{}
 }
 

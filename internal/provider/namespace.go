@@ -18,8 +18,10 @@ import (
 )
 
 // Ensure provider-defined types fully satisfy framework interfaces.
-var _ resource.Resource = &NamespaceResource{}
-var _ resource.ResourceWithImportState = &NamespaceResource{}
+var (
+	_ resource.Resource                = &NamespaceResource{}
+	_ resource.ResourceWithImportState = &NamespaceResource{}
+)
 
 // NewNamespaceResource creates a new NamespaceResource.
 func NewNamespaceResource() resource.Resource {
@@ -38,11 +40,11 @@ type NamespaceResourceModel struct {
 	ParentID types.String `tfsdk:"parent_id"`
 }
 
-func (r *NamespaceResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *NamespaceResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_namespace"
 }
 
-func (r *NamespaceResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *NamespaceResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Namespace resource for Pomerium.",
 
@@ -66,7 +68,7 @@ func (r *NamespaceResource) Schema(ctx context.Context, req resource.SchemaReque
 	}
 }
 
-func (r *NamespaceResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *NamespaceResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -188,7 +190,7 @@ func (r *NamespaceResource) ImportState(ctx context.Context, req resource.Import
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func ConvertNamespaceToPB(ctx context.Context, src *NamespaceResourceModel) (*pb.Namespace, diag.Diagnostics) {
+func ConvertNamespaceToPB(_ context.Context, src *NamespaceResourceModel) (*pb.Namespace, diag.Diagnostics) {
 	var diagnostics diag.Diagnostics
 
 	pbNamespace := &pb.Namespace{

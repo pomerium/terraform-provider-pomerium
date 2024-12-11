@@ -18,8 +18,10 @@ import (
 )
 
 // Ensure provider-defined types fully satisfy framework interfaces.
-var _ resource.Resource = &PolicyResource{}
-var _ resource.ResourceWithImportState = &PolicyResource{}
+var (
+	_ resource.Resource                = &PolicyResource{}
+	_ resource.ResourceWithImportState = &PolicyResource{}
+)
 
 // NewPolicyResource creates a new PolicyResource.
 func NewPolicyResource() resource.Resource {
@@ -39,11 +41,11 @@ type PolicyResourceModel struct {
 	PPL         types.String `tfsdk:"ppl"`
 }
 
-func (r *PolicyResource) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *PolicyResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_policy"
 }
 
-func (r *PolicyResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *PolicyResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Policy resource for Pomerium.",
 
@@ -71,7 +73,7 @@ func (r *PolicyResource) Schema(ctx context.Context, req resource.SchemaRequest,
 	}
 }
 
-func (r *PolicyResource) Configure(ctx context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
+func (r *PolicyResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
 	if req.ProviderData == nil {
 		return
 	}
@@ -194,7 +196,7 @@ func (r *PolicyResource) ImportState(ctx context.Context, req resource.ImportSta
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func ConvertPolicyToPB(ctx context.Context, src *PolicyResourceModel) (*pb.Policy, diag.Diagnostics) {
+func ConvertPolicyToPB(_ context.Context, src *PolicyResourceModel) (*pb.Policy, diag.Diagnostics) {
 	var diagnostics diag.Diagnostics
 
 	pbPolicy := &pb.Policy{

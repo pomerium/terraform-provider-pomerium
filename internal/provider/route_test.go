@@ -39,7 +39,7 @@ func TestConvertRoute(t *testing.T) {
 			From: types.StringValue("from"),
 			To:   types.ListValueMust(types.StringType, []attr.Value{types.StringValue("to")}),
 			Name: types.StringValue("route-name"),
-			Id:   types.StringValue("route-id"),
+			ID:   types.StringValue("route-id"),
 		}
 
 		route, diag := provider.ConvertRouteToPB(context.Background(), &plan)

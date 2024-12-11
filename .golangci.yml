@@ -17,7 +17,7 @@ linters:
     - dogsled
     - errcheck
     - errorlint
-    - exportloopref
+    - copyloopvar
     # - gci # https://github.com/daixiang0/gci/issues/209
     - gocheckcompilerdirectives
     - gofumpt
@@ -50,6 +50,10 @@ issues:
     - "SA1019"
 
   exclude-rules:
+    # allow tls skip verify
+    - path: internal/provider/provider.go
+      linters:
+        - gosec
     # Exclude some linters from running on test files.
     - path: _test\.go$|^test/|^examples/|templates\.go$
       linters:
