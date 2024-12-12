@@ -111,7 +111,7 @@ func (r *ServiceAccountResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	respServiceAccount, err := r.client.ServiceAccountService.AddPomeriumServiceAccount(ctx, &pb.AddPomeriumServiceAccountRequest{
+	respServiceAccount, err := r.client.PomeriumServiceAccountService.AddPomeriumServiceAccount(ctx, &pb.AddPomeriumServiceAccountRequest{
 		ServiceAccount: pbServiceAccount,
 	})
 	if err != nil {
@@ -137,7 +137,7 @@ func (r *ServiceAccountResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	respServiceAccount, err := r.client.ServiceAccountService.GetPomeriumServiceAccount(ctx, &pb.GetPomeriumServiceAccountRequest{
+	respServiceAccount, err := r.client.PomeriumServiceAccountService.GetPomeriumServiceAccount(ctx, &pb.GetPomeriumServiceAccountRequest{
 		Id: state.ID.ValueString(),
 	})
 	if err != nil {
@@ -168,7 +168,7 @@ func (r *ServiceAccountResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	_, err := r.client.ServiceAccountService.SetPomeriumServiceAccount(ctx, &pb.SetPomeriumServiceAccountRequest{
+	_, err := r.client.PomeriumServiceAccountService.SetPomeriumServiceAccount(ctx, &pb.SetPomeriumServiceAccountRequest{
 		ServiceAccount: pbServiceAccount,
 	})
 	if err != nil {
@@ -187,7 +187,7 @@ func (r *ServiceAccountResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	_, err := r.client.ServiceAccountService.DeletePomeriumServiceAccount(ctx, &pb.DeletePomeriumServiceAccountRequest{
+	_, err := r.client.PomeriumServiceAccountService.DeletePomeriumServiceAccount(ctx, &pb.DeletePomeriumServiceAccountRequest{
 		Id: state.ID.ValueString(),
 	})
 	if err != nil {
