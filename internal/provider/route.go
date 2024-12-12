@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -33,14 +31,7 @@ type RouteResource struct {
 }
 
 // RouteResourceModel describes the resource data model.
-type RouteResourceModel struct {
-	From        types.String `tfsdk:"from"`
-	To          types.List   `tfsdk:"to"`
-	Name        types.String `tfsdk:"name"`
-	ID          types.String `tfsdk:"id"`
-	NamespaceID types.String `tfsdk:"namespace_id"`
-	Policies    types.List   `tfsdk:"policies"`
-}
+type RouteResourceModel = RouteModel
 
 func (r *RouteResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_route"
@@ -48,37 +39,35 @@ func (r *RouteResource) Metadata(_ context.Context, req resource.MetadataRequest
 
 func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "Route",
-
+		MarkdownDescription: "Route for Pomerium.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:    true,
-				Description: "Route ID",
+				Description: "Unique identifier for the route.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"name": schema.StringAttribute{
-				Description: "Route name",
+				Description: "Name of the route.",
 				Required:    true,
 			},
 			"from": schema.StringAttribute{
-				Description: "From URL",
+				Description: "From URL.",
 				Required:    true,
 			},
 			"to": schema.ListAttribute{
 				ElementType: types.StringType,
-				Description: "To URL",
+				Description: "To URLs.",
 				Required:    true,
 			},
 			"namespace_id": schema.StringAttribute{
-				Description: "ID of the namespace the route belongs to",
+				Description: "ID of the namespace the route belongs to.",
 				Required:    true,
 			},
 			"policies": schema.ListAttribute{
 				ElementType: types.StringType,
-				Description: "List of policy IDs to associate with the route",
+				Description: "List of policy IDs associated with the route.",
 				Optional:    true,
 			},
 		},
@@ -207,52 +196,4 @@ func (r *RouteResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 
 func (r *RouteResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-func ConvertRouteToPB(
-	ctx context.Context,
-	src *RouteResourceModel,
-) (*pb.Route, diag.Diagnostics) {
-	pbRoute := new(pb.Route)
-	var diagnostics diag.Diagnostics
-
-	pbRoute.Id = src.ID.ValueString()
-	pbRoute.Name = src.Name.ValueString()
-	pbRoute.From = src.From.ValueString()
-	pbRoute.NamespaceId = src.NamespaceID.ValueString()
-
-	diags := src.To.ElementsAs(ctx, &pbRoute.To, false)
-	diagnostics.Append(diags...)
-
-	if !src.Policies.IsNull() {
-		diags = src.Policies.ElementsAs(ctx, &pbRoute.PolicyIds, false)
-		diagnostics.Append(diags...)
-	}
-	return pbRoute, diagnostics
-}
-
-func ConvertRouteFromPB(
-	dst *RouteResourceModel,
-	src *pb.Route,
-) diag.Diagnostics {
-	var diagnostics diag.Diagnostics
-
-	dst.ID = types.StringValue(src.Id)
-	dst.Name = types.StringValue(src.Name)
-	dst.From = types.StringValue(src.From)
-	dst.NamespaceID = types.StringValue(src.NamespaceId)
-
-	toList := make([]attr.Value, len(src.To))
-	for i, v := range src.To {
-		toList[i] = types.StringValue(v)
-	}
-	dst.To = types.ListValueMust(types.StringType, toList)
-
-	policiesList := make([]attr.Value, len(src.PolicyIds))
-	for i, v := range src.PolicyIds {
-		policiesList[i] = types.StringValue(v)
-	}
-	dst.Policies = types.ListValueMust(types.StringType, policiesList)
-
-	return diagnostics
 }
