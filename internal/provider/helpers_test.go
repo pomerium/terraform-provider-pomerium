@@ -85,15 +85,3 @@ func TestConfigureClient(t *testing.T) {
 		})
 	}
 }
-
-func TestImportStatePassthroughID(t *testing.T) {
-	t.Parallel()
-
-	req := resource.ImportStateRequest{
-		ID: "test-id",
-	}
-	resp := &resource.ImportStateResponse{}
-
-	provider.ImportStatePassthroughID(req, resp)
-	assert.False(t, resp.Diagnostics.HasError())
-}

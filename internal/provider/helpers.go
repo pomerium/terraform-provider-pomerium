@@ -46,5 +46,5 @@ func ConfigureClient(req any, resp any) *client.Client {
 
 // ImportStatePassthroughID is a helper that implements the common import state pattern
 func ImportStatePassthroughID(req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(context.TODO(), path.Root("id"), req, resp)
+	resp.Diagnostics.Append(resp.State.SetAttribute(context.Background(), path.Root("id"), req.ID)...)
 }
