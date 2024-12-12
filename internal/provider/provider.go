@@ -122,17 +122,11 @@ func (p *PomeriumProvider) Resources(_ context.Context) []func() resource.Resour
 		NewNamespaceResource,
 		NewRouteResource,
 		NewPolicyResource,
-		NewServiceAccountResource,
 	}
 }
 
 func (p *PomeriumProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{
-		NewServiceAccountDataSource,
-		NewRouteDataSource,
-		NewNamespaceDataSource,
-		NewPolicyDataSource,
-	}
+	return []func() datasource.DataSource{}
 }
 
 func (p *PomeriumProvider) Functions(_ context.Context) []func() function.Function {
