@@ -29,8 +29,7 @@ func (d *PolicyDataSource) Metadata(_ context.Context, req datasource.MetadataRe
 
 func (d *PolicyDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Policy data source",
-
+		MarkdownDescription: "Policy for Pomerium.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Required:    true,

@@ -8,6 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	client "github.com/pomerium/enterprise-client-go"
@@ -37,7 +40,40 @@ func (r *RouteResource) Metadata(_ context.Context, req resource.MetadataRequest
 }
 
 func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = RouteSchema(false)
+	resp.Schema = schema.Schema{
+		MarkdownDescription: "Route for Pomerium.",
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed:    true,
+				Description: "Unique identifier for the route.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"name": schema.StringAttribute{
+				Description: "Name of the route.",
+				Required:    true,
+			},
+			"from": schema.StringAttribute{
+				Description: "From URL.",
+				Required:    true,
+			},
+			"to": schema.ListAttribute{
+				ElementType: types.StringType,
+				Description: "To URLs.",
+				Required:    true,
+			},
+			"namespace_id": schema.StringAttribute{
+				Description: "ID of the namespace the route belongs to.",
+				Required:    true,
+			},
+			"policies": schema.ListAttribute{
+				ElementType: types.StringType,
+				Description: "List of policy IDs associated with the route.",
+				Optional:    true,
+			},
+		},
+	}
 }
 
 func (r *RouteResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {

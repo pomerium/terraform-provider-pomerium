@@ -28,8 +28,7 @@ func (d *NamespaceDataSource) Metadata(_ context.Context, req datasource.Metadat
 
 func (d *NamespaceDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Namespace data source",
-
+		MarkdownDescription: "Namespace for Pomerium.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Required:    true,

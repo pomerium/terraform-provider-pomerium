@@ -6,7 +6,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
@@ -29,7 +28,35 @@ func (d *ServiceAccountDataSource) Metadata(_ context.Context, req datasource.Me
 }
 
 func (d *ServiceAccountDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = ServiceAccountSchema(true)
+	resp.Schema = schema.Schema{
+		MarkdownDescription: "Service Account for Pomerium.",
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Required:    true,
+				Description: "Unique identifier for the service account.",
+			},
+			"name": schema.StringAttribute{
+				Computed:    true,
+				Description: "Name of the service account.",
+			},
+			"namespace_id": schema.StringAttribute{
+				Computed:    true,
+				Description: "ID of the namespace the service account belongs to.",
+			},
+			"description": schema.StringAttribute{
+				Computed:    true,
+				Description: "Description of the service account.",
+			},
+			"user_id": schema.StringAttribute{
+				Computed:    true,
+				Description: "User ID associated with the service account.",
+			},
+			"expires_at": schema.StringAttribute{
+				Computed:    true,
+				Description: "Timestamp when the service account expires.",
+			},
+		},
+	}
 }
 
 func (d *ServiceAccountDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {

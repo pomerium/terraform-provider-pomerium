@@ -7,6 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -38,7 +41,30 @@ func (r *PolicyResource) Metadata(_ context.Context, req resource.MetadataReques
 }
 
 func (r *PolicyResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = PolicySchema(false)
+	resp.Schema = schema.Schema{
+		MarkdownDescription: "Policy for Pomerium.",
+		Attributes: map[string]schema.Attribute{
+			"id": schema.StringAttribute{
+				Computed:    true,
+				Description: "Unique identifier for the policy.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"name": schema.StringAttribute{
+				Description: "Name of the policy.",
+				Required:    true,
+			},
+			"namespace_id": schema.StringAttribute{
+				Description: "ID of the namespace the policy belongs to.",
+				Required:    true,
+			},
+			"ppl": schema.StringAttribute{
+				Description: "Policy Policy Language (PPL) string.",
+				Required:    true,
+			},
+		},
+	}
 }
 
 func (r *PolicyResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
