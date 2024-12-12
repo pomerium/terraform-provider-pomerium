@@ -23,6 +23,9 @@ locals {
   namespace_id = "9d8dbd2c-8cce-4e66-9c1f-c490b4a07243"
 }
 
+resource "pomerium_settings" "settings" {
+}
+
 resource "pomerium_policy" "test_policy" {
   name         = "test-policy"
   namespace_id = local.namespace_id

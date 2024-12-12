@@ -122,6 +122,7 @@ func (p *PomeriumProvider) Resources(_ context.Context) []func() resource.Resour
 		NewNamespaceResource,
 		NewRouteResource,
 		NewPolicyResource,
+		NewSettingsResource,
 	}
 }
 
