@@ -81,7 +81,7 @@ func (d *NamespacesDataSource) Configure(_ context.Context, req datasource.Confi
 	d.client = client
 }
 
-func (d *NamespacesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *NamespacesDataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data NamespacesDataSourceModel
 
 	namespacesResp, err := d.client.NamespaceService.ListNamespaces(ctx, &pb.ListNamespacesRequest{})
