@@ -73,7 +73,7 @@ func TestConfigureClient(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
-			client := provider.ConfigureClient(tt.req, tt.resp, "test")
+			client := provider.ConfigureClient(tt.req, tt.resp)
 			assert.Equal(t, tt.expectedClient, client)
 
 			switch resp := tt.resp.(type) {
