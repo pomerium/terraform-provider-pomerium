@@ -11,7 +11,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func generateBootstrapServiceAccountToken(
+func GenerateBootstrapServiceAccountToken(
 	sharedSecretB64 string,
 ) (string, error) {
 	sharedSecret, err := base64.StdEncoding.DecodeString(sharedSecretB64)

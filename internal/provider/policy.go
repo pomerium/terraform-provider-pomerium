@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -34,12 +33,7 @@ type PolicyResource struct {
 }
 
 // PolicyResourceModel describes the resource data model.
-type PolicyResourceModel struct {
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	NamespaceID types.String `tfsdk:"namespace_id"`
-	PPL         types.String `tfsdk:"ppl"`
-}
+type PolicyResourceModel = PolicyModel
 
 func (r *PolicyResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_policy"
@@ -47,8 +41,7 @@ func (r *PolicyResource) Metadata(_ context.Context, req resource.MetadataReques
 
 func (r *PolicyResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Policy resource for Pomerium.",
-
+		MarkdownDescription: "Policy for Pomerium.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:    true,
@@ -194,28 +187,4 @@ func (r *PolicyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 func (r *PolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Import by ID
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-func ConvertPolicyToPB(_ context.Context, src *PolicyResourceModel) (*pb.Policy, diag.Diagnostics) {
-	var diagnostics diag.Diagnostics
-
-	pbPolicy := &pb.Policy{
-		Id:          src.ID.ValueString(),
-		Name:        src.Name.ValueString(),
-		NamespaceId: src.NamespaceID.ValueString(),
-		Ppl:         src.PPL.ValueString(),
-	}
-
-	return pbPolicy, diagnostics
-}
-
-func ConvertPolicyFromPB(dst *PolicyResourceModel, src *pb.Policy) diag.Diagnostics {
-	var diagnostics diag.Diagnostics
-
-	dst.ID = types.StringValue(src.Id)
-	dst.Name = types.StringValue(src.Name)
-	dst.NamespaceID = types.StringValue(src.NamespaceId)
-	dst.PPL = types.StringValue(src.Ppl)
-
-	return diagnostics
 }

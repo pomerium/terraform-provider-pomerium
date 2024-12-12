@@ -99,7 +99,7 @@ func (p *PomeriumProvider) Configure(ctx context.Context, req provider.Configure
 	if !data.ServiceAccountToken.IsNull() {
 		token = data.ServiceAccountToken.ValueString()
 	} else if !data.SharedSecretB64.IsNull() {
-		token, err = generateBootstrapServiceAccountToken(data.SharedSecretB64.ValueString())
+		token, err = GenerateBootstrapServiceAccountToken(data.SharedSecretB64.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError("failed to decode shared_secret_b64", err.Error())
 			return
@@ -122,11 +122,21 @@ func (p *PomeriumProvider) Resources(_ context.Context) []func() resource.Resour
 		NewNamespaceResource,
 		NewRouteResource,
 		NewPolicyResource,
+		NewServiceAccountResource,
 	}
 }
 
 func (p *PomeriumProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-	return []func() datasource.DataSource{}
+	return []func() datasource.DataSource{
+		NewServiceAccountDataSource,
+		NewServiceAccountsDataSource,
+		NewRouteDataSource,
+		NewRoutesDataSource,
+		NewNamespaceDataSource,
+		NewNamespacesDataSource,
+		NewPolicyDataSource,
+		NewPoliciesDataSource,
+	}
 }
 
 func (p *PomeriumProvider) Functions(_ context.Context) []func() function.Function {

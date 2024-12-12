@@ -2,10 +2,7 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -34,11 +31,7 @@ type NamespaceResource struct {
 }
 
 // NamespaceResourceModel describes the resource data model.
-type NamespaceResourceModel struct {
-	ID       types.String `tfsdk:"id"`
-	Name     types.String `tfsdk:"name"`
-	ParentID types.String `tfsdk:"parent_id"`
-}
+type NamespaceResourceModel = NamespaceModel
 
 func (r *NamespaceResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_namespace"
@@ -46,8 +39,7 @@ func (r *NamespaceResource) Metadata(_ context.Context, req resource.MetadataReq
 
 func (r *NamespaceResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
-		MarkdownDescription: "Namespace resource for Pomerium.",
-
+		MarkdownDescription: "Namespace for Pomerium.",
 		Attributes: map[string]schema.Attribute{
 			"id": schema.StringAttribute{
 				Computed:    true,
@@ -69,20 +61,7 @@ func (r *NamespaceResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 }
 
 func (r *NamespaceResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-
-	c, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Provider Data Type",
-			fmt.Sprintf("Expected *client.Client, got: %T.", req.ProviderData),
-		)
-		return
-	}
-
-	r.client = c
+	r.client = ConfigureClient(req, resp)
 }
 
 func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -186,36 +165,6 @@ func (r *NamespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 	resp.State.RemoveResource(ctx)
 }
 
-func (r *NamespaceResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-func ConvertNamespaceToPB(_ context.Context, src *NamespaceResourceModel) (*pb.Namespace, diag.Diagnostics) {
-	var diagnostics diag.Diagnostics
-
-	pbNamespace := &pb.Namespace{
-		Id:   src.ID.ValueString(),
-		Name: src.Name.ValueString(),
-	}
-
-	if !src.ParentID.IsNull() {
-		pbNamespace.ParentId = src.ParentID.ValueString()
-	}
-
-	return pbNamespace, diagnostics
-}
-
-func ConvertNamespaceFromPB(dst *NamespaceResourceModel, src *pb.Namespace) diag.Diagnostics {
-	var diagnostics diag.Diagnostics
-
-	dst.ID = types.StringValue(src.Id)
-	dst.Name = types.StringValue(src.Name)
-
-	if src.ParentId != "" {
-		dst.ParentID = types.StringValue(src.ParentId)
-	} else {
-		dst.ParentID = types.StringNull()
-	}
-
-	return diagnostics
+func (r *NamespaceResource) ImportState(_ context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	ImportStatePassthroughID(req, resp)
 }
