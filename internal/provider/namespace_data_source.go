@@ -47,7 +47,7 @@ func (d *NamespaceDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 }
 
 func (d *NamespaceDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	d.client = ConfigureClient(req, resp, "namespace")
+	d.client = ConfigureClient(req, resp)
 }
 
 func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

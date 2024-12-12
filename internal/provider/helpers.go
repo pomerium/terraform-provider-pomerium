@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -10,7 +11,7 @@ import (
 )
 
 // ConfigureClient is a helper to configure resources and data sources with the API client
-func ConfigureClient(req any, resp any, typeName string) *client.Client {
+func ConfigureClient(req any, resp any) *client.Client {
 	var providerData any
 	switch r := req.(type) {
 	case datasource.ConfigureRequest:
@@ -45,5 +46,5 @@ func ConfigureClient(req any, resp any, typeName string) *client.Client {
 
 // ImportStatePassthroughID is a helper that implements the common import state pattern
 func ImportStatePassthroughID(req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(nil, path.Root("id"), req, resp)
+	resource.ImportStatePassthroughID(context.TODO(), path.Root("id"), req, resp)
 }

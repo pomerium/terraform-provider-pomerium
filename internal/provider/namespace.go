@@ -62,7 +62,7 @@ func (r *NamespaceResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 }
 
 func (r *NamespaceResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	r.client = ConfigureClient(req, resp, "namespace")
+	r.client = ConfigureClient(req, resp)
 }
 
 func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
