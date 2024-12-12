@@ -3,9 +3,7 @@ package provider
 import (
 	"context"
 	"fmt"
-	"time"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -192,47 +190,4 @@ func (r *ServiceAccountResource) Delete(ctx context.Context, req resource.Delete
 
 func (r *ServiceAccountResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-func ConvertServiceAccountToPB(_ context.Context, src *ServiceAccountResourceModel) (*pb.PomeriumServiceAccount, diag.Diagnostics) {
-	var diagnostics diag.Diagnostics
-
-	namespaceID := src.NamespaceID.ValueString()
-	pbServiceAccount := &pb.PomeriumServiceAccount{
-		Id:          src.ID.ValueString(),
-		UserId:      src.Name.ValueString(),
-		NamespaceId: &namespaceID,
-	}
-
-	if !src.Description.IsNull() {
-		desc := src.Description.ValueString()
-		pbServiceAccount.Description = &desc
-	}
-
-	return pbServiceAccount, diagnostics
-}
-
-func ConvertServiceAccountFromPB(dst *ServiceAccountResourceModel, src *pb.PomeriumServiceAccount) diag.Diagnostics {
-	var diagnostics diag.Diagnostics
-
-	dst.ID = types.StringValue(src.Id)
-	dst.Name = types.StringValue(src.UserId)
-	if src.NamespaceId != nil {
-		dst.NamespaceID = types.StringValue(*src.NamespaceId)
-	} else {
-		dst.NamespaceID = types.StringNull()
-	}
-	if src.Description != nil {
-		dst.Description = types.StringValue(*src.Description)
-	} else {
-		dst.Description = types.StringNull()
-	}
-	dst.UserID = types.StringValue(src.UserId)
-	if src.ExpiresAt != nil {
-		dst.ExpiresAt = types.StringValue(src.ExpiresAt.AsTime().Format(time.RFC3339))
-	} else {
-		dst.ExpiresAt = types.StringNull()
-	}
-
-	return diagnostics
 }

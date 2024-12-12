@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -168,34 +167,4 @@ func (r *NamespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 
 func (r *NamespaceResource) ImportState(_ context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	ImportStatePassthroughID(req, resp)
-}
-
-func ConvertNamespaceToPB(_ context.Context, src *NamespaceResourceModel) (*pb.Namespace, diag.Diagnostics) {
-	var diagnostics diag.Diagnostics
-
-	pbNamespace := &pb.Namespace{
-		Id:   src.ID.ValueString(),
-		Name: src.Name.ValueString(),
-	}
-
-	if !src.ParentID.IsNull() {
-		pbNamespace.ParentId = src.ParentID.ValueString()
-	}
-
-	return pbNamespace, diagnostics
-}
-
-func ConvertNamespaceFromPB(dst *NamespaceResourceModel, src *pb.Namespace) diag.Diagnostics {
-	var diagnostics diag.Diagnostics
-
-	dst.ID = types.StringValue(src.Id)
-	dst.Name = types.StringValue(src.Name)
-
-	if src.ParentId != "" {
-		dst.ParentID = types.StringValue(src.ParentId)
-	} else {
-		dst.ParentID = types.StringNull()
-	}
-
-	return diagnostics
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -188,28 +187,4 @@ func (r *PolicyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 func (r *PolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	// Import by ID
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-func ConvertPolicyToPB(_ context.Context, src *PolicyResourceModel) (*pb.Policy, diag.Diagnostics) {
-	var diagnostics diag.Diagnostics
-
-	pbPolicy := &pb.Policy{
-		Id:          src.ID.ValueString(),
-		Name:        src.Name.ValueString(),
-		NamespaceId: src.NamespaceID.ValueString(),
-		Ppl:         src.PPL.ValueString(),
-	}
-
-	return pbPolicy, diagnostics
-}
-
-func ConvertPolicyFromPB(dst *PolicyResourceModel, src *pb.Policy) diag.Diagnostics {
-	var diagnostics diag.Diagnostics
-
-	dst.ID = types.StringValue(src.Id)
-	dst.Name = types.StringValue(src.Name)
-	dst.NamespaceID = types.StringValue(src.NamespaceId)
-	dst.PPL = types.StringValue(src.Ppl)
-
-	return diagnostics
 }

@@ -21,8 +21,6 @@ type PolicyDataSource struct {
 	client *client.Client
 }
 
-type PolicyDataSourceModel = PolicyModel
-
 func (d *PolicyDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_policy"
 }
@@ -69,7 +67,7 @@ func (d *PolicyDataSource) Configure(_ context.Context, req datasource.Configure
 }
 
 func (d *PolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data PolicyDataSourceModel
+	var data PolicyModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -84,12 +82,7 @@ func (d *PolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	diags := ConvertPolicyFromPB(&PolicyResourceModel{
-		ID:          data.ID,
-		Name:        data.Name,
-		NamespaceID: data.NamespaceID,
-		PPL:         data.PPL,
-	}, policyResp.Policy)
+	diags := ConvertPolicyFromPB(&data, policyResp.Policy)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

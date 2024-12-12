@@ -21,8 +21,6 @@ type ServiceAccountDataSource struct {
 	client *client.Client
 }
 
-type ServiceAccountDataSourceModel = ServiceAccountModel
-
 func (d *ServiceAccountDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_service_account"
 }
@@ -77,7 +75,7 @@ func (d *ServiceAccountDataSource) Configure(_ context.Context, req datasource.C
 }
 
 func (d *ServiceAccountDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data ServiceAccountDataSourceModel
+	var data ServiceAccountModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -92,14 +90,7 @@ func (d *ServiceAccountDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	diags := ConvertServiceAccountFromPB(&ServiceAccountResourceModel{
-		ID:          data.ID,
-		Name:        data.Name,
-		NamespaceID: data.NamespaceID,
-		Description: data.Description,
-		UserID:      data.UserID,
-		ExpiresAt:   data.ExpiresAt,
-	}, serviceAccountResp.ServiceAccount)
+	diags := ConvertServiceAccountFromPB(&data, serviceAccountResp.ServiceAccount)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

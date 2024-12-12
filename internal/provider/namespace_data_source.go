@@ -20,8 +20,6 @@ type NamespaceDataSource struct {
 	client *client.Client
 }
 
-type NamespaceDataSourceModel = NamespaceModel
-
 func (d *NamespaceDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_namespace"
 }
@@ -51,7 +49,7 @@ func (d *NamespaceDataSource) Configure(_ context.Context, req datasource.Config
 }
 
 func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data NamespaceDataSourceModel
+	var data NamespaceModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -66,11 +64,7 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	diags := ConvertNamespaceFromPB(&NamespaceResourceModel{
-		ID:       data.ID,
-		Name:     data.Name,
-		ParentID: data.ParentID,
-	}, namespaceResp.Namespace)
+	diags := ConvertNamespaceFromPB(&data, namespaceResp.Namespace)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

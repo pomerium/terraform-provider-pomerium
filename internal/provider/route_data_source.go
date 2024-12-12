@@ -22,8 +22,6 @@ type RouteDataSource struct {
 	client *client.Client
 }
 
-type RouteDataSourceModel = RouteModel
-
 func (d *RouteDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_route"
 }
@@ -81,7 +79,7 @@ func (d *RouteDataSource) Configure(_ context.Context, req datasource.ConfigureR
 }
 
 func (d *RouteDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data RouteDataSourceModel
+	var data RouteModel
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
@@ -96,14 +94,7 @@ func (d *RouteDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	diags := ConvertRouteFromPB(&RouteResourceModel{
-		ID:          data.ID,
-		Name:        data.Name,
-		From:        data.From,
-		To:          data.To,
-		NamespaceID: data.NamespaceID,
-		Policies:    data.Policies,
-	}, routeResp.Route)
+	diags := ConvertRouteFromPB(&data, routeResp.Route)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
