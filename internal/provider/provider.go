@@ -99,7 +99,7 @@ func (p *PomeriumProvider) Configure(ctx context.Context, req provider.Configure
 	if !data.ServiceAccountToken.IsNull() {
 		token = data.ServiceAccountToken.ValueString()
 	} else if !data.SharedSecretB64.IsNull() {
-		token, err = generateBootstrapServiceAccountToken(data.SharedSecretB64.ValueString())
+		token, err = GenerateBootstrapServiceAccountToken(data.SharedSecretB64.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError("failed to decode shared_secret_b64", err.Error())
 			return
