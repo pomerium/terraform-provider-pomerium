@@ -93,7 +93,7 @@ func (d *ServiceAccountDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	serviceAccountResp, err := d.client.ServiceAccountService.GetPomeriumServiceAccount(ctx, &pb.GetPomeriumServiceAccountRequest{
+	serviceAccountResp, err := d.client.PomeriumServiceAccountService.GetPomeriumServiceAccount(ctx, &pb.GetPomeriumServiceAccountRequest{
 		Id: data.ID.ValueString(),
 	})
 	if err != nil {
