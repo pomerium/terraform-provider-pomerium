@@ -62,7 +62,7 @@ func (r *NamespaceResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 			},
 			"parent_id": schema.StringAttribute{
 				Description: "ID of the parent namespace (optional).",
-				Optional:    false,
+				Optional:    true,
 			},
 		},
 	}
