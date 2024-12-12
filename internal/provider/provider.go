@@ -129,10 +129,13 @@ func (p *PomeriumProvider) Resources(_ context.Context) []func() resource.Resour
 func (p *PomeriumProvider) DataSources(_ context.Context) []func() datasource.DataSource {
 	return []func() datasource.DataSource{
 		NewServiceAccountDataSource,
+		NewServiceAccountsDataSource,
 		NewRouteDataSource,
+		NewRoutesDataSource,
 		NewNamespaceDataSource,
-		NewPolicyDataSource,
 		NewNamespacesDataSource,
+		NewPolicyDataSource,
+		NewPoliciesDataSource,
 	}
 }
 

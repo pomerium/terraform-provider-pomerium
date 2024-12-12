@@ -22,14 +22,7 @@ type RouteDataSource struct {
 	client *client.Client
 }
 
-type RouteDataSourceModel struct {
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	From        types.String `tfsdk:"from"`
-	To          types.List   `tfsdk:"to"`
-	NamespaceID types.String `tfsdk:"namespace_id"`
-	Policies    types.List   `tfsdk:"policies"`
-}
+type RouteDataSourceModel = RouteModel
 
 func (d *RouteDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_route"

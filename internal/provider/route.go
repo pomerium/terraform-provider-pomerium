@@ -8,9 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	client "github.com/pomerium/enterprise-client-go"
@@ -33,56 +30,14 @@ type RouteResource struct {
 }
 
 // RouteResourceModel describes the resource data model.
-type RouteResourceModel struct {
-	From        types.String `tfsdk:"from"`
-	To          types.List   `tfsdk:"to"`
-	Name        types.String `tfsdk:"name"`
-	ID          types.String `tfsdk:"id"`
-	NamespaceID types.String `tfsdk:"namespace_id"`
-	Policies    types.List   `tfsdk:"policies"`
-}
+type RouteResourceModel = RouteModel
 
 func (r *RouteResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_route"
 }
 
 func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		// This description is used by the documentation generator and the language server.
-		MarkdownDescription: "Route",
-
-		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed:    true,
-				Description: "Route ID",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"name": schema.StringAttribute{
-				Description: "Route name",
-				Required:    true,
-			},
-			"from": schema.StringAttribute{
-				Description: "From URL",
-				Required:    true,
-			},
-			"to": schema.ListAttribute{
-				ElementType: types.StringType,
-				Description: "To URL",
-				Required:    true,
-			},
-			"namespace_id": schema.StringAttribute{
-				Description: "ID of the namespace the route belongs to",
-				Required:    true,
-			},
-			"policies": schema.ListAttribute{
-				ElementType: types.StringType,
-				Description: "List of policy IDs to associate with the route",
-				Optional:    true,
-			},
-		},
-	}
+	resp.Schema = RouteSchema(false)
 }
 
 func (r *RouteResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {

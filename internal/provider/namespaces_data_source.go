@@ -22,12 +22,6 @@ type NamespacesDataSource struct {
 	client *client.Client
 }
 
-type NamespaceModel struct {
-	ID       types.String `tfsdk:"id"`
-	Name     types.String `tfsdk:"name"`
-	ParentID types.String `tfsdk:"parent_id"`
-}
-
 type NamespacesDataSourceModel struct {
 	Namespaces []NamespaceModel `tfsdk:"namespaces"`
 }

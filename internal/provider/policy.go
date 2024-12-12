@@ -7,9 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -34,43 +31,14 @@ type PolicyResource struct {
 }
 
 // PolicyResourceModel describes the resource data model.
-type PolicyResourceModel struct {
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	NamespaceID types.String `tfsdk:"namespace_id"`
-	PPL         types.String `tfsdk:"ppl"`
-}
+type PolicyResourceModel = PolicyModel
 
 func (r *PolicyResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_policy"
 }
 
 func (r *PolicyResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "Policy resource for Pomerium.",
-
-		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed:    true,
-				Description: "Unique identifier for the policy.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"name": schema.StringAttribute{
-				Description: "Name of the policy.",
-				Required:    true,
-			},
-			"namespace_id": schema.StringAttribute{
-				Description: "ID of the namespace the policy belongs to.",
-				Required:    true,
-			},
-			"ppl": schema.StringAttribute{
-				Description: "Policy Policy Language (PPL) string.",
-				Required:    true,
-			},
-		},
-	}
+	resp.Schema = PolicySchema(false)
 }
 
 func (r *PolicyResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {

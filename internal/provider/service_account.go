@@ -8,9 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 
@@ -31,53 +28,14 @@ type ServiceAccountResource struct {
 	client *client.Client
 }
 
-type ServiceAccountResourceModel struct {
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	NamespaceID types.String `tfsdk:"namespace_id"`
-	Description types.String `tfsdk:"description"`
-	UserID      types.String `tfsdk:"user_id"`
-	ExpiresAt   types.String `tfsdk:"expires_at"`
-}
+type ServiceAccountResourceModel = ServiceAccountModel
 
 func (r *ServiceAccountResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_service_account"
 }
 
 func (r *ServiceAccountResource) Schema(_ context.Context, _ resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		MarkdownDescription: "Service Account resource for Pomerium.",
-
-		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed:    true,
-				Description: "Unique identifier for the service account.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"name": schema.StringAttribute{
-				Description: "Name of the service account.",
-				Required:    true,
-			},
-			"namespace_id": schema.StringAttribute{
-				Description: "ID of the namespace the service account belongs to.",
-				Required:    true,
-			},
-			"description": schema.StringAttribute{
-				Description: "Description of the service account.",
-				Optional:    true,
-			},
-			"user_id": schema.StringAttribute{
-				Description: "User ID associated with the service account.",
-				Computed:    true,
-			},
-			"expires_at": schema.StringAttribute{
-				Description: "Timestamp when the service account expires.",
-				Computed:    true,
-			},
-		},
-	}
+	resp.Schema = ServiceAccountSchema(false)
 }
 
 func (r *ServiceAccountResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
