@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -45,7 +46,20 @@ func (d *NamespaceDataSource) Schema(_ context.Context, _ datasource.SchemaReque
 }
 
 func (d *NamespaceDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	d.client = ConfigureClient(req, resp)
+	if req.ProviderData == nil {
+		return
+	}
+
+	client, ok := req.ProviderData.(*client.Client)
+	if !ok {
+		resp.Diagnostics.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *client.Client, got: %T.", req.ProviderData),
+		)
+		return
+	}
+
+	d.client = client
 }
 
 func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -53,6 +67,14 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if d.client == nil {
+		resp.Diagnostics.AddError(
+			"Client not configured",
+			"The provider client is not properly configured. Please report this issue to the provider developers.",
+		)
 		return
 	}
 
