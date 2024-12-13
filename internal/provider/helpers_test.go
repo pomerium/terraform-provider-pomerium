@@ -85,3 +85,8 @@ func TestConfigureClient(t *testing.T) {
 		})
 	}
 }
+
+// helper function to create pointers
+func ptr[T any](v T) *T {
+	return &v
+}

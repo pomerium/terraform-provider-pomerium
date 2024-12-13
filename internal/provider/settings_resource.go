@@ -56,26 +56,14 @@ func (r *SettingsResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	// First get current settings
-	currentSettings, err := r.client.SettingsService.GetSettings(ctx, &pb.GetSettingsRequest{})
-	if err != nil {
-		resp.Diagnostics.AddError("get current settings", err.Error())
-		return
-	}
-
-	// Convert plan to protobuf
 	planSettings, diags := ConvertSettingsToPB(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if diags.HasError() {
 		return
 	}
 
-	// Merge new settings with current settings
-	mergedSettings := mergeSettings(currentSettings.Settings, planSettings)
-
-	// Apply merged settings
 	respSettings, err := r.client.SettingsService.SetSettings(ctx, &pb.SetSettingsRequest{
-		Settings: mergedSettings,
+		Settings: planSettings,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("set settings", err.Error())
@@ -122,35 +110,17 @@ func (r *SettingsResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	// First get current settings
-	currentSettings, err := r.client.SettingsService.GetSettings(ctx, &pb.GetSettingsRequest{})
-	if err != nil {
-		resp.Diagnostics.AddError("get current settings", err.Error())
-		return
-	}
-
-	// Convert plan to protobuf
 	planSettings, diags := ConvertSettingsToPB(ctx, &plan)
 	resp.Diagnostics.Append(diags...)
 	if diags.HasError() {
 		return
 	}
 
-	// Merge new settings with current settings
-	mergedSettings := mergeSettings(currentSettings.Settings, planSettings)
-
-	// Apply merged settings
-	respSettings, err := r.client.SettingsService.SetSettings(ctx, &pb.SetSettingsRequest{
-		Settings: mergedSettings,
+	_, err := r.client.SettingsService.SetSettings(ctx, &pb.SetSettingsRequest{
+		Settings: planSettings,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("set settings", err.Error())
-		return
-	}
-
-	diags = ConvertSettingsFromPB(&plan, respSettings.Settings)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
 		return
 	}
 
@@ -158,11 +128,9 @@ func (r *SettingsResource) Update(ctx context.Context, req resource.UpdateReques
 }
 
 func (r *SettingsResource) Delete(ctx context.Context, _ resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// Settings are global and cannot be deleted, only updated
 	resp.State.RemoveResource(ctx)
 }
 
 func (r *SettingsResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	// Settings are global, so we can just trigger a read
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
