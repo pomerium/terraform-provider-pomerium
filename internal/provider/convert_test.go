@@ -13,7 +13,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/durationpb"
-	"google.golang.org/protobuf/types/known/structpb"
 )
 
 func TestStringP(t *testing.T) {
@@ -148,63 +147,6 @@ func TestFromDurationP(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := provider.FromDurationP(tt.input)
 			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
-func TestToStruct(t *testing.T) {
-	ctx := context.Background()
-	tests := []struct {
-		name        string
-		input       types.Map
-		expectError bool
-		validate    func(*testing.T, *structpb.Struct)
-	}{
-		{
-			name:  "null map",
-			input: types.MapNull(types.StringType),
-			validate: func(t *testing.T, s *structpb.Struct) {
-				assert.Nil(t, s)
-			},
-		},
-		{
-			name: "valid map",
-			input: types.MapValueMust(types.StringType, map[string]attr.Value{
-				"key1": types.StringValue("value1"),
-				"key2": types.StringValue("value2"),
-			}),
-			validate: func(t *testing.T, s *structpb.Struct) {
-				require.NotNil(t, s)
-				require.NotNil(t, s.Fields)
-				assert.Equal(t, "value1", s.Fields["key1"].GetStringValue())
-				assert.Equal(t, "value2", s.Fields["key2"].GetStringValue())
-			},
-		},
-		{
-			name:  "empty map",
-			input: types.MapValueMust(types.StringType, map[string]attr.Value{}),
-			validate: func(t *testing.T, s *structpb.Struct) {
-				require.NotNil(t, s)
-				assert.Empty(t, s.Fields)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var result *structpb.Struct
-			diagnostics := diag.Diagnostics{}
-			provider.ToStruct(ctx, &result, tt.input, "test", &diagnostics)
-
-			if tt.expectError {
-				assert.True(t, diagnostics.HasError())
-				return
-			}
-
-			assert.False(t, diagnostics.HasError())
-			if tt.validate != nil {
-				tt.validate(t, result)
-			}
 		})
 	}
 }

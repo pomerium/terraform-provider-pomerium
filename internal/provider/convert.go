@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -10,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/pomerium/enterprise-client-go/pb"
 	"google.golang.org/protobuf/types/known/durationpb"
-	"google.golang.org/protobuf/types/known/structpb"
 )
 
 // StringP returns a pointer to the string value if not null, otherwise nil
@@ -132,34 +130,4 @@ func FromDurationP(d *durationpb.Duration) types.String {
 		return types.StringNull()
 	}
 	return types.StringValue(d.AsDuration().String())
-}
-
-// ToStruct converts a types.Map to a structpb.Struct and handles diagnostics internally
-func ToStruct(ctx context.Context, dst **structpb.Struct, m types.Map, field string, diagnostics *diag.Diagnostics) {
-	if m.IsNull() {
-		*dst = nil
-		return
-	}
-
-	var options map[string]interface{}
-	diagnostics.Append(m.ElementsAs(ctx, &options, false)...)
-	if !diagnostics.HasError() {
-		if s, err := structpb.NewStruct(options); err == nil {
-			*dst = s
-		} else {
-			diagnostics.AddError("invalid "+field, err.Error())
-		}
-	}
-}
-
-// FromStruct converts a structpb.Struct to a types.Map
-func FromStruct(s *structpb.Struct) types.Map {
-	if s == nil {
-		return types.MapNull(types.StringType)
-	}
-	elements := make(map[string]attr.Value)
-	for k, v := range s.AsMap() {
-		elements[k] = types.StringValue(fmt.Sprint(v))
-	}
-	return types.MapValueMust(types.StringType, elements)
 }
