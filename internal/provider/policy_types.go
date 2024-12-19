@@ -42,7 +42,7 @@ func (p PolicyLanguageType) Equal(o attr.Type) bool {
 
 func (PolicyLanguageType) Parse(src basetypes.StringValue) (PolicyLanguage, error) {
 	if src.IsNull() {
-		return NewPolicyLanguageJSON("[]"), nil
+		return PolicyLanguage{}, nil
 	}
 
 	ppl, err := parser.New().ParseYAML(strings.NewReader(src.ValueString()))
@@ -98,12 +98,6 @@ type PolicyLanguage struct {
 	basetypes.StringValue
 	Policy     parser.Policy
 	PolicyJSON json.RawMessage
-}
-
-func NewPolicyLanguageJSON(s string) PolicyLanguage {
-	return PolicyLanguage{
-		StringValue: basetypes.NewStringValue(s),
-	}
 }
 
 func (p PolicyLanguage) Type(context.Context) attr.Type {
