@@ -26,15 +26,6 @@ var SettingsResourceSchema = schema.Schema{
 			Optional:    true,
 			Description: "Proxy log level",
 		},
-		"shared_secret": schema.StringAttribute{
-			Optional:    true,
-			Description: "Shared secret",
-			Sensitive:   true,
-		},
-		"services": schema.StringAttribute{
-			Optional:    true,
-			Description: "Services",
-		},
 		"address": schema.StringAttribute{
 			Optional:    true,
 			Description: "Address",

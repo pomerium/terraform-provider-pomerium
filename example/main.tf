@@ -21,6 +21,7 @@ resource "pomerium_namespace" "test_namespace" {
 }
 
 resource "pomerium_settings" "settings" {
+  installation_id = "localhost-dev"
 }
 
 resource "pomerium_policy" "test_policy" {

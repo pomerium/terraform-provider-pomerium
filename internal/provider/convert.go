@@ -11,33 +11,6 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 )
 
-// StringP returns a pointer to the string value if not null, otherwise nil
-func StringP(v types.String) *string {
-	if v.IsNull() {
-		return nil
-	}
-	value := v.ValueString()
-	return &value
-}
-
-// BoolP returns a pointer to the bool value if not null, otherwise nil
-func BoolP(v types.Bool) *bool {
-	if v.IsNull() {
-		return nil
-	}
-	value := v.ValueBool()
-	return &value
-}
-
-// Float64P returns a pointer to the float64 value if not null, otherwise nil
-func Float64P(v types.Float64) *float64 {
-	if v.IsNull() {
-		return nil
-	}
-	value := v.ValueFloat64()
-	return &value
-}
-
 func FromStringSlice(slice []string) types.List {
 	if slice == nil {
 		return types.ListNull(types.StringType)
