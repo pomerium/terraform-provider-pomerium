@@ -145,7 +145,7 @@ func TestFromDurationP(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := provider.FromDurationP(tt.input)
+			result := provider.FromDuration(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
 	}

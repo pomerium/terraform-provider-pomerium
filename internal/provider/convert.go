@@ -110,8 +110,8 @@ func ToStringSlice(ctx context.Context, dst *[]string, list types.List, diagnost
 	}
 }
 
-// ToDurationP converts a types.String containing a duration to a durationpb.Duration and handles diagnostics internally
-func ToDurationP(dst **durationpb.Duration, src types.String, field string, diagnostics *diag.Diagnostics) {
+// ToDuration converts a types.String containing a duration to a durationpb.Duration and handles diagnostics internally
+func ToDuration(dst **durationpb.Duration, src types.String, field string, diagnostics *diag.Diagnostics) {
 	if src.IsNull() {
 		*dst = nil
 		return
@@ -124,8 +124,8 @@ func ToDurationP(dst **durationpb.Duration, src types.String, field string, diag
 	}
 }
 
-// FromDurationP converts a durationpb.Duration to a types.String
-func FromDurationP(d *durationpb.Duration) types.String {
+// FromDuration converts a durationpb.Duration to a types.String
+func FromDuration(d *durationpb.Duration) types.String {
 	if d == nil {
 		return types.StringNull()
 	}
