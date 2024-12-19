@@ -20,6 +20,10 @@ resource "pomerium_namespace" "test_namespace" {
   parent_id = "9d8dbd2c-8cce-4e66-9c1f-c490b4a07243"
 }
 
+resource "pomerium_settings" "settings" {
+  installation_id = "localhost-dev"
+}
+
 resource "pomerium_policy" "test_policy" {
   name         = "test-policy"
   namespace_id = pomerium_namespace.test_namespace.id
