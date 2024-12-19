@@ -1,0 +1,3 @@
+allow:
+  and:
+    - accept: true
