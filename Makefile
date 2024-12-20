@@ -9,3 +9,7 @@ lint:
 build:
 	@echo "@==> $@"
 	@go build -o bin/terraform-provider-pomerium
+
+.PHONY: docs
+docs:
+	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest generate --provider-dir . -provider-name pomerium
