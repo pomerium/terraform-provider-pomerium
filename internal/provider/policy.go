@@ -18,8 +18,9 @@ import (
 
 // Ensure provider-defined types fully satisfy framework interfaces.
 var (
-	_ resource.Resource                = &PolicyResource{}
-	_ resource.ResourceWithImportState = &PolicyResource{}
+	_ resource.Resource                = (*PolicyResource)(nil)
+	_ resource.ResourceWithConfigure   = (*PolicyResource)(nil)
+	_ resource.ResourceWithImportState = (*PolicyResource)(nil)
 )
 
 // NewPolicyResource creates a new PolicyResource.
@@ -61,6 +62,7 @@ func (r *PolicyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"ppl": schema.StringAttribute{
 				Description: "Policy Policy Language (PPL) string.",
 				Required:    true,
+				CustomType:  PolicyLanguageType{},
 			},
 		},
 	}

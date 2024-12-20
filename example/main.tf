@@ -20,6 +20,10 @@ resource "pomerium_namespace" "test_namespace" {
   parent_id = "9d8dbd2c-8cce-4e66-9c1f-c490b4a07243"
 }
 
+resource "pomerium_settings" "settings" {
+  installation_id = "localhost-dev"
+}
+
 resource "pomerium_policy" "test_policy" {
   name         = "test-policy"
   namespace_id = pomerium_namespace.test_namespace.id
@@ -38,20 +42,20 @@ resource "pomerium_route" "test_route" {
   policies     = [pomerium_policy.test_policy.id]
 }
 
-# Data source examples
-data "pomerium_namespace" "existing_namespace" {
-  id = "9d8dbd2c-8cce-4e66-9c1f-c490b4a07243"
-}
+# # Data source examples
+# data "pomerium_namespace" "existing_namespace" {
+#   id = "9d8dbd2c-8cce-4e66-9c1f-c490b4a07243"
+# }
 
-data "pomerium_route" "existing_route" {
-  id = pomerium_route.test_route.id
-}
+# data "pomerium_route" "existing_route" {
+#   id = pomerium_route.test_route.id
+# }
 
-# Output examples
-output "namespace_name" {
-  value = data.pomerium_namespace.existing_namespace.name
-}
+# # Output examples
+# output "namespace_name" {
+#   value = data.pomerium_namespace.existing_namespace.name
+# }
 
-output "route_from" {
-  value = data.pomerium_route.existing_route.from
-}
+# output "route_from" {
+#   value = data.pomerium_route.existing_route.from
+# }

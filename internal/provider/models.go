@@ -157,35 +157,3 @@ func ConvertRouteFromPB(
 
 	return diagnostics
 }
-
-// PolicyModel represents the shared model for policy resources and data sources
-type PolicyModel struct {
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	NamespaceID types.String `tfsdk:"namespace_id"`
-	PPL         types.String `tfsdk:"ppl"`
-}
-
-func ConvertPolicyToPB(_ context.Context, src *PolicyResourceModel) (*pb.Policy, diag.Diagnostics) {
-	var diagnostics diag.Diagnostics
-
-	pbPolicy := &pb.Policy{
-		Id:          src.ID.ValueString(),
-		Name:        src.Name.ValueString(),
-		NamespaceId: src.NamespaceID.ValueString(),
-		Ppl:         src.PPL.ValueString(),
-	}
-
-	return pbPolicy, diagnostics
-}
-
-func ConvertPolicyFromPB(dst *PolicyResourceModel, src *pb.Policy) diag.Diagnostics {
-	var diagnostics diag.Diagnostics
-
-	dst.ID = types.StringValue(src.Id)
-	dst.Name = types.StringValue(src.Name)
-	dst.NamespaceID = types.StringValue(src.NamespaceId)
-	dst.PPL = types.StringValue(src.Ppl)
-
-	return diagnostics
-}
