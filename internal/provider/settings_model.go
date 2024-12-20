@@ -44,8 +44,15 @@ type SettingsModel struct {
 	GRPCAddress                                       types.String  `tfsdk:"grpc_address"`
 	GRPCInsecure                                      types.Bool    `tfsdk:"grpc_insecure"`
 	HTTPRedirectAddr                                  types.String  `tfsdk:"http_redirect_addr"`
-	IdentityProvider                                  types.String  `tfsdk:"identity_provider"`
-	IdentityProviderOptions                           types.Map     `tfsdk:"identity_provider_options"`
+	IdentityProviderAuth0                             types.Object  `tfsdk:"identity_provider_auth0"`
+	IdentityProviderAzure                             types.Object  `tfsdk:"identity_provider_azure"`
+	IdentityProviderCognito                           types.Object  `tfsdk:"identity_provider_cognito"`
+	IdentityProviderGitHub                            types.Object  `tfsdk:"identity_provider_github"`
+	IdentityProviderGitLab                            types.Object  `tfsdk:"identity_provider_gitlab"`
+	IdentityProviderGoogle                            types.Object  `tfsdk:"identity_provider_google"`
+	IdentityProviderOkta                              types.Object  `tfsdk:"identity_provider_okta"`
+	IdentityProviderOneLogin                          types.Object  `tfsdk:"identity_provider_onelogin"`
+	IdentityProviderPing                              types.Object  `tfsdk:"identity_provider_ping"`
 	IdentityProviderRefreshInterval                   types.String  `tfsdk:"identity_provider_refresh_interval"`
 	IdentityProviderRefreshTimeout                    types.String  `tfsdk:"identity_provider_refresh_timeout"`
 	IdpClientID                                       types.String  `tfsdk:"idp_client_id"`
@@ -122,7 +129,7 @@ func ConvertSettingsToPB(
 	pbSettings.GrpcAddress = src.GRPCAddress.ValueStringPointer()
 	pbSettings.GrpcInsecure = src.GRPCInsecure.ValueBoolPointer()
 	pbSettings.HttpRedirectAddr = src.HTTPRedirectAddr.ValueStringPointer()
-	pbSettings.IdentityProvider = src.IdentityProvider.ValueStringPointer()
+	IdentityProviderSettingsToPB(ctx, pbSettings, src, &diagnostics)
 	ToDuration(&pbSettings.IdentityProviderRefreshInterval, src.IdentityProviderRefreshInterval, "identity_provider_refresh_interval", &diagnostics)
 	ToDuration(&pbSettings.IdentityProviderRefreshTimeout, src.IdentityProviderRefreshTimeout, "identity_provider_refresh_timeout", &diagnostics)
 	pbSettings.IdpClientId = src.IdpClientID.ValueStringPointer()
@@ -200,7 +207,7 @@ func ConvertSettingsFromPB(
 	dst.GRPCAddress = types.StringPointerValue(src.GrpcAddress)
 	dst.GRPCInsecure = types.BoolPointerValue(src.GrpcInsecure)
 	dst.HTTPRedirectAddr = types.StringPointerValue(src.HttpRedirectAddr)
-	dst.IdentityProvider = types.StringPointerValue(src.IdentityProvider)
+	IdentityProviderSettingsFromPB(dst, src, &diagnostics)
 	dst.IdentityProviderRefreshInterval = FromDuration(src.IdentityProviderRefreshInterval)
 	dst.IdentityProviderRefreshTimeout = FromDuration(src.IdentityProviderRefreshTimeout)
 	dst.IdpClientID = types.StringPointerValue(src.IdpClientId)

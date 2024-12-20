@@ -3,12 +3,38 @@ package provider
 import (
 	_ "embed"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 //go:embed help/settings.md
 var settingsResourceHelp string
+
+func idpOneOf(name string) []validator.Object {
+	var exprs []path.Expression
+	for _, n := range []string{
+		"identity_provider_auth0",
+		"identity_provider_azure",
+		"identity_provider_cognito",
+		"identity_provider_github",
+		"identity_provider_gitlab",
+		"identity_provider_google",
+		"identity_provider_okta",
+		"identity_provider_onelogin",
+		"identity_provider_ping",
+	} {
+		if n == name {
+			continue
+		}
+		exprs = append(exprs, path.MatchRelative().AtParent().AtName(n))
+	}
+	return []validator.Object{
+		objectvalidator.ConflictsWith(exprs...),
+	}
+}
 
 var SettingsResourceSchema = schema.Schema{
 	MarkdownDescription: settingsResourceHelp,
@@ -269,14 +295,150 @@ var SettingsResourceSchema = schema.Schema{
 			Optional:    true,
 			Description: "Error message first paragraph",
 		},
-		"identity_provider": schema.StringAttribute{
+		"identity_provider_auth0": schema.SingleNestedAttribute{
 			Optional:    true,
-			Description: "Identity provider",
+			Description: "Auth0 directory sync options",
+			Validators:  idpOneOf("identity_provider_auth0"),
+			Attributes: map[string]schema.Attribute{
+				"client_id": schema.StringAttribute{
+					Required: true,
+				},
+				"client_secret": schema.StringAttribute{
+					Required:  true,
+					Sensitive: true,
+				},
+				"domain": schema.StringAttribute{
+					Required: true,
+				},
+			},
 		},
-		"identity_provider_options": schema.MapAttribute{
-			ElementType: types.StringType,
+		"identity_provider_azure": schema.SingleNestedAttribute{
 			Optional:    true,
-			Description: "Identity provider options",
+			Description: "Azure EntraID directory sync options",
+			Validators:  idpOneOf("identity_provider_azure"),
+			Attributes: map[string]schema.Attribute{
+				"client_id": schema.StringAttribute{
+					Required: true,
+				},
+				"client_secret": schema.StringAttribute{
+					Required:  true,
+					Sensitive: true,
+				},
+				"directory_id": schema.StringAttribute{
+					Required: true,
+				},
+			},
+		},
+		"identity_provider_cognito": schema.SingleNestedAttribute{
+			Optional:    true,
+			Description: "Cognito directory sync options",
+			Validators:  idpOneOf("identity_provider_cognito"),
+			Attributes: map[string]schema.Attribute{
+				"access_key_id": schema.StringAttribute{
+					Required: true,
+				},
+				"region": schema.StringAttribute{
+					Required: true,
+				},
+				"secret_access_key": schema.StringAttribute{
+					Required:  true,
+					Sensitive: true,
+				},
+				"session_token": schema.StringAttribute{
+					Required:  true,
+					Sensitive: true,
+				},
+				"user_pool_id": schema.StringAttribute{
+					Required: true,
+				},
+			},
+		},
+		"identity_provider_github": schema.SingleNestedAttribute{
+			Optional:    true,
+			Description: "GitHub directory sync options",
+			Validators:  idpOneOf("identity_provider_github"),
+			Attributes: map[string]schema.Attribute{
+				"username": schema.StringAttribute{
+					Required: true,
+				},
+				"personal_access_token": schema.StringAttribute{
+					Required:  true,
+					Sensitive: true,
+				},
+			},
+		},
+		"identity_provider_gitlab": schema.SingleNestedAttribute{
+			Optional:    true,
+			Description: "GitLab directory sync options",
+			Validators:  idpOneOf("identity_provider_gitlab"),
+			Attributes: map[string]schema.Attribute{
+				"private_token": schema.StringAttribute{
+					Required:  true,
+					Sensitive: true,
+				},
+			},
+		},
+		"identity_provider_google": schema.SingleNestedAttribute{
+			Optional:    true,
+			Description: "Google directory sync options",
+			Validators:  idpOneOf("identity_provider_google"),
+			Attributes: map[string]schema.Attribute{
+				"impersonate_user": schema.StringAttribute{
+					Optional: true,
+				},
+				"json_key": schema.StringAttribute{
+					Required:  true,
+					Sensitive: true,
+				},
+				"url": schema.StringAttribute{
+					Required: true,
+				},
+			},
+		},
+		"identity_provider_okta": schema.SingleNestedAttribute{
+			Optional:    true,
+			Description: "Okta directory sync options",
+			Validators:  idpOneOf("identity_provider_okta"),
+			Attributes: map[string]schema.Attribute{
+				"api_key": schema.StringAttribute{
+					Required:  true,
+					Sensitive: true,
+				},
+				"url": schema.StringAttribute{
+					Required: true,
+				},
+			},
+		},
+		"identity_provider_onelogin": schema.SingleNestedAttribute{
+			Optional:    true,
+			Description: "OneLogin directory sync options",
+			Validators:  idpOneOf("identity_provider_onelogin"),
+			Attributes: map[string]schema.Attribute{
+				"client_id": schema.StringAttribute{
+					Required: true,
+				},
+				"client_secret": schema.StringAttribute{
+					Required:  true,
+					Sensitive: true,
+				},
+			},
+		},
+		"identity_provider_ping": schema.SingleNestedAttribute{
+			Optional:    true,
+			Description: "Ping directory sync options",
+			Validators:  idpOneOf("identity_provider_ping"),
+			Attributes: map[string]schema.Attribute{
+				"client_id": schema.StringAttribute{
+					Required: true,
+				},
+				"client_secret": schema.StringAttribute{
+					Required:  true,
+					Sensitive: true,
+				},
+				"environment_id": schema.StringAttribute{
+					Required: true,
+				},
+			},
 		},
 		"identity_provider_refresh_interval": schema.StringAttribute{
 			Optional:    true,

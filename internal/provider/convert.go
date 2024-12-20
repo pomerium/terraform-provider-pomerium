@@ -2,13 +2,19 @@ package provider
 
 import (
 	"context"
+	"fmt"
+	"reflect"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/iancoleman/strcase"
 	"github.com/pomerium/enterprise-client-go/pb"
 	"google.golang.org/protobuf/types/known/durationpb"
+
+	"google.golang.org/protobuf/types/known/structpb"
 )
 
 func FromStringSlice(slice []string) types.List {
@@ -103,4 +109,115 @@ func FromDuration(d *durationpb.Duration) types.String {
 		return types.StringNull()
 	}
 	return types.StringValue(d.AsDuration().String())
+}
+
+// GoStructToPB converts a Go struct to a protobuf Struct.
+// It only supports protobuf types.String field types
+// Field names are converted to snake_case.
+func GoStructToPB(input interface{}) (*structpb.Struct, error) {
+	if input == nil {
+		return nil, nil
+	}
+
+	val := reflect.ValueOf(input)
+	if val.Kind() != reflect.Struct {
+		return nil, fmt.Errorf("input must be a struct, got %v", val.Kind())
+	}
+
+	fields := make(map[string]*structpb.Value)
+	typ := val.Type()
+
+	typeString := reflect.TypeOf(types.String{})
+	for i := 0; i < typ.NumField(); i++ {
+		field := typ.Field(i)
+		fieldValue := val.Field(i)
+		fieldName := strcase.ToSnake(field.Name)
+
+		if fieldValue.Type() != typeString {
+			return nil, fmt.Errorf("unsupported field type %s for field %s", fieldValue.Type(), fieldName)
+		}
+		protoValue, ok := fieldValue.Interface().(types.String)
+		if !ok {
+			return nil, fmt.Errorf("unexpected type assertion for field %s", fieldName)
+		}
+		if !protoValue.IsNull() {
+			fields[fieldName] = structpb.NewStringValue(protoValue.ValueString())
+		}
+	}
+
+	return &structpb.Struct{Fields: fields}, nil
+}
+
+// PBStructToTF converts a protobuf Struct to a types.Object,
+// by enumerating the `tfsdk` tags on the struct fields.
+// only supports string fields
+func PBStructToTF[T any](
+	dst *types.Object,
+	src *structpb.Struct,
+	diags *diag.Diagnostics,
+) {
+	attrTypes, err := GetTFObjectTypes[T]()
+	if err != nil {
+		diags.AddError("failed to get object types", err.Error())
+		return
+	}
+
+	if src == nil {
+		*dst = types.ObjectNull(attrTypes)
+		return
+	}
+
+	attrs := make(map[string]attr.Value)
+	for k, v := range src.Fields {
+		_, ok := attrTypes[k]
+		if !ok {
+			diags.AddAttributeWarning(
+				path.Root(k),
+				"unexpected field",
+				fmt.Sprintf("unexpected field %s", k),
+			)
+			continue
+		}
+		str, ok := v.GetKind().(*structpb.Value_StringValue)
+		if !ok {
+			diags.AddAttributeError(
+				path.Root(k),
+				"unsupported field type",
+				fmt.Sprintf("%T for field %s", v, k))
+			return
+		}
+		attrs[k] = types.StringValue(str.StringValue)
+	}
+
+	for k := range attrTypes {
+		if _, ok := src.Fields[k]; ok {
+			continue
+		}
+		attrs[k] = types.StringNull()
+	}
+
+	v, d := types.ObjectValue(attrTypes, attrs)
+	diags.Append(d...)
+	if !diags.HasError() {
+		*dst = v
+	}
+}
+
+func GetTFObjectTypes[T any]() (map[string]attr.Type, error) {
+	tm := make(map[string]attr.Type)
+	var v T
+	typ := reflect.TypeOf(v)
+	typeString := reflect.TypeOf(types.String{})
+	for i := 0; i < typ.NumField(); i++ {
+		field := typ.Field(i)
+		if field.Type != typeString {
+			return nil, fmt.Errorf("unsupported field type %s for field %s", field.Type, field.Name)
+		}
+		tfsdkTag := field.Tag.Get("tfsdk")
+		if tfsdkTag == "" {
+			return nil, fmt.Errorf("missing tfsdk tag for field %s", field.Name)
+		}
+		tm[tfsdkTag] = types.StringType
+	}
+	return tm, nil
 }

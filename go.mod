@@ -4,9 +4,12 @@ go 1.23.0
 
 require (
 	github.com/go-jose/go-jose/v3 v3.0.3
-	github.com/hashicorp/terraform-plugin-framework v1.11.0
-	github.com/hashicorp/terraform-plugin-go v0.23.0
+	github.com/google/go-cmp v0.6.0
+	github.com/hashicorp/terraform-plugin-framework v1.13.0
+	github.com/hashicorp/terraform-plugin-framework-validators v0.16.0
+	github.com/hashicorp/terraform-plugin-go v0.25.0
 	github.com/hashicorp/terraform-plugin-log v0.9.0
+	github.com/iancoleman/strcase v0.3.0
 	github.com/pomerium/enterprise-client-go v0.18.1-0.20241202185750-aab20a674922
 	github.com/pomerium/pomerium v0.28.0
 	github.com/rs/zerolog v1.33.0
@@ -31,7 +34,7 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-hclog v1.5.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
-	github.com/hashicorp/go-plugin v1.6.0 // indirect
+	github.com/hashicorp/go-plugin v1.6.2 // indirect
 	github.com/hashicorp/go-set/v3 v3.0.0 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
