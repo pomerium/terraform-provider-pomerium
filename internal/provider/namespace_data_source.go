@@ -56,6 +56,14 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
+	if d.client == nil {
+		resp.Diagnostics.AddError(
+			"Client not configured",
+			"The provider client is not properly configured. Please check your provider configuration.",
+		)
+		return
+	}
+
 	namespaceResp, err := d.client.NamespaceService.GetNamespace(ctx, &pb.GetNamespaceRequest{
 		Id: data.ID.ValueString(),
 	})
