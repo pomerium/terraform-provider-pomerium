@@ -22,6 +22,10 @@ resource "pomerium_namespace" "test_namespace" {
 
 resource "pomerium_settings" "settings" {
   installation_id = "localhost-dev"
+  identity_provider_okta = {
+    api_key = "key"
+    url     = "http://localhost"
+  }
 }
 
 resource "pomerium_policy" "test_policy" {
