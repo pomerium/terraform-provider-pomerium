@@ -9,3 +9,7 @@ lint:
 build:
 	@echo "@==> $@"
 	@go build -o bin/terraform-provider-pomerium
+
+.PHONY: generate
+generate:
+	cd tools; go generate ./...
