@@ -55,8 +55,15 @@ The settings are global object.
 - `grpc_address` (String) gRPC address
 - `grpc_insecure` (Boolean) gRPC insecure
 - `http_redirect_addr` (String) HTTP redirect address
-- `identity_provider` (String) Identity provider
-- `identity_provider_options` (Map of String) Identity provider options
+- `identity_provider_auth0` (Attributes) Auth0 directory sync options (see [below for nested schema](#nestedatt--identity_provider_auth0))
+- `identity_provider_azure` (Attributes) Azure EntraID directory sync options (see [below for nested schema](#nestedatt--identity_provider_azure))
+- `identity_provider_cognito` (Attributes) Cognito directory sync options (see [below for nested schema](#nestedatt--identity_provider_cognito))
+- `identity_provider_github` (Attributes) GitHub directory sync options (see [below for nested schema](#nestedatt--identity_provider_github))
+- `identity_provider_gitlab` (Attributes) GitLab directory sync options (see [below for nested schema](#nestedatt--identity_provider_gitlab))
+- `identity_provider_google` (Attributes) Google directory sync options (see [below for nested schema](#nestedatt--identity_provider_google))
+- `identity_provider_okta` (Attributes) Okta directory sync options (see [below for nested schema](#nestedatt--identity_provider_okta))
+- `identity_provider_onelogin` (Attributes) OneLogin directory sync options (see [below for nested schema](#nestedatt--identity_provider_onelogin))
+- `identity_provider_ping` (Attributes) Ping directory sync options (see [below for nested schema](#nestedatt--identity_provider_ping))
 - `identity_provider_refresh_interval` (String) Identity provider refresh interval
 - `identity_provider_refresh_timeout` (String) Identity provider refresh timeout
 - `idp_client_id` (String) IDP client ID
@@ -89,3 +96,92 @@ The settings are global object.
 - `tracing_provider` (String) Tracing provider
 - `tracing_sample_rate` (Number) Tracing sample rate
 - `tracing_zipkin_endpoint` (String) Tracing Zipkin endpoint
+
+<a id="nestedatt--identity_provider_auth0"></a>
+### Nested Schema for `identity_provider_auth0`
+
+Required:
+
+- `client_id` (String)
+- `client_secret` (String, Sensitive)
+- `domain` (String)
+
+
+<a id="nestedatt--identity_provider_azure"></a>
+### Nested Schema for `identity_provider_azure`
+
+Required:
+
+- `client_id` (String)
+- `client_secret` (String, Sensitive)
+- `directory_id` (String)
+
+
+<a id="nestedatt--identity_provider_cognito"></a>
+### Nested Schema for `identity_provider_cognito`
+
+Required:
+
+- `access_key_id` (String)
+- `region` (String)
+- `secret_access_key` (String, Sensitive)
+- `session_token` (String, Sensitive)
+- `user_pool_id` (String)
+
+
+<a id="nestedatt--identity_provider_github"></a>
+### Nested Schema for `identity_provider_github`
+
+Required:
+
+- `personal_access_token` (String, Sensitive)
+- `username` (String)
+
+
+<a id="nestedatt--identity_provider_gitlab"></a>
+### Nested Schema for `identity_provider_gitlab`
+
+Required:
+
+- `private_token` (String, Sensitive)
+
+
+<a id="nestedatt--identity_provider_google"></a>
+### Nested Schema for `identity_provider_google`
+
+Required:
+
+- `json_key` (String, Sensitive)
+- `url` (String)
+
+Optional:
+
+- `impersonate_user` (String)
+
+
+<a id="nestedatt--identity_provider_okta"></a>
+### Nested Schema for `identity_provider_okta`
+
+Required:
+
+- `api_key` (String, Sensitive)
+- `url` (String)
+
+
+<a id="nestedatt--identity_provider_onelogin"></a>
+### Nested Schema for `identity_provider_onelogin`
+
+Required:
+
+- `client_id` (String)
+- `client_secret` (String, Sensitive)
+
+
+<a id="nestedatt--identity_provider_ping"></a>
+### Nested Schema for `identity_provider_ping`
+
+Required:
+
+- `client_id` (String)
+- `client_secret` (String, Sensitive)
+- `environment_id` (String)
