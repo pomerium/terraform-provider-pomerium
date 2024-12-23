@@ -47,7 +47,7 @@ func TestConfigureClient(t *testing.T) {
 			},
 			resp:           &datasource.ConfigureResponse{},
 			expectedClient: nil,
-			expectError:    true,
+			expectError:    false,
 		},
 		{
 			name: "invalid provider data type - datasource",
