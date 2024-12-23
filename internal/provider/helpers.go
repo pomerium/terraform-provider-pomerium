@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	client "github.com/pomerium/enterprise-client-go"
@@ -18,6 +19,18 @@ func ConfigureClient(req any, resp any) *client.Client {
 		providerData = r.ProviderData
 	case resource.ConfigureRequest:
 		providerData = r.ProviderData
+	default:
+		panic("unexpected req type: " + fmt.Sprintf("%T", req))
+	}
+
+	var diag *diag.Diagnostics
+	switch r := resp.(type) {
+	case *datasource.ConfigureResponse:
+		diag = &r.Diagnostics
+	case *resource.ConfigureResponse:
+		diag = &r.Diagnostics
+	default:
+		panic("unexpected resp type: " + fmt.Sprintf("%T", resp))
 	}
 
 	if providerData == nil {
@@ -26,18 +39,10 @@ func ConfigureClient(req any, resp any) *client.Client {
 
 	client, ok := providerData.(*client.Client)
 	if !ok {
-		switch r := resp.(type) {
-		case *datasource.ConfigureResponse:
-			r.Diagnostics.AddError(
-				"Unexpected Data Source Configure Type",
-				fmt.Sprintf("Expected *client.Client, got: %T.", providerData),
-			)
-		case *resource.ConfigureResponse:
-			r.Diagnostics.AddError(
-				"Unexpected Resource Configure Type",
-				fmt.Sprintf("Expected *client.Client, got: %T.", providerData),
-			)
-		}
+		diag.AddError(
+			"Unexpected Data Source Configure Type",
+			fmt.Sprintf("Expected *client.Client, got: %T.", providerData),
+		)
 		return nil
 	}
 
