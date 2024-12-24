@@ -14,10 +14,20 @@ provider "pomerium" {
   shared_secret_b64 = "9OkZR6hwfmVD3a7Sfmgq58lUbFJGGz4hl/R9xbHFCAg="
 }
 
+locals {
+  root_namespace_id = "9d8dbd2c-8cce-4e66-9c1f-c490b4a07243"
+}
 # Create resources
 resource "pomerium_namespace" "test_namespace" {
   name      = "test-namespace"
-  parent_id = "9d8dbd2c-8cce-4e66-9c1f-c490b4a07243"
+  parent_id = local.root_namespace_id
+}
+
+resource "pomerium_namespace_permission" "admin_group" {
+  namespace_id = pomerium_namespace.test_namespace.id
+  subject_type = "group"
+  subject_id   = "gid-123456"
+  role         = "admin"
 }
 
 resource "pomerium_settings" "settings" {

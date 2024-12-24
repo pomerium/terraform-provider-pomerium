@@ -121,6 +121,7 @@ func (p *PomeriumProvider) Configure(ctx context.Context, req provider.Configure
 func (p *PomeriumProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewNamespaceResource,
+		NewNamespacePermissionResource,
 		NewRouteResource,
 		NewPolicyResource,
 		NewSettingsResource,
