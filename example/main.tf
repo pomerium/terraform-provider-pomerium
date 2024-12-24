@@ -21,7 +21,7 @@ resource "pomerium_namespace" "test_namespace" {
 }
 
 resource "pomerium_settings" "settings" {
-  installation_id = "localhost-dev"
+  installation_id = "localhost-dev4"
   identity_provider_okta = {
     api_key = "key"
     url     = "http://localhost"
@@ -46,20 +46,26 @@ resource "pomerium_route" "test_route" {
   policies     = [pomerium_policy.test_policy.id]
 }
 
-# # Data source examples
-# data "pomerium_namespace" "existing_namespace" {
-#   id = "9d8dbd2c-8cce-4e66-9c1f-c490b4a07243"
-# }
+# Data source examples
+data "pomerium_namespaces" "all_namespaces" {}
 
-# data "pomerium_route" "existing_route" {
-#   id = pomerium_route.test_route.id
-# }
+data "pomerium_namespace" "existing_namespace" {
+  id = pomerium_namespace.test_namespace.id
+}
 
-# # Output examples
-# output "namespace_name" {
-#   value = data.pomerium_namespace.existing_namespace.name
-# }
+data "pomerium_route" "existing_route" {
+  id = pomerium_route.test_route.id
+}
 
-# output "route_from" {
-#   value = data.pomerium_route.existing_route.from
-# }
+# Output examples
+output "namespace_name" {
+  value = data.pomerium_namespace.existing_namespace.name
+}
+
+output "route_from" {
+  value = data.pomerium_route.existing_route.from
+}
+
+output "all_namespaces" {
+  value = data.pomerium_namespaces.all_namespaces.namespaces
+}

@@ -115,6 +115,7 @@ func (p *PomeriumProvider) Configure(ctx context.Context, req provider.Configure
 	}
 
 	resp.ResourceData = c
+	resp.DataSourceData = c
 }
 
 func (p *PomeriumProvider) Resources(_ context.Context) []func() resource.Resource {
