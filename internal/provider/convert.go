@@ -221,3 +221,14 @@ func GetTFObjectTypes[T any]() (map[string]attr.Type, error) {
 	}
 	return tm, nil
 }
+
+func ToByteSlice(src types.String) []byte {
+	if src.IsNull() {
+		return nil
+	}
+	val := src.ValueString()
+	if val == "" {
+		return nil
+	}
+	return []byte(val)
+}
