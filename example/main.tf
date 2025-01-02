@@ -60,6 +60,13 @@ resource "pomerium_route" "test_route" {
   policies     = [pomerium_policy.test_policy.id]
 }
 
+resource "pomerium_key_pair" "test_key_pair" {
+  namespace_id = pomerium_namespace.test_namespace.id
+  name         = "test-key-pair"
+  certificate  = file("test.host.pem")
+  key          = file("test.host-key.pem")
+}
+
 # Data source examples
 data "pomerium_namespaces" "all_namespaces" {}
 
