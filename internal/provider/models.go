@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/pomerium/enterprise-client-go/pb"
@@ -96,64 +95,6 @@ func ConvertNamespaceFromPB(dst *NamespaceResourceModel, src *pb.Namespace) diag
 	} else {
 		dst.ParentID = types.StringNull()
 	}
-
-	return diagnostics
-}
-
-// RouteModel represents the shared model for route resources and data sources
-type RouteModel struct {
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	From        types.String `tfsdk:"from"`
-	To          types.List   `tfsdk:"to"`
-	NamespaceID types.String `tfsdk:"namespace_id"`
-	Policies    types.List   `tfsdk:"policies"`
-}
-
-func ConvertRouteToPB(
-	ctx context.Context,
-	src *RouteResourceModel,
-) (*pb.Route, diag.Diagnostics) {
-	pbRoute := new(pb.Route)
-	var diagnostics diag.Diagnostics
-
-	pbRoute.Id = src.ID.ValueString()
-	pbRoute.Name = src.Name.ValueString()
-	pbRoute.From = src.From.ValueString()
-	pbRoute.NamespaceId = src.NamespaceID.ValueString()
-
-	diags := src.To.ElementsAs(ctx, &pbRoute.To, false)
-	diagnostics.Append(diags...)
-
-	if !src.Policies.IsNull() {
-		diags = src.Policies.ElementsAs(ctx, &pbRoute.PolicyIds, false)
-		diagnostics.Append(diags...)
-	}
-	return pbRoute, diagnostics
-}
-
-func ConvertRouteFromPB(
-	dst *RouteResourceModel,
-	src *pb.Route,
-) diag.Diagnostics {
-	var diagnostics diag.Diagnostics
-
-	dst.ID = types.StringValue(src.Id)
-	dst.Name = types.StringValue(src.Name)
-	dst.From = types.StringValue(src.From)
-	dst.NamespaceID = types.StringValue(src.NamespaceId)
-
-	toList := make([]attr.Value, len(src.To))
-	for i, v := range src.To {
-		toList[i] = types.StringValue(v)
-	}
-	dst.To = types.ListValueMust(types.StringType, toList)
-
-	policiesList := make([]attr.Value, len(src.PolicyIds))
-	for i, v := range src.PolicyIds {
-		policiesList[i] = types.StringValue(v)
-	}
-	dst.Policies = types.ListValueMust(types.StringType, policiesList)
 
 	return diagnostics
 }

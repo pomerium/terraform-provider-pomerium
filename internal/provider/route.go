@@ -70,6 +70,125 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Description: "List of policy IDs associated with the route.",
 				Optional:    true,
 			},
+			"stat_name": schema.StringAttribute{
+				Description: "Name of the stat.",
+				Optional:    true,
+			},
+			"prefix": schema.StringAttribute{
+				Description: "Prefix.",
+				Optional:    true,
+			},
+			"path": schema.StringAttribute{
+				Description: "Path.",
+				Optional:    true,
+			},
+			"regex": schema.StringAttribute{
+				Description: "Regex.",
+				Optional:    true,
+			},
+			"prefix_rewrite": schema.StringAttribute{
+				Description: "Prefix rewrite.",
+				Optional:    true,
+			},
+			"regex_rewrite_pattern": schema.StringAttribute{
+				Description: "Regex rewrite pattern.",
+				Optional:    true,
+			},
+			"regex_rewrite_substitution": schema.StringAttribute{
+				Description: "Regex rewrite substitution.",
+				Optional:    true,
+			},
+			"host_rewrite": schema.StringAttribute{
+				Description: "Host rewrite.",
+				Optional:    true,
+			},
+			"host_rewrite_header": schema.StringAttribute{
+				Description: "Host rewrite header.",
+				Optional:    true,
+			},
+			"host_path_regex_rewrite_pattern": schema.StringAttribute{
+				Description: "Host path regex rewrite pattern.",
+				Optional:    true,
+			},
+			"host_path_regex_rewrite_substitution": schema.StringAttribute{
+				Description: "Host path regex rewrite substitution.",
+				Optional:    true,
+			},
+			"regex_priority_order": schema.Int64Attribute{
+				Description: "Regex priority order.",
+				Optional:    true,
+			},
+			"timeout": schema.StringAttribute{
+				Description: "Timeout.",
+				Optional:    true,
+			},
+			"idle_timeout": schema.StringAttribute{
+				Description: "Idle timeout.",
+				Optional:    true,
+			},
+			"allow_websockets": schema.BoolAttribute{
+				Description: "Allow websockets.",
+				Optional:    true,
+			},
+			"allow_spdy": schema.BoolAttribute{
+				Description: "Allow SPDY.",
+				Optional:    true,
+			},
+			"tls_skip_verify": schema.BoolAttribute{
+				Description: "TLS skip verify.",
+				Optional:    true,
+			},
+			"tls_upstream_server_name": schema.StringAttribute{
+				Description: "TLS upstream server name.",
+				Optional:    true,
+			},
+			"tls_downstream_server_name": schema.StringAttribute{
+				Description: "TLS downstream server name.",
+				Optional:    true,
+			},
+			"tls_upstream_allow_renegotiation": schema.BoolAttribute{
+				Description: "TLS upstream allow renegotiation.",
+				Optional:    true,
+			},
+			"set_request_headers": schema.MapAttribute{
+				ElementType: types.StringType,
+				Description: "Set request headers.",
+				Optional:    true,
+			},
+			"remove_request_headers": schema.ListAttribute{
+				ElementType: types.StringType,
+				Description: "Remove request headers.",
+				Optional:    true,
+			},
+			"set_response_headers": schema.MapAttribute{
+				ElementType: types.StringType,
+				Description: "Set response headers.",
+				Optional:    true,
+			},
+			"preserve_host_header": schema.BoolAttribute{
+				Description: "Preserve host header.",
+				Optional:    true,
+			},
+			"pass_identity_headers": schema.BoolAttribute{
+				Description: "Pass identity headers.",
+				Optional:    true,
+			},
+			"kubernetes_service_account_token": schema.StringAttribute{
+				Description: "Kubernetes service account token.",
+				Optional:    true,
+			},
+			"idp_client_id": schema.StringAttribute{
+				Description: "IDP client ID.",
+				Optional:    true,
+			},
+			"idp_client_secret": schema.StringAttribute{
+				Description: "IDP client secret.",
+				Optional:    true,
+			},
+			"show_error_details": schema.BoolAttribute{
+				Description: "Show error details.",
+				Optional:    true,
+			},
 		},
 	}
 }
