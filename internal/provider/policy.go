@@ -51,6 +51,10 @@ func (r *PolicyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"description": schema.StringAttribute{
+				Description: "Description of the policy.",
+				Optional:    true,
+			},
 			"name": schema.StringAttribute{
 				Description: "Name of the policy.",
 				Required:    true,
@@ -63,6 +67,23 @@ func (r *PolicyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 				Description: "Policy Policy Language (PPL) string.",
 				Required:    true,
 				CustomType:  PolicyLanguageType{},
+			},
+			"rego": schema.ListAttribute{
+				Description: "Rego policies.",
+				Optional:    true,
+				ElementType: types.StringType,
+			},
+			"enforced": schema.BoolAttribute{
+				Description: "Whether the policy is enforced within the namespace hierarchy.",
+				Optional:    true,
+			},
+			"explanation": schema.StringAttribute{
+				Description: "Explanation of the policy.",
+				Optional:    true,
+			},
+			"remediation": schema.StringAttribute{
+				Description: "Remediation of the policy.",
+				Optional:    true,
 			},
 		},
 	}

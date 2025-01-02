@@ -41,6 +41,10 @@ resource "pomerium_settings" "settings" {
 resource "pomerium_policy" "test_policy" {
   name         = "test-policy"
   namespace_id = pomerium_namespace.test_namespace.id
+  description  = "test policy"
+  enforced     = false
+  explanation  = "test policy explanation"
+  remediation  = "test policy remediation"
   ppl          = <<EOF
 - allow:
     and:
