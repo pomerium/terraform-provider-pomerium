@@ -24,7 +24,36 @@ Route for Pomerium.
 
 ### Optional
 
+- `allow_spdy` (Boolean) Allow SPDY.
+- `allow_websockets` (Boolean) Allow websockets.
+- `host_path_regex_rewrite_pattern` (String) Host path regex rewrite pattern.
+- `host_path_regex_rewrite_substitution` (String) Host path regex rewrite substitution.
+- `host_rewrite` (String) Host rewrite.
+- `host_rewrite_header` (String) Host rewrite header.
+- `idle_timeout` (String) Idle timeout.
+- `idp_client_id` (String) IDP client ID.
+- `idp_client_secret` (String) IDP client secret.
+- `kubernetes_service_account_token` (String) Kubernetes service account token.
+- `pass_identity_headers` (Boolean) Pass identity headers.
+- `path` (String) Path.
 - `policies` (List of String) List of policy IDs associated with the route.
+- `prefix` (String) Prefix.
+- `prefix_rewrite` (String) Prefix rewrite.
+- `preserve_host_header` (Boolean) Preserve host header.
+- `regex` (String) Regex.
+- `regex_priority_order` (Number) Regex priority order.
+- `regex_rewrite_pattern` (String) Regex rewrite pattern.
+- `regex_rewrite_substitution` (String) Regex rewrite substitution.
+- `remove_request_headers` (List of String) Remove request headers.
+- `set_request_headers` (Map of String) Set request headers.
+- `set_response_headers` (Map of String) Set response headers.
+- `show_error_details` (Boolean) Show error details.
+- `stat_name` (String) Name of the stat.
+- `timeout` (String) Timeout.
+- `tls_downstream_server_name` (String) TLS downstream server name.
+- `tls_skip_verify` (Boolean) TLS skip verify.
+- `tls_upstream_allow_renegotiation` (Boolean) TLS upstream allow renegotiation.
+- `tls_upstream_server_name` (String) TLS upstream server name.
 
 ### Read-Only
 
