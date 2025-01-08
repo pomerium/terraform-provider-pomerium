@@ -90,7 +90,7 @@ func ToStringSlice(ctx context.Context, dst *[]string, list types.List, diagnost
 }
 
 // ToDuration converts a types.String containing a duration to a durationpb.Duration and handles diagnostics internally
-func ToDuration(dst **durationpb.Duration, src timetypes.GoDuration, field string, diagnostics *diag.Diagnostics) {
+func ToDuration(dst **durationpb.Duration, src timetypes.GoDuration, diagnostics *diag.Diagnostics) {
 	if src.IsNull() {
 		*dst = nil
 		return
