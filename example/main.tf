@@ -36,6 +36,7 @@ resource "pomerium_settings" "settings" {
     api_key = "key"
     url     = "http://localhost"
   }
+  timeout_idle = "5m"
 }
 
 resource "pomerium_policy" "test_policy" {
@@ -74,18 +75,18 @@ data "pomerium_namespace" "existing_namespace" {
   id = pomerium_namespace.test_namespace.id
 }
 
-data "pomerium_route" "existing_route" {
-  id = pomerium_route.test_route.id
-}
+# data "pomerium_route" "existing_route" {
+#   id = pomerium_route.test_route.id
+# }
 
 # Output examples
 output "namespace_name" {
   value = data.pomerium_namespace.existing_namespace.name
 }
 
-output "route_from" {
-  value = data.pomerium_route.existing_route.from
-}
+# output "route_from" {
+#   value = data.pomerium_route.existing_route.from
+# }
 
 output "all_namespaces" {
   value = data.pomerium_namespaces.all_namespaces.namespaces

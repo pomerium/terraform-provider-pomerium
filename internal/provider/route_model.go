@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -11,41 +12,41 @@ import (
 
 // RouteModel represents the shared model for route resources and data sources
 type RouteModel struct {
-	ID                               types.String `tfsdk:"id"`
-	Name                             types.String `tfsdk:"name"`
-	From                             types.String `tfsdk:"from"`
-	To                               types.List   `tfsdk:"to"`
-	NamespaceID                      types.String `tfsdk:"namespace_id"`
-	Policies                         types.List   `tfsdk:"policies"`
-	StatName                         types.String `tfsdk:"stat_name"`
-	Prefix                           types.String `tfsdk:"prefix"`
-	Path                             types.String `tfsdk:"path"`
-	Regex                            types.String `tfsdk:"regex"`
-	PrefixRewrite                    types.String `tfsdk:"prefix_rewrite"`
-	RegexRewritePattern              types.String `tfsdk:"regex_rewrite_pattern"`
-	RegexRewriteSubstitution         types.String `tfsdk:"regex_rewrite_substitution"`
-	HostRewrite                      types.String `tfsdk:"host_rewrite"`
-	HostRewriteHeader                types.String `tfsdk:"host_rewrite_header"`
-	HostPathRegexRewritePattern      types.String `tfsdk:"host_path_regex_rewrite_pattern"`
-	HostPathRegexRewriteSubstitution types.String `tfsdk:"host_path_regex_rewrite_substitution"`
-	RegexPriorityOrder               types.Int64  `tfsdk:"regex_priority_order"`
-	Timeout                          types.String `tfsdk:"timeout"`
-	IdleTimeout                      types.String `tfsdk:"idle_timeout"`
-	AllowWebsockets                  types.Bool   `tfsdk:"allow_websockets"`
-	AllowSPDY                        types.Bool   `tfsdk:"allow_spdy"`
-	TLSSkipVerify                    types.Bool   `tfsdk:"tls_skip_verify"`
-	TLSUpstreamServerName            types.String `tfsdk:"tls_upstream_server_name"`
-	TLSDownstreamServerName          types.String `tfsdk:"tls_downstream_server_name"`
-	TLSUpstreamAllowRenegotiation    types.Bool   `tfsdk:"tls_upstream_allow_renegotiation"`
-	SetRequestHeaders                types.Map    `tfsdk:"set_request_headers"`
-	RemoveRequestHeaders             types.List   `tfsdk:"remove_request_headers"`
-	SetResponseHeaders               types.Map    `tfsdk:"set_response_headers"`
-	PreserveHostHeader               types.Bool   `tfsdk:"preserve_host_header"`
-	PassIdentityHeaders              types.Bool   `tfsdk:"pass_identity_headers"`
-	KubernetesServiceAccountToken    types.String `tfsdk:"kubernetes_service_account_token"`
-	IDPClientID                      types.String `tfsdk:"idp_client_id"`
-	IDPClientSecret                  types.String `tfsdk:"idp_client_secret"`
-	ShowErrorDetails                 types.Bool   `tfsdk:"show_error_details"`
+	ID                               types.String         `tfsdk:"id"`
+	Name                             types.String         `tfsdk:"name"`
+	From                             types.String         `tfsdk:"from"`
+	To                               types.List           `tfsdk:"to"`
+	NamespaceID                      types.String         `tfsdk:"namespace_id"`
+	Policies                         types.List           `tfsdk:"policies"`
+	StatName                         types.String         `tfsdk:"stat_name"`
+	Prefix                           types.String         `tfsdk:"prefix"`
+	Path                             types.String         `tfsdk:"path"`
+	Regex                            types.String         `tfsdk:"regex"`
+	PrefixRewrite                    types.String         `tfsdk:"prefix_rewrite"`
+	RegexRewritePattern              types.String         `tfsdk:"regex_rewrite_pattern"`
+	RegexRewriteSubstitution         types.String         `tfsdk:"regex_rewrite_substitution"`
+	HostRewrite                      types.String         `tfsdk:"host_rewrite"`
+	HostRewriteHeader                types.String         `tfsdk:"host_rewrite_header"`
+	HostPathRegexRewritePattern      types.String         `tfsdk:"host_path_regex_rewrite_pattern"`
+	HostPathRegexRewriteSubstitution types.String         `tfsdk:"host_path_regex_rewrite_substitution"`
+	RegexPriorityOrder               types.Int64          `tfsdk:"regex_priority_order"`
+	Timeout                          timetypes.GoDuration `tfsdk:"timeout"`
+	IdleTimeout                      timetypes.GoDuration `tfsdk:"idle_timeout"`
+	AllowWebsockets                  types.Bool           `tfsdk:"allow_websockets"`
+	AllowSPDY                        types.Bool           `tfsdk:"allow_spdy"`
+	TLSSkipVerify                    types.Bool           `tfsdk:"tls_skip_verify"`
+	TLSUpstreamServerName            types.String         `tfsdk:"tls_upstream_server_name"`
+	TLSDownstreamServerName          types.String         `tfsdk:"tls_downstream_server_name"`
+	TLSUpstreamAllowRenegotiation    types.Bool           `tfsdk:"tls_upstream_allow_renegotiation"`
+	SetRequestHeaders                types.Map            `tfsdk:"set_request_headers"`
+	RemoveRequestHeaders             types.List           `tfsdk:"remove_request_headers"`
+	SetResponseHeaders               types.Map            `tfsdk:"set_response_headers"`
+	PreserveHostHeader               types.Bool           `tfsdk:"preserve_host_header"`
+	PassIdentityHeaders              types.Bool           `tfsdk:"pass_identity_headers"`
+	KubernetesServiceAccountToken    types.String         `tfsdk:"kubernetes_service_account_token"`
+	IDPClientID                      types.String         `tfsdk:"idp_client_id"`
+	IDPClientSecret                  types.String         `tfsdk:"idp_client_secret"`
+	ShowErrorDetails                 types.Bool           `tfsdk:"show_error_details"`
 }
 
 func ConvertRouteToPB(
@@ -134,8 +135,8 @@ func ConvertRouteFromPB(
 	dst.HostPathRegexRewritePattern = types.StringPointerValue(src.HostPathRegexRewritePattern)
 	dst.HostPathRegexRewriteSubstitution = types.StringPointerValue(src.HostPathRegexRewriteSubstitution)
 	dst.RegexPriorityOrder = types.Int64PointerValue(src.RegexPriorityOrder)
-	dst.Timeout = types.StringValue(src.Timeout.String())
-	dst.IdleTimeout = types.StringValue(src.IdleTimeout.String())
+	dst.Timeout = FromDuration(src.Timeout)
+	dst.IdleTimeout = FromDuration(src.IdleTimeout)
 	dst.AllowWebsockets = types.BoolPointerValue(src.AllowWebsockets)
 	dst.AllowSPDY = types.BoolPointerValue(src.AllowSpdy)
 	dst.TLSSkipVerify = types.BoolPointerValue(src.TlsSkipVerify)
