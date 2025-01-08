@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -58,22 +59,22 @@ func TestFromDurationP(t *testing.T) {
 	tests := []struct {
 		name     string
 		input    *durationpb.Duration
-		expected types.String
+		expected timetypes.GoDuration
 	}{
 		{
 			name:     "nil duration",
 			input:    nil,
-			expected: types.StringNull(),
+			expected: timetypes.NewGoDurationNull(),
 		},
 		{
 			name:     "zero duration",
 			input:    durationpb.New(0),
-			expected: types.StringValue("0s"),
+			expected: timetypes.NewGoDurationValueFromStringMust("0s"),
 		},
 		{
 			name:     "normal duration",
 			input:    durationpb.New(time.Hour + time.Minute),
-			expected: types.StringValue("1h1m0s"),
+			expected: timetypes.NewGoDurationValueFromStringMust("1h1m0s"),
 		},
 	}
 
