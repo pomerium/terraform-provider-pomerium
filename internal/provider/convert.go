@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"reflect"
-	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -50,7 +50,6 @@ func FromStringMap(m map[string]string) types.Map {
 
 // ToStringList converts a types.List to Settings_StringList and handles diagnostics internally
 func ToStringList(ctx context.Context, dst **pb.Settings_StringList, list types.List, diagnostics *diag.Diagnostics) {
-	// Handle null list case first
 	if list.IsNull() {
 		*dst = nil
 		return
@@ -89,26 +88,27 @@ func ToStringSlice(ctx context.Context, dst *[]string, list types.List, diagnost
 	}
 }
 
-// ToDuration converts a types.String containing a duration to a durationpb.Duration and handles diagnostics internally
-func ToDuration(dst **durationpb.Duration, src types.String, field string, diagnostics *diag.Diagnostics) {
-	if src.IsNull() {
+// ToDuration converts a timetypes.Duration to durationpb.Duration
+func ToDuration(dst **durationpb.Duration, src timetypes.GoDuration, diagnostics *diag.Diagnostics) {
+	if src.IsNull() || src.IsUnknown() {
 		*dst = nil
 		return
 	}
 
-	if d, err := time.ParseDuration(src.ValueString()); err == nil {
-		*dst = durationpb.New(d)
-	} else {
-		diagnostics.AddError("invalid "+field, err.Error())
+	d, diags := src.ValueGoDuration()
+	diagnostics.Append(diags...)
+	if diagnostics.HasError() {
+		return
 	}
+	*dst = durationpb.New(d)
 }
 
-// FromDuration converts a durationpb.Duration to a types.String
-func FromDuration(d *durationpb.Duration) types.String {
+// FromDuration converts a durationpb.Duration to a timetypes.GoDuration
+func FromDuration(d *durationpb.Duration) timetypes.GoDuration {
 	if d == nil {
-		return types.StringNull()
+		return timetypes.NewGoDurationNull()
 	}
-	return types.StringValue(d.AsDuration().String())
+	return timetypes.NewGoDurationValue(d.AsDuration())
 }
 
 // GoStructToPB converts a Go struct to a protobuf Struct.

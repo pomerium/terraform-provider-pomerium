@@ -3,6 +3,7 @@ package provider
 import (
 	_ "embed"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -71,14 +72,17 @@ var SettingsResourceSchema = schema.Schema{
 		"timeout_read": schema.StringAttribute{
 			Optional:    true,
 			Description: "Timeout read",
+			CustomType:  timetypes.GoDurationType{},
 		},
 		"timeout_write": schema.StringAttribute{
 			Optional:    true,
 			Description: "Timeout write",
+			CustomType:  timetypes.GoDurationType{},
 		},
 		"timeout_idle": schema.StringAttribute{
 			Optional:    true,
 			Description: "Timeout idle",
+			CustomType:  timetypes.GoDurationType{},
 		},
 		"authenticate_service_url": schema.StringAttribute{
 			Optional:    true,
@@ -116,6 +120,7 @@ var SettingsResourceSchema = schema.Schema{
 		"cookie_expire": schema.StringAttribute{
 			Optional:    true,
 			Description: "Cookie expire",
+			CustomType:  timetypes.GoDurationType{},
 		},
 		"idp_client_id": schema.StringAttribute{
 			Optional:    true,
@@ -147,10 +152,12 @@ var SettingsResourceSchema = schema.Schema{
 		"idp_refresh_directory_timeout": schema.StringAttribute{
 			Optional:    true,
 			Description: "IDP refresh directory timeout",
+			CustomType:  timetypes.GoDurationType{},
 		},
 		"idp_refresh_directory_interval": schema.StringAttribute{
 			Optional:    true,
 			Description: "IDP refresh directory interval",
+			CustomType:  timetypes.GoDurationType{},
 		},
 		"request_params": schema.MapAttribute{
 			ElementType: types.StringType,
@@ -186,6 +193,7 @@ var SettingsResourceSchema = schema.Schema{
 		"default_upstream_timeout": schema.StringAttribute{
 			Optional:    true,
 			Description: "Default upstream timeout",
+			CustomType:  timetypes.GoDurationType{},
 		},
 		"metrics_address": schema.StringAttribute{
 			Optional:    true,
@@ -443,10 +451,12 @@ var SettingsResourceSchema = schema.Schema{
 		"identity_provider_refresh_interval": schema.StringAttribute{
 			Optional:    true,
 			Description: "Identity provider refresh interval",
+			CustomType:  timetypes.GoDurationType{},
 		},
 		"identity_provider_refresh_timeout": schema.StringAttribute{
 			Optional:    true,
 			Description: "Identity provider refresh timeout",
+			CustomType:  timetypes.GoDurationType{},
 		},
 		"access_log_fields": schema.ListAttribute{
 			Optional:    true,

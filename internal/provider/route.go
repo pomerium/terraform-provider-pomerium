@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -123,10 +124,12 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"timeout": schema.StringAttribute{
 				Description: "Timeout.",
 				Optional:    true,
+				CustomType:  timetypes.GoDurationType{},
 			},
 			"idle_timeout": schema.StringAttribute{
 				Description: "Idle timeout.",
 				Optional:    true,
+				CustomType:  timetypes.GoDurationType{},
 			},
 			"allow_websockets": schema.BoolAttribute{
 				Description: "Allow websockets.",
