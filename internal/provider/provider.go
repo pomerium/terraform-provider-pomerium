@@ -6,11 +6,14 @@ import (
 	"net"
 	"net/url"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/function"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/provider"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	client "github.com/pomerium/enterprise-client-go"
 )
@@ -52,6 +55,12 @@ func (p *PomeriumProvider) Schema(_ context.Context, _ provider.SchemaRequest, r
 				MarkdownDescription: "Pomerium Enterprise Service Account Token",
 				Optional:            true,
 				Sensitive:           true,
+				Validators: []validator.String{
+					stringvalidator.ExactlyOneOf(path.Expressions{
+						path.MatchRoot("service_account_token"),
+						path.MatchRoot("shared_secret_b64"),
+					}...),
+				},
 			},
 			"shared_secret_b64": schema.StringAttribute{
 				MarkdownDescription: "Pomerium Shared Secret (base64 encoded)",
