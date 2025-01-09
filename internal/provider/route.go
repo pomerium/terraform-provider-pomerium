@@ -74,6 +74,7 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"stat_name": schema.StringAttribute{
 				Description: "Name of the stat.",
 				Optional:    true,
+				Computed:    true,
 			},
 			"prefix": schema.StringAttribute{
 				Description: "Prefix.",
@@ -123,11 +124,13 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Description: "Timeout.",
 				Optional:    true,
 				CustomType:  timetypes.GoDurationType{},
+				Computed:    true,
 			},
 			"idle_timeout": schema.StringAttribute{
 				Description: "Idle timeout.",
 				Optional:    true,
 				CustomType:  timetypes.GoDurationType{},
+				Computed:    true,
 			},
 			"allow_websockets": schema.BoolAttribute{
 				Description: "Allow websockets.",
@@ -191,6 +194,7 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"show_error_details": schema.BoolAttribute{
 				Description: "Show error details.",
 				Optional:    true,
+				Computed:    true,
 			},
 		},
 	}
@@ -237,7 +241,11 @@ func (r *RouteResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	plan.ID = types.StringValue(respRoute.Route.Id)
+	diags = ConvertRouteFromPB(&plan, respRoute.Route)
+	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
+		return
+	}
 
 	tflog.Trace(ctx, "Created a route", map[string]interface{}{
 		"id":   plan.ID.ValueString(),
@@ -286,11 +294,17 @@ func (r *RouteResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	_, err := r.client.RouteService.SetRoute(ctx, &pb.SetRouteRequest{
+	respRoute, err := r.client.RouteService.SetRoute(ctx, &pb.SetRouteRequest{
 		Route: pbRoute,
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("set route", err.Error())
+		return
+	}
+
+	diags = ConvertRouteFromPB(&plan, respRoute.Route)
+	resp.Diagnostics.Append(diags...)
+	if diags.HasError() {
 		return
 	}
 
