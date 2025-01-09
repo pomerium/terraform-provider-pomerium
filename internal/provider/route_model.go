@@ -117,12 +117,7 @@ func ConvertRouteFromPB(
 	}
 	dst.To = types.ListValueMust(types.StringType, toList)
 
-	policiesList := make([]attr.Value, len(src.PolicyIds))
-	for i, v := range src.PolicyIds {
-		policiesList[i] = types.StringValue(v)
-	}
-	dst.Policies = types.ListValueMust(types.StringType, policiesList)
-
+	dst.Policies = FromStringSlice(src.PolicyIds)
 	dst.StatName = types.StringValue(src.StatName)
 	dst.Prefix = types.StringPointerValue(src.Prefix)
 	dst.Path = types.StringPointerValue(src.Path)
