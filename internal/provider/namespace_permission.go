@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 //go:embed help/namespace_permissions.md
@@ -118,6 +120,10 @@ func (r *NamespacePermissionResource) Read(ctx context.Context, req resource.Rea
 		Id: state.ID.ValueString(),
 	})
 	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError("failed to read namespace permission", err.Error())
 		return
 	}

@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -124,13 +126,19 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Description: "Timeout.",
 				Optional:    true,
 				CustomType:  timetypes.GoDurationType{},
+<<<<<<< HEAD
 				Computed:    true,
+=======
+>>>>>>> main
 			},
 			"idle_timeout": schema.StringAttribute{
 				Description: "Idle timeout.",
 				Optional:    true,
 				CustomType:  timetypes.GoDurationType{},
+<<<<<<< HEAD
 				Computed:    true,
+=======
+>>>>>>> main
 			},
 			"allow_websockets": schema.BoolAttribute{
 				Description: "Allow websockets.",
@@ -267,6 +275,10 @@ func (r *RouteResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		Id: state.ID.ValueString(),
 	})
 	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError("get route", err.Error())
 		return
 	}
