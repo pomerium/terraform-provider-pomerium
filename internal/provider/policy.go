@@ -11,6 +11,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
@@ -150,6 +152,10 @@ func (r *PolicyResource) Read(ctx context.Context, req resource.ReadRequest, res
 		Id: state.ID.ValueString(),
 	})
 	if err != nil {
+		if status.Code(err) == codes.NotFound {
+			resp.State.RemoveResource(ctx)
+			return
+		}
 		resp.Diagnostics.AddError("Error reading policy", err.Error())
 		return
 	}
