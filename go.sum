@@ -237,10 +237,6 @@ github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRI
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pomerium/csrf v1.7.0 h1:Qp4t6oyEod3svQtKfJZs589mdUTWKVf7q0PgCKYCshY=
 github.com/pomerium/csrf v1.7.0/go.mod h1:hAPZV47mEj2T9xFs+ysbum4l7SF1IdrryYaY6PdoIqw=
-github.com/pomerium/enterprise-client-go v0.18.1-0.20241202185616-83189ffe78a8 h1:gUf1q1LuvYP5/IK/BQo1CcLfH1PsDm7SkPaMZQnNQGg=
-github.com/pomerium/enterprise-client-go v0.18.1-0.20241202185616-83189ffe78a8/go.mod h1:VdYFbxVuHkC9/CEQBSwAu6k69S5uUkwM7bM708YSZJ8=
-github.com/pomerium/enterprise-client-go v0.18.1-0.20241202185750-aab20a674922 h1:On4g0z92DXMKNFHhOhpaUJpj+gobumEQcBw3KeFbuQ8=
-github.com/pomerium/enterprise-client-go v0.18.1-0.20241202185750-aab20a674922/go.mod h1:+l5FjwKlXDsHahK6JE4anAqx691G6uN/3s5HBcLkPrQ=
 github.com/pomerium/enterprise-client-go v0.18.1-0.20241231202145-17196aa57a93 h1:XBOdbvUcrnFHjpfjRG1oS1g58g7V1IETAaTVjzz/19I=
 github.com/pomerium/enterprise-client-go v0.18.1-0.20241231202145-17196aa57a93/go.mod h1:+l5FjwKlXDsHahK6JE4anAqx691G6uN/3s5HBcLkPrQ=
 github.com/pomerium/pomerium v0.28.0 h1:oNUw623093ybLB+a/W7fZgJXRlZiLlbwXMWXpdMTs3E=
@@ -360,8 +356,8 @@ golang.org/x/net v0.0.0-20210226172049-e18ecbb05110/go.mod h1:m0MpNAwzfU5UDzcl9v
 golang.org/x/net v0.0.0-20220722155237-a158d28d115b/go.mod h1:XRhObCWvk6IyKnWLug+ECip1KBveYUHfp+8e9klMJ9c=
 golang.org/x/net v0.6.0/go.mod h1:2Tu9+aMcznHK/AK1HMvgo6xiTLG5rD5rZLDS+rp2Bjs=
 golang.org/x/net v0.10.0/go.mod h1:0qNGK6F8kojg2nk9dLZ2mShWaEBan6FAoqfSigmmuDg=
-golang.org/x/net v0.31.0 h1:68CPQngjLL0r2AlUKiSxtQFKvzRVbnzLwMUn5SzcLHo=
-golang.org/x/net v0.31.0/go.mod h1:P4fl1q7dY2hnZFxEk4pPSkDHF+QqjitcnDjUQyMM+pM=
+golang.org/x/net v0.33.0 h1:74SYHlV8BIgHIFC/LrYkOGIwL19eTYXQ5wc6TBuO36I=
+golang.org/x/net v0.33.0/go.mod h1:HXLR5J+9DxmrqMwG9qjGCxZ+zKXxBru04zlTvWlWuN4=
 golang.org/x/oauth2 v0.23.0 h1:PbgcYx2W7i4LvjJWEbf0ngHV6qJYr86PkAV3bXdLEbs=
 golang.org/x/oauth2 v0.23.0/go.mod h1:XYTD2NtWslqkgxebSiOHnXEap4TF09sJSc7H1sXbhtI=
 golang.org/x/sync v0.0.0-20190423024810-112230192c58/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
