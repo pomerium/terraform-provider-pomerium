@@ -126,19 +126,13 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Description: "Timeout.",
 				Optional:    true,
 				CustomType:  timetypes.GoDurationType{},
-<<<<<<< HEAD
 				Computed:    true,
-=======
->>>>>>> main
 			},
 			"idle_timeout": schema.StringAttribute{
 				Description: "Idle timeout.",
 				Optional:    true,
 				CustomType:  timetypes.GoDurationType{},
-<<<<<<< HEAD
 				Computed:    true,
-=======
->>>>>>> main
 			},
 			"allow_websockets": schema.BoolAttribute{
 				Description: "Allow websockets.",
