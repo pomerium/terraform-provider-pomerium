@@ -50,7 +50,6 @@ func FromStringMap(m map[string]string) types.Map {
 
 // ToStringList converts a types.List to Settings_StringList and handles diagnostics internally
 func ToStringList(ctx context.Context, dst **pb.Settings_StringList, list types.List, diagnostics *diag.Diagnostics) {
-	// Handle null list case first
 	if list.IsNull() {
 		*dst = nil
 		return
@@ -91,7 +90,7 @@ func ToStringSlice(ctx context.Context, dst *[]string, list types.List, diagnost
 
 // ToDuration converts a types.String containing a duration to a durationpb.Duration and handles diagnostics internally
 func ToDuration(dst **durationpb.Duration, src timetypes.GoDuration, diagnostics *diag.Diagnostics) {
-	if src.IsNull() {
+	if src.IsNull() || src.IsUnknown() {
 		*dst = nil
 		return
 	}

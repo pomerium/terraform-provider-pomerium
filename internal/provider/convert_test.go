@@ -86,6 +86,56 @@ func TestFromDurationP(t *testing.T) {
 	}
 }
 
+func TestToDuration(t *testing.T) {
+	tests := []struct {
+		name        string
+		input       timetypes.GoDuration
+		expected    *durationpb.Duration
+		expectError bool
+	}{
+		{
+			name:     "null duration",
+			input:    timetypes.NewGoDurationNull(),
+			expected: nil,
+		},
+		{
+			name:     "unknown duration",
+			input:    timetypes.NewGoDurationUnknown(),
+			expected: nil,
+		},
+		{
+			name:     "zero duration",
+			input:    timetypes.NewGoDurationValueFromStringMust("0s"),
+			expected: durationpb.New(0),
+		},
+		{
+			name:     "normal duration",
+			input:    timetypes.NewGoDurationValueFromStringMust("1h1m0s"),
+			expected: durationpb.New(time.Hour + time.Minute),
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var result *durationpb.Duration
+			diagnostics := diag.Diagnostics{}
+			provider.ToDuration(&result, tt.input, &diagnostics)
+
+			if tt.expectError {
+				assert.True(t, diagnostics.HasError())
+				return
+			}
+
+			assert.False(t, diagnostics.HasError())
+			if tt.expected == nil {
+				assert.Nil(t, result)
+			} else {
+				assert.Equal(t, tt.expected.AsDuration(), result.AsDuration())
+			}
+		})
+	}
+}
+
 func TestToStringList(t *testing.T) {
 	ctx := context.Background()
 	tests := []struct {
