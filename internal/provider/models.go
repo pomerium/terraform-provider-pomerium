@@ -2,10 +2,12 @@ package provider
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -17,16 +19,19 @@ type ServiceAccountModel struct {
 	Description types.String `tfsdk:"description"`
 	UserID      types.String `tfsdk:"user_id"`
 	ExpiresAt   types.String `tfsdk:"expires_at"`
+	JWT         types.String `tfsdk:"jwt"`
 }
 
 func ConvertServiceAccountToPB(_ context.Context, src *ServiceAccountResourceModel) (*pb.PomeriumServiceAccount, diag.Diagnostics) {
-	var diagnostics diag.Diagnostics
+	var diags diag.Diagnostics
 
-	namespaceID := src.NamespaceID.ValueString()
 	pbServiceAccount := &pb.PomeriumServiceAccount{
-		Id:          src.ID.ValueString(),
-		UserId:      src.Name.ValueString(),
-		NamespaceId: &namespaceID,
+		Id:     src.ID.ValueString(),
+		UserId: src.Name.ValueString(),
+	}
+
+	if src.NamespaceID.ValueString() != "" {
+		pbServiceAccount.NamespaceId = src.NamespaceID.ValueStringPointer()
 	}
 
 	if !src.Description.IsNull() {
@@ -34,14 +39,14 @@ func ConvertServiceAccountToPB(_ context.Context, src *ServiceAccountResourceMod
 		pbServiceAccount.Description = &desc
 	}
 
-	return pbServiceAccount, diagnostics
+	return pbServiceAccount, diags
 }
 
 func ConvertServiceAccountFromPB(dst *ServiceAccountResourceModel, src *pb.PomeriumServiceAccount) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 
 	dst.ID = types.StringValue(src.Id)
-	dst.Name = types.StringValue(src.UserId)
+	dst.Name = types.StringValue(strings.TrimSuffix(src.UserId, "@"+src.GetNamespaceId()+".pomerium"))
 	if src.NamespaceId != nil {
 		dst.NamespaceID = types.StringValue(*src.NamespaceId)
 	} else {

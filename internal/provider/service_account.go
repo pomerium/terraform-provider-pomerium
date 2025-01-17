@@ -50,23 +50,39 @@ func (r *ServiceAccountResource) Schema(_ context.Context, _ resource.SchemaRequ
 			},
 			"name": schema.StringAttribute{
 				Description: "Name of the service account.",
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"namespace_id": schema.StringAttribute{
 				Description: "ID of the namespace the service account belongs to.",
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"description": schema.StringAttribute{
 				Description: "Description of the service account.",
 				Optional:    true,
 			},
 			"user_id": schema.StringAttribute{
-				Computed:    true,
 				Description: "User ID associated with the service account.",
+				Computed:    true,
 			},
 			"expires_at": schema.StringAttribute{
 				Computed:    true,
 				Description: "Timestamp when the service account expires.",
+			},
+			"jwt": schema.StringAttribute{
+				Computed:    true,
+				Sensitive:   true,
+				Description: "The Service Account JWT used for authentication. This is only populated when creating a new key.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 		},
 	}
@@ -111,7 +127,13 @@ func (r *ServiceAccountResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	plan.ID = types.StringValue(respServiceAccount.ServiceAccount.Id)
+	diags = ConvertServiceAccountFromPB(&plan, respServiceAccount.ServiceAccount)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	plan.JWT = types.StringValue(respServiceAccount.JWT)
 
 	tflog.Trace(ctx, "Created a service account", map[string]interface{}{
 		"id":   plan.ID.ValueString(),
