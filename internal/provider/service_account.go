@@ -79,7 +79,7 @@ func (r *ServiceAccountResource) Schema(_ context.Context, _ resource.SchemaRequ
 			"jwt": schema.StringAttribute{
 				Computed:    true,
 				Sensitive:   true,
-				Description: "The Service Account JWT used for authentication. This is only populated when creating a new key.",
+				Description: "The Service Account JWT used for authentication. This is only populated when creating a new service account.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
