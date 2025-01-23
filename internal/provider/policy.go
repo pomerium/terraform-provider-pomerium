@@ -7,7 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
@@ -56,6 +58,8 @@ func (r *PolicyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"description": schema.StringAttribute{
 				Description: "Description of the policy.",
 				Optional:    true,
+				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 			"name": schema.StringAttribute{
 				Description: "Name of the policy.",
@@ -78,14 +82,20 @@ func (r *PolicyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			"enforced": schema.BoolAttribute{
 				Description: "Whether the policy is enforced within the namespace hierarchy.",
 				Optional:    true,
+				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"explanation": schema.StringAttribute{
 				Description: "Explanation of the policy.",
 				Optional:    true,
+				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 			"remediation": schema.StringAttribute{
 				Description: "Remediation of the policy.",
 				Optional:    true,
+				Computed:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 		},
 	}

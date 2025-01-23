@@ -16,7 +16,18 @@ provider "pomerium" {
 
 locals {
   root_namespace_id = "9d8dbd2c-8cce-4e66-9c1f-c490b4a07243"
+
+  any_authenticated_user_ppl = {
+    allow = {
+      and = [
+        {
+          authenticated_user = true
+        }
+      ]
+    }
+  }
 }
+
 # Create resources
 resource "pomerium_namespace" "test_namespace" {
   name      = "test-namespace"
@@ -36,16 +47,20 @@ resource "pomerium_settings" "settings" {
     api_key = "key"
     url     = "http://localhost"
   }
+
+  log_level       = "info"
+  proxy_log_level = "info"
+  # tracing_provider                  = "jaeger"
+  # tracing_sample_rate               = 1
+  # tracing_jaeger_collector_endpoint = "http://localhost:14268/api/traces"
+  # tracing_jaeger_agent_endpoint     = "localhost:6831"
+
   timeout_idle = "5m"
 }
 
 resource "pomerium_policy" "test_policy" {
   name         = "test-policy"
   namespace_id = pomerium_namespace.test_namespace.id
-  description  = "test policy"
-  enforced     = false
-  explanation  = "test policy explanation"
-  remediation  = "test policy remediation"
   ppl          = <<EOF
 - allow:
     and:
