@@ -80,12 +80,6 @@ type SettingsModel struct {
 	TimeoutIdle                                       timetypes.GoDuration `tfsdk:"timeout_idle"`
 	TimeoutRead                                       timetypes.GoDuration `tfsdk:"timeout_read"`
 	TimeoutWrite                                      timetypes.GoDuration `tfsdk:"timeout_write"`
-	TracingDatadogAddress                             types.String         `tfsdk:"tracing_datadog_address"`
-	TracingJaegerAgentEndpoint                        types.String         `tfsdk:"tracing_jaeger_agent_endpoint"`
-	TracingJaegerCollectorEndpoint                    types.String         `tfsdk:"tracing_jaeger_collector_endpoint"`
-	TracingProvider                                   types.String         `tfsdk:"tracing_provider"`
-	TracingSampleRate                                 types.Float64        `tfsdk:"tracing_sample_rate"`
-	TracingZipkinEndpoint                             types.String         `tfsdk:"tracing_zipkin_endpoint"`
 }
 
 func ConvertSettingsToPB(
@@ -157,12 +151,6 @@ func ConvertSettingsToPB(
 	ToDuration(&pbSettings.TimeoutIdle, src.TimeoutIdle, &diagnostics)
 	ToDuration(&pbSettings.TimeoutRead, src.TimeoutRead, &diagnostics)
 	ToDuration(&pbSettings.TimeoutWrite, src.TimeoutWrite, &diagnostics)
-	pbSettings.TracingDatadogAddress = src.TracingDatadogAddress.ValueStringPointer()
-	pbSettings.TracingJaegerAgentEndpoint = src.TracingJaegerAgentEndpoint.ValueStringPointer()
-	pbSettings.TracingJaegerCollectorEndpoint = src.TracingJaegerCollectorEndpoint.ValueStringPointer()
-	pbSettings.TracingProvider = src.TracingProvider.ValueStringPointer()
-	pbSettings.TracingSampleRate = src.TracingSampleRate.ValueFloat64Pointer()
-	pbSettings.TracingZipkinEndpoint = src.TracingZipkinEndpoint.ValueStringPointer()
 
 	return pbSettings, diagnostics
 }
@@ -235,12 +223,6 @@ func ConvertSettingsFromPB(
 	dst.TimeoutIdle = FromDuration(src.TimeoutIdle)
 	dst.TimeoutRead = FromDuration(src.TimeoutRead)
 	dst.TimeoutWrite = FromDuration(src.TimeoutWrite)
-	dst.TracingDatadogAddress = types.StringPointerValue(src.TracingDatadogAddress)
-	dst.TracingJaegerAgentEndpoint = types.StringPointerValue(src.TracingJaegerAgentEndpoint)
-	dst.TracingJaegerCollectorEndpoint = types.StringPointerValue(src.TracingJaegerCollectorEndpoint)
-	dst.TracingProvider = types.StringPointerValue(src.TracingProvider)
-	dst.TracingSampleRate = types.Float64PointerValue(src.TracingSampleRate)
-	dst.TracingZipkinEndpoint = types.StringPointerValue(src.TracingZipkinEndpoint)
 
 	return diagnostics
 }
