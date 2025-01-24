@@ -199,30 +199,6 @@ var SettingsResourceSchema = schema.Schema{
 			Optional:    true,
 			Description: "Metrics address",
 		},
-		"tracing_provider": schema.StringAttribute{
-			Optional:    true,
-			Description: "Tracing provider",
-		},
-		"tracing_sample_rate": schema.Float64Attribute{
-			Optional:    true,
-			Description: "Tracing sample rate",
-		},
-		"tracing_datadog_address": schema.StringAttribute{
-			Optional:    true,
-			Description: "Tracing Datadog address",
-		},
-		"tracing_jaeger_collector_endpoint": schema.StringAttribute{
-			Optional:    true,
-			Description: "Tracing Jaeger collector endpoint",
-		},
-		"tracing_jaeger_agent_endpoint": schema.StringAttribute{
-			Optional:    true,
-			Description: "Tracing Jaeger agent endpoint",
-		},
-		"tracing_zipkin_endpoint": schema.StringAttribute{
-			Optional:    true,
-			Description: "Tracing Zipkin endpoint",
-		},
 		"grpc_address": schema.StringAttribute{
 			Optional:    true,
 			Description: "gRPC address",
