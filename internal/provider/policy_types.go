@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 
 	"github.com/pomerium/pomerium/pkg/policy/parser"
 )
@@ -42,7 +43,14 @@ func (p PolicyLanguageType) Equal(o attr.Type) bool {
 
 func (PolicyLanguageType) Parse(src basetypes.StringValue) (PolicyLanguage, error) {
 	if src.IsNull() {
-		return PolicyLanguage{}, nil
+		return PolicyLanguage{
+			StringValue: basetypes.NewStringNull(),
+		}, nil
+	}
+	if src.IsUnknown() {
+		return PolicyLanguage{
+			StringValue: basetypes.NewStringUnknown(),
+		}, nil
 	}
 
 	ppl, err := parser.New().ParseYAML(strings.NewReader(src.ValueString()))
@@ -61,13 +69,14 @@ func (PolicyLanguageType) Parse(src basetypes.StringValue) (PolicyLanguage, erro
 }
 
 func (PolicyLanguageType) ValueFromString(
-	_ context.Context,
+	ctx context.Context,
 	in basetypes.StringValue,
 ) (basetypes.StringValuable, diag.Diagnostics) {
+	tflog.Info(ctx, "PPL.ValueFromString", map[string]any{"in": in})
 	var diag diag.Diagnostics
 	v, err := PolicyLanguageType{}.Parse(in)
 	if err != nil {
-		diag.AddError("failed to parse PPL", err.Error()+">>"+in.ValueString()+"<<")
+		diag.AddError("failed to parse PPL", err.Error())
 		return nil, diag
 	}
 	return v, nil
@@ -77,6 +86,7 @@ func (p PolicyLanguageType) ValueFromTerraform(
 	ctx context.Context,
 	in tftypes.Value,
 ) (attr.Value, error) {
+	tflog.Info(ctx, "PPL.ValueFromTerraform", map[string]any{"in": in})
 	attrValue, err := p.StringType.ValueFromTerraform(ctx, in)
 	if err != nil {
 		return nil, err

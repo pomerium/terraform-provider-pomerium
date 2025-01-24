@@ -2,7 +2,7 @@ terraform {
   required_providers {
     pomerium = {
       source  = "pomerium/pomerium"
-      version = "0.0.2"
+      version = "0.0.5"
     }
   }
 }
@@ -50,22 +50,30 @@ resource "pomerium_settings" "settings" {
 
   log_level       = "info"
   proxy_log_level = "info"
-  # tracing_provider                  = "jaeger"
-  # tracing_sample_rate               = 1
-  # tracing_jaeger_collector_endpoint = "http://localhost:14268/api/traces"
-  # tracing_jaeger_agent_endpoint     = "localhost:6831"
 
   timeout_idle = "5m"
 }
 
+resource "pomerium_service_account" "test_sa" {
+  namespace_id = pomerium_namespace.test_namespace.id
+  name         = "test-service-account"
+}
+
 resource "pomerium_policy" "test_policy" {
+  depends_on   = [pomerium_service_account.test_sa]
   name         = "test-policy"
   namespace_id = pomerium_namespace.test_namespace.id
-  ppl          = <<EOF
-- allow:
-    and:
-        - authenticated_user: true
-EOF
+  ppl = yamlencode({
+    allow = {
+      and = [
+        {
+          user = {
+            is = pomerium_service_account.test_sa.id
+          }
+        }
+      ]
+    }
+  })
 }
 
 resource "pomerium_route" "test_route" {
