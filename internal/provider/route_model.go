@@ -117,7 +117,7 @@ func ConvertRouteFromPB(
 	}
 	dst.To = types.ListValueMust(types.StringType, toList)
 
-	dst.Policies = FromStringSlice(src.PolicyIds)
+	dst.Policies = FromStringSlice(StringSliceExclude(src.PolicyIds, src.EnforcedPolicyIds))
 	dst.StatName = types.StringValue(src.StatName)
 	dst.Prefix = types.StringPointerValue(src.Prefix)
 	dst.Path = types.StringPointerValue(src.Path)
