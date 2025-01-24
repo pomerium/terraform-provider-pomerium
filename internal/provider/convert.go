@@ -232,3 +232,21 @@ func ToByteSlice(src types.String) []byte {
 	}
 	return []byte(val)
 }
+
+// StringSliceExclude returns a new slice with elements from s1 that are not in s2
+func StringSliceExclude(s1, s2 []string) []string {
+	if len(s1) == 0 || len(s2) == 0 {
+		return s1
+	}
+	m := make(map[string]struct{}, len(s2))
+	for _, v := range s2 {
+		m[v] = struct{}{}
+	}
+	var result []string
+	for _, v := range s1 {
+		if _, ok := m[v]; !ok {
+			result = append(result, v)
+		}
+	}
+	return result
+}
