@@ -35,7 +35,11 @@ func TestPolicyTypes(t *testing.T) {
 		},
 		"null": {
 			in:       tftypes.NewValue(tftypes.String, nil),
-			expected: provider.PolicyLanguage{},
+			expected: provider.PolicyLanguage{StringValue: basetypes.NewStringNull()},
+		},
+		"unknown": {
+			in:       tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
+			expected: provider.PolicyLanguage{StringValue: basetypes.NewStringUnknown()},
 		},
 	}
 	for name, testCase := range testCases {
