@@ -67,7 +67,7 @@ func (PolicyLanguageType) ValueFromString(
 	var diag diag.Diagnostics
 	v, err := PolicyLanguageType{}.Parse(in)
 	if err != nil {
-		diag.AddError("failed to parse PPL", err.Error())
+		diag.AddError("failed to parse PPL", err.Error()+">>"+in.ValueString()+"<<")
 		return nil, diag
 	}
 	return v, nil
