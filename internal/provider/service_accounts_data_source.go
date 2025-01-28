@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
@@ -22,6 +23,7 @@ type ServiceAccountsDataSource struct {
 }
 
 type ServiceAccountsDataSourceModel struct {
+	Namespace       types.String          `tfsdk:"namespace"`
 	ServiceAccounts []ServiceAccountModel `tfsdk:"service_accounts"`
 }
 
@@ -32,8 +34,11 @@ func (d *ServiceAccountsDataSource) Metadata(_ context.Context, req datasource.M
 func (d *ServiceAccountsDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "List all service accounts",
-
 		Attributes: map[string]schema.Attribute{
+			"namespace": schema.StringAttribute{
+				Optional:    true,
+				Description: "Namespace of the service accounts.",
+			},
 			"service_accounts": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
@@ -86,10 +91,18 @@ func (d *ServiceAccountsDataSource) Configure(_ context.Context, req datasource.
 	d.client = client
 }
 
-func (d *ServiceAccountsDataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *ServiceAccountsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data ServiceAccountsDataSourceModel
 
-	serviceAccountsResp, err := d.client.PomeriumServiceAccountService.ListPomeriumServiceAccounts(ctx, &pb.ListPomeriumServiceAccountsRequest{})
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	listReq := &pb.ListPomeriumServiceAccountsRequest{
+		Namespace: data.Namespace.ValueString(),
+	}
+	serviceAccountsResp, err := d.client.PomeriumServiceAccountService.ListPomeriumServiceAccounts(ctx, listReq)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading service accounts", err.Error())
 		return
