@@ -80,6 +80,7 @@ type SettingsModel struct {
 	TimeoutIdle                                       timetypes.GoDuration `tfsdk:"timeout_idle"`
 	TimeoutRead                                       timetypes.GoDuration `tfsdk:"timeout_read"`
 	TimeoutWrite                                      timetypes.GoDuration `tfsdk:"timeout_write"`
+	JWTGroupsFilter                                   types.Object         `tfsdk:"jwt_groups_filter"`
 }
 
 func ConvertSettingsToPB(
@@ -151,6 +152,7 @@ func ConvertSettingsToPB(
 	ToDuration(&pbSettings.TimeoutIdle, src.TimeoutIdle, &diagnostics)
 	ToDuration(&pbSettings.TimeoutRead, src.TimeoutRead, &diagnostics)
 	ToDuration(&pbSettings.TimeoutWrite, src.TimeoutWrite, &diagnostics)
+	JWTGroupsFilterToPB(ctx, &pbSettings.JwtGroupsFilter, src.JWTGroupsFilter, &diagnostics)
 
 	return pbSettings, diagnostics
 }
@@ -223,6 +225,7 @@ func ConvertSettingsFromPB(
 	dst.TimeoutIdle = FromDuration(src.TimeoutIdle)
 	dst.TimeoutRead = FromDuration(src.TimeoutRead)
 	dst.TimeoutWrite = FromDuration(src.TimeoutWrite)
+	JWTGroupsFilterFromPB(&dst.JWTGroupsFilter, src.JwtGroupsFilter, &diagnostics)
 
 	return diagnostics
 }

@@ -2,7 +2,7 @@ terraform {
   required_providers {
     pomerium = {
       source  = "pomerium/pomerium"
-      version = "0.0.5"
+      version = "0.0.7"
     }
   }
 }
@@ -52,6 +52,10 @@ resource "pomerium_settings" "settings" {
   proxy_log_level = "info"
 
   timeout_idle = "5m"
+
+  jwt_groups_filter = {
+    groups = ["id1", "id2"]
+  }
 }
 
 resource "pomerium_service_account" "test_sa" {
@@ -82,6 +86,9 @@ resource "pomerium_route" "test_route" {
   from         = "https://verify-tf.localhost.pomerium.io"
   to           = ["https://verify.pomerium.com"]
   policies     = [pomerium_policy.test_policy.id]
+  jwt_groups_filter = {
+    infer_from_ppl = true
+  }
 }
 
 resource "pomerium_key_pair" "test_key_pair" {

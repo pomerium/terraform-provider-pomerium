@@ -198,6 +198,7 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Optional:    true,
 				Computed:    true,
 			},
+			"jwt_groups_filter": jwtGroupsFilterSchema,
 		},
 	}
 }

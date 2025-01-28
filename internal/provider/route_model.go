@@ -47,6 +47,7 @@ type RouteModel struct {
 	IDPClientID                      types.String         `tfsdk:"idp_client_id"`
 	IDPClientSecret                  types.String         `tfsdk:"idp_client_secret"`
 	ShowErrorDetails                 types.Bool           `tfsdk:"show_error_details"`
+	JWTGroupsFilter                  types.Object         `tfsdk:"jwt_groups_filter"`
 }
 
 func ConvertRouteToPB(
@@ -89,6 +90,7 @@ func ConvertRouteToPB(
 	pbRoute.IdpClientId = src.IDPClientID.ValueStringPointer()
 	pbRoute.IdpClientSecret = src.IDPClientSecret.ValueStringPointer()
 	pbRoute.ShowErrorDetails = src.ShowErrorDetails.ValueBool()
+	JWTGroupsFilterToPB(ctx, &pbRoute.JwtGroupsFilter, src.JWTGroupsFilter, &diagnostics)
 
 	diags := src.To.ElementsAs(ctx, &pbRoute.To, false)
 	diagnostics.Append(diags...)
@@ -147,6 +149,7 @@ func ConvertRouteFromPB(
 	dst.IDPClientID = types.StringPointerValue(src.IdpClientId)
 	dst.IDPClientSecret = types.StringPointerValue(src.IdpClientSecret)
 	dst.ShowErrorDetails = types.BoolValue(src.ShowErrorDetails)
+	JWTGroupsFilterFromPB(&dst.JWTGroupsFilter, src.JwtGroupsFilter, &diagnostics)
 
 	return diagnostics
 }
