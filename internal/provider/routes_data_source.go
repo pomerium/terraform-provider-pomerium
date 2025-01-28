@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	client "github.com/pomerium/enterprise-client-go"
@@ -23,7 +25,13 @@ type RoutesDataSource struct {
 }
 
 type RoutesDataSourceModel struct {
-	Routes []RouteModel `tfsdk:"routes"`
+	Namespace  types.String `tfsdk:"namespace"`
+	Query      types.String `tfsdk:"query"`
+	Offset     types.Int64  `tfsdk:"offset"`
+	Limit      types.Int64  `tfsdk:"limit"`
+	OrderBy    types.String `tfsdk:"order_by"`
+	Routes     []RouteModel `tfsdk:"routes"`
+	TotalCount types.Int64  `tfsdk:"total_count"`
 }
 
 func (d *RoutesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -33,40 +41,39 @@ func (d *RoutesDataSource) Metadata(_ context.Context, req datasource.MetadataRe
 func (d *RoutesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, resp *datasource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "List all routes",
-
 		Attributes: map[string]schema.Attribute{
+			"namespace": schema.StringAttribute{
+				Optional:    true,
+				Description: "Namespace to list routes in.",
+			},
+			"query": schema.StringAttribute{
+				Optional:    true,
+				Description: "Query for routes.",
+			},
+			"offset": schema.Int64Attribute{
+				Optional:    true,
+				Description: "List offset.",
+			},
+			"limit": schema.Int64Attribute{
+				Optional:    true,
+				Description: "List limit.",
+			},
+			"order_by": schema.StringAttribute{
+				Optional:    true,
+				Description: "List order by.",
+				Validators: []validator.String{
+					stringvalidator.OneOf("newest", "oldest", "name", "from"),
+				},
+			},
 			"routes": schema.ListNestedAttribute{
 				Computed: true,
 				NestedObject: schema.NestedAttributeObject{
-					Attributes: map[string]schema.Attribute{
-						"id": schema.StringAttribute{
-							Computed:    true,
-							Description: "Unique identifier for the route.",
-						},
-						"name": schema.StringAttribute{
-							Computed:    true,
-							Description: "Name of the route.",
-						},
-						"from": schema.StringAttribute{
-							Computed:    true,
-							Description: "From URL.",
-						},
-						"to": schema.ListAttribute{
-							Computed:    true,
-							ElementType: types.StringType,
-							Description: "To URLs.",
-						},
-						"namespace_id": schema.StringAttribute{
-							Computed:    true,
-							Description: "ID of the namespace the route belongs to.",
-						},
-						"policies": schema.ListAttribute{
-							Computed:    true,
-							ElementType: types.StringType,
-							Description: "List of policy IDs associated with the route.",
-						},
-					},
+					Attributes: getRouteDataSourceAttributes(false),
 				},
+			},
+			"total_count": schema.Int64Attribute{
+				Optional:    true,
+				Description: "Total number of routes.",
 			},
 		},
 	}
@@ -89,10 +96,22 @@ func (d *RoutesDataSource) Configure(_ context.Context, req datasource.Configure
 	d.client = client
 }
 
-func (d *RoutesDataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *RoutesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data RoutesDataSourceModel
 
-	routesResp, err := d.client.RouteService.ListRoutes(ctx, &pb.ListRoutesRequest{})
+	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	listReq := &pb.ListRoutesRequest{
+		Namespace: data.Namespace.ValueString(),
+		Query:     data.Query.ValueStringPointer(),
+		Offset:    data.Offset.ValueInt64Pointer(),
+		Limit:     data.Limit.ValueInt64Pointer(),
+		OrderBy:   data.OrderBy.ValueStringPointer(),
+	}
+	routesResp, err := d.client.RouteService.ListRoutes(ctx, listReq)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading routes", err.Error())
 		return
@@ -110,5 +129,6 @@ func (d *RoutesDataSource) Read(ctx context.Context, _ datasource.ReadRequest, r
 	}
 
 	data.Routes = routes
+	data.TotalCount = types.Int64Value(routesResp.GetTotalCount())
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
