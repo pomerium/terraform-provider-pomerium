@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
@@ -33,6 +34,10 @@ func (d *PolicyDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 				Required:    true,
 				Description: "Unique identifier for the policy.",
 			},
+			"description": schema.StringAttribute{
+				Computed:    true,
+				Description: "Description of the policy.",
+			},
 			"name": schema.StringAttribute{
 				Computed:    true,
 				Description: "Name of the policy.",
@@ -44,6 +49,24 @@ func (d *PolicyDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 			"ppl": schema.StringAttribute{
 				Computed:    true,
 				Description: "Policy Policy Language (PPL) string.",
+				CustomType:  PolicyLanguageType{},
+			},
+			"rego": schema.ListAttribute{
+				Computed:    true,
+				Description: "Rego policies.",
+				ElementType: types.StringType,
+			},
+			"enforced": schema.BoolAttribute{
+				Computed:    true,
+				Description: "Whether the policy is enforced within the namespace hierarchy.",
+			},
+			"explanation": schema.StringAttribute{
+				Computed:    true,
+				Description: "Explanation of the policy.",
+			},
+			"remediation": schema.StringAttribute{
+				Computed:    true,
+				Description: "Remediation of the policy.",
 			},
 		},
 	}
@@ -82,11 +105,13 @@ func (d *PolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	diags := ConvertPolicyFromPB(&data, policyResp.Policy)
+	var out PolicyModel
+
+	diags := ConvertPolicyFromPB(&out, policyResp.Policy)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &out)...)
 }
