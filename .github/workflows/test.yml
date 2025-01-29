@@ -23,7 +23,7 @@ jobs:
         run: go mod download
       
       - name: Run tests
-        run: go test -v -cover ./internal/provider/...
+        run: make test
       
       - name: Run acceptance tests
         run: |

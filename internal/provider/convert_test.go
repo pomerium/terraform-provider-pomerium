@@ -49,7 +49,7 @@ func TestFromStringSlice(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := provider.FromStringSlice(tt.input)
+			result := provider.FromStringSliceToList(tt.input)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
@@ -136,24 +136,24 @@ func TestToDuration(t *testing.T) {
 	}
 }
 
-func TestToStringList(t *testing.T) {
+func TestToStringListFromSet(t *testing.T) {
 	ctx := context.Background()
 	tests := []struct {
 		name        string
-		input       types.List
+		input       types.Set
 		expectError bool
 		validate    func(*testing.T, *pb.Settings_StringList)
 	}{
 		{
 			name:  "null list",
-			input: types.ListNull(types.StringType),
+			input: types.SetNull(types.StringType),
 			validate: func(t *testing.T, s *pb.Settings_StringList) {
 				assert.Nil(t, s)
 			},
 		},
 		{
 			name:  "empty list",
-			input: types.ListValueMust(types.StringType, []attr.Value{}),
+			input: types.SetValueMust(types.StringType, []attr.Value{}),
 			validate: func(t *testing.T, s *pb.Settings_StringList) {
 				require.NotNil(t, s)
 				assert.Empty(t, s.Values)
@@ -161,7 +161,7 @@ func TestToStringList(t *testing.T) {
 		},
 		{
 			name: "valid list",
-			input: types.ListValueMust(types.StringType, []attr.Value{
+			input: types.SetValueMust(types.StringType, []attr.Value{
 				types.StringValue("value1"),
 				types.StringValue("value2"),
 			}),
@@ -176,7 +176,7 @@ func TestToStringList(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			var result *pb.Settings_StringList
 			diagnostics := diag.Diagnostics{}
-			provider.ToStringList(ctx, &result, tt.input, &diagnostics)
+			provider.ToStringListFromSet(ctx, &result, tt.input, &diagnostics)
 
 			if tt.expectError {
 				assert.True(t, diagnostics.HasError())

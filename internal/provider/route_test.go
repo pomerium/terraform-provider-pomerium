@@ -37,7 +37,7 @@ func TestConvertRoute(t *testing.T) {
 		// Test conversion from model to pb
 		plan := provider.RouteResourceModel{
 			From: types.StringValue("from"),
-			To:   types.ListValueMust(types.StringType, []attr.Value{types.StringValue("to")}),
+			To:   types.SetValueMust(types.StringType, []attr.Value{types.StringValue("to")}),
 			Name: types.StringValue("route-name"),
 			ID:   types.StringValue("route-id"),
 		}

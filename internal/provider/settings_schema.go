@@ -139,7 +139,7 @@ var SettingsResourceSchema = schema.Schema{
 			Optional:    true,
 			Description: "IDP provider URL",
 		},
-		"scopes": schema.ListAttribute{
+		"scopes": schema.SetAttribute{
 			Optional:    true,
 			ElementType: types.StringType,
 			Description: "Scopes",
@@ -434,12 +434,12 @@ var SettingsResourceSchema = schema.Schema{
 			Description: "Identity provider refresh timeout",
 			CustomType:  timetypes.GoDurationType{},
 		},
-		"access_log_fields": schema.ListAttribute{
+		"access_log_fields": schema.SetAttribute{
 			Optional:    true,
 			ElementType: types.StringType,
 			Description: "Access log fields",
 		},
-		"authorize_log_fields": schema.ListAttribute{
+		"authorize_log_fields": schema.SetAttribute{
 			Optional:    true,
 			ElementType: types.StringType,
 			Description: "Authorize log fields",
