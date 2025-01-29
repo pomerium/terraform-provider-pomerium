@@ -21,7 +21,7 @@ var (
 				Optional:    true,
 				Computed:    false,
 				Sensitive:   false,
-				Description: "Group IDs to filter",
+				Description: "Group IDs to include",
 			},
 			"infer_from_ppl": schema.BoolAttribute{
 				Optional: true,
