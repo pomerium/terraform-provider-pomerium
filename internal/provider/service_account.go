@@ -31,7 +31,10 @@ type ServiceAccountResource struct {
 	client *client.Client
 }
 
-type ServiceAccountResourceModel = ServiceAccountModel
+type ServiceAccountResourceModel struct {
+	ServiceAccountModel
+	JWT types.String `tfsdk:"jwt"`
+}
 
 func (r *ServiceAccountResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = req.ProviderTypeName + "_service_account"
@@ -127,7 +130,7 @@ func (r *ServiceAccountResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	diags = ConvertServiceAccountFromPB(&plan, respServiceAccount.ServiceAccount)
+	diags = ConvertServiceAccountFromPB(&plan.ServiceAccountModel, respServiceAccount.ServiceAccount)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -163,7 +166,7 @@ func (r *ServiceAccountResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	diags := ConvertServiceAccountFromPB(&state, respServiceAccount.ServiceAccount)
+	diags := ConvertServiceAccountFromPB(&state.ServiceAccountModel, respServiceAccount.ServiceAccount)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return

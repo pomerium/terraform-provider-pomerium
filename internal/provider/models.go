@@ -19,7 +19,6 @@ type ServiceAccountModel struct {
 	Description types.String `tfsdk:"description"`
 	UserID      types.String `tfsdk:"user_id"`
 	ExpiresAt   types.String `tfsdk:"expires_at"`
-	JWT         types.String `tfsdk:"jwt"`
 }
 
 func ConvertServiceAccountToPB(_ context.Context, src *ServiceAccountResourceModel) (*pb.PomeriumServiceAccount, diag.Diagnostics) {
@@ -42,7 +41,7 @@ func ConvertServiceAccountToPB(_ context.Context, src *ServiceAccountResourceMod
 	return pbServiceAccount, diags
 }
 
-func ConvertServiceAccountFromPB(dst *ServiceAccountResourceModel, src *pb.PomeriumServiceAccount) diag.Diagnostics {
+func ConvertServiceAccountFromPB(dst *ServiceAccountModel, src *pb.PomeriumServiceAccount) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 
 	dst.ID = types.StringValue(src.Id)
