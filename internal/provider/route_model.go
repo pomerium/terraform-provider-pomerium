@@ -149,7 +149,7 @@ func ConvertRouteFromPB(
 	dst.IDPClientID = types.StringPointerValue(src.IdpClientId)
 	dst.IDPClientSecret = types.StringPointerValue(src.IdpClientSecret)
 	dst.ShowErrorDetails = types.BoolValue(src.ShowErrorDetails)
-	JWTGroupsFilterFromPB(&dst.JWTGroupsFilter, src.JwtGroupsFilter, &diagnostics)
+	JWTGroupsFilterFromPB(&dst.JWTGroupsFilter, src.JwtGroupsFilter)
 
 	return diagnostics
 }

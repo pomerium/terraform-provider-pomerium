@@ -39,7 +39,6 @@ var (
 func JWTGroupsFilterFromPB(
 	dst *types.Object,
 	src *pb.JwtGroupsFilter,
-	diags *diag.Diagnostics,
 ) {
 	if src == nil {
 		*dst = types.ObjectNull(jwtGroupsFilterSchemaAttr)
@@ -69,7 +68,7 @@ func JWTGroupsFilterToPB(
 	diags *diag.Diagnostics,
 ) {
 	if src.IsNull() {
-		dst = nil
+		*dst = nil
 		return
 	}
 

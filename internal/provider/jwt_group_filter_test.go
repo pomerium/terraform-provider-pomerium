@@ -53,10 +53,8 @@ func TestJWTGroupsFilterFromPB(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var diags diag.Diagnostics
 			var result types.Object
-			JWTGroupsFilterFromPB(&result, tc.input, &diags)
-			assert.False(t, diags.HasError())
+			JWTGroupsFilterFromPB(&result, tc.input)
 			diff := cmp.Diff(tc.expected, result)
 			assert.Empty(t, diff)
 		})

@@ -225,7 +225,7 @@ func ConvertSettingsFromPB(
 	dst.TimeoutIdle = FromDuration(src.TimeoutIdle)
 	dst.TimeoutRead = FromDuration(src.TimeoutRead)
 	dst.TimeoutWrite = FromDuration(src.TimeoutWrite)
-	JWTGroupsFilterFromPB(&dst.JWTGroupsFilter, src.JwtGroupsFilter, &diagnostics)
+	JWTGroupsFilterFromPB(&dst.JWTGroupsFilter, src.JwtGroupsFilter)
 
 	return diagnostics
 }
