@@ -25,13 +25,13 @@ type PoliciesDataSource struct {
 }
 
 type PoliciesDataSourceModel struct {
-	Namespace  types.String  `tfsdk:"namespace"`
-	Query      types.String  `tfsdk:"query"`
-	Offset     types.Int64   `tfsdk:"offset"`
-	Limit      types.Int64   `tfsdk:"limit"`
-	OrderBy    types.String  `tfsdk:"order_by"`
-	Policies   []PolicyModel `tfsdk:"policies"`
-	TotalCount types.Int64   `tfsdk:"total_count"`
+	NamespaceID types.String  `tfsdk:"namespace_id"`
+	Query       types.String  `tfsdk:"query"`
+	Offset      types.Int64   `tfsdk:"offset"`
+	Limit       types.Int64   `tfsdk:"limit"`
+	OrderBy     types.String  `tfsdk:"order_by"`
+	Policies    []PolicyModel `tfsdk:"policies"`
+	TotalCount  types.Int64   `tfsdk:"total_count"`
 }
 
 func (d *PoliciesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -43,7 +43,7 @@ func (d *PoliciesDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 		MarkdownDescription: "List all policies",
 
 		Attributes: map[string]schema.Attribute{
-			"namespace": schema.StringAttribute{
+			"namespace_id": schema.StringAttribute{
 				Optional:    true,
 				Description: "Namespace to list policies in.",
 			},
@@ -145,7 +145,7 @@ func (d *PoliciesDataSource) Read(ctx context.Context, req datasource.ReadReques
 	}
 
 	listReq := &pb.ListPoliciesRequest{
-		Namespace: data.Namespace.ValueString(),
+		Namespace: data.NamespaceID.ValueString(),
 		Query:     data.Query.ValueStringPointer(),
 		Offset:    data.Offset.ValueInt64Pointer(),
 		Limit:     data.Limit.ValueInt64Pointer(),
