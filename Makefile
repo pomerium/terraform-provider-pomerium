@@ -12,4 +12,10 @@ build:
 
 .PHONY: docs
 docs:
+	@echo "@==> $@"
 	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest generate --provider-dir . -provider-name pomerium
+
+.PHONY: test
+test:
+	@echo "@==> $@"
+	@go test ./internal/provider/...

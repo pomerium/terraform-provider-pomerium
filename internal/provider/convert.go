@@ -17,7 +17,18 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 )
 
-func FromStringSlice(slice []string) types.List {
+func FromStringSliceToSet(slice []string) types.Set {
+	if slice == nil {
+		return types.SetNull(types.StringType)
+	}
+	fields := make([]attr.Value, 0)
+	for _, v := range slice {
+		fields = append(fields, types.StringValue(v))
+	}
+	return types.SetValueMust(types.StringType, fields)
+}
+
+func FromStringSliceToList(slice []string) types.List {
 	if slice == nil {
 		return types.ListNull(types.StringType)
 	}
@@ -28,12 +39,12 @@ func FromStringSlice(slice []string) types.List {
 	return types.ListValueMust(types.StringType, fields)
 }
 
-// FromStringList converts a Settings_StringList to a types.List
-func FromStringList(sl *pb.Settings_StringList) types.List {
+// FromStringListToSet converts a Settings_StringList to a types.List
+func FromStringListToSet(sl *pb.Settings_StringList) types.Set {
 	if sl == nil {
-		return types.ListNull(types.StringType)
+		return types.SetNull(types.StringType)
 	}
-	return FromStringSlice(sl.Values)
+	return FromStringSliceToSet(sl.Values)
 }
 
 // FromStringMap converts a map[string]string to a types.Map
@@ -49,14 +60,14 @@ func FromStringMap(m map[string]string) types.Map {
 }
 
 // ToStringList converts a types.List to Settings_StringList and handles diagnostics internally
-func ToStringList(ctx context.Context, dst **pb.Settings_StringList, list types.List, diagnostics *diag.Diagnostics) {
-	if list.IsNull() {
+func ToStringListFromSet(ctx context.Context, dst **pb.Settings_StringList, set types.Set, diagnostics *diag.Diagnostics) {
+	if set.IsNull() {
 		*dst = nil
 		return
 	}
 
 	var values []string
-	diagnostics.Append(list.ElementsAs(ctx, &values, false)...)
+	diagnostics.Append(set.ElementsAs(ctx, &values, false)...)
 	if !diagnostics.HasError() {
 		*dst = &pb.Settings_StringList{Values: values}
 	}
@@ -76,8 +87,19 @@ func ToStringMap(ctx context.Context, dst *map[string]string, m types.Map, diagn
 	}
 }
 
-// ToStringSlice converts a types.List to string slice and handles diagnostics internally
-func ToStringSlice(ctx context.Context, dst *[]string, list types.List, diagnostics *diag.Diagnostics) {
+func ToStringSliceFromSet(ctx context.Context, dst *[]string, set types.Set, diagnostics *diag.Diagnostics) {
+	*dst = make([]string, 0)
+	if !set.IsNull() {
+		var values []string
+		diagnostics.Append(set.ElementsAs(ctx, &values, false)...)
+		if !diagnostics.HasError() {
+			*dst = values
+		}
+	}
+}
+
+// ToStringSliceFromList converts a types.List to string slice and handles diagnostics internally
+func ToStringSliceFromList(ctx context.Context, dst *[]string, list types.List, diagnostics *diag.Diagnostics) {
 	*dst = make([]string, 0)
 	if !list.IsNull() {
 		var values []string

@@ -49,7 +49,7 @@ func ConvertPolicyFromPB(dst *PolicyResourceModel, src *pb.Policy) diag.Diagnost
 	dst.Enforced = types.BoolValue(src.Enforced)
 	dst.Explanation = types.StringValue(src.Explanation)
 	dst.Remediation = types.StringValue(src.Remediation)
-	dst.Rego = FromStringSlice(src.Rego)
+	dst.Rego = FromStringSliceToList(src.Rego)
 	ppl, err := PolicyLanguageType{}.Parse(types.StringValue(src.Ppl))
 	if err != nil {
 		diagnostics.AddError("converting PPL", err.Error())
