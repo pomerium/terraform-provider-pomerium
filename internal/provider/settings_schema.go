@@ -190,6 +190,7 @@ var SettingsResourceSchema = schema.Schema{
 			Optional:    true,
 			Description: "JWT claims headers mapping",
 		},
+		"jwt_groups_filter": JWTGroupsFilterSchema,
 		"default_upstream_timeout": schema.StringAttribute{
 			Optional:    true,
 			Description: "Default upstream timeout",
