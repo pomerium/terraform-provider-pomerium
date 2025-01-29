@@ -23,7 +23,7 @@ type ServiceAccountsDataSource struct {
 }
 
 type ServiceAccountsDataSourceModel struct {
-	Namespace       types.String          `tfsdk:"namespace"`
+	NamespaceID     types.String          `tfsdk:"namespace_id"`
 	ServiceAccounts []ServiceAccountModel `tfsdk:"service_accounts"`
 }
 
@@ -35,7 +35,7 @@ func (d *ServiceAccountsDataSource) Schema(_ context.Context, _ datasource.Schem
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "List all service accounts",
 		Attributes: map[string]schema.Attribute{
-			"namespace": schema.StringAttribute{
+			"namespace_id": schema.StringAttribute{
 				Optional:    true,
 				Description: "Namespace of the service accounts.",
 			},
@@ -100,7 +100,7 @@ func (d *ServiceAccountsDataSource) Read(ctx context.Context, req datasource.Rea
 	}
 
 	listReq := &pb.ListPomeriumServiceAccountsRequest{
-		Namespace: data.Namespace.ValueString(),
+		Namespace: data.NamespaceID.ValueString(),
 	}
 	serviceAccountsResp, err := d.client.PomeriumServiceAccountService.ListPomeriumServiceAccounts(ctx, listReq)
 	if err != nil {
