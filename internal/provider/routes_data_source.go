@@ -25,13 +25,13 @@ type RoutesDataSource struct {
 }
 
 type RoutesDataSourceModel struct {
-	Namespace  types.String `tfsdk:"namespace"`
-	Query      types.String `tfsdk:"query"`
-	Offset     types.Int64  `tfsdk:"offset"`
-	Limit      types.Int64  `tfsdk:"limit"`
-	OrderBy    types.String `tfsdk:"order_by"`
-	Routes     []RouteModel `tfsdk:"routes"`
-	TotalCount types.Int64  `tfsdk:"total_count"`
+	NamespaceID types.String `tfsdk:"namespace_id"`
+	Query       types.String `tfsdk:"query"`
+	Offset      types.Int64  `tfsdk:"offset"`
+	Limit       types.Int64  `tfsdk:"limit"`
+	OrderBy     types.String `tfsdk:"order_by"`
+	Routes      []RouteModel `tfsdk:"routes"`
+	TotalCount  types.Int64  `tfsdk:"total_count"`
 }
 
 func (d *RoutesDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -42,7 +42,7 @@ func (d *RoutesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "List all routes",
 		Attributes: map[string]schema.Attribute{
-			"namespace": schema.StringAttribute{
+			"namespace_id": schema.StringAttribute{
 				Optional:    true,
 				Description: "Namespace to list routes in.",
 			},
@@ -105,7 +105,7 @@ func (d *RoutesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 	}
 
 	listReq := &pb.ListRoutesRequest{
-		Namespace: data.Namespace.ValueString(),
+		Namespace: data.NamespaceID.ValueString(),
 		Query:     data.Query.ValueStringPointer(),
 		Offset:    data.Offset.ValueInt64Pointer(),
 		Limit:     data.Limit.ValueInt64Pointer(),
