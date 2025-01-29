@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	jwtGroupsFilterSchema = schema.SingleNestedAttribute{
+	JWTGroupsFilterSchema = schema.SingleNestedAttribute{
 		Optional:    true,
 		Description: "JWT Groups Filter",
 		Attributes: map[string]schema.Attribute{
@@ -28,7 +28,7 @@ var (
 			},
 		},
 	}
-	jwtGroupsFilterSchemaAttr = map[string]attr.Type{
+	JWTGroupsFilterSchemaAttr = map[string]attr.Type{
 		"groups": types.SetType{
 			ElemType: types.StringType,
 		},
@@ -41,7 +41,7 @@ func JWTGroupsFilterFromPB(
 	src *pb.JwtGroupsFilter,
 ) {
 	if src == nil {
-		*dst = types.ObjectNull(jwtGroupsFilterSchemaAttr)
+		*dst = types.ObjectNull(JWTGroupsFilterSchemaAttr)
 		return
 	}
 
@@ -56,9 +56,9 @@ func JWTGroupsFilterFromPB(
 		attrs["groups"] = types.SetValueMust(types.StringType, vals)
 	}
 
-	attrs["infer_from_ppl"] = types.BoolValue(src.InferFromPpl)
+	attrs["infer_from_ppl"] = types.BoolPointerValue(src.InferFromPpl)
 
-	*dst = types.ObjectValueMust(jwtGroupsFilterSchemaAttr, attrs)
+	*dst = types.ObjectValueMust(JWTGroupsFilterSchemaAttr, attrs)
 }
 
 func JWTGroupsFilterToPB(
@@ -74,7 +74,7 @@ func JWTGroupsFilterToPB(
 
 	type jwtOptions struct {
 		Groups       []string `tfsdk:"groups"`
-		InferFromPpl bool     `tfsdk:"infer_from_ppl"`
+		InferFromPpl *bool    `tfsdk:"infer_from_ppl"`
 	}
 	var opts jwtOptions
 	d := src.As(ctx, &opts, basetypes.ObjectAsOptions{

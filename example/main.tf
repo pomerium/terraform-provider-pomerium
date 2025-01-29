@@ -105,6 +105,7 @@ resource "pomerium_route" "test_route" {
     pomerium_policy.test_policy.id,
   ]
   jwt_groups_filter = {
+    groups         = ["group1", "group2"]
     infer_from_ppl = true
   }
 }
