@@ -80,12 +80,30 @@ resource "pomerium_policy" "test_policy" {
   })
 }
 
+resource "pomerium_policy" "test_policy_group" {
+  name         = "group test policy"
+  namespace_id = pomerium_namespace.test_namespace.id
+  ppl = yamlencode({
+    allow = {
+      and = [
+        {
+          groups = {
+            has = "gid-123456"
+          }
+        }
+      ]
+    }
+  })
+}
 resource "pomerium_route" "test_route" {
   name         = "test-route"
   namespace_id = pomerium_namespace.test_namespace.id
   from         = "https://verify-tf.localhost.pomerium.io"
   to           = ["https://verify.pomerium.com"]
-  policies     = [pomerium_policy.test_policy.id]
+  policies = [
+    pomerium_policy.test_policy_group.id,
+    pomerium_policy.test_policy.id,
+  ]
   jwt_groups_filter = {
     infer_from_ppl = true
   }

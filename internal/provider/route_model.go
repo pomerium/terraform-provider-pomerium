@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/pomerium/enterprise-client-go/pb"
@@ -15,9 +14,9 @@ type RouteModel struct {
 	ID                               types.String         `tfsdk:"id"`
 	Name                             types.String         `tfsdk:"name"`
 	From                             types.String         `tfsdk:"from"`
-	To                               types.List           `tfsdk:"to"`
+	To                               types.Set            `tfsdk:"to"`
 	NamespaceID                      types.String         `tfsdk:"namespace_id"`
-	Policies                         types.List           `tfsdk:"policies"`
+	Policies                         types.Set            `tfsdk:"policies"`
 	StatName                         types.String         `tfsdk:"stat_name"`
 	Prefix                           types.String         `tfsdk:"prefix"`
 	Path                             types.String         `tfsdk:"path"`
@@ -39,7 +38,7 @@ type RouteModel struct {
 	TLSDownstreamServerName          types.String         `tfsdk:"tls_downstream_server_name"`
 	TLSUpstreamAllowRenegotiation    types.Bool           `tfsdk:"tls_upstream_allow_renegotiation"`
 	SetRequestHeaders                types.Map            `tfsdk:"set_request_headers"`
-	RemoveRequestHeaders             types.List           `tfsdk:"remove_request_headers"`
+	RemoveRequestHeaders             types.Set            `tfsdk:"remove_request_headers"`
 	SetResponseHeaders               types.Map            `tfsdk:"set_response_headers"`
 	PreserveHostHeader               types.Bool           `tfsdk:"preserve_host_header"`
 	PassIdentityHeaders              types.Bool           `tfsdk:"pass_identity_headers"`
@@ -82,7 +81,7 @@ func ConvertRouteToPB(
 	pbRoute.TlsDownstreamServerName = src.TLSDownstreamServerName.ValueStringPointer()
 	pbRoute.TlsUpstreamAllowRenegotiation = src.TLSUpstreamAllowRenegotiation.ValueBoolPointer()
 	ToStringMap(ctx, &pbRoute.SetRequestHeaders, src.SetRequestHeaders, &diagnostics)
-	ToStringSlice(ctx, &pbRoute.RemoveRequestHeaders, src.RemoveRequestHeaders, &diagnostics)
+	ToStringSliceFromSet(ctx, &pbRoute.RemoveRequestHeaders, src.RemoveRequestHeaders, &diagnostics)
 	ToStringMap(ctx, &pbRoute.SetResponseHeaders, src.SetResponseHeaders, &diagnostics)
 	pbRoute.PreserveHostHeader = src.PreserveHostHeader.ValueBoolPointer()
 	pbRoute.PassIdentityHeaders = src.PassIdentityHeaders.ValueBoolPointer()
@@ -112,14 +111,8 @@ func ConvertRouteFromPB(
 	dst.Name = types.StringValue(src.Name)
 	dst.From = types.StringValue(src.From)
 	dst.NamespaceID = types.StringValue(src.NamespaceId)
-
-	toList := make([]attr.Value, len(src.To))
-	for i, v := range src.To {
-		toList[i] = types.StringValue(v)
-	}
-	dst.To = types.ListValueMust(types.StringType, toList)
-
-	dst.Policies = FromStringSlice(StringSliceExclude(src.PolicyIds, src.EnforcedPolicyIds))
+	dst.To = FromStringSliceToSet(src.To)
+	dst.Policies = FromStringSliceToSet(StringSliceExclude(src.PolicyIds, src.EnforcedPolicyIds))
 	dst.StatName = types.StringValue(src.StatName)
 	dst.Prefix = types.StringPointerValue(src.Prefix)
 	dst.Path = types.StringPointerValue(src.Path)
@@ -141,7 +134,7 @@ func ConvertRouteFromPB(
 	dst.TLSDownstreamServerName = types.StringPointerValue(src.TlsDownstreamServerName)
 	dst.TLSUpstreamAllowRenegotiation = types.BoolPointerValue(src.TlsUpstreamAllowRenegotiation)
 	dst.SetRequestHeaders = FromStringMap(src.SetRequestHeaders)
-	dst.RemoveRequestHeaders = FromStringSlice(src.RemoveRequestHeaders)
+	dst.RemoveRequestHeaders = FromStringSliceToSet(src.RemoveRequestHeaders)
 	dst.SetResponseHeaders = FromStringMap(src.SetResponseHeaders)
 	dst.PreserveHostHeader = types.BoolPointerValue(src.PreserveHostHeader)
 	dst.PassIdentityHeaders = types.BoolPointerValue(src.PassIdentityHeaders)

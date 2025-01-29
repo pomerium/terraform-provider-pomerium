@@ -59,7 +59,7 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Description: "From URL.",
 				Required:    true,
 			},
-			"to": schema.ListAttribute{
+			"to": schema.SetAttribute{
 				ElementType: types.StringType,
 				Description: "To URLs.",
 				Required:    true,
@@ -68,7 +68,7 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Description: "ID of the namespace the route belongs to.",
 				Required:    true,
 			},
-			"policies": schema.ListAttribute{
+			"policies": schema.SetAttribute{
 				ElementType: types.StringType,
 				Description: "List of policy IDs associated with the route.",
 				Optional:    true,
@@ -163,7 +163,7 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Description: "Set request headers.",
 				Optional:    true,
 			},
-			"remove_request_headers": schema.ListAttribute{
+			"remove_request_headers": schema.SetAttribute{
 				ElementType: types.StringType,
 				Description: "Remove request headers.",
 				Optional:    true,

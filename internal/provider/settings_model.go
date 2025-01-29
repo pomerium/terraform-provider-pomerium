@@ -10,11 +10,11 @@ import (
 )
 
 type SettingsModel struct {
-	AccessLogFields                                   types.List           `tfsdk:"access_log_fields"`
+	AccessLogFields                                   types.Set            `tfsdk:"access_log_fields"`
 	Address                                           types.String         `tfsdk:"address"`
 	AuthenticateCallbackPath                          types.String         `tfsdk:"authenticate_callback_path"`
 	AuthenticateServiceURL                            types.String         `tfsdk:"authenticate_service_url"`
-	AuthorizeLogFields                                types.List           `tfsdk:"authorize_log_fields"`
+	AuthorizeLogFields                                types.Set            `tfsdk:"authorize_log_fields"`
 	AuthorizeServiceURL                               types.String         `tfsdk:"authorize_service_url"`
 	Autocert                                          types.Bool           `tfsdk:"autocert"`
 	AutocertDir                                       types.String         `tfsdk:"autocert_dir"`
@@ -73,7 +73,7 @@ type SettingsModel struct {
 	PrimaryColor                                      types.String         `tfsdk:"primary_color"`
 	ProxyLogLevel                                     types.String         `tfsdk:"proxy_log_level"`
 	RequestParams                                     types.Map            `tfsdk:"request_params"`
-	Scopes                                            types.List           `tfsdk:"scopes"`
+	Scopes                                            types.Set            `tfsdk:"scopes"`
 	SecondaryColor                                    types.String         `tfsdk:"secondary_color"`
 	SetResponseHeaders                                types.Map            `tfsdk:"set_response_headers"`
 	SkipXFFAppend                                     types.Bool           `tfsdk:"skip_xff_append"`
@@ -90,11 +90,11 @@ func ConvertSettingsToPB(
 	var diagnostics diag.Diagnostics
 	pbSettings := &pb.Settings{}
 
-	ToStringList(ctx, &pbSettings.AccessLogFields, src.AccessLogFields, &diagnostics)
+	ToStringListFromSet(ctx, &pbSettings.AccessLogFields, src.AccessLogFields, &diagnostics)
 	pbSettings.Address = src.Address.ValueStringPointer()
 	pbSettings.AuthenticateCallbackPath = src.AuthenticateCallbackPath.ValueStringPointer()
 	pbSettings.AuthenticateServiceUrl = src.AuthenticateServiceURL.ValueStringPointer()
-	ToStringList(ctx, &pbSettings.AuthorizeLogFields, src.AuthorizeLogFields, &diagnostics)
+	ToStringListFromSet(ctx, &pbSettings.AuthorizeLogFields, src.AuthorizeLogFields, &diagnostics)
 	pbSettings.AuthorizeServiceUrl = src.AuthorizeServiceURL.ValueStringPointer()
 	pbSettings.Autocert = src.Autocert.ValueBoolPointer()
 	pbSettings.AutocertDir = src.AutocertDir.ValueStringPointer()
@@ -145,7 +145,7 @@ func ConvertSettingsToPB(
 	pbSettings.PrimaryColor = src.PrimaryColor.ValueStringPointer()
 	pbSettings.ProxyLogLevel = src.ProxyLogLevel.ValueStringPointer()
 	ToStringMap(ctx, &pbSettings.RequestParams, src.RequestParams, &diagnostics)
-	ToStringSlice(ctx, &pbSettings.Scopes, src.Scopes, &diagnostics)
+	ToStringSliceFromSet(ctx, &pbSettings.Scopes, src.Scopes, &diagnostics)
 	pbSettings.SecondaryColor = src.SecondaryColor.ValueStringPointer()
 	ToStringMap(ctx, &pbSettings.SetResponseHeaders, src.SetResponseHeaders, &diagnostics)
 	pbSettings.SkipXffAppend = src.SkipXFFAppend.ValueBoolPointer()
@@ -163,11 +163,11 @@ func ConvertSettingsFromPB(
 ) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 
-	dst.AccessLogFields = FromStringList(src.AccessLogFields)
+	dst.AccessLogFields = FromStringListToSet(src.AccessLogFields)
 	dst.Address = types.StringPointerValue(src.Address)
 	dst.AuthenticateCallbackPath = types.StringPointerValue(src.AuthenticateCallbackPath)
 	dst.AuthenticateServiceURL = types.StringPointerValue(src.AuthenticateServiceUrl)
-	dst.AuthorizeLogFields = FromStringList(src.AuthorizeLogFields)
+	dst.AuthorizeLogFields = FromStringListToSet(src.AuthorizeLogFields)
 	dst.AuthorizeServiceURL = types.StringPointerValue(src.AuthorizeServiceUrl)
 	dst.Autocert = types.BoolPointerValue(src.Autocert)
 	dst.AutocertDir = types.StringPointerValue(src.AutocertDir)
@@ -218,7 +218,7 @@ func ConvertSettingsFromPB(
 	dst.PrimaryColor = types.StringPointerValue(src.PrimaryColor)
 	dst.ProxyLogLevel = types.StringPointerValue(src.ProxyLogLevel)
 	dst.RequestParams = FromStringMap(src.RequestParams)
-	dst.Scopes = FromStringSlice(src.Scopes)
+	dst.Scopes = FromStringSliceToSet(src.Scopes)
 	dst.SecondaryColor = types.StringPointerValue(src.SecondaryColor)
 	dst.SetResponseHeaders = FromStringMap(src.SetResponseHeaders)
 	dst.SkipXFFAppend = types.BoolPointerValue(src.SkipXffAppend)
