@@ -203,6 +203,41 @@ resource "pomerium_route" "kubernetes_route" {
   tls_upstream_allow_renegotiation = true
 }
 
+resource "pomerium_route" "advanced_route" {
+  name         = "advanced-route"
+  from         = "https://advanced.corp.example.com"
+  to           = ["https://internal-service.example.com"]
+  namespace_id = pomerium_namespace.test_namespace.id
+
+  # Response header manipulation
+  rewrite_response_headers = [
+    {
+      header = "Location"
+      prefix = "http://internal"
+      value  = "https://external"
+    },
+    {
+      header = "Content-Security-Policy"
+      value  = "default-src 'self'"
+    }
+  ]
+  set_response_headers = {
+    "Strict-Transport-Security" = "max-age=31536000"
+    "X-Frame-Options"           = "DENY"
+  }
+
+  tls_custom_ca_key_pair_id = pomerium_key_pair.test_key_pair.id
+  tls_skip_verify           = false
+
+  enable_google_cloud_serverless_authentication = true
+  kubernetes_service_account_token_file         = "/path/to/token"
+
+  description = "Advanced route with security headers"
+  logo_url    = "https://example.com/logo.png"
+
+  show_error_details = true
+}
+
 # Data source examples
 data "pomerium_namespaces" "all_namespaces" {}
 
