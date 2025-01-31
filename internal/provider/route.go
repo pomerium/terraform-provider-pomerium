@@ -251,20 +251,6 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Description: "Enable Google Cloud serverless authentication.",
 				Optional:    true,
 			},
-			"redirect": schema.ObjectAttribute{
-				Description: "Redirect configuration.",
-				Optional:    true,
-				AttributeTypes: map[string]attr.Type{
-					"host_redirect":   types.StringType,
-					"https_redirect":  types.BoolType,
-					"path_redirect":   types.StringType,
-					"prefix_rewrite":  types.StringType,
-					"response_code":   types.Int64Type,
-					"strip_query":     types.BoolType,
-					"scheme_redirect": types.StringType,
-					"port_redirect":   types.Int64Type,
-				},
-			},
 		},
 	}
 }

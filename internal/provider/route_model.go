@@ -38,7 +38,6 @@ type RouteModel struct {
 	Prefix                                    types.String         `tfsdk:"prefix"`
 	PrefixRewrite                             types.String         `tfsdk:"prefix_rewrite"`
 	PreserveHostHeader                        types.Bool           `tfsdk:"preserve_host_header"`
-	Redirect                                  types.Object         `tfsdk:"redirect"`
 	Regex                                     types.String         `tfsdk:"regex"`
 	RegexPriorityOrder                        types.Int64          `tfsdk:"regex_priority_order"`
 	RegexRewritePattern                       types.String         `tfsdk:"regex_rewrite_pattern"`
