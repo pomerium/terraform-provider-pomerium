@@ -245,9 +245,9 @@ data "pomerium_namespace" "existing_namespace" {
   id = pomerium_namespace.test_namespace.id
 }
 
-# data "pomerium_route" "existing_route" {
-#   id = pomerium_route.test_route.id
-# }
+data "pomerium_route" "existing_route" {
+  id = pomerium_route.test_route.id
+}
 
 # Output examples
 output "namespace_name" {
