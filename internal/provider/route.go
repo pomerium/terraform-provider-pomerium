@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -199,6 +200,57 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Computed:    true,
 			},
 			"jwt_groups_filter": JWTGroupsFilterSchema,
+			"jwt_issuer_format": schema.ObjectAttribute{
+				Description: "JWT issuer format configuration.",
+				Optional:    true,
+				AttributeTypes: map[string]attr.Type{
+					"format": types.StringType,
+				},
+			},
+			"rewrite_response_headers": schema.SetNestedAttribute{
+				Description: "Response header rewrite rules.",
+				Optional:    true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"header": schema.StringAttribute{
+							Required:    true,
+							Description: "Header name to rewrite",
+						},
+						"prefix": schema.StringAttribute{
+							Optional:    true,
+							Description: "Prefix matcher for the header",
+						},
+						"value": schema.StringAttribute{
+							Required:    true,
+							Description: "New value for the header",
+						},
+					},
+				},
+			},
+			"tls_custom_ca_key_pair_id": schema.StringAttribute{
+				Description: "Custom CA key pair ID for TLS verification.",
+				Optional:    true,
+			},
+			"tls_client_key_pair_id": schema.StringAttribute{
+				Description: "Client key pair ID for TLS client authentication.",
+				Optional:    true,
+			},
+			"description": schema.StringAttribute{
+				Description: "Description of the route.",
+				Optional:    true,
+			},
+			"kubernetes_service_account_token_file": schema.StringAttribute{
+				Description: "Path to the Kubernetes service account token file.",
+				Optional:    true,
+			},
+			"logo_url": schema.StringAttribute{
+				Description: "URL to the logo image.",
+				Optional:    true,
+			},
+			"enable_google_cloud_serverless_authentication": schema.BoolAttribute{
+				Description: "Enable Google Cloud serverless authentication.",
+				Optional:    true,
+			},
 		},
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/pomerium/enterprise-client-go/pb"
@@ -11,42 +12,115 @@ import (
 
 // RouteModel represents the shared model for route resources and data sources
 type RouteModel struct {
-	ID                               types.String         `tfsdk:"id"`
-	Name                             types.String         `tfsdk:"name"`
-	From                             types.String         `tfsdk:"from"`
-	To                               types.Set            `tfsdk:"to"`
-	NamespaceID                      types.String         `tfsdk:"namespace_id"`
-	Policies                         types.Set            `tfsdk:"policies"`
-	StatName                         types.String         `tfsdk:"stat_name"`
-	Prefix                           types.String         `tfsdk:"prefix"`
-	Path                             types.String         `tfsdk:"path"`
-	Regex                            types.String         `tfsdk:"regex"`
-	PrefixRewrite                    types.String         `tfsdk:"prefix_rewrite"`
-	RegexRewritePattern              types.String         `tfsdk:"regex_rewrite_pattern"`
-	RegexRewriteSubstitution         types.String         `tfsdk:"regex_rewrite_substitution"`
-	HostRewrite                      types.String         `tfsdk:"host_rewrite"`
-	HostRewriteHeader                types.String         `tfsdk:"host_rewrite_header"`
-	HostPathRegexRewritePattern      types.String         `tfsdk:"host_path_regex_rewrite_pattern"`
-	HostPathRegexRewriteSubstitution types.String         `tfsdk:"host_path_regex_rewrite_substitution"`
-	RegexPriorityOrder               types.Int64          `tfsdk:"regex_priority_order"`
-	Timeout                          timetypes.GoDuration `tfsdk:"timeout"`
-	IdleTimeout                      timetypes.GoDuration `tfsdk:"idle_timeout"`
-	AllowWebsockets                  types.Bool           `tfsdk:"allow_websockets"`
-	AllowSPDY                        types.Bool           `tfsdk:"allow_spdy"`
-	TLSSkipVerify                    types.Bool           `tfsdk:"tls_skip_verify"`
-	TLSUpstreamServerName            types.String         `tfsdk:"tls_upstream_server_name"`
-	TLSDownstreamServerName          types.String         `tfsdk:"tls_downstream_server_name"`
-	TLSUpstreamAllowRenegotiation    types.Bool           `tfsdk:"tls_upstream_allow_renegotiation"`
-	SetRequestHeaders                types.Map            `tfsdk:"set_request_headers"`
-	RemoveRequestHeaders             types.Set            `tfsdk:"remove_request_headers"`
-	SetResponseHeaders               types.Map            `tfsdk:"set_response_headers"`
-	PreserveHostHeader               types.Bool           `tfsdk:"preserve_host_header"`
-	PassIdentityHeaders              types.Bool           `tfsdk:"pass_identity_headers"`
-	KubernetesServiceAccountToken    types.String         `tfsdk:"kubernetes_service_account_token"`
-	IDPClientID                      types.String         `tfsdk:"idp_client_id"`
-	IDPClientSecret                  types.String         `tfsdk:"idp_client_secret"`
-	ShowErrorDetails                 types.Bool           `tfsdk:"show_error_details"`
-	JWTGroupsFilter                  types.Object         `tfsdk:"jwt_groups_filter"`
+	AllowSPDY                                 types.Bool           `tfsdk:"allow_spdy"`
+	AllowWebsockets                           types.Bool           `tfsdk:"allow_websockets"`
+	Description                               types.String         `tfsdk:"description"`
+	EnableGoogleCloudServerlessAuthentication types.Bool           `tfsdk:"enable_google_cloud_serverless_authentication"`
+	From                                      types.String         `tfsdk:"from"`
+	HostPathRegexRewritePattern               types.String         `tfsdk:"host_path_regex_rewrite_pattern"`
+	HostPathRegexRewriteSubstitution          types.String         `tfsdk:"host_path_regex_rewrite_substitution"`
+	HostRewrite                               types.String         `tfsdk:"host_rewrite"`
+	HostRewriteHeader                         types.String         `tfsdk:"host_rewrite_header"`
+	ID                                        types.String         `tfsdk:"id"`
+	IdleTimeout                               timetypes.GoDuration `tfsdk:"idle_timeout"`
+	IDPClientID                               types.String         `tfsdk:"idp_client_id"`
+	IDPClientSecret                           types.String         `tfsdk:"idp_client_secret"`
+	JWTGroupsFilter                           types.Object         `tfsdk:"jwt_groups_filter"`
+	JWTIssuerFormat                           types.Object         `tfsdk:"jwt_issuer_format"`
+	KubernetesServiceAccountToken             types.String         `tfsdk:"kubernetes_service_account_token"`
+	KubernetesServiceAccountTokenFile         types.String         `tfsdk:"kubernetes_service_account_token_file"`
+	LogoURL                                   types.String         `tfsdk:"logo_url"`
+	Name                                      types.String         `tfsdk:"name"`
+	NamespaceID                               types.String         `tfsdk:"namespace_id"`
+	PassIdentityHeaders                       types.Bool           `tfsdk:"pass_identity_headers"`
+	Path                                      types.String         `tfsdk:"path"`
+	Policies                                  types.Set            `tfsdk:"policies"`
+	Prefix                                    types.String         `tfsdk:"prefix"`
+	PrefixRewrite                             types.String         `tfsdk:"prefix_rewrite"`
+	PreserveHostHeader                        types.Bool           `tfsdk:"preserve_host_header"`
+	Regex                                     types.String         `tfsdk:"regex"`
+	RegexPriorityOrder                        types.Int64          `tfsdk:"regex_priority_order"`
+	RegexRewritePattern                       types.String         `tfsdk:"regex_rewrite_pattern"`
+	RegexRewriteSubstitution                  types.String         `tfsdk:"regex_rewrite_substitution"`
+	RemoveRequestHeaders                      types.Set            `tfsdk:"remove_request_headers"`
+	RewriteResponseHeaders                    types.Set            `tfsdk:"rewrite_response_headers"`
+	SetRequestHeaders                         types.Map            `tfsdk:"set_request_headers"`
+	SetResponseHeaders                        types.Map            `tfsdk:"set_response_headers"`
+	ShowErrorDetails                          types.Bool           `tfsdk:"show_error_details"`
+	StatName                                  types.String         `tfsdk:"stat_name"`
+	Timeout                                   timetypes.GoDuration `tfsdk:"timeout"`
+	TLSClientKeyPairID                        types.String         `tfsdk:"tls_client_key_pair_id"`
+	TLSCustomCAKeyPairID                      types.String         `tfsdk:"tls_custom_ca_key_pair_id"`
+	TLSDownstreamServerName                   types.String         `tfsdk:"tls_downstream_server_name"`
+	TLSSkipVerify                             types.Bool           `tfsdk:"tls_skip_verify"`
+	TLSUpstreamAllowRenegotiation             types.Bool           `tfsdk:"tls_upstream_allow_renegotiation"`
+	TLSUpstreamServerName                     types.String         `tfsdk:"tls_upstream_server_name"`
+	To                                        types.Set            `tfsdk:"to"`
+}
+
+var rewriteHeaderAttrTypes = map[string]attr.Type{
+	"header": types.StringType,
+	"value":  types.StringType,
+	"prefix": types.StringType,
+}
+
+// RewriteHeaderAttrTypes returns the attribute type map for rewrite headers
+func RewriteHeaderAttrTypes() map[string]attr.Type {
+	return rewriteHeaderAttrTypes
+}
+
+func rewriteHeadersToPB(src types.Set) []*pb.RouteRewriteHeader {
+	if (src).IsNull() {
+		return nil
+	}
+
+	headers := make([]*pb.RouteRewriteHeader, 0)
+	elements := src.Elements()
+	for _, element := range elements {
+		obj := element.(types.Object)
+		prefixAttr := obj.Attributes()["prefix"].(types.String)
+
+		header := &pb.RouteRewriteHeader{
+			Header: obj.Attributes()["header"].(types.String).ValueString(),
+			Value:  obj.Attributes()["value"].(types.String).ValueString(),
+		}
+
+		if !prefixAttr.IsNull() && prefixAttr.ValueString() != "" {
+			header.Matcher = &pb.RouteRewriteHeader_Prefix{Prefix: prefixAttr.ValueString()}
+		}
+
+		headers = append(headers, header)
+	}
+	return headers
+}
+
+func rewriteHeadersFromPB(headers []*pb.RouteRewriteHeader) types.Set {
+	if len(headers) == 0 {
+		return types.SetNull(RewriteHeaderObjectType())
+	}
+
+	elements := make([]attr.Value, 0, len(headers))
+	for _, header := range headers {
+		prefix := header.GetPrefix()
+		prefixValue := types.StringNull()
+		if prefix != "" {
+			prefixValue = types.StringValue(prefix)
+		}
+
+		attrs := map[string]attr.Value{
+			"header": types.StringValue(header.Header),
+			"value":  types.StringValue(header.Value),
+			"prefix": prefixValue,
+		}
+		obj, _ := types.ObjectValue(rewriteHeaderAttrTypes, attrs)
+		elements = append(elements, obj)
+	}
+	result, _ := types.SetValue(RewriteHeaderObjectType(), elements)
+	return result
+}
+
+func RewriteHeaderObjectType() attr.Type {
+	return types.ObjectType{AttrTypes: rewriteHeaderAttrTypes}
 }
 
 func ConvertRouteToPB(
@@ -90,14 +164,19 @@ func ConvertRouteToPB(
 	pbRoute.IdpClientSecret = src.IDPClientSecret.ValueStringPointer()
 	pbRoute.ShowErrorDetails = src.ShowErrorDetails.ValueBool()
 	JWTGroupsFilterToPB(ctx, &pbRoute.JwtGroupsFilter, src.JWTGroupsFilter, &diagnostics)
-
-	diags := src.To.ElementsAs(ctx, &pbRoute.To, false)
-	diagnostics.Append(diags...)
-
-	if !src.Policies.IsNull() {
-		diags = src.Policies.ElementsAs(ctx, &pbRoute.PolicyIds, false)
-		diagnostics.Append(diags...)
+	ToStringSliceFromSet(ctx, &pbRoute.To, src.To, &diagnostics)
+	ToStringSliceFromSet(ctx, &pbRoute.PolicyIds, src.Policies, &diagnostics)
+	pbRoute.TlsClientKeyPairId = src.TLSClientKeyPairID.ValueStringPointer()
+	pbRoute.TlsCustomCaKeyPairId = src.TLSCustomCAKeyPairID.ValueStringPointer()
+	pbRoute.Description = src.Description.ValueStringPointer()
+	pbRoute.LogoUrl = src.LogoURL.ValueStringPointer()
+	if !src.EnableGoogleCloudServerlessAuthentication.IsNull() {
+		pbRoute.EnableGoogleCloudServerlessAuthentication = src.EnableGoogleCloudServerlessAuthentication.ValueBool()
 	}
+	pbRoute.KubernetesServiceAccountTokenFile = src.KubernetesServiceAccountTokenFile.ValueStringPointer()
+
+	pbRoute.RewriteResponseHeaders = rewriteHeadersToPB(src.RewriteResponseHeaders)
+
 	return pbRoute, diagnostics
 }
 
@@ -143,6 +222,17 @@ func ConvertRouteFromPB(
 	dst.IDPClientSecret = types.StringPointerValue(src.IdpClientSecret)
 	dst.ShowErrorDetails = types.BoolValue(src.ShowErrorDetails)
 	JWTGroupsFilterFromPB(&dst.JWTGroupsFilter, src.JwtGroupsFilter)
+	dst.TLSClientKeyPairID = types.StringPointerValue(src.TlsClientKeyPairId)
+	dst.TLSCustomCAKeyPairID = types.StringPointerValue(src.TlsCustomCaKeyPairId)
+	dst.Description = types.StringPointerValue(src.Description)
+	dst.LogoURL = types.StringPointerValue(src.LogoUrl)
+	dst.EnableGoogleCloudServerlessAuthentication = types.BoolNull()
+	if src.EnableGoogleCloudServerlessAuthentication {
+		dst.EnableGoogleCloudServerlessAuthentication = types.BoolValue(true)
+	}
+	dst.KubernetesServiceAccountTokenFile = types.StringPointerValue(src.KubernetesServiceAccountTokenFile)
+
+	dst.RewriteResponseHeaders = rewriteHeadersFromPB(src.RewriteResponseHeaders)
 
 	return diagnostics
 }

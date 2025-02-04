@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -30,7 +31,7 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 			Computed:    true,
 			Description: "From URL.",
 		},
-		"to": schema.ListAttribute{
+		"to": schema.SetAttribute{
 			Computed:    true,
 			ElementType: types.StringType,
 			Description: "To URLs.",
@@ -39,7 +40,7 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 			Computed:    true,
 			Description: "ID of the namespace the route belongs to.",
 		},
-		"policies": schema.ListAttribute{
+		"policies": schema.SetAttribute{
 			Computed:    true,
 			ElementType: types.StringType,
 			Description: "List of policy IDs associated with the route.",
@@ -131,7 +132,7 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 			ElementType: types.StringType,
 			Description: "Set request headers.",
 		},
-		"remove_request_headers": schema.ListAttribute{
+		"remove_request_headers": schema.SetAttribute{
 			Computed:    true,
 			ElementType: types.StringType,
 			Description: "Remove request headers.",
@@ -164,6 +165,58 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 		"show_error_details": schema.BoolAttribute{
 			Computed:    true,
 			Description: "Show error details.",
+		},
+		"jwt_groups_filter": JWTGroupsFilterSchema,
+		"jwt_issuer_format": schema.ObjectAttribute{
+			Description: "JWT issuer format configuration.",
+			Computed:    true,
+			AttributeTypes: map[string]attr.Type{
+				"format": types.StringType,
+			},
+		},
+		"rewrite_response_headers": schema.SetNestedAttribute{
+			Description: "Response header rewrite rules.",
+			Computed:    true,
+			NestedObject: schema.NestedAttributeObject{
+				Attributes: map[string]schema.Attribute{
+					"header": schema.StringAttribute{
+						Required:    true,
+						Description: "Header name to rewrite",
+					},
+					"prefix": schema.StringAttribute{
+						Optional:    true,
+						Description: "Prefix matcher for the header",
+					},
+					"value": schema.StringAttribute{
+						Required:    true,
+						Description: "New value for the header",
+					},
+				},
+			},
+		},
+		"tls_custom_ca_key_pair_id": schema.StringAttribute{
+			Description: "Custom CA key pair ID for TLS verification.",
+			Computed:    true,
+		},
+		"tls_client_key_pair_id": schema.StringAttribute{
+			Description: "Client key pair ID for TLS client authentication.",
+			Computed:    true,
+		},
+		"description": schema.StringAttribute{
+			Description: "Description of the route.",
+			Computed:    true,
+		},
+		"kubernetes_service_account_token_file": schema.StringAttribute{
+			Description: "Path to the Kubernetes service account token file.",
+			Computed:    true,
+		},
+		"logo_url": schema.StringAttribute{
+			Description: "URL to the logo image.",
+			Computed:    true,
+		},
+		"enable_google_cloud_serverless_authentication": schema.BoolAttribute{
+			Description: "Enable Google Cloud serverless authentication.",
+			Computed:    true,
 		},
 	}
 }
