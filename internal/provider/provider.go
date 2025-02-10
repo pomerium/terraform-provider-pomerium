@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"crypto/tls"
+	_ "embed" // embed is used to embed the provider description
 	"net"
 	"net/url"
 
@@ -21,6 +22,9 @@ import (
 var (
 	_ provider.Provider              = &PomeriumProvider{}
 	_ provider.ProviderWithFunctions = &PomeriumProvider{}
+
+	//go:embed help/provider.md
+	providerDescription string
 )
 
 // PomeriumProvider defines the provider implementation.
@@ -46,6 +50,7 @@ func (p *PomeriumProvider) Metadata(_ context.Context, _ provider.MetadataReques
 
 func (p *PomeriumProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		MarkdownDescription: providerDescription,
 		Attributes: map[string]schema.Attribute{
 			"api_url": schema.StringAttribute{
 				MarkdownDescription: "Pomerium Enterprise API URL",

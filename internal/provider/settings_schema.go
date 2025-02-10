@@ -55,7 +55,7 @@ var SettingsResourceSchema = schema.Schema{
 		},
 		"address": schema.StringAttribute{
 			Optional:    true,
-			Description: "Address",
+			Description: "Specifies the IP Address and Port to serve HTTP requests from.",
 		},
 		"insecure_server": schema.BoolAttribute{
 			Optional:    true,
@@ -71,22 +71,22 @@ var SettingsResourceSchema = schema.Schema{
 		},
 		"timeout_read": schema.StringAttribute{
 			Optional:    true,
-			Description: "Timeout read",
+			Description: "Sets the amount of time for the client to receive the entire request stream.",
 			CustomType:  timetypes.GoDurationType{},
 		},
 		"timeout_write": schema.StringAttribute{
 			Optional:    true,
-			Description: "Timeout write",
+			Description: "Sets max stream duration of an HTTP request/response exchange. Must be greater than read timeout.",
 			CustomType:  timetypes.GoDurationType{},
 		},
 		"timeout_idle": schema.StringAttribute{
 			Optional:    true,
-			Description: "Timeout idle",
+			Description: "Sets the time at which a downstream or upstream connection will be terminated if no active streams.",
 			CustomType:  timetypes.GoDurationType{},
 		},
 		"authenticate_service_url": schema.StringAttribute{
 			Optional:    true,
-			Description: "Authenticate service URL",
+			Description: "The externally accessible URL for the authenticate service.",
 		},
 		"authenticate_callback_path": schema.StringAttribute{
 			Optional:    true,
@@ -230,23 +230,23 @@ var SettingsResourceSchema = schema.Schema{
 		},
 		"google_cloud_serverless_authentication_service_account": schema.StringAttribute{
 			Optional:    true,
-			Description: "Google Cloud Serverless Authentication Service Account",
+			Description: "Google Cloud Serverless Authentication service account credentials.",
 		},
 		"autocert": schema.BoolAttribute{
 			Optional:    true,
-			Description: "Autocert",
+			Description: "Turning on autocert allows Pomerium to automatically retrieve, manage, and renew public facing TLS certificates from Lets Encrypt.",
 		},
 		"autocert_use_staging": schema.BoolAttribute{
 			Optional:    true,
-			Description: "Autocert use staging",
+			Description: "Autocert Use Staging setting allows you to use Let's Encrypt's staging environment, which has more lenient usage limits than the production environment.",
 		},
 		"autocert_must_staple": schema.BoolAttribute{
 			Optional:    true,
-			Description: "Autocert must staple",
+			Description: "Controls whether the must-staple flag is enabled when requesting certificates.",
 		},
 		"autocert_dir": schema.StringAttribute{
 			Optional:    true,
-			Description: "Autocert directory",
+			Description: "Autocert directory is the path which Autocert will store x509 certificate data.",
 		},
 		"skip_xff_append": schema.BoolAttribute{
 			Optional:    true,
@@ -254,31 +254,31 @@ var SettingsResourceSchema = schema.Schema{
 		},
 		"primary_color": schema.StringAttribute{
 			Optional:    true,
-			Description: "Primary color",
+			Description: "A hex code that determines the primary color for the Enterprise Console and Route Error Details pages.",
 		},
 		"secondary_color": schema.StringAttribute{
 			Optional:    true,
-			Description: "Secondary color",
+			Description: "A hex code that determines the secondary color for the Enterprise Console and Route Error Details pages.",
 		},
 		"darkmode_primary_color": schema.StringAttribute{
 			Optional:    true,
-			Description: "Darkmode primary color",
+			Description: "A hex code that determines the primary color for the Enterprise Console and Route Error Details pages when in Dark Mode.",
 		},
 		"darkmode_secondary_color": schema.StringAttribute{
 			Optional:    true,
-			Description: "Darkmode secondary color",
+			Description: "A hex code that determines the secondary color for the Enterprise Console and Route Error Details pages when in Dark Mode.",
 		},
 		"logo_url": schema.StringAttribute{
 			Optional:    true,
-			Description: "Logo URL",
+			Description: "A URL pointing to your logo. Defaults to Pomerium's Logo.",
 		},
 		"favicon_url": schema.StringAttribute{
 			Optional:    true,
-			Description: "Favicon URL",
+			Description: "A Url pointing to your favicon. Defaults to Pomerium's Favicon.",
 		},
 		"error_message_first_paragraph": schema.StringAttribute{
 			Optional:    true,
-			Description: "Error message first paragraph",
+			Description: "A paragraph that will appear on all Route Error Pages in the top section.",
 		},
 		"identity_provider_auth0": schema.SingleNestedAttribute{
 			Optional:    true,
@@ -438,16 +438,16 @@ var SettingsResourceSchema = schema.Schema{
 		"access_log_fields": schema.SetAttribute{
 			Optional:    true,
 			ElementType: types.StringType,
-			Description: "Access log fields",
+			Description: "Displays HTTP request logs from the Pomerium Proxy service.",
 		},
 		"authorize_log_fields": schema.SetAttribute{
 			Optional:    true,
 			ElementType: types.StringType,
-			Description: "Authorize log fields",
+			Description: "Displays HTTP request logs from the Pomerium Authorize service.",
 		},
 		"pass_identity_headers": schema.BoolAttribute{
 			Optional:    true,
-			Description: "Pass identity headers",
+			Description: "If applied, passes X-Pomerium-Jwt-Assertion header and JWT Claims Headers to all upstream applications.",
 		},
 	},
 }
