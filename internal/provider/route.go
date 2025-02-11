@@ -57,12 +57,12 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Required:    true,
 			},
 			"from": schema.StringAttribute{
-				Description: "From URL.",
+				Description: "The external URL for a proxied request. Must contain a scheme and Hostname, must not contain a path.",
 				Required:    true,
 			},
 			"to": schema.SetAttribute{
 				ElementType: types.StringType,
-				Description: "To URLs.",
+				Description: "The destination(s) of a proxied request. Must contain a scheme and Hostname, with an optional weight.",
 				Required:    true,
 			},
 			"namespace_id": schema.StringAttribute{
@@ -80,43 +80,43 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Computed:    true,
 			},
 			"prefix": schema.StringAttribute{
-				Description: "Prefix.",
+				Description: "Matches incoming requests with a path that begins with the specified prefix.",
 				Optional:    true,
 			},
 			"path": schema.StringAttribute{
-				Description: "Path.",
+				Description: "Matches incoming requests with a path that is an exact match for the specified path.",
 				Optional:    true,
 			},
 			"regex": schema.StringAttribute{
-				Description: "Regex.",
+				Description: "Matches incoming requests with a path that matches the specified regular expression.",
 				Optional:    true,
 			},
 			"prefix_rewrite": schema.StringAttribute{
-				Description: "Prefix rewrite.",
+				Description: "While forwarding a request, Prefix Rewrite swaps the matched prefix (or path) with the specified value.",
 				Optional:    true,
 			},
 			"regex_rewrite_pattern": schema.StringAttribute{
-				Description: "Regex rewrite pattern.",
+				Description: "Rewrites the URL path according to the regex rewrite pattern.",
 				Optional:    true,
 			},
 			"regex_rewrite_substitution": schema.StringAttribute{
-				Description: "Regex rewrite substitution.",
+				Description: "Rewrites the URL path according to the regex rewrite substitution.",
 				Optional:    true,
 			},
 			"host_rewrite": schema.StringAttribute{
-				Description: "Host rewrite.",
+				Description: "Rewrites the Host header to a new literal value.",
 				Optional:    true,
 			},
 			"host_rewrite_header": schema.StringAttribute{
-				Description: "Host rewrite header.",
+				Description: "Rewrites the Host header to match an incoming header value.",
 				Optional:    true,
 			},
 			"host_path_regex_rewrite_pattern": schema.StringAttribute{
-				Description: "Host path regex rewrite pattern.",
+				Description: "Rewrites the Host header according to a regular expression matching the path.",
 				Optional:    true,
 			},
 			"host_path_regex_rewrite_substitution": schema.StringAttribute{
-				Description: "Host path regex rewrite substitution.",
+				Description: "Rewrites the Host header according to a regular expression matching the substitution.",
 				Optional:    true,
 			},
 			"regex_priority_order": schema.Int64Attribute{
@@ -124,31 +124,31 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Optional:    true,
 			},
 			"timeout": schema.StringAttribute{
-				Description: "Timeout.",
+				Description: "Sets the per-route timeout value. Cannot exceed global timeout values. Defaults to 30 seconds.",
 				Optional:    true,
 				CustomType:  timetypes.GoDurationType{},
 				Computed:    true,
 			},
 			"idle_timeout": schema.StringAttribute{
-				Description: "Idle timeout.",
+				Description: "Sets the time to terminate the upstream connection if there are no active streams. Defaults to 5 minutes.",
 				Optional:    true,
 				CustomType:  timetypes.GoDurationType{},
 				Computed:    true,
 			},
 			"allow_websockets": schema.BoolAttribute{
-				Description: "Allow websockets.",
+				Description: "If applied, this setting enables Pomerium to proxy websocket connections.",
 				Optional:    true,
 			},
 			"allow_spdy": schema.BoolAttribute{
-				Description: "Allow SPDY.",
+				Description: "If applied, this setting enables Pomerium to proxy SPDY protocol upgrades.",
 				Optional:    true,
 			},
 			"tls_skip_verify": schema.BoolAttribute{
-				Description: "TLS skip verify.",
+				Description: "If applied, Pomerium accepts any certificate presented by the upstream server and any Hostname in that certificate. Use for testing only.",
 				Optional:    true,
 			},
 			"tls_upstream_server_name": schema.StringAttribute{
-				Description: "TLS upstream server name.",
+				Description: "This server name overrides the Hostname in the 'To:' field, and will be used to verify the certificate name.",
 				Optional:    true,
 			},
 			"tls_downstream_server_name": schema.StringAttribute{
@@ -161,25 +161,25 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			},
 			"set_request_headers": schema.MapAttribute{
 				ElementType: types.StringType,
-				Description: "Set request headers.",
+				Description: "Sets static and dynamic values for given request headers. Available substitutions: ${pomerium.id_token}, ${pomerium.access_token}, ${pomerium.client_cert_fingerprint}.",
 				Optional:    true,
 			},
 			"remove_request_headers": schema.SetAttribute{
 				ElementType: types.StringType,
-				Description: "Remove request headers.",
+				Description: "Removes given request headers so they do not reach the upstream server.",
 				Optional:    true,
 			},
 			"set_response_headers": schema.MapAttribute{
 				ElementType: types.StringType,
-				Description: "Set response headers.",
+				Description: "Sets static HTTP Response Header values for a route. These headers take precedence over globally set response headers.",
 				Optional:    true,
 			},
 			"preserve_host_header": schema.BoolAttribute{
-				Description: "Preserve host header.",
+				Description: "Passes the host header from the incoming request to the proxied host, instead of the destination hostname.",
 				Optional:    true,
 			},
 			"pass_identity_headers": schema.BoolAttribute{
-				Description: "Pass identity headers.",
+				Description: "If applied, passes X-Pomerium-Jwt-Assertion header and JWT Claims Headers to the upstream application.",
 				Optional:    true,
 			},
 			"kubernetes_service_account_token": schema.StringAttribute{
@@ -195,7 +195,7 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Optional:    true,
 			},
 			"show_error_details": schema.BoolAttribute{
-				Description: "Show error details.",
+				Description: "If applied, shows error details, including policy explanation and remediation for 403 Forbidden responses.",
 				Optional:    true,
 				Computed:    true,
 			},
@@ -208,7 +208,7 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				},
 			},
 			"rewrite_response_headers": schema.SetNestedAttribute{
-				Description: "Response header rewrite rules.",
+				Description: "Modifies response headers before they are returned to the client. 'Header' matches the HTTP header name; 'prefix' will be replaced with 'value'.",
 				Optional:    true,
 				NestedObject: schema.NestedAttributeObject{
 					Attributes: map[string]schema.Attribute{
