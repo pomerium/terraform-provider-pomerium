@@ -19,10 +19,80 @@ Route data source
 
 - `id` (String) Unique identifier for the route.
 
+### Optional
+
+- `jwt_groups_filter` (Attributes) JWT Groups Filter (see [below for nested schema](#nestedatt--jwt_groups_filter))
+
 ### Read-Only
 
+- `allow_spdy` (Boolean) Allow SPDY.
+- `allow_websockets` (Boolean) Allow websockets.
+- `description` (String) Description of the route.
+- `enable_google_cloud_serverless_authentication` (Boolean) Enable Google Cloud serverless authentication.
 - `from` (String) From URL.
+- `host_path_regex_rewrite_pattern` (String) Host path regex rewrite pattern.
+- `host_path_regex_rewrite_substitution` (String) Host path regex rewrite substitution.
+- `host_rewrite` (String) Host rewrite.
+- `host_rewrite_header` (String) Host rewrite header.
+- `idle_timeout` (String) Idle timeout.
+- `idp_client_id` (String) IDP client ID.
+- `idp_client_secret` (String) IDP client secret.
+- `jwt_issuer_format` (Object) JWT issuer format configuration. (see [below for nested schema](#nestedatt--jwt_issuer_format))
+- `kubernetes_service_account_token` (String) Kubernetes service account token.
+- `kubernetes_service_account_token_file` (String) Path to the Kubernetes service account token file.
+- `logo_url` (String) URL to the logo image.
 - `name` (String) Name of the route.
 - `namespace_id` (String) ID of the namespace the route belongs to.
-- `policies` (List of String) List of policy IDs associated with the route.
-- `to` (List of String) To URLs.
+- `pass_identity_headers` (Boolean) Pass identity headers.
+- `path` (String) Path.
+- `policies` (Set of String) List of policy IDs associated with the route.
+- `prefix` (String) Prefix.
+- `prefix_rewrite` (String) Prefix rewrite.
+- `preserve_host_header` (Boolean) Preserve host header.
+- `regex` (String) Regex.
+- `regex_priority_order` (Number) Regex priority order.
+- `regex_rewrite_pattern` (String) Regex rewrite pattern.
+- `regex_rewrite_substitution` (String) Regex rewrite substitution.
+- `remove_request_headers` (Set of String) Remove request headers.
+- `rewrite_response_headers` (Attributes Set) Response header rewrite rules. (see [below for nested schema](#nestedatt--rewrite_response_headers))
+- `set_request_headers` (Map of String) Set request headers.
+- `set_response_headers` (Map of String) Set response headers.
+- `show_error_details` (Boolean) Show error details.
+- `stat_name` (String) Name of the stat.
+- `timeout` (String) Timeout.
+- `tls_client_key_pair_id` (String) Client key pair ID for TLS client authentication.
+- `tls_custom_ca_key_pair_id` (String) Custom CA key pair ID for TLS verification.
+- `tls_downstream_server_name` (String) TLS downstream server name.
+- `tls_skip_verify` (Boolean) TLS skip verify.
+- `tls_upstream_allow_renegotiation` (Boolean) TLS upstream allow renegotiation.
+- `tls_upstream_server_name` (String) TLS upstream server name.
+- `to` (Set of String) To URLs.
+
+<a id="nestedatt--jwt_groups_filter"></a>
+### Nested Schema for `jwt_groups_filter`
+
+Optional:
+
+- `groups` (Set of String) Group IDs to include
+- `infer_from_ppl` (Boolean)
+
+
+<a id="nestedatt--jwt_issuer_format"></a>
+### Nested Schema for `jwt_issuer_format`
+
+Read-Only:
+
+- `format` (String)
+
+
+<a id="nestedatt--rewrite_response_headers"></a>
+### Nested Schema for `rewrite_response_headers`
+
+Required:
+
+- `header` (String) Header name to rewrite
+- `value` (String) New value for the header
+
+Optional:
+
+- `prefix` (String) Prefix matcher for the header
