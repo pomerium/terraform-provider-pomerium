@@ -2,7 +2,7 @@ terraform {
   required_providers {
     pomerium = {
       source  = "pomerium/pomerium"
-      version = "0.0.7"
+      version = "0.0.8"
     }
   }
 }
@@ -249,15 +249,5 @@ data "pomerium_route" "existing_route" {
   id = pomerium_route.test_route.id
 }
 
-# Output examples
-output "namespace_name" {
-  value = data.pomerium_namespace.existing_namespace.name
-}
+data "pomerium_routes" "all_routes" {}
 
-# output "route_from" {
-#   value = data.pomerium_route.existing_route.from
-# }
-
-output "all_namespaces" {
-  value = data.pomerium_namespaces.all_namespaces.namespaces
-}
