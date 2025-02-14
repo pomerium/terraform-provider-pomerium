@@ -20,16 +20,16 @@ The settings are global object.
 
 ### Optional
 
-- `access_log_fields` (List of String) Access log fields
-- `address` (String) Address
+- `access_log_fields` (Set of String) Displays HTTP request logs from the Pomerium Proxy service.
+- `address` (String) Specifies the IP Address and Port to serve HTTP requests from.
 - `authenticate_callback_path` (String) Authenticate callback path
-- `authenticate_service_url` (String) Authenticate service URL
-- `authorize_log_fields` (List of String) Authorize log fields
+- `authenticate_service_url` (String) The externally accessible URL for the authenticate service.
+- `authorize_log_fields` (Set of String) Displays HTTP request logs from the Pomerium Authorize service.
 - `authorize_service_url` (String) Authorize service URL
-- `autocert` (Boolean) Autocert
-- `autocert_dir` (String) Autocert directory
-- `autocert_must_staple` (Boolean) Autocert must staple
-- `autocert_use_staging` (Boolean) Autocert use staging
+- `autocert` (Boolean) Turning on autocert allows Pomerium to automatically retrieve, manage, and renew public facing TLS certificates from Lets Encrypt.
+- `autocert_dir` (String) Autocert directory is the path which Autocert will store x509 certificate data.
+- `autocert_must_staple` (Boolean) Controls whether the must-staple flag is enabled when requesting certificates.
+- `autocert_use_staging` (Boolean) Autocert Use Staging setting allows you to use Let's Encrypt's staging environment, which has more lenient usage limits than the production environment.
 - `cache_service_url` (String) Cache service URL
 - `certificate_authority` (String) Certificate authority
 - `certificate_authority_file` (String) Certificate authority file
@@ -44,14 +44,14 @@ The settings are global object.
 - `cookie_same_site` (String) Cookie same site
 - `cookie_secret` (String, Sensitive) Cookie secret
 - `cookie_secure` (Boolean) Cookie secure
-- `darkmode_primary_color` (String) Darkmode primary color
-- `darkmode_secondary_color` (String) Darkmode secondary color
+- `darkmode_primary_color` (String) A hex code that determines the primary color for the Enterprise Console and Route Error Details pages when in Dark Mode.
+- `darkmode_secondary_color` (String) A hex code that determines the secondary color for the Enterprise Console and Route Error Details pages when in Dark Mode.
 - `databroker_service_url` (String) Databroker service URL
 - `default_upstream_timeout` (String) Default upstream timeout
 - `dns_lookup_family` (String) DNS lookup family
-- `error_message_first_paragraph` (String) Error message first paragraph
-- `favicon_url` (String) Favicon URL
-- `google_cloud_serverless_authentication_service_account` (String) Google Cloud Serverless Authentication Service Account
+- `error_message_first_paragraph` (String) A paragraph that will appear on all Route Error Pages in the top section.
+- `favicon_url` (String) A Url pointing to your favicon. Defaults to Pomerium's Favicon.
+- `google_cloud_serverless_authentication_service_account` (String) Google Cloud Serverless Authentication service account credentials.
 - `grpc_address` (String) gRPC address
 - `grpc_insecure` (Boolean) gRPC insecure
 - `http_redirect_addr` (String) HTTP redirect address
@@ -76,26 +76,21 @@ The settings are global object.
 - `insecure_server` (Boolean) Insecure server
 - `installation_id` (String) Installation ID
 - `jwt_claims_headers` (Map of String) JWT claims headers mapping
+- `jwt_groups_filter` (Attributes) JWT Groups Filter (see [below for nested schema](#nestedatt--jwt_groups_filter))
 - `log_level` (String) Log level
-- `logo_url` (String) Logo URL
+- `logo_url` (String) A URL pointing to your logo. Defaults to Pomerium's Logo.
 - `metrics_address` (String) Metrics address
-- `pass_identity_headers` (Boolean) Pass identity headers
-- `primary_color` (String) Primary color
+- `pass_identity_headers` (Boolean) If applied, passes X-Pomerium-Jwt-Assertion header and JWT Claims Headers to all upstream applications.
+- `primary_color` (String) A hex code that determines the primary color for the Enterprise Console and Route Error Details pages.
 - `proxy_log_level` (String) Proxy log level
 - `request_params` (Map of String) Request parameters
-- `scopes` (List of String) Scopes
-- `secondary_color` (String) Secondary color
+- `scopes` (Set of String) Scopes
+- `secondary_color` (String) A hex code that determines the secondary color for the Enterprise Console and Route Error Details pages.
 - `set_response_headers` (Map of String) Response headers to set
 - `skip_xff_append` (Boolean) Skip XFF append
-- `timeout_idle` (String) Timeout idle
-- `timeout_read` (String) Timeout read
-- `timeout_write` (String) Timeout write
-- `tracing_datadog_address` (String) Tracing Datadog address
-- `tracing_jaeger_agent_endpoint` (String) Tracing Jaeger agent endpoint
-- `tracing_jaeger_collector_endpoint` (String) Tracing Jaeger collector endpoint
-- `tracing_provider` (String) Tracing provider
-- `tracing_sample_rate` (Number) Tracing sample rate
-- `tracing_zipkin_endpoint` (String) Tracing Zipkin endpoint
+- `timeout_idle` (String) Sets the time at which a downstream or upstream connection will be terminated if no active streams.
+- `timeout_read` (String) Sets the amount of time for the client to receive the entire request stream.
+- `timeout_write` (String) Sets max stream duration of an HTTP request/response exchange. Must be greater than read timeout.
 
 <a id="nestedatt--identity_provider_auth0"></a>
 ### Nested Schema for `identity_provider_auth0`
@@ -185,3 +180,12 @@ Required:
 - `client_id` (String)
 - `client_secret` (String, Sensitive)
 - `environment_id` (String)
+
+
+<a id="nestedatt--jwt_groups_filter"></a>
+### Nested Schema for `jwt_groups_filter`
+
+Optional:
+
+- `groups` (Set of String) Group IDs to include
+- `infer_from_ppl` (Boolean)

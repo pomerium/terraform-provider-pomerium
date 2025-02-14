@@ -1,0 +1,20 @@
+repos:
+  - repo: local
+    hooks:
+      - id: docs
+        name: docs
+        language: system
+        entry: make docs
+        types: ["go"]
+      - id: go-mod-tidy
+        name: go-mod-tidy
+        language: system
+        entry: bash -c 'go mod tidy'
+        files: go\.mod|go\.sum$
+      - id: lint
+        name: lint
+        language: system
+        entry: make
+        args: ["lint"]
+        types: ["go"]
+        pass_filenames: false
