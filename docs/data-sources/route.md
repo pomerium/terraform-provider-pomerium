@@ -22,6 +22,7 @@ Route data source
 ### Optional
 
 - `jwt_groups_filter` (Attributes) JWT Groups Filter (see [below for nested schema](#nestedatt--jwt_groups_filter))
+- `jwt_issuer_format` (String) Format for JWT issuer strings. Use 'IssuerHostOnly' for hostname without scheme or trailing slash, or 'IssuerURI' for complete URI including scheme and trailing slash.
 
 ### Read-Only
 
@@ -37,7 +38,6 @@ Route data source
 - `idle_timeout` (String) Idle timeout.
 - `idp_client_id` (String) IDP client ID.
 - `idp_client_secret` (String) IDP client secret.
-- `jwt_issuer_format` (Object) JWT issuer format configuration. (see [below for nested schema](#nestedatt--jwt_issuer_format))
 - `kubernetes_service_account_token` (String) Kubernetes service account token.
 - `kubernetes_service_account_token_file` (String) Path to the Kubernetes service account token file.
 - `logo_url` (String) URL to the logo image.
@@ -75,14 +75,6 @@ Optional:
 
 - `groups` (Set of String) Group IDs to include
 - `infer_from_ppl` (Boolean)
-
-
-<a id="nestedatt--jwt_issuer_format"></a>
-### Nested Schema for `jwt_issuer_format`
-
-Read-Only:
-
-- `format` (String)
 
 
 <a id="nestedatt--rewrite_response_headers"></a>
