@@ -5,9 +5,10 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	client "github.com/pomerium/enterprise-client-go"
@@ -167,11 +168,12 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 			Description: "Show error details.",
 		},
 		"jwt_groups_filter": JWTGroupsFilterSchema,
-		"jwt_issuer_format": schema.ObjectAttribute{
-			Description: "JWT issuer format configuration.",
+		"jwt_issuer_format": schema.StringAttribute{
+			Optional:    true,
 			Computed:    true,
-			AttributeTypes: map[string]attr.Type{
-				"format": types.StringType,
+			Description: "Format for JWT issuer strings. Use 'IssuerHostOnly' for hostname without scheme or trailing slash, or 'IssuerURI' for complete URI including scheme and trailing slash.",
+			Validators: []validator.String{
+				stringvalidator.OneOf(GetValidEnumValues[pb.IssuerFormat]()...),
 			},
 		},
 		"rewrite_response_headers": schema.SetNestedAttribute{

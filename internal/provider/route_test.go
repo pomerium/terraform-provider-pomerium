@@ -50,6 +50,7 @@ func TestConvertRoute(t *testing.T) {
 			EnableGoogleCloudServerlessAuthentication: true,
 			TlsCustomCaKeyPairId:                      P("custom-ca-1"),
 			KubernetesServiceAccountTokenFile:         P("/path/to/token"),
+			JwtIssuerFormat:                           pb.IssuerFormat_IssuerURI,
 		}
 
 		var actual provider.RouteResourceModel
@@ -108,6 +109,7 @@ func TestConvertRoute(t *testing.T) {
 			EnableGoogleCloudServerlessAuthentication: types.BoolValue(true),
 			TLSCustomCAKeyPairID:                      types.StringValue("custom-ca-1"),
 			KubernetesServiceAccountTokenFile:         types.StringValue("/path/to/token"),
+			JWTIssuerFormat:                           types.StringValue("IssuerURI"),
 		}
 
 		if diff := cmp.Diff(expected, actual); diff != "" {

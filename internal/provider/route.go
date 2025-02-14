@@ -5,12 +5,13 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	client "github.com/pomerium/enterprise-client-go"
@@ -200,11 +201,12 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Computed:    true,
 			},
 			"jwt_groups_filter": JWTGroupsFilterSchema,
-			"jwt_issuer_format": schema.ObjectAttribute{
-				Description: "JWT issuer format configuration.",
+			"jwt_issuer_format": schema.StringAttribute{
 				Optional:    true,
-				AttributeTypes: map[string]attr.Type{
-					"format": types.StringType,
+				Computed:    true,
+				Description: "Format for JWT issuer strings. Use 'IssuerHostOnly' for hostname without scheme or trailing slash, or 'IssuerURI' for complete URI including scheme and trailing slash.",
+				Validators: []validator.String{
+					stringvalidator.OneOf(GetValidEnumValues[pb.IssuerFormat]()...),
 				},
 			},
 			"rewrite_response_headers": schema.SetNestedAttribute{
