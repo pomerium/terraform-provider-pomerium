@@ -26,7 +26,7 @@ type RouteModel struct {
 	IDPClientID                               types.String         `tfsdk:"idp_client_id"`
 	IDPClientSecret                           types.String         `tfsdk:"idp_client_secret"`
 	JWTGroupsFilter                           types.Object         `tfsdk:"jwt_groups_filter"`
-	JWTIssuerFormat                           types.Object         `tfsdk:"jwt_issuer_format"`
+	JWTIssuerFormat                           types.String         `tfsdk:"jwt_issuer_format"`
 	KubernetesServiceAccountToken             types.String         `tfsdk:"kubernetes_service_account_token"`
 	KubernetesServiceAccountTokenFile         types.String         `tfsdk:"kubernetes_service_account_token_file"`
 	LogoURL                                   types.String         `tfsdk:"logo_url"`
@@ -174,6 +174,7 @@ func ConvertRouteToPB(
 		pbRoute.EnableGoogleCloudServerlessAuthentication = src.EnableGoogleCloudServerlessAuthentication.ValueBool()
 	}
 	pbRoute.KubernetesServiceAccountTokenFile = src.KubernetesServiceAccountTokenFile.ValueStringPointer()
+	EnumValueToPBWithDefault(&pbRoute.JwtIssuerFormat, src.JWTIssuerFormat, pb.IssuerFormat_IssuerHostOnly, &diagnostics)
 
 	pbRoute.RewriteResponseHeaders = rewriteHeadersToPB(src.RewriteResponseHeaders)
 
@@ -232,6 +233,7 @@ func ConvertRouteFromPB(
 	}
 	dst.KubernetesServiceAccountTokenFile = types.StringPointerValue(src.KubernetesServiceAccountTokenFile)
 
+	dst.JWTIssuerFormat = EnumValueFromPB(src.JwtIssuerFormat)
 	dst.RewriteResponseHeaders = rewriteHeadersFromPB(src.RewriteResponseHeaders)
 
 	return diagnostics
