@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -14,6 +15,7 @@ import (
 type RouteModel struct {
 	AllowSPDY                                 types.Bool           `tfsdk:"allow_spdy"`
 	AllowWebsockets                           types.Bool           `tfsdk:"allow_websockets"`
+	BearerTokenFormat                         types.String         `tfsdk:"bearer_token_format"`
 	Description                               types.String         `tfsdk:"description"`
 	EnableGoogleCloudServerlessAuthentication types.Bool           `tfsdk:"enable_google_cloud_serverless_authentication"`
 	From                                      types.String         `tfsdk:"from"`
@@ -23,6 +25,7 @@ type RouteModel struct {
 	HostRewriteHeader                         types.String         `tfsdk:"host_rewrite_header"`
 	ID                                        types.String         `tfsdk:"id"`
 	IdleTimeout                               timetypes.GoDuration `tfsdk:"idle_timeout"`
+	IDPAccessTokenAllowedAudiences            types.List           `tfsdk:"idp_access_token_allowed_audiences"`
 	IDPClientID                               types.String         `tfsdk:"idp_client_id"`
 	IDPClientSecret                           types.String         `tfsdk:"idp_client_secret"`
 	JWTGroupsFilter                           types.Object         `tfsdk:"jwt_groups_filter"`
@@ -175,8 +178,9 @@ func ConvertRouteToPB(
 	}
 	pbRoute.KubernetesServiceAccountTokenFile = src.KubernetesServiceAccountTokenFile.ValueStringPointer()
 	EnumValueToPBWithDefault(&pbRoute.JwtIssuerFormat, src.JWTIssuerFormat, pb.IssuerFormat_IssuerHostOnly, &diagnostics)
-
 	pbRoute.RewriteResponseHeaders = rewriteHeadersToPB(src.RewriteResponseHeaders)
+	pbRoute.BearerTokenFormat = ToBearerTokenFormat(src.BearerTokenFormat)
+	ToRouteStringList(ctx, &pbRoute.IdpAccessTokenAllowedAudiences, src.IDPAccessTokenAllowedAudiences, &diagnostics)
 
 	return pbRoute, diagnostics
 }
@@ -232,9 +236,9 @@ func ConvertRouteFromPB(
 		dst.EnableGoogleCloudServerlessAuthentication = types.BoolValue(true)
 	}
 	dst.KubernetesServiceAccountTokenFile = types.StringPointerValue(src.KubernetesServiceAccountTokenFile)
-
 	dst.JWTIssuerFormat = EnumValueFromPB(src.JwtIssuerFormat)
 	dst.RewriteResponseHeaders = rewriteHeadersFromPB(src.RewriteResponseHeaders)
-
+	dst.BearerTokenFormat = FromBearerTokenFormat(src.BearerTokenFormat)
+	dst.IDPAccessTokenAllowedAudiences = FromStringList(src.IdpAccessTokenAllowedAudiences)
 	return diagnostics
 }

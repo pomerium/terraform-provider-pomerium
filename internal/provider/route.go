@@ -14,10 +14,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	client "github.com/pomerium/enterprise-client-go"
-	"github.com/pomerium/enterprise-client-go/pb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	client "github.com/pomerium/enterprise-client-go"
+	"github.com/pomerium/enterprise-client-go/pb"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -252,6 +253,18 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"enable_google_cloud_serverless_authentication": schema.BoolAttribute{
 				Description: "Enable Google Cloud serverless authentication.",
 				Optional:    true,
+			},
+			"bearer_token_format": schema.StringAttribute{
+				Description: "Bearer token format.",
+				Optional:    true,
+				Validators: []validator.String{
+					stringvalidator.OneOf("default", "idp_access_token", "idp_identity_token"),
+				},
+			},
+			"idp_access_token_allowed_audiences": schema.ListAttribute{
+				Description: "IDP access token allowed audiences.",
+				Optional:    true,
+				ElementType: types.StringType,
 			},
 		},
 	}

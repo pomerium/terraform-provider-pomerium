@@ -220,6 +220,15 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 			Description: "Enable Google Cloud serverless authentication.",
 			Computed:    true,
 		},
+		"bearer_token_format": schema.StringAttribute{
+			Description: "Bearer token format.",
+			Computed:    true,
+		},
+		"idp_access_token_allowed_audiences": schema.ListAttribute{
+			Description: "IDP access token allowed audiences.",
+			Computed:    true,
+			ElementType: types.StringType,
+		},
 	}
 }
 

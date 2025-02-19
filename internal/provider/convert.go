@@ -11,10 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/iancoleman/strcase"
-	"github.com/pomerium/enterprise-client-go/pb"
 	"google.golang.org/protobuf/types/known/durationpb"
-
 	"google.golang.org/protobuf/types/known/structpb"
+
+	"github.com/pomerium/enterprise-client-go/pb"
 )
 
 func FromStringSliceToSet(slice []string) types.Set {
@@ -34,6 +34,21 @@ func FromStringSliceToList(slice []string) types.List {
 	}
 	fields := make([]attr.Value, 0)
 	for _, v := range slice {
+		fields = append(fields, types.StringValue(v))
+	}
+	return types.ListValueMust(types.StringType, fields)
+}
+
+// FromStringList converts a protobuf string list into a list of strings.
+func FromStringList[T any, TMessage interface {
+	*T
+	GetValues() []string
+}](src TMessage) types.List {
+	if src == nil {
+		return types.ListNull(types.StringType)
+	}
+	fields := make([]attr.Value, 0)
+	for _, v := range (src).GetValues() {
 		fields = append(fields, types.StringValue(v))
 	}
 	return types.ListValueMust(types.StringType, fields)
@@ -271,4 +286,69 @@ func StringSliceExclude(s1, s2 []string) []string {
 		}
 	}
 	return result
+}
+
+// FromBearerTokenFormat converts a protobuf bearer token format into a string.
+func FromBearerTokenFormat(src *pb.BearerTokenFormat) types.String {
+	if src == nil {
+		return types.StringNull()
+	}
+
+	switch *src {
+	default:
+		fallthrough
+	case pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_UNKNOWN:
+		return types.StringValue("")
+	case pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_DEFAULT:
+		return types.StringValue("default")
+	case pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_ACCESS_TOKEN:
+		return types.StringValue("idp_access_token")
+	case pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_IDENTITY_TOKEN:
+		return types.StringValue("idp_identity_token")
+	}
+}
+
+// ToBearerTokenFormat converts a bearker token format string into a protobuf enum.
+func ToBearerTokenFormat(src types.String) *pb.BearerTokenFormat {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	switch src.ValueString() {
+	default:
+		fallthrough
+
+	case "":
+		return pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_UNKNOWN.Enum()
+	case "default":
+		return pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_DEFAULT.Enum()
+	case "idp_access_token":
+		return pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_ACCESS_TOKEN.Enum()
+	case "idp_identity_token":
+		return pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_IDENTITY_TOKEN.Enum()
+	}
+}
+
+func ToRouteStringList(ctx context.Context, dst **pb.Route_StringList, src types.List, diagnostics *diag.Diagnostics) {
+	if src.IsNull() || src.IsUnknown() {
+		*dst = nil
+		return
+	}
+	var values []string
+	diagnostics.Append(src.ElementsAs(ctx, &values, false)...)
+	if !diagnostics.HasError() {
+		*dst = &pb.Route_StringList{Values: values}
+	}
+}
+
+func ToSettingsStringList(ctx context.Context, dst **pb.Settings_StringList, src types.List, diagnostics *diag.Diagnostics) {
+	if src.IsNull() || src.IsUnknown() {
+		*dst = nil
+		return
+	}
+	var values []string
+	diagnostics.Append(src.ElementsAs(ctx, &values, false)...)
+	if !diagnostics.HasError() {
+		*dst = &pb.Settings_StringList{Values: values}
+	}
 }
