@@ -166,6 +166,10 @@ func TestConvertRoute(t *testing.T) {
 			EnableGoogleCloudServerlessAuthentication: types.BoolValue(true),
 			TLSCustomCAKeyPairID:                      types.StringValue("custom-ca-1"),
 			KubernetesServiceAccountTokenFile:         types.StringValue("/path/to/token"),
+			BearerTokenFormat:                         types.StringValue("idp_access_token"),
+			IDPAccessTokenAllowedAudiences: types.ListValueMust(types.StringType, []attr.Value{
+				types.StringValue("X"), types.StringValue("Y"), types.StringValue("Z"),
+			}),
 		}
 
 		actual, diag := provider.ConvertRouteToPB(context.Background(), &input)
@@ -191,6 +195,10 @@ func TestConvertRoute(t *testing.T) {
 			EnableGoogleCloudServerlessAuthentication: true,
 			TlsCustomCaKeyPairId:                      P("custom-ca-1"),
 			KubernetesServiceAccountTokenFile:         P("/path/to/token"),
+			BearerTokenFormat:                         pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_ACCESS_TOKEN.Enum(),
+			IdpAccessTokenAllowedAudiences: &pb.Route_StringList{
+				Values: []string{"X", "Y", "Z"},
+			},
 		}
 
 		if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
