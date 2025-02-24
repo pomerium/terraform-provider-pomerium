@@ -261,7 +261,7 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 					stringvalidator.OneOf("default", "idp_access_token", "idp_identity_token"),
 				},
 			},
-			"idp_access_token_allowed_audiences": schema.ListAttribute{
+			"idp_access_token_allowed_audiences": schema.SetAttribute{
 				Description: "IDP access token allowed audiences.",
 				Optional:    true,
 				ElementType: types.StringType,

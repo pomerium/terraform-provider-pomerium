@@ -224,7 +224,7 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 			Description: "Bearer token format.",
 			Computed:    true,
 		},
-		"idp_access_token_allowed_audiences": schema.ListAttribute{
+		"idp_access_token_allowed_audiences": schema.SetAttribute{
 			Description: "IDP access token allowed audiences.",
 			Computed:    true,
 			ElementType: types.StringType,

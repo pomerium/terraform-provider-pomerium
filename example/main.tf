@@ -56,6 +56,8 @@ resource "pomerium_settings" "settings" {
   jwt_groups_filter = {
     groups = ["id1", "id2"]
   }
+
+  idp_access_token_allowed_audiences = ["aud1", "aud2"]
 }
 
 resource "pomerium_service_account" "test_sa" {
@@ -141,6 +143,8 @@ resource "pomerium_route" "prefix_route" {
   allow_websockets      = true
   preserve_host_header  = true
   pass_identity_headers = true
+
+  idp_access_token_allowed_audiences = ["aud3", "aud4"]
 }
 
 # Example route with path matching
