@@ -26,6 +26,7 @@ Route for Pomerium.
 
 - `allow_spdy` (Boolean) If applied, this setting enables Pomerium to proxy SPDY protocol upgrades.
 - `allow_websockets` (Boolean) If applied, this setting enables Pomerium to proxy websocket connections.
+- `bearer_token_format` (String) Bearer token format.
 - `description` (String) Description of the route.
 - `enable_google_cloud_serverless_authentication` (Boolean) Enable Google Cloud serverless authentication.
 - `host_path_regex_rewrite_pattern` (String) Rewrites the Host header according to a regular expression matching the path.
@@ -33,6 +34,7 @@ Route for Pomerium.
 - `host_rewrite` (String) Rewrites the Host header to a new literal value.
 - `host_rewrite_header` (String) Rewrites the Host header to match an incoming header value.
 - `idle_timeout` (String) Sets the time to terminate the upstream connection if there are no active streams. Defaults to 5 minutes.
+- `idp_access_token_allowed_audiences` (Set of String) IDP access token allowed audiences.
 - `idp_client_id` (String) IDP client ID.
 - `idp_client_secret` (String) IDP client secret.
 - `jwt_groups_filter` (Attributes) JWT Groups Filter (see [below for nested schema](#nestedatt--jwt_groups_filter))

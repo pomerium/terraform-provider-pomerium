@@ -30,6 +30,7 @@ The settings are global object.
 - `autocert_dir` (String) Autocert directory is the path which Autocert will store x509 certificate data.
 - `autocert_must_staple` (Boolean) Controls whether the must-staple flag is enabled when requesting certificates.
 - `autocert_use_staging` (Boolean) Autocert Use Staging setting allows you to use Let's Encrypt's staging environment, which has more lenient usage limits than the production environment.
+- `bearer_token_format` (String) Bearer token format.
 - `cache_service_url` (String) Cache service URL
 - `certificate_authority` (String) Certificate authority
 - `certificate_authority_file` (String) Certificate authority file
@@ -66,6 +67,7 @@ The settings are global object.
 - `identity_provider_ping` (Attributes) Ping directory sync options (see [below for nested schema](#nestedatt--identity_provider_ping))
 - `identity_provider_refresh_interval` (String) Identity provider refresh interval
 - `identity_provider_refresh_timeout` (String) Identity provider refresh timeout
+- `idp_access_token_allowed_audiences` (Set of String) IDP access token allowed audiences.
 - `idp_client_id` (String) IDP client ID
 - `idp_client_secret` (String, Sensitive) IDP client secret
 - `idp_provider` (String) IDP provider

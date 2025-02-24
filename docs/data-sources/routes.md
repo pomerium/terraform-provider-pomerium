@@ -40,6 +40,7 @@ Read-Only:
 
 - `allow_spdy` (Boolean) Allow SPDY.
 - `allow_websockets` (Boolean) Allow websockets.
+- `bearer_token_format` (String) Bearer token format.
 - `description` (String) Description of the route.
 - `enable_google_cloud_serverless_authentication` (Boolean) Enable Google Cloud serverless authentication.
 - `from` (String) From URL.
@@ -49,6 +50,7 @@ Read-Only:
 - `host_rewrite_header` (String) Host rewrite header.
 - `id` (String) Unique identifier for the route.
 - `idle_timeout` (String) Idle timeout.
+- `idp_access_token_allowed_audiences` (Set of String) IDP access token allowed audiences.
 - `idp_client_id` (String) IDP client ID.
 - `idp_client_secret` (String) IDP client secret.
 - `kubernetes_service_account_token` (String) Kubernetes service account token.
