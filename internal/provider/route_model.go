@@ -25,7 +25,7 @@ type RouteModel struct {
 	HostRewriteHeader                         types.String         `tfsdk:"host_rewrite_header"`
 	ID                                        types.String         `tfsdk:"id"`
 	IdleTimeout                               timetypes.GoDuration `tfsdk:"idle_timeout"`
-	IDPAccessTokenAllowedAudiences            types.Set           `tfsdk:"idp_access_token_allowed_audiences"`
+	IDPAccessTokenAllowedAudiences            types.Set            `tfsdk:"idp_access_token_allowed_audiences"`
 	IDPClientID                               types.String         `tfsdk:"idp_client_id"`
 	IDPClientSecret                           types.String         `tfsdk:"idp_client_secret"`
 	JWTGroupsFilter                           types.Object         `tfsdk:"jwt_groups_filter"`

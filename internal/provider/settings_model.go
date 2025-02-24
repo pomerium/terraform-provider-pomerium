@@ -58,7 +58,7 @@ type SettingsModel struct {
 	IdentityProviderPing                              types.Object         `tfsdk:"identity_provider_ping"`
 	IdentityProviderRefreshInterval                   timetypes.GoDuration `tfsdk:"identity_provider_refresh_interval"`
 	IdentityProviderRefreshTimeout                    timetypes.GoDuration `tfsdk:"identity_provider_refresh_timeout"`
-	IDPAccessTokenAllowedAudiences                    types.List           `tfsdk:"idp_access_token_allowed_audiences"`
+	IDPAccessTokenAllowedAudiences                    types.Set            `tfsdk:"idp_access_token_allowed_audiences"`
 	IdpClientID                                       types.String         `tfsdk:"idp_client_id"`
 	IdpClientSecret                                   types.String         `tfsdk:"idp_client_secret"`
 	IdpProvider                                       types.String         `tfsdk:"idp_provider"`

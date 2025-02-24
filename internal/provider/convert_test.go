@@ -701,22 +701,22 @@ func TestFromStringList(t *testing.T) {
 	for _, tc := range []struct {
 		name   string
 		in     *pb.Route_StringList
-		expect types.List
+		expect types.Set
 	}{
 		{
 			"null",
 			nil,
-			types.ListNull(types.StringType),
+			types.SetNull(types.StringType),
 		},
 		{
 			"empty",
 			&pb.Route_StringList{},
-			types.ListValueMust(types.StringType, []attr.Value{}),
+			types.SetValueMust(types.StringType, []attr.Value{}),
 		},
 		{
 			"entries",
 			&pb.Route_StringList{Values: []string{"a", "b", "c"}},
-			types.ListValueMust(types.StringType, []attr.Value{
+			types.SetValueMust(types.StringType, []attr.Value{
 				types.StringValue("a"), types.StringValue("b"), types.StringValue("c"),
 			}),
 		},
@@ -769,31 +769,31 @@ func TestToRouteStringList(t *testing.T) {
 
 	for _, tc := range []struct {
 		name       string
-		in         types.List
+		in         types.Set
 		expect     *pb.Route_StringList
 		errorCount int
 	}{
 		{
 			"null",
-			types.ListNull(types.StringType),
+			types.SetNull(types.StringType),
 			nil,
 			0,
 		},
 		{
 			"invalid",
-			types.ListValueMust(types.BoolType, []attr.Value{types.BoolValue(true)}),
+			types.SetValueMust(types.BoolType, []attr.Value{types.BoolValue(true)}),
 			nil,
 			1,
 		},
 		{
 			"empty",
-			types.ListValueMust(types.StringType, []attr.Value{}),
+			types.SetValueMust(types.StringType, []attr.Value{}),
 			&pb.Route_StringList{Values: []string{}},
 			0,
 		},
 		{
 			"entries",
-			types.ListValueMust(types.StringType, []attr.Value{
+			types.SetValueMust(types.StringType, []attr.Value{
 				types.StringValue("a"), types.StringValue("b"), types.StringValue("c"),
 			}),
 			&pb.Route_StringList{Values: []string{
@@ -816,31 +816,31 @@ func TestToSettingsStringList(t *testing.T) {
 
 	for _, tc := range []struct {
 		name       string
-		in         types.List
+		in         types.Set
 		expect     *pb.Settings_StringList
 		errorCount int
 	}{
 		{
 			"null",
-			types.ListNull(types.StringType),
+			types.SetNull(types.StringType),
 			nil,
 			0,
 		},
 		{
 			"invalid",
-			types.ListValueMust(types.BoolType, []attr.Value{types.BoolValue(true)}),
+			types.SetValueMust(types.BoolType, []attr.Value{types.BoolValue(true)}),
 			nil,
 			1,
 		},
 		{
 			"empty",
-			types.ListValueMust(types.StringType, []attr.Value{}),
+			types.SetValueMust(types.StringType, []attr.Value{}),
 			&pb.Settings_StringList{Values: []string{}},
 			0,
 		},
 		{
 			"entries",
-			types.ListValueMust(types.StringType, []attr.Value{
+			types.SetValueMust(types.StringType, []attr.Value{
 				types.StringValue("a"), types.StringValue("b"), types.StringValue("c"),
 			}),
 			&pb.Settings_StringList{Values: []string{

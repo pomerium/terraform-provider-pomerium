@@ -43,15 +43,15 @@ func FromStringSliceToList(slice []string) types.List {
 func FromStringList[T any, TMessage interface {
 	*T
 	GetValues() []string
-}](src TMessage) types.List {
+}](src TMessage) types.Set {
 	if src == nil {
-		return types.ListNull(types.StringType)
+		return types.SetNull(types.StringType)
 	}
 	fields := make([]attr.Value, 0)
 	for _, v := range (src).GetValues() {
 		fields = append(fields, types.StringValue(v))
 	}
-	return types.ListValueMust(types.StringType, fields)
+	return types.SetValueMust(types.StringType, fields)
 }
 
 // FromStringListToSet converts a Settings_StringList to a types.List
@@ -329,7 +329,7 @@ func ToBearerTokenFormat(src types.String) *pb.BearerTokenFormat {
 	}
 }
 
-func ToRouteStringList(ctx context.Context, dst **pb.Route_StringList, src types.List, diagnostics *diag.Diagnostics) {
+func ToRouteStringList(ctx context.Context, dst **pb.Route_StringList, src types.Set, diagnostics *diag.Diagnostics) {
 	if src.IsNull() || src.IsUnknown() {
 		*dst = nil
 		return
@@ -341,7 +341,7 @@ func ToRouteStringList(ctx context.Context, dst **pb.Route_StringList, src types
 	}
 }
 
-func ToSettingsStringList(ctx context.Context, dst **pb.Settings_StringList, src types.List, diagnostics *diag.Diagnostics) {
+func ToSettingsStringList(ctx context.Context, dst **pb.Settings_StringList, src types.Set, diagnostics *diag.Diagnostics) {
 	if src.IsNull() || src.IsUnknown() {
 		*dst = nil
 		return

@@ -114,7 +114,7 @@ func TestConvertRoute(t *testing.T) {
 			KubernetesServiceAccountTokenFile:         types.StringValue("/path/to/token"),
 			JWTIssuerFormat:                           types.StringValue("IssuerURI"),
 			BearerTokenFormat:                         types.StringValue("idp_access_token"),
-			IDPAccessTokenAllowedAudiences: types.ListValueMust(types.StringType, []attr.Value{
+			IDPAccessTokenAllowedAudiences: types.SetValueMust(types.StringType, []attr.Value{
 				types.StringValue("a"), types.StringValue("b"), types.StringValue("c"),
 			}),
 		}
@@ -167,7 +167,7 @@ func TestConvertRoute(t *testing.T) {
 			TLSCustomCAKeyPairID:                      types.StringValue("custom-ca-1"),
 			KubernetesServiceAccountTokenFile:         types.StringValue("/path/to/token"),
 			BearerTokenFormat:                         types.StringValue("idp_access_token"),
-			IDPAccessTokenAllowedAudiences: types.ListValueMust(types.StringType, []attr.Value{
+			IDPAccessTokenAllowedAudiences: types.SetValueMust(types.StringType, []attr.Value{
 				types.StringValue("X"), types.StringValue("Y"), types.StringValue("Z"),
 			}),
 		}
