@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -20,6 +21,7 @@ type SettingsModel struct {
 	AutocertDir                                       types.String         `tfsdk:"autocert_dir"`
 	AutocertMustStaple                                types.Bool           `tfsdk:"autocert_must_staple"`
 	AutocertUseStaging                                types.Bool           `tfsdk:"autocert_use_staging"`
+	BearerTokenFormat                                 types.String         `tfsdk:"bearer_token_format"`
 	CacheServiceURL                                   types.String         `tfsdk:"cache_service_url"`
 	CertificateAuthority                              types.String         `tfsdk:"certificate_authority"`
 	CertificateAuthorityFile                          types.String         `tfsdk:"certificate_authority_file"`
@@ -56,6 +58,7 @@ type SettingsModel struct {
 	IdentityProviderPing                              types.Object         `tfsdk:"identity_provider_ping"`
 	IdentityProviderRefreshInterval                   timetypes.GoDuration `tfsdk:"identity_provider_refresh_interval"`
 	IdentityProviderRefreshTimeout                    timetypes.GoDuration `tfsdk:"identity_provider_refresh_timeout"`
+	IDPAccessTokenAllowedAudiences                    types.Set            `tfsdk:"idp_access_token_allowed_audiences"`
 	IdpClientID                                       types.String         `tfsdk:"idp_client_id"`
 	IdpClientSecret                                   types.String         `tfsdk:"idp_client_secret"`
 	IdpProvider                                       types.String         `tfsdk:"idp_provider"`
@@ -100,6 +103,7 @@ func ConvertSettingsToPB(
 	pbSettings.AutocertDir = src.AutocertDir.ValueStringPointer()
 	pbSettings.AutocertMustStaple = src.AutocertMustStaple.ValueBoolPointer()
 	pbSettings.AutocertUseStaging = src.AutocertUseStaging.ValueBoolPointer()
+	pbSettings.BearerTokenFormat = ToBearerTokenFormat(src.BearerTokenFormat)
 	pbSettings.CacheServiceUrl = src.CacheServiceURL.ValueStringPointer()
 	pbSettings.CertificateAuthority = src.CertificateAuthority.ValueStringPointer()
 	pbSettings.CertificateAuthorityFile = src.CertificateAuthorityFile.ValueStringPointer()
@@ -128,6 +132,7 @@ func ConvertSettingsToPB(
 	IdentityProviderSettingsToPB(ctx, pbSettings, src, &diagnostics)
 	ToDuration(&pbSettings.IdentityProviderRefreshInterval, src.IdentityProviderRefreshInterval, &diagnostics)
 	ToDuration(&pbSettings.IdentityProviderRefreshTimeout, src.IdentityProviderRefreshTimeout, &diagnostics)
+	ToSettingsStringList(ctx, &pbSettings.IdpAccessTokenAllowedAudiences, src.IDPAccessTokenAllowedAudiences, &diagnostics)
 	pbSettings.IdpClientId = src.IdpClientID.ValueStringPointer()
 	pbSettings.IdpClientSecret = src.IdpClientSecret.ValueStringPointer()
 	pbSettings.IdpProvider = src.IdpProvider.ValueStringPointer()
@@ -173,6 +178,7 @@ func ConvertSettingsFromPB(
 	dst.AutocertDir = types.StringPointerValue(src.AutocertDir)
 	dst.AutocertMustStaple = types.BoolPointerValue(src.AutocertMustStaple)
 	dst.AutocertUseStaging = types.BoolPointerValue(src.AutocertUseStaging)
+	dst.BearerTokenFormat = FromBearerTokenFormat(src.BearerTokenFormat)
 	dst.CacheServiceURL = types.StringPointerValue(src.CacheServiceUrl)
 	dst.CertificateAuthority = types.StringPointerValue(src.CertificateAuthority)
 	dst.CertificateAuthorityFile = types.StringPointerValue(src.CertificateAuthorityFile)
@@ -198,9 +204,9 @@ func ConvertSettingsFromPB(
 	dst.GRPCAddress = types.StringPointerValue(src.GrpcAddress)
 	dst.GRPCInsecure = types.BoolPointerValue(src.GrpcInsecure)
 	dst.HTTPRedirectAddr = types.StringPointerValue(src.HttpRedirectAddr)
-	IdentityProviderSettingsFromPB(dst, src, &diagnostics)
 	dst.IdentityProviderRefreshInterval = FromDuration(src.IdentityProviderRefreshInterval)
 	dst.IdentityProviderRefreshTimeout = FromDuration(src.IdentityProviderRefreshTimeout)
+	dst.IDPAccessTokenAllowedAudiences = FromStringList(src.IdpAccessTokenAllowedAudiences)
 	dst.IdpClientID = types.StringPointerValue(src.IdpClientId)
 	dst.IdpClientSecret = types.StringPointerValue(src.IdpClientSecret)
 	dst.IdpProvider = types.StringPointerValue(src.IdpProvider)
@@ -225,6 +231,7 @@ func ConvertSettingsFromPB(
 	dst.TimeoutIdle = FromDuration(src.TimeoutIdle)
 	dst.TimeoutRead = FromDuration(src.TimeoutRead)
 	dst.TimeoutWrite = FromDuration(src.TimeoutWrite)
+	IdentityProviderSettingsFromPB(dst, src, &diagnostics)
 	JWTGroupsFilterFromPB(&dst.JWTGroupsFilter, src.JwtGroupsFilter)
 
 	return diagnostics

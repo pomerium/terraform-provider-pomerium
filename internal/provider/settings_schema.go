@@ -5,6 +5,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -448,6 +449,18 @@ var SettingsResourceSchema = schema.Schema{
 		"pass_identity_headers": schema.BoolAttribute{
 			Optional:    true,
 			Description: "If applied, passes X-Pomerium-Jwt-Assertion header and JWT Claims Headers to all upstream applications.",
+		},
+		"bearer_token_format": schema.StringAttribute{
+			Description: "Bearer token format.",
+			Optional:    true,
+			Validators: []validator.String{
+				stringvalidator.OneOf("default", "idp_access_token", "idp_identity_token"),
+			},
+		},
+		"idp_access_token_allowed_audiences": schema.ListAttribute{
+			Description: "IDP access token allowed audiences.",
+			Optional:    true,
+			ElementType: types.StringType,
 		},
 	},
 }

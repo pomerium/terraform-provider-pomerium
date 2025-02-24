@@ -7,10 +7,11 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/pomerium/enterprise-client-go/pb"
-	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/testing/protocmp"
+
+	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
 )
 
 func TestConvertRoute(t *testing.T) {
@@ -51,6 +52,8 @@ func TestConvertRoute(t *testing.T) {
 			TlsCustomCaKeyPairId:                      P("custom-ca-1"),
 			KubernetesServiceAccountTokenFile:         P("/path/to/token"),
 			JwtIssuerFormat:                           pb.IssuerFormat_IssuerURI,
+			BearerTokenFormat:                         pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_ACCESS_TOKEN.Enum(),
+			IdpAccessTokenAllowedAudiences:            &pb.Route_StringList{Values: []string{"a", "b", "c"}},
 		}
 
 		var actual provider.RouteResourceModel
@@ -110,6 +113,10 @@ func TestConvertRoute(t *testing.T) {
 			TLSCustomCAKeyPairID:                      types.StringValue("custom-ca-1"),
 			KubernetesServiceAccountTokenFile:         types.StringValue("/path/to/token"),
 			JWTIssuerFormat:                           types.StringValue("IssuerURI"),
+			BearerTokenFormat:                         types.StringValue("idp_access_token"),
+			IDPAccessTokenAllowedAudiences: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("a"), types.StringValue("b"), types.StringValue("c"),
+			}),
 		}
 
 		if diff := cmp.Diff(expected, actual); diff != "" {
@@ -159,6 +166,10 @@ func TestConvertRoute(t *testing.T) {
 			EnableGoogleCloudServerlessAuthentication: types.BoolValue(true),
 			TLSCustomCAKeyPairID:                      types.StringValue("custom-ca-1"),
 			KubernetesServiceAccountTokenFile:         types.StringValue("/path/to/token"),
+			BearerTokenFormat:                         types.StringValue("idp_access_token"),
+			IDPAccessTokenAllowedAudiences: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("X"), types.StringValue("Y"), types.StringValue("Z"),
+			}),
 		}
 
 		actual, diag := provider.ConvertRouteToPB(context.Background(), &input)
@@ -184,6 +195,10 @@ func TestConvertRoute(t *testing.T) {
 			EnableGoogleCloudServerlessAuthentication: true,
 			TlsCustomCaKeyPairId:                      P("custom-ca-1"),
 			KubernetesServiceAccountTokenFile:         P("/path/to/token"),
+			BearerTokenFormat:                         pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_ACCESS_TOKEN.Enum(),
+			IdpAccessTokenAllowedAudiences: &pb.Route_StringList{
+				Values: []string{"X", "Y", "Z"},
+			},
 		}
 
 		if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {

@@ -11,13 +11,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/pomerium/enterprise-client-go/pb"
-	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/structpb"
+
+	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
 )
 
 func TestFromStringSlice(t *testing.T) {
@@ -692,4 +693,167 @@ func TestGetTFObjectTypes(t *testing.T) {
 	_, err = provider.GetTFObjectTypes[NoTagStruct]()
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "missing tfsdk tag")
+}
+
+func TestFromStringList(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name   string
+		in     *pb.Route_StringList
+		expect types.Set
+	}{
+		{
+			"null",
+			nil,
+			types.SetNull(types.StringType),
+		},
+		{
+			"empty",
+			&pb.Route_StringList{},
+			types.SetValueMust(types.StringType, []attr.Value{}),
+		},
+		{
+			"entries",
+			&pb.Route_StringList{Values: []string{"a", "b", "c"}},
+			types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("a"), types.StringValue("b"), types.StringValue("c"),
+			}),
+		},
+	} {
+		assert.Equal(t, tc.expect, provider.FromStringList(tc.in),
+			"%s: should convert %v to %v", tc.name, tc.in, tc.expect)
+	}
+}
+
+func TestFromBearerTokenFormat(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name   string
+		in     *pb.BearerTokenFormat
+		expect types.String
+	}{
+		{"null", nil, types.StringNull()},
+		{"unknown", pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_UNKNOWN.Enum(), types.StringValue("")},
+		{"default", pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_DEFAULT.Enum(), types.StringValue("default")},
+		{"idp_access_token", pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_ACCESS_TOKEN.Enum(), types.StringValue("idp_access_token")},
+		{"idp_identity_token", pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_IDENTITY_TOKEN.Enum(), types.StringValue("idp_identity_token")},
+	} {
+		assert.Equal(t, tc.expect, provider.FromBearerTokenFormat(tc.in),
+			"%s: should convert %v to %v", tc.name, tc.in, tc.expect)
+	}
+}
+
+func TestToBearerTokenFormat(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name   string
+		in     types.String
+		expect *pb.BearerTokenFormat
+	}{
+		{"null", types.StringNull(), nil},
+		{"unknown", types.StringValue(""), pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_UNKNOWN.Enum()},
+		{"default", types.StringValue("default"), pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_DEFAULT.Enum()},
+		{"idp_access_token", types.StringValue("idp_access_token"), pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_ACCESS_TOKEN.Enum()},
+		{"idp_identity_token", types.StringValue("idp_identity_token"), pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_IDENTITY_TOKEN.Enum()},
+	} {
+		assert.Equal(t, tc.expect, provider.ToBearerTokenFormat(tc.in),
+			"%s: should convert %v to %v", tc.name, tc.in, tc.expect)
+	}
+}
+
+func TestToRouteStringList(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name       string
+		in         types.Set
+		expect     *pb.Route_StringList
+		errorCount int
+	}{
+		{
+			"null",
+			types.SetNull(types.StringType),
+			nil,
+			0,
+		},
+		{
+			"invalid",
+			types.SetValueMust(types.BoolType, []attr.Value{types.BoolValue(true)}),
+			nil,
+			1,
+		},
+		{
+			"empty",
+			types.SetValueMust(types.StringType, []attr.Value{}),
+			&pb.Route_StringList{Values: []string{}},
+			0,
+		},
+		{
+			"entries",
+			types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("a"), types.StringValue("b"), types.StringValue("c"),
+			}),
+			&pb.Route_StringList{Values: []string{
+				"a", "b", "c",
+			}},
+			0,
+		},
+	} {
+		ctx := context.Background()
+		var diagnostics diag.Diagnostics
+		dst := new(*pb.Route_StringList)
+		provider.ToRouteStringList(ctx, dst, tc.in, &diagnostics)
+		assert.Equal(t, tc.expect, *dst)
+		assert.Equal(t, tc.errorCount, diagnostics.ErrorsCount())
+	}
+}
+
+func TestToSettingsStringList(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name       string
+		in         types.Set
+		expect     *pb.Settings_StringList
+		errorCount int
+	}{
+		{
+			"null",
+			types.SetNull(types.StringType),
+			nil,
+			0,
+		},
+		{
+			"invalid",
+			types.SetValueMust(types.BoolType, []attr.Value{types.BoolValue(true)}),
+			nil,
+			1,
+		},
+		{
+			"empty",
+			types.SetValueMust(types.StringType, []attr.Value{}),
+			&pb.Settings_StringList{Values: []string{}},
+			0,
+		},
+		{
+			"entries",
+			types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("a"), types.StringValue("b"), types.StringValue("c"),
+			}),
+			&pb.Settings_StringList{Values: []string{
+				"a", "b", "c",
+			}},
+			0,
+		},
+	} {
+		ctx := context.Background()
+		var diagnostics diag.Diagnostics
+		dst := new(*pb.Settings_StringList)
+		provider.ToSettingsStringList(ctx, dst, tc.in, &diagnostics)
+		assert.Equal(t, tc.expect, *dst)
+		assert.Equal(t, tc.errorCount, diagnostics.ErrorsCount())
+	}
 }
