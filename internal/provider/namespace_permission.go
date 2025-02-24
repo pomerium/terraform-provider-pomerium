@@ -93,6 +93,7 @@ func (r *NamespacePermissionResource) Create(ctx context.Context, req resource.C
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create namespace permission", err.Error())
+		return
 	}
 
 	plan.ID = types.StringValue(respNP.NamespacePermission.Id)
