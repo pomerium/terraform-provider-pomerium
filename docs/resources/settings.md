@@ -82,6 +82,21 @@ The settings are global object.
 - `log_level` (String) Log level
 - `logo_url` (String) A URL pointing to your logo. Defaults to Pomerium's Logo.
 - `metrics_address` (String) Metrics address
+- `otel_attribute_value_length_limit` (Number) OpenTelemetry attribute value length limit
+- `otel_bsp_max_export_batch_size` (Number) OpenTelemetry BSP max export batch size
+- `otel_bsp_schedule_delay` (String) OpenTelemetry BSP schedule delay
+- `otel_exporter_otlp_endpoint` (String) OpenTelemetry OTLP exporter endpoint
+- `otel_exporter_otlp_headers` (Set of String) OpenTelemetry OTLP exporter headers
+- `otel_exporter_otlp_protocol` (String) OpenTelemetry OTLP exporter protocol
+- `otel_exporter_otlp_timeout` (String) OpenTelemetry OTLP exporter timeout
+- `otel_exporter_otlp_traces_endpoint` (String) OpenTelemetry OTLP traces endpoint
+- `otel_exporter_otlp_traces_headers` (Set of String) OpenTelemetry OTLP traces headers
+- `otel_exporter_otlp_traces_protocol` (String) OpenTelemetry OTLP traces protocol
+- `otel_exporter_otlp_traces_timeout` (String) OpenTelemetry OTLP traces timeout
+- `otel_log_level` (String) OpenTelemetry log level
+- `otel_resource_attributes` (Set of String) OpenTelemetry resource attributes
+- `otel_traces_exporter` (String) OpenTelemetry traces exporter type
+- `otel_traces_sampler_arg` (Number) OpenTelemetry traces sampler argument
 - `pass_identity_headers` (Boolean) If applied, passes X-Pomerium-Jwt-Assertion header and JWT Claims Headers to all upstream applications.
 - `primary_color` (String) A hex code that determines the primary color for the Enterprise Console and Route Error Details pages.
 - `proxy_log_level` (String) Proxy log level
