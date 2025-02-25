@@ -5,19 +5,20 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
 // PolicyModel represents the shared model for policy resources and data sources
 type PolicyModel struct {
+	Description types.String   `tfsdk:"description"`
+	Enforced    types.Bool     `tfsdk:"enforced"`
+	Explanation types.String   `tfsdk:"explanation"`
 	ID          types.String   `tfsdk:"id"`
 	Name        types.String   `tfsdk:"name"`
-	Description types.String   `tfsdk:"description"`
 	NamespaceID types.String   `tfsdk:"namespace_id"`
 	PPL         PolicyLanguage `tfsdk:"ppl"`
 	Rego        types.List     `tfsdk:"rego"`
-	Enforced    types.Bool     `tfsdk:"enforced"`
-	Explanation types.String   `tfsdk:"explanation"`
 	Remediation types.String   `tfsdk:"remediation"`
 }
 
@@ -25,14 +26,15 @@ func ConvertPolicyToPB(ctx context.Context, src *PolicyResourceModel) (*pb.Polic
 	var diagnostics diag.Diagnostics
 
 	pbPolicy := &pb.Policy{
-		Id:          src.ID.ValueString(),
-		Name:        src.Name.ValueString(),
-		Description: src.Description.ValueString(),
-		NamespaceId: src.NamespaceID.ValueString(),
-		Ppl:         string(src.PPL.PolicyJSON),
-		Enforced:    src.Enforced.ValueBool(),
-		Explanation: src.Explanation.ValueString(),
-		Remediation: src.Remediation.ValueString(),
+		OriginatorId: originatorID,
+		Id:           src.ID.ValueString(),
+		Name:         src.Name.ValueString(),
+		Description:  src.Description.ValueString(),
+		NamespaceId:  src.NamespaceID.ValueString(),
+		Ppl:          string(src.PPL.PolicyJSON),
+		Enforced:     src.Enforced.ValueBool(),
+		Explanation:  src.Explanation.ValueString(),
+		Remediation:  src.Remediation.ValueString(),
 	}
 	diagnostics.Append(src.Rego.ElementsAs(ctx, &pbPolicy.Rego, false)...)
 

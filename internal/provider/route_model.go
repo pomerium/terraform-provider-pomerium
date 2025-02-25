@@ -181,6 +181,7 @@ func ConvertRouteToPB(
 	pbRoute.RewriteResponseHeaders = rewriteHeadersToPB(src.RewriteResponseHeaders)
 	pbRoute.BearerTokenFormat = ToBearerTokenFormat(src.BearerTokenFormat)
 	ToRouteStringList(ctx, &pbRoute.IdpAccessTokenAllowedAudiences, src.IDPAccessTokenAllowedAudiences, &diagnostics)
+	pbRoute.OriginatorId = originatorID
 
 	return pbRoute, diagnostics
 }

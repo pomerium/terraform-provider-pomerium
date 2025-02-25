@@ -176,6 +176,7 @@ func TestConvertRoute(t *testing.T) {
 		require.False(t, diag.HasError(), diag.Errors())
 
 		expected := &pb.Route{
+			OriginatorId:         "terraform",
 			Id:                   "route-id",
 			Name:                 "route-name",
 			From:                 "from",

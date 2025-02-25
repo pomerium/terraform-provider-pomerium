@@ -5,10 +5,11 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/pomerium/enterprise-client-go/pb"
-	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
 )
 
 func TestConvertRouteFromPB(t *testing.T) {

@@ -94,19 +94,8 @@ func (r *KeyChainResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	keyPairReq := &pb.CreateKeyPairRequest{
-		NamespaceId: plan.NamespaceID.ValueString(),
-		Name:        plan.Name.ValueString(),
-		Format:      pb.Format_PEM,
-		Certificate: []byte(plan.Certificate.ValueString()),
-	}
-
-	if !plan.Key.IsNull() {
-		keyData := []byte(plan.Key.ValueString())
-		keyPairReq.Key = keyData
-	}
-
-	respKeyPair, err := r.client.KeyChainService.CreateKeyPair(ctx, keyPairReq)
+	createReq := ConvertKeyPairToCreatePB(&plan)
+	respKeyPair, err := r.client.KeyChainService.CreateKeyPair(ctx, createReq)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating key pair", err.Error())
 		return
@@ -157,18 +146,7 @@ func (r *KeyChainResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	fmt := pb.Format_PEM
-	updateReq := &pb.UpdateKeyPairRequest{
-		Id:          plan.ID.ValueString(),
-		Name:        plan.Name.ValueStringPointer(),
-		Format:      &fmt,
-		Certificate: []byte(plan.Certificate.ValueString()),
-	}
-
-	if !plan.Key.IsNull() {
-		updateReq.Key = []byte(plan.Key.ValueString())
-	}
-
+	updateReq := ConvertKeyPairToUpdatePB(&plan)
 	_, err := r.client.KeyChainService.UpdateKeyPair(ctx, updateReq)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating key pair", err.Error())
