@@ -112,6 +112,10 @@ func (p *PomeriumProvider) Configure(ctx context.Context, req provider.Configure
 	var token string
 	if !data.ServiceAccountToken.IsNull() {
 		token = data.ServiceAccountToken.ValueString()
+		if token == "" {
+			resp.Diagnostics.AddError("service_account_token is empty", "service_account_token is empty")
+			return
+		}
 	} else if !data.SharedSecretB64.IsNull() {
 		token, err = GenerateBootstrapServiceAccountToken(data.SharedSecretB64.ValueString())
 		if err != nil {

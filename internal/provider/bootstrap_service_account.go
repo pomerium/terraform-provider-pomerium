@@ -19,6 +19,10 @@ func GenerateBootstrapServiceAccountToken(
 		return "", fmt.Errorf("shared_secret is invalid: %w", err)
 	}
 
+	if len(sharedSecret) == 0 {
+		return "", fmt.Errorf("shared_secret is empty")
+	}
+
 	sig, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.HS256, Key: sharedSecret},
 		(&jose.SignerOptions{}).WithType("JWT"))
 	if err != nil {
