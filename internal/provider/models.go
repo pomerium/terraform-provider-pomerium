@@ -11,6 +11,8 @@ import (
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
+const originatorID = "terraform"
+
 // ServiceAccountModel represents the shared model for service account resources and data sources
 type ServiceAccountModel struct {
 	ID          types.String `tfsdk:"id"`
@@ -77,8 +79,9 @@ func ConvertNamespaceToPB(_ context.Context, src *NamespaceResourceModel) (*pb.N
 	var diagnostics diag.Diagnostics
 
 	pbNamespace := &pb.Namespace{
-		Id:   src.ID.ValueString(),
-		Name: src.Name.ValueString(),
+		OriginatorId: originatorID,
+		Id:           src.ID.ValueString(),
+		Name:         src.Name.ValueString(),
 	}
 
 	if !src.ParentID.IsNull() {
