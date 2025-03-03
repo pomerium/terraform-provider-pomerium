@@ -33,6 +33,11 @@ func TestGenerateBootstrapServiceAccountToken(t *testing.T) {
 				require.Len(t, parts, 3)
 			},
 		},
+		{
+			name:         "empty secret",
+			sharedSecret: "",
+			expectError:  true,
+		},
 	}
 
 	for _, tt := range tests {

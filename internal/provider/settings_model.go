@@ -69,6 +69,7 @@ type SettingsModel struct {
 	InsecureServer                                    types.Bool           `tfsdk:"insecure_server"`
 	InstallationID                                    types.String         `tfsdk:"installation_id"`
 	JWTClaimsHeaders                                  types.Map            `tfsdk:"jwt_claims_headers"`
+	JWTGroupsFilter                                   types.Object         `tfsdk:"jwt_groups_filter"`
 	LogLevel                                          types.String         `tfsdk:"log_level"`
 	LogoURL                                           types.String         `tfsdk:"logo_url"`
 	MetricsAddress                                    types.String         `tfsdk:"metrics_address"`
@@ -83,7 +84,6 @@ type SettingsModel struct {
 	TimeoutIdle                                       timetypes.GoDuration `tfsdk:"timeout_idle"`
 	TimeoutRead                                       timetypes.GoDuration `tfsdk:"timeout_read"`
 	TimeoutWrite                                      timetypes.GoDuration `tfsdk:"timeout_write"`
-	JWTGroupsFilter                                   types.Object         `tfsdk:"jwt_groups_filter"`
 	OtelTracesExporter                                types.String         `tfsdk:"otel_traces_exporter"`
 	OtelTracesSamplerArg                              types.Float64        `tfsdk:"otel_traces_sampler_arg"`
 	OtelResourceAttributes                            types.Set            `tfsdk:"otel_resource_attributes"`
@@ -161,6 +161,7 @@ func ConvertSettingsToPB(
 	pbSettings.LogLevel = src.LogLevel.ValueStringPointer()
 	pbSettings.LogoUrl = src.LogoURL.ValueStringPointer()
 	pbSettings.MetricsAddress = src.MetricsAddress.ValueStringPointer()
+	pbSettings.OriginatorId = originatorID
 	pbSettings.PassIdentityHeaders = src.PassIdentityHeaders.ValueBoolPointer()
 	pbSettings.PrimaryColor = src.PrimaryColor.ValueStringPointer()
 	pbSettings.ProxyLogLevel = src.ProxyLogLevel.ValueStringPointer()
