@@ -2,7 +2,7 @@ terraform {
   required_providers {
     pomerium = {
       source  = "pomerium/pomerium"
-      version = "0.0.8"
+      version = "0.0.11"
     }
   }
 }
@@ -51,7 +51,9 @@ resource "pomerium_settings" "settings" {
   log_level       = "info"
   proxy_log_level = "info"
 
-  timeout_idle = "5m"
+  timeout_idle = "10m"
+
+  darkmode_primary_color = "#49AAA1"
 
   jwt_groups_filter = {
     groups = ["id1", "id2"]

@@ -26,7 +26,7 @@ func ConvertPolicyToPB(ctx context.Context, src *PolicyResourceModel) (*pb.Polic
 	var diagnostics diag.Diagnostics
 
 	pbPolicy := &pb.Policy{
-		OriginatorId: originatorID,
+		OriginatorId: OriginatorID,
 		Id:           src.ID.ValueString(),
 		Name:         src.Name.ValueString(),
 		Description:  src.Description.ValueString(),

@@ -161,7 +161,7 @@ func ConvertSettingsToPB(
 	pbSettings.LogLevel = src.LogLevel.ValueStringPointer()
 	pbSettings.LogoUrl = src.LogoURL.ValueStringPointer()
 	pbSettings.MetricsAddress = src.MetricsAddress.ValueStringPointer()
-	pbSettings.OriginatorId = originatorID
+	pbSettings.OriginatorId = OriginatorID
 	pbSettings.PassIdentityHeaders = src.PassIdentityHeaders.ValueBoolPointer()
 	pbSettings.PrimaryColor = src.PrimaryColor.ValueStringPointer()
 	pbSettings.ProxyLogLevel = src.ProxyLogLevel.ValueStringPointer()
