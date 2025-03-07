@@ -176,6 +176,14 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 				stringvalidator.OneOf(GetValidEnumValues[pb.IssuerFormat]()...),
 			},
 		},
+		"load_balancing_policy": schema.StringAttribute{
+			Optional:    true,
+			Computed:    true,
+			Description: "Load balancing policy.",
+			Validators: []validator.String{
+				stringvalidator.OneOf(GetValidEnumValuesCanonical[pb.LoadBalancingPolicy]("LOAD_BALANCING_POLICY")...),
+			},
+		},
 		"rewrite_response_headers": schema.SetNestedAttribute{
 			Description: "Response header rewrite rules.",
 			Computed:    true,

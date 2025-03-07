@@ -23,6 +23,7 @@ Route data source
 
 - `jwt_groups_filter` (Attributes) JWT Groups Filter (see [below for nested schema](#nestedatt--jwt_groups_filter))
 - `jwt_issuer_format` (String) Format for JWT issuer strings. Use 'IssuerHostOnly' for hostname without scheme or trailing slash, or 'IssuerURI' for complete URI including scheme and trailing slash.
+- `load_balancing_policy` (String) Load balancing policy.
 
 ### Read-Only
 

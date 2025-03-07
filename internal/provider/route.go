@@ -210,6 +210,13 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 					stringvalidator.OneOf(GetValidEnumValues[pb.IssuerFormat]()...),
 				},
 			},
+			"load_balancing_policy": schema.StringAttribute{
+				Description: "Load balancing policy.",
+				Optional:    true,
+				Validators: []validator.String{
+					stringvalidator.OneOf(GetValidEnumValuesCanonical[pb.LoadBalancingPolicy]("LOAD_BALANCING_POLICY")...),
+				},
+			},
 			"rewrite_response_headers": schema.SetNestedAttribute{
 				Description: "Modifies response headers before they are returned to the client. 'Header' matches the HTTP header name; 'prefix' will be replaced with 'value'.",
 				Optional:    true,

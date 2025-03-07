@@ -33,6 +33,7 @@ type RouteModel struct {
 	KubernetesServiceAccountToken             types.String         `tfsdk:"kubernetes_service_account_token"`
 	KubernetesServiceAccountTokenFile         types.String         `tfsdk:"kubernetes_service_account_token_file"`
 	LogoURL                                   types.String         `tfsdk:"logo_url"`
+	LoadBalancingPolicy                       types.String         `tfsdk:"load_balancing_policy"`
 	Name                                      types.String         `tfsdk:"name"`
 	NamespaceID                               types.String         `tfsdk:"namespace_id"`
 	PassIdentityHeaders                       types.Bool           `tfsdk:"pass_identity_headers"`
@@ -181,7 +182,8 @@ func ConvertRouteToPB(
 	pbRoute.RewriteResponseHeaders = rewriteHeadersToPB(src.RewriteResponseHeaders)
 	pbRoute.BearerTokenFormat = ToBearerTokenFormat(src.BearerTokenFormat)
 	ToRouteStringList(ctx, &pbRoute.IdpAccessTokenAllowedAudiences, src.IDPAccessTokenAllowedAudiences, &diagnostics)
-	pbRoute.OriginatorId = originatorID
+	pbRoute.OriginatorId = OriginatorID
+	OptionalEnumValueToPB(&pbRoute.LoadBalancingPolicy, src.LoadBalancingPolicy, "LOAD_BALANCING_POLICY", &diagnostics)
 
 	return pbRoute, diagnostics
 }
@@ -241,5 +243,6 @@ func ConvertRouteFromPB(
 	dst.RewriteResponseHeaders = rewriteHeadersFromPB(src.RewriteResponseHeaders)
 	dst.BearerTokenFormat = FromBearerTokenFormat(src.BearerTokenFormat)
 	dst.IDPAccessTokenAllowedAudiences = FromStringList(src.IdpAccessTokenAllowedAudiences)
+	dst.LoadBalancingPolicy = OptionalEnumValueFromPB(src.LoadBalancingPolicy, "LOAD_BALANCING_POLICY")
 	return diagnostics
 }

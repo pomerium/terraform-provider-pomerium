@@ -16,7 +16,7 @@ type KeyPairModel struct {
 
 func ConvertKeyPairToCreatePB(src *KeyPairModel) *pb.CreateKeyPairRequest {
 	dst := &pb.CreateKeyPairRequest{
-		OriginatorId: originatorID,
+		OriginatorId: OriginatorID,
 		NamespaceId:  src.NamespaceID.ValueString(),
 		Name:         src.Name.ValueString(),
 		Format:       pb.Format_PEM,
@@ -32,7 +32,7 @@ func ConvertKeyPairToCreatePB(src *KeyPairModel) *pb.CreateKeyPairRequest {
 func ConvertKeyPairToUpdatePB(src *KeyPairModel) *pb.UpdateKeyPairRequest {
 	fmt := pb.Format_PEM
 	dst := &pb.UpdateKeyPairRequest{
-		OriginatorId: originatorID,
+		OriginatorId: OriginatorID,
 		Id:           src.ID.ValueString(),
 		Name:         src.Name.ValueStringPointer(),
 		Format:       &fmt,
