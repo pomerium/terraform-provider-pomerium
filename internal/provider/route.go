@@ -211,8 +211,9 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				},
 			},
 			"load_balancing_policy": schema.StringAttribute{
-				Description: "Load balancing policy.",
-				Optional:    true,
+				Description:         "Load balancing policy.",
+				MarkdownDescription: GetValidEnumValuesCanonicalMarkdown[pb.LoadBalancingPolicy]("Load Balancing Policy", "LOAD_BALANCING_POLICY"),
+				Optional:            true,
 				Validators: []validator.String{
 					stringvalidator.OneOf(GetValidEnumValuesCanonical[pb.LoadBalancingPolicy]("LOAD_BALANCING_POLICY")...),
 				},

@@ -30,6 +30,21 @@ func GetValidEnumValuesCanonical[T protoreflect.Enum](prefix string) []string {
 	return values
 }
 
+// GetValidEnumValuesCanonicalMarkdown returns a markdown string of valid enum values for a given protobuf enum type
+func GetValidEnumValuesCanonicalMarkdown[T protoreflect.Enum](name, prefix string) string {
+	vals := GetValidEnumValuesCanonical[T](prefix)
+	var sb strings.Builder
+	sb.WriteString("The following values are valid for the ")
+	sb.WriteString(name)
+	sb.WriteString(" field:\n\n")
+	for _, v := range vals {
+		sb.WriteString("- `")
+		sb.WriteString(v)
+		sb.WriteString("`\n")
+	}
+	return sb.String()
+}
+
 // EnumValueToPBWithDefault converts a string to a protobuf enum value.
 func OptionalEnumValueToPB[T interface {
 	~int32
