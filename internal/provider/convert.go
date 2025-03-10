@@ -329,6 +329,14 @@ func ToBearerTokenFormat(src types.String) *pb.BearerTokenFormat {
 	}
 }
 
+// UInt32ToInt64OrNull converts a uint32 to types.Int64, returning null if the value is 0
+func UInt32ToInt64OrNull(value uint32) types.Int64 {
+	if value > 0 {
+		return types.Int64Value(int64(value))
+	}
+	return types.Int64Null()
+}
+
 func ToRouteStringList(ctx context.Context, dst **pb.Route_StringList, src types.Set, diagnostics *diag.Diagnostics) {
 	if src.IsNull() || src.IsUnknown() {
 		*dst = nil

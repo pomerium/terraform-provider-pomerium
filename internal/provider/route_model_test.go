@@ -78,6 +78,64 @@ func TestConvertRoute(t *testing.T) {
 			InferFromPpl: ptr(true),
 		},
 		OriginatorId: provider.OriginatorID,
+		HealthChecks: []*pb.HealthCheck{
+			{
+				Timeout:               durationpb.New(5 * time.Second),
+				Interval:              durationpb.New(10 * time.Second),
+				InitialJitter:         durationpb.New(100 * time.Millisecond),
+				IntervalJitter:        durationpb.New(200 * time.Millisecond),
+				IntervalJitterPercent: 5,
+				UnhealthyThreshold:    2,
+				HealthyThreshold:      2,
+				HealthChecker: &pb.HealthCheck_HttpHealthCheck_{
+					HttpHealthCheck: &pb.HealthCheck_HttpHealthCheck{
+						Host:            "health.example.com",
+						Path:            "/health",
+						CodecClientType: pb.CodecClientType_HTTP2,
+						ExpectedStatuses: []*pb.Int64Range{
+							{Start: 200, End: 300},
+						},
+						RetriableStatuses: []*pb.Int64Range{
+							{Start: 500, End: 501},
+						},
+					},
+				},
+			},
+			{
+				Timeout:            durationpb.New(3 * time.Second),
+				Interval:           durationpb.New(15 * time.Second),
+				UnhealthyThreshold: 3,
+				HealthyThreshold:   1,
+				HealthChecker: &pb.HealthCheck_TcpHealthCheck_{
+					TcpHealthCheck: &pb.HealthCheck_TcpHealthCheck{
+						Send: &pb.HealthCheck_Payload{
+							Payload: &pb.HealthCheck_Payload_Text{
+								Text: "000000FF",
+							},
+						},
+						Receive: []*pb.HealthCheck_Payload{
+							{
+								Payload: &pb.HealthCheck_Payload_Text{
+									Text: "0000FFFF",
+								},
+							},
+						},
+					},
+				},
+			},
+			{
+				Timeout:            durationpb.New(2 * time.Second),
+				Interval:           durationpb.New(5 * time.Second),
+				UnhealthyThreshold: 2,
+				HealthyThreshold:   1,
+				HealthChecker: &pb.HealthCheck_GrpcHealthCheck_{
+					GrpcHealthCheck: &pb.HealthCheck_GrpcHealthCheck{
+						ServiceName: "my-service",
+						Authority:   "grpc.example.com",
+					},
+				},
+			},
+		},
 	}
 
 	tfRoute := provider.RouteModel{
@@ -152,6 +210,116 @@ func TestConvertRoute(t *testing.T) {
 					"prefix": types.StringValue("old-prefix"),
 				},
 			)},
+		),
+		HealthChecks: types.SetValueMust(
+			provider.HealthCheckObjectType(),
+			[]attr.Value{
+				types.ObjectValueMust(
+					provider.HealthCheckObjectType().AttrTypes,
+					map[string]attr.Value{
+						"timeout":                 timetypes.NewGoDurationValue(5 * time.Second),
+						"interval":                timetypes.NewGoDurationValue(10 * time.Second),
+						"initial_jitter":          timetypes.NewGoDurationValue(100 * time.Millisecond),
+						"interval_jitter":         timetypes.NewGoDurationValue(200 * time.Millisecond),
+						"interval_jitter_percent": types.Int64Value(5),
+						"unhealthy_threshold":     types.Int64Value(2),
+						"healthy_threshold":       types.Int64Value(2),
+						"tcp_health_check":        types.ObjectNull(provider.TCPHealthCheckObjectType().AttrTypes),
+						"grpc_health_check":       types.ObjectNull(provider.GrpcHealthCheckObjectType().AttrTypes),
+						"http_health_check": types.ObjectValueMust(
+							provider.HTTPHealthCheckObjectType().AttrTypes,
+							map[string]attr.Value{
+								"host":              types.StringValue("health.example.com"),
+								"path":              types.StringValue("/health"),
+								"codec_client_type": types.StringValue("HTTP2"),
+								"expected_statuses": types.SetValueMust(
+									provider.Int64RangeObjectType(),
+									[]attr.Value{
+										types.ObjectValueMust(
+											provider.Int64RangeObjectType().AttrTypes,
+											map[string]attr.Value{
+												"start": types.Int64Value(200),
+												"end":   types.Int64Value(300),
+											},
+										),
+									},
+								),
+								"retriable_statuses": types.SetValueMust(
+									provider.Int64RangeObjectType(),
+									[]attr.Value{
+										types.ObjectValueMust(
+											provider.Int64RangeObjectType().AttrTypes,
+											map[string]attr.Value{
+												"start": types.Int64Value(500),
+												"end":   types.Int64Value(501),
+											},
+										),
+									},
+								),
+							},
+						),
+					},
+				),
+				types.ObjectValueMust(
+					provider.HealthCheckObjectType().AttrTypes,
+					map[string]attr.Value{
+						"timeout":                 timetypes.NewGoDurationValue(3 * time.Second),
+						"interval":                timetypes.NewGoDurationValue(15 * time.Second),
+						"initial_jitter":          timetypes.NewGoDurationNull(),
+						"interval_jitter":         timetypes.NewGoDurationNull(),
+						"interval_jitter_percent": types.Int64Null(),
+						"unhealthy_threshold":     types.Int64Value(3),
+						"healthy_threshold":       types.Int64Value(1),
+						"http_health_check":       types.ObjectNull(provider.HTTPHealthCheckObjectType().AttrTypes),
+						"grpc_health_check":       types.ObjectNull(provider.GrpcHealthCheckObjectType().AttrTypes),
+						"tcp_health_check": types.ObjectValueMust(
+							provider.TCPHealthCheckObjectType().AttrTypes,
+							map[string]attr.Value{
+								"send": types.ObjectValueMust(
+									provider.HealthCheckPayloadObjectType().AttrTypes,
+									map[string]attr.Value{
+										"text":       types.StringValue("000000FF"),
+										"binary_b64": types.StringNull(),
+									},
+								),
+								"receive": types.SetValueMust(
+									provider.HealthCheckPayloadObjectType(),
+									[]attr.Value{
+										types.ObjectValueMust(
+											provider.HealthCheckPayloadObjectType().AttrTypes,
+											map[string]attr.Value{
+												"text":       types.StringValue("0000FFFF"),
+												"binary_b64": types.StringNull(),
+											},
+										),
+									},
+								),
+							},
+						),
+					},
+				),
+				types.ObjectValueMust(
+					provider.HealthCheckObjectType().AttrTypes,
+					map[string]attr.Value{
+						"timeout":                 timetypes.NewGoDurationValue(2 * time.Second),
+						"interval":                timetypes.NewGoDurationValue(5 * time.Second),
+						"initial_jitter":          timetypes.NewGoDurationNull(),
+						"interval_jitter":         timetypes.NewGoDurationNull(),
+						"interval_jitter_percent": types.Int64Null(),
+						"unhealthy_threshold":     types.Int64Value(2),
+						"healthy_threshold":       types.Int64Value(1),
+						"http_health_check":       types.ObjectNull(provider.HTTPHealthCheckObjectType().AttrTypes),
+						"tcp_health_check":        types.ObjectNull(provider.TCPHealthCheckObjectType().AttrTypes),
+						"grpc_health_check": types.ObjectValueMust(
+							provider.GrpcHealthCheckObjectType().AttrTypes,
+							map[string]attr.Value{
+								"service_name": types.StringValue("my-service"),
+								"authority":    types.StringValue("grpc.example.com"),
+							},
+						),
+					},
+				),
+			},
 		),
 	}
 

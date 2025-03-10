@@ -237,6 +237,146 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 			Computed:    true,
 			ElementType: types.StringType,
 		},
+		"health_checks": schema.SetNestedAttribute{
+			Description: "Health checks for the route.",
+			Computed:    true,
+			NestedObject: schema.NestedAttributeObject{
+				Attributes: map[string]schema.Attribute{
+					"timeout": schema.StringAttribute{
+						Description: "The time to wait for a health check response.",
+						Computed:    true,
+						CustomType:  timetypes.GoDurationType{},
+					},
+					"interval": schema.StringAttribute{
+						Description: "The interval between health checks.",
+						Computed:    true,
+						CustomType:  timetypes.GoDurationType{},
+					},
+					"initial_jitter": schema.StringAttribute{
+						Description: "An optional jitter amount for the first health check.",
+						Computed:    true,
+						CustomType:  timetypes.GoDurationType{},
+					},
+					"interval_jitter": schema.StringAttribute{
+						Description: "An optional jitter amount for every interval.",
+						Computed:    true,
+						CustomType:  timetypes.GoDurationType{},
+					},
+					"interval_jitter_percent": schema.Int64Attribute{
+						Description: "An optional jitter percentage.",
+						Computed:    true,
+					},
+					"unhealthy_threshold": schema.Int64Attribute{
+						Description: "Number of failures before marking unhealthy.",
+						Computed:    true,
+					},
+					"healthy_threshold": schema.Int64Attribute{
+						Description: "Number of successes before marking healthy.",
+						Computed:    true,
+					},
+					"http_health_check": schema.SingleNestedAttribute{
+						Description: "HTTP health check settings.",
+						Computed:    true,
+						Attributes: map[string]schema.Attribute{
+							"host": schema.StringAttribute{
+								Description: "The host header value.",
+								Computed:    true,
+							},
+							"path": schema.StringAttribute{
+								Description: "The request path.",
+								Computed:    true,
+							},
+							"expected_statuses": schema.SetNestedAttribute{
+								Description: "Expected status code ranges.",
+								Computed:    true,
+								NestedObject: schema.NestedAttributeObject{
+									Attributes: map[string]schema.Attribute{
+										"start": schema.Int64Attribute{
+											Description: "Start of status code range.",
+											Computed:    true,
+										},
+										"end": schema.Int64Attribute{
+											Description: "End of status code range.",
+											Computed:    true,
+										},
+									},
+								},
+							},
+							"retriable_statuses": schema.SetNestedAttribute{
+								Description: "Retriable status code ranges.",
+								Computed:    true,
+								NestedObject: schema.NestedAttributeObject{
+									Attributes: map[string]schema.Attribute{
+										"start": schema.Int64Attribute{
+											Description: "Start of status code range.",
+											Computed:    true,
+										},
+										"end": schema.Int64Attribute{
+											Description: "End of status code range.",
+											Computed:    true,
+										},
+									},
+								},
+							},
+							"codec_client_type": schema.StringAttribute{
+								Description: "Application protocol for health checks.",
+								Computed:    true,
+							},
+						},
+					},
+					"tcp_health_check": schema.SingleNestedAttribute{
+						Description: "TCP health check settings.",
+						Computed:    true,
+						Attributes: map[string]schema.Attribute{
+							"send": schema.SingleNestedAttribute{
+								Description: "Payload to send.",
+								Computed:    true,
+								Attributes: map[string]schema.Attribute{
+									"text": schema.StringAttribute{
+										Description: "Hex encoded payload.",
+										Computed:    true,
+									},
+									"binary_b64": schema.StringAttribute{
+										Description: "Base64 encoded binary payload.",
+										Computed:    true,
+									},
+								},
+							},
+							"receive": schema.SetNestedAttribute{
+								Description: "Expected response payloads.",
+								Computed:    true,
+								NestedObject: schema.NestedAttributeObject{
+									Attributes: map[string]schema.Attribute{
+										"text": schema.StringAttribute{
+											Description: "Hex encoded payload.",
+											Computed:    true,
+										},
+										"binary_b64": schema.StringAttribute{
+											Description: "Base64 encoded binary payload.",
+											Computed:    true,
+										},
+									},
+								},
+							},
+						},
+					},
+					"grpc_health_check": schema.SingleNestedAttribute{
+						Description: "gRPC health check settings.",
+						Computed:    true,
+						Attributes: map[string]schema.Attribute{
+							"service_name": schema.StringAttribute{
+								Description: "Service name to check.",
+								Computed:    true,
+							},
+							"authority": schema.StringAttribute{
+								Description: "Authority header value.",
+								Computed:    true,
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 }
 

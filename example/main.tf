@@ -244,6 +244,109 @@ resource "pomerium_route" "advanced_route" {
   show_error_details = true
 }
 
+# Example route with HTTP health check
+resource "pomerium_route" "http_health_check_route" {
+  name         = "http-health-check-route"
+  namespace_id = pomerium_namespace.test_namespace.id
+  from         = "https://http-health.localhost.pomerium.io"
+  to           = ["https://backend-service.internal"]
+  policies     = [pomerium_policy.test_policy.id]
+
+  # Configure HTTP health check
+  health_checks = [
+    {
+      timeout                 = "5s"
+      interval                = "10s"
+      initial_jitter          = "100ms"
+      interval_jitter         = "200ms"
+      interval_jitter_percent = 5
+      unhealthy_threshold     = 2
+      healthy_threshold       = 2
+
+      http_health_check = {
+        host              = "backend-service.internal"
+        path              = "/health"
+        codec_client_type = "HTTP2"
+        expected_statuses = [
+          {
+            start = 200
+            end   = 300
+          }
+        ]
+        retriable_statuses = [
+          {
+            start = 500
+            end   = 503
+          }
+        ]
+      }
+    }
+  ]
+
+  timeout              = "30s"
+  idle_timeout         = "5m"
+  allow_websockets     = true
+  preserve_host_header = true
+}
+
+# Example route with TCP health check
+resource "pomerium_route" "tcp_health_check_route" {
+  name         = "tcp-health-check-route"
+  namespace_id = pomerium_namespace.test_namespace.id
+  from         = "https://tcp-health.localhost.pomerium.io"
+  to           = ["https://tcp-service.internal"]
+  policies     = [pomerium_policy.test_policy.id]
+
+  # Configure TCP health check
+  health_checks = [
+    {
+      timeout             = "3s"
+      interval            = "15s"
+      unhealthy_threshold = 3
+      healthy_threshold   = 1
+
+      tcp_health_check = {
+        send = {
+          text = "000000FF" # Hex encoded payload
+        }
+        receive = [
+          {
+            text = "0000FFFF" # Expected response
+          }
+        ]
+      }
+    }
+  ]
+}
+
+# Example route with gRPC health check
+resource "pomerium_route" "grpc_health_check_route" {
+  name         = "grpc-health-check-route"
+  namespace_id = pomerium_namespace.test_namespace.id
+  from         = "https://grpc-health.localhost.pomerium.io"
+  to           = ["https://grpc-service.internal"]
+  policies     = [pomerium_policy.test_policy.id]
+
+  # Configure gRPC health check
+  health_checks = [
+    {
+      timeout             = "2s"
+      interval            = "5s"
+      unhealthy_threshold = 2
+      healthy_threshold   = 1
+
+      grpc_health_check = {
+        service_name = "my-grpc-service"
+        authority    = "grpc.example.com"
+      }
+    }
+  ]
+
+  set_request_headers = {
+    "X-Health-Check" = "enabled"
+  }
+}
+
 # Data source examples
 data "pomerium_namespaces" "all_namespaces" {}
 

@@ -2,10 +2,12 @@ package provider
 
 import (
 	"context"
+	"encoding/base64"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	"github.com/pomerium/enterprise-client-go/pb"
@@ -60,6 +62,7 @@ type RouteModel struct {
 	TLSUpstreamAllowRenegotiation             types.Bool           `tfsdk:"tls_upstream_allow_renegotiation"`
 	TLSUpstreamServerName                     types.String         `tfsdk:"tls_upstream_server_name"`
 	To                                        types.Set            `tfsdk:"to"`
+	HealthChecks                              types.Set            `tfsdk:"health_checks"`
 }
 
 var rewriteHeaderAttrTypes = map[string]attr.Type{
@@ -127,6 +130,415 @@ func RewriteHeaderObjectType() attr.Type {
 	return types.ObjectType{AttrTypes: rewriteHeaderAttrTypes}
 }
 
+// Type definitions for health check objects
+func HealthCheckPayloadObjectType() types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"text":       types.StringType,
+			"binary_b64": types.StringType,
+		},
+	}
+}
+
+func Int64RangeObjectType() types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"start": types.Int64Type,
+			"end":   types.Int64Type,
+		},
+	}
+}
+
+func HTTPHealthCheckObjectType() types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"host":               types.StringType,
+			"path":               types.StringType,
+			"expected_statuses":  types.SetType{ElemType: Int64RangeObjectType()},
+			"retriable_statuses": types.SetType{ElemType: Int64RangeObjectType()},
+			"codec_client_type":  types.StringType,
+		},
+	}
+}
+
+func TCPHealthCheckObjectType() types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"send":    HealthCheckPayloadObjectType(),
+			"receive": types.SetType{ElemType: HealthCheckPayloadObjectType()},
+		},
+	}
+}
+
+func GrpcHealthCheckObjectType() types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"service_name": types.StringType,
+			"authority":    types.StringType,
+		},
+	}
+}
+
+func HealthCheckObjectType() types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"timeout":                 timetypes.GoDurationType{},
+			"interval":                timetypes.GoDurationType{},
+			"initial_jitter":          timetypes.GoDurationType{},
+			"interval_jitter":         timetypes.GoDurationType{},
+			"interval_jitter_percent": types.Int64Type,
+			"unhealthy_threshold":     types.Int64Type,
+			"healthy_threshold":       types.Int64Type,
+			"http_health_check":       HTTPHealthCheckObjectType(),
+			"tcp_health_check":        TCPHealthCheckObjectType(),
+			"grpc_health_check":       GrpcHealthCheckObjectType(),
+		},
+	}
+}
+
+// Convert health check payload between Terraform and protobuf
+func payloadFromPB(payload *pb.HealthCheck_Payload) (types.Object, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if payload == nil {
+		return types.ObjectNull(HealthCheckPayloadObjectType().AttrTypes), diags
+	}
+
+	attrs := map[string]attr.Value{
+		"text":       types.StringNull(),
+		"binary_b64": types.StringNull(),
+	}
+
+	switch p := payload.GetPayload().(type) {
+	case *pb.HealthCheck_Payload_Text:
+		attrs["text"] = types.StringValue(p.Text)
+	case *pb.HealthCheck_Payload_Binary:
+		attrs["binary_b64"] = types.StringValue(base64.StdEncoding.EncodeToString(p.Binary))
+	}
+
+	return types.ObjectValue(HealthCheckPayloadObjectType().AttrTypes, attrs)
+}
+
+func payloadToPB(obj types.Object) (*pb.HealthCheck_Payload, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if obj.IsNull() {
+		return nil, diags
+	}
+
+	attrs := obj.Attributes()
+	payload := &pb.HealthCheck_Payload{}
+
+	text := attrs["text"].(types.String)
+	binaryB64 := attrs["binary_b64"].(types.String)
+
+	if !text.IsNull() {
+		payload.Payload = &pb.HealthCheck_Payload_Text{
+			Text: text.ValueString(),
+		}
+	} else if !binaryB64.IsNull() {
+		binaryData, err := base64.StdEncoding.DecodeString(binaryB64.ValueString())
+		if err != nil {
+			diags.AddError("Invalid base64 data", "Could not decode base64 binary payload: "+err.Error())
+			return nil, diags
+		}
+		payload.Payload = &pb.HealthCheck_Payload_Binary{
+			Binary: binaryData,
+		}
+	}
+
+	return payload, diags
+}
+
+// Convert Int64Range between Terraform and protobuf
+func int64RangeFromPB(r *pb.Int64Range) (types.Object, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if r == nil {
+		return types.ObjectNull(Int64RangeObjectType().AttrTypes), diags
+	}
+
+	attrs := map[string]attr.Value{
+		"start": types.Int64Value(r.Start),
+		"end":   types.Int64Value(r.End),
+	}
+
+	return types.ObjectValue(Int64RangeObjectType().AttrTypes, attrs)
+}
+
+func int64RangeToPB(obj types.Object) (*pb.Int64Range, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if obj.IsNull() {
+		return nil, diags
+	}
+
+	attrs := obj.Attributes()
+	r := &pb.Int64Range{
+		Start: attrs["start"].(types.Int64).ValueInt64(),
+		End:   attrs["end"].(types.Int64).ValueInt64(),
+	}
+
+	return r, diags
+}
+
+// Convert HealthCheck between Terraform and protobuf
+func HealthCheckFromPB(hc *pb.HealthCheck) (types.Object, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if hc == nil {
+		return types.ObjectNull(HealthCheckObjectType().AttrTypes), diags
+	}
+
+	attrs := map[string]attr.Value{
+		"timeout":                 FromDuration(hc.Timeout),
+		"interval":                FromDuration(hc.Interval),
+		"initial_jitter":          FromDuration(hc.InitialJitter),
+		"interval_jitter":         FromDuration(hc.IntervalJitter),
+		"interval_jitter_percent": UInt32ToInt64OrNull(hc.IntervalJitterPercent),
+		"unhealthy_threshold":     UInt32ToInt64OrNull(hc.UnhealthyThreshold),
+		"healthy_threshold":       UInt32ToInt64OrNull(hc.HealthyThreshold),
+		"http_health_check":       types.ObjectNull(HTTPHealthCheckObjectType().AttrTypes),
+		"tcp_health_check":        types.ObjectNull(TCPHealthCheckObjectType().AttrTypes),
+		"grpc_health_check":       types.ObjectNull(GrpcHealthCheckObjectType().AttrTypes),
+	}
+
+	if httpHc := hc.GetHttpHealthCheck(); httpHc != nil {
+		expectedStatusesElem := []attr.Value{}
+		for _, status := range httpHc.ExpectedStatuses {
+			statusObj, diagsStatus := int64RangeFromPB(status)
+			diags.Append(diagsStatus...)
+			expectedStatusesElem = append(expectedStatusesElem, statusObj)
+		}
+		expectedStatuses, _ := types.SetValue(Int64RangeObjectType(), expectedStatusesElem)
+
+		retriableStatusesElem := []attr.Value{}
+		for _, status := range httpHc.RetriableStatuses {
+			statusObj, diagsStatus := int64RangeFromPB(status)
+			diags.Append(diagsStatus...)
+			retriableStatusesElem = append(retriableStatusesElem, statusObj)
+		}
+		retriableStatuses, _ := types.SetValue(Int64RangeObjectType(), retriableStatusesElem)
+
+		httpAttrs := map[string]attr.Value{
+			"host":               types.StringValue(httpHc.Host),
+			"path":               types.StringValue(httpHc.Path),
+			"expected_statuses":  expectedStatuses,
+			"retriable_statuses": retriableStatuses,
+			"codec_client_type":  types.StringValue(httpHc.CodecClientType.String()),
+		}
+
+		httpHealthCheck, _ := types.ObjectValue(HTTPHealthCheckObjectType().AttrTypes, httpAttrs)
+		attrs["http_health_check"] = httpHealthCheck
+	} else if tcpHc := hc.GetTcpHealthCheck(); tcpHc != nil {
+		sendPayload, diagsSend := payloadFromPB(tcpHc.Send)
+		diags.Append(diagsSend...)
+
+		receiveElements := []attr.Value{}
+		for _, payload := range tcpHc.Receive {
+			payloadObj, diagsPayload := payloadFromPB(payload)
+			diags.Append(diagsPayload...)
+			receiveElements = append(receiveElements, payloadObj)
+		}
+		receiveSet, _ := types.SetValue(HealthCheckPayloadObjectType(), receiveElements)
+
+		tcpAttrs := map[string]attr.Value{
+			"send":    sendPayload,
+			"receive": receiveSet,
+		}
+
+		tcpHealthCheck, _ := types.ObjectValue(TCPHealthCheckObjectType().AttrTypes, tcpAttrs)
+		attrs["tcp_health_check"] = tcpHealthCheck
+	} else if grpcHc := hc.GetGrpcHealthCheck(); grpcHc != nil {
+		grpcAttrs := map[string]attr.Value{
+			"service_name": types.StringValue(grpcHc.ServiceName),
+			"authority":    types.StringValue(grpcHc.Authority),
+		}
+
+		grpcHealthCheck, _ := types.ObjectValue(GrpcHealthCheckObjectType().AttrTypes, grpcAttrs)
+		attrs["grpc_health_check"] = grpcHealthCheck
+	} else {
+		diags.AddAttributeError(path.Root("health_checks"), "health check not specified", "must specify one of http_health_check, tcp_health_check, or grpc_health_check")
+	}
+
+	return types.ObjectValue(HealthCheckObjectType().AttrTypes, attrs)
+}
+
+func HealthCheckToPB(obj types.Object) (*pb.HealthCheck, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if obj.IsNull() {
+		return nil, diags
+	}
+
+	attrs := obj.Attributes()
+	hc := &pb.HealthCheck{}
+
+	// Convert basic fields
+	timeout := attrs["timeout"].(timetypes.GoDuration)
+	interval := attrs["interval"].(timetypes.GoDuration)
+	initialJitter := attrs["initial_jitter"].(timetypes.GoDuration)
+	intervalJitter := attrs["interval_jitter"].(timetypes.GoDuration)
+	intervalJitterPercent := attrs["interval_jitter_percent"].(types.Int64)
+	unhealthyThreshold := attrs["unhealthy_threshold"].(types.Int64)
+	healthyThreshold := attrs["healthy_threshold"].(types.Int64)
+
+	ToDuration(&hc.Timeout, timeout, &diags)
+	ToDuration(&hc.Interval, interval, &diags)
+	ToDuration(&hc.InitialJitter, initialJitter, &diags)
+	ToDuration(&hc.IntervalJitter, intervalJitter, &diags)
+	if !intervalJitterPercent.IsNull() {
+		hc.IntervalJitterPercent = uint32(intervalJitterPercent.ValueInt64())
+	}
+	if !unhealthyThreshold.IsNull() {
+		hc.UnhealthyThreshold = uint32(unhealthyThreshold.ValueInt64())
+	}
+	if !healthyThreshold.IsNull() {
+		hc.HealthyThreshold = uint32(healthyThreshold.ValueInt64())
+	}
+
+	httpHc := attrs["http_health_check"].(types.Object)
+	tcpHc := attrs["tcp_health_check"].(types.Object)
+	grpcHc := attrs["grpc_health_check"].(types.Object)
+
+	if !httpHc.IsNull() {
+		httpAttrs := httpHc.Attributes()
+		httpHealthCheck := &pb.HealthCheck_HttpHealthCheck{}
+
+		host := httpAttrs["host"].(types.String)
+		path := httpAttrs["path"].(types.String)
+		codecType := httpAttrs["codec_client_type"].(types.String)
+		expectedStatuses := httpAttrs["expected_statuses"].(types.Set)
+		retriableStatuses := httpAttrs["retriable_statuses"].(types.Set)
+
+		if !host.IsNull() {
+			httpHealthCheck.Host = host.ValueString()
+		}
+		if !path.IsNull() {
+			httpHealthCheck.Path = path.ValueString()
+		}
+		if !codecType.IsNull() {
+			// Handle codec client type enum properly
+			switch codecType.ValueString() {
+			case "HTTP1":
+				httpHealthCheck.CodecClientType = pb.CodecClientType_HTTP1
+			case "HTTP2":
+				httpHealthCheck.CodecClientType = pb.CodecClientType_HTTP2
+			default:
+				// Default to HTTP1 if not specified or invalid
+				httpHealthCheck.CodecClientType = pb.CodecClientType_HTTP1
+			}
+		}
+
+		if !expectedStatuses.IsNull() {
+			for _, elem := range expectedStatuses.Elements() {
+				obj := elem.(types.Object)
+				statusRange, diagsRange := int64RangeToPB(obj)
+				diags.Append(diagsRange...)
+				httpHealthCheck.ExpectedStatuses = append(httpHealthCheck.ExpectedStatuses, statusRange)
+			}
+		}
+
+		if !retriableStatuses.IsNull() {
+			for _, elem := range retriableStatuses.Elements() {
+				obj := elem.(types.Object)
+				statusRange, diagsRange := int64RangeToPB(obj)
+				diags.Append(diagsRange...)
+				httpHealthCheck.RetriableStatuses = append(httpHealthCheck.RetriableStatuses, statusRange)
+			}
+		}
+
+		hc.HealthChecker = &pb.HealthCheck_HttpHealthCheck_{
+			HttpHealthCheck: httpHealthCheck,
+		}
+	} else if !tcpHc.IsNull() {
+		tcpAttrs := tcpHc.Attributes()
+		tcpHealthCheck := &pb.HealthCheck_TcpHealthCheck{}
+
+		send := tcpAttrs["send"].(types.Object)
+		receive := tcpAttrs["receive"].(types.Set)
+
+		if !send.IsNull() {
+			sendPayload, diagsSend := payloadToPB(send)
+			diags.Append(diagsSend...)
+			tcpHealthCheck.Send = sendPayload
+		}
+
+		if !receive.IsNull() {
+			for _, elem := range receive.Elements() {
+				obj := elem.(types.Object)
+				payload, diagsPayload := payloadToPB(obj)
+				diags.Append(diagsPayload...)
+				tcpHealthCheck.Receive = append(tcpHealthCheck.Receive, payload)
+			}
+		}
+
+		hc.HealthChecker = &pb.HealthCheck_TcpHealthCheck_{
+			TcpHealthCheck: tcpHealthCheck,
+		}
+	} else if !grpcHc.IsNull() {
+		grpcAttrs := grpcHc.Attributes()
+		grpcHealthCheck := &pb.HealthCheck_GrpcHealthCheck{}
+
+		serviceName := grpcAttrs["service_name"].(types.String)
+		authority := grpcAttrs["authority"].(types.String)
+
+		if !serviceName.IsNull() {
+			grpcHealthCheck.ServiceName = serviceName.ValueString()
+		}
+		if !authority.IsNull() {
+			grpcHealthCheck.Authority = authority.ValueString()
+		}
+
+		hc.HealthChecker = &pb.HealthCheck_GrpcHealthCheck_{
+			GrpcHealthCheck: grpcHealthCheck,
+		}
+	} else {
+		diags.AddAttributeError(path.Root("health_checks"), "health check not specified", "must specify one of http_health_check, tcp_health_check, or grpc_health_check")
+	}
+
+	return hc, diags
+}
+
+// Convert health checks between Terraform and protobuf
+func healthChecksFromPB(dst *types.Set, src []*pb.HealthCheck, diags *diag.Diagnostics) {
+	if len(src) == 0 {
+		*dst = types.SetNull(HealthCheckObjectType())
+		return
+	}
+
+	elements := make([]attr.Value, 0, len(src))
+	for _, hc := range src {
+		healthCheck, diagsHc := HealthCheckFromPB(hc)
+		diags.Append(diagsHc...)
+		elements = append(elements, healthCheck)
+	}
+
+	result, diagsSet := types.SetValue(HealthCheckObjectType(), elements)
+	diags.Append(diagsSet...)
+	*dst = result
+}
+
+func healthChecksToPB(dst *[]*pb.HealthCheck, src types.Set, diags *diag.Diagnostics) {
+	if src.IsNull() {
+		return
+	}
+
+	elements := src.Elements()
+	healthChecks := make([]*pb.HealthCheck, 0, len(elements))
+
+	for _, element := range elements {
+		obj := element.(types.Object)
+		hc, diagsHc := HealthCheckToPB(obj)
+		diags.Append(diagsHc...)
+		if hc != nil {
+			healthChecks = append(healthChecks, hc)
+		}
+	}
+
+	*dst = healthChecks
+}
+
 func ConvertRouteToPB(
 	ctx context.Context,
 	src *RouteResourceModel,
@@ -184,6 +596,7 @@ func ConvertRouteToPB(
 	ToRouteStringList(ctx, &pbRoute.IdpAccessTokenAllowedAudiences, src.IDPAccessTokenAllowedAudiences, &diagnostics)
 	pbRoute.OriginatorId = OriginatorID
 	OptionalEnumValueToPB(&pbRoute.LoadBalancingPolicy, src.LoadBalancingPolicy, "LOAD_BALANCING_POLICY", &diagnostics)
+	healthChecksToPB(&pbRoute.HealthChecks, src.HealthChecks, &diagnostics)
 
 	return pbRoute, diagnostics
 }
@@ -244,5 +657,7 @@ func ConvertRouteFromPB(
 	dst.BearerTokenFormat = FromBearerTokenFormat(src.BearerTokenFormat)
 	dst.IDPAccessTokenAllowedAudiences = FromStringList(src.IdpAccessTokenAllowedAudiences)
 	dst.LoadBalancingPolicy = OptionalEnumValueFromPB(src.LoadBalancingPolicy, "LOAD_BALANCING_POLICY")
+	healthChecksFromPB(&dst.HealthChecks, src.HealthChecks, &diagnostics)
+
 	return diagnostics
 }
