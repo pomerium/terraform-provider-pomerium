@@ -3,6 +3,7 @@ package provider
 import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -35,11 +36,12 @@ func ConvertNamespacePermissionToPB(
 	var diagnostics diag.Diagnostics
 
 	pbNamespacePermission := &pb.NamespacePermission{
-		Id:          src.ID.ValueString(),
-		NamespaceId: src.NamespaceID.ValueString(),
-		Role:        src.Role.ValueString(),
-		SubjectId:   src.SubjectID.ValueString(),
-		SubjectType: src.SubjectType.ValueString(),
+		OriginatorId: OriginatorID,
+		Id:           src.ID.ValueString(),
+		NamespaceId:  src.NamespaceID.ValueString(),
+		Role:         src.Role.ValueString(),
+		SubjectId:    src.SubjectID.ValueString(),
+		SubjectType:  src.SubjectType.ValueString(),
 	}
 
 	return pbNamespacePermission, diagnostics
