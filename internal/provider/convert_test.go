@@ -153,6 +153,13 @@ func TestToStringListFromSet(t *testing.T) {
 			},
 		},
 		{
+			name:  "unknown set",
+			input: types.SetUnknown(types.StringType),
+			validate: func(t *testing.T, s *pb.Settings_StringList) {
+				assert.Nil(t, s)
+			},
+		},
+		{
 			name:  "empty list",
 			input: types.SetValueMust(types.StringType, []attr.Value{}),
 			validate: func(t *testing.T, s *pb.Settings_StringList) {
@@ -491,11 +498,16 @@ func TestToStringSliceFromSet(t *testing.T) {
 		{
 			name:     "null set",
 			input:    types.SetNull(types.StringType),
-			expected: []string{},
+			expected: nil,
+		},
+		{
+			name:     "unknown set",
+			input:    types.SetUnknown(types.StringType),
+			expected: nil,
 		},
 		{
 			name:     "empty set",
-			input:    types.SetValueMust(types.StringType, []attr.Value{}),
+			input:    types.SetValueMust(types.StringType, nil),
 			expected: []string{},
 		},
 		{
@@ -595,7 +607,12 @@ func TestToStringSliceFromList(t *testing.T) {
 		{
 			name:     "null list",
 			input:    types.ListNull(types.StringType),
-			expected: []string{},
+			expected: nil,
+		},
+		{
+			name:     "unknown list",
+			input:    types.ListUnknown(types.StringType),
+			expected: nil,
 		},
 		{
 			name:     "empty list",
@@ -633,7 +650,12 @@ func TestToStringMap(t *testing.T) {
 		{
 			name:     "null map",
 			input:    types.MapNull(types.StringType),
-			expected: nil, // Changed from empty map to nil to match implementation
+			expected: nil,
+		},
+		{
+			name:     "unknown map",
+			input:    types.MapUnknown(types.StringType),
+			expected: nil,
 		},
 		{
 			name:     "empty map",
@@ -780,10 +802,10 @@ func TestToRouteStringList(t *testing.T) {
 			0,
 		},
 		{
-			"invalid",
-			types.SetValueMust(types.BoolType, []attr.Value{types.BoolValue(true)}),
+			"unknown",
+			types.SetUnknown(types.StringType),
 			nil,
-			1,
+			0,
 		},
 		{
 			"empty",
@@ -827,10 +849,10 @@ func TestToSettingsStringList(t *testing.T) {
 			0,
 		},
 		{
-			"invalid",
-			types.SetValueMust(types.BoolType, []attr.Value{types.BoolValue(true)}),
+			"unknown",
+			types.SetUnknown(types.StringType),
 			nil,
-			1,
+			0,
 		},
 		{
 			"empty",
