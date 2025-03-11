@@ -76,7 +76,7 @@ func FromStringMap(m map[string]string) types.Map {
 
 // ToStringList converts a types.List to Settings_StringList and handles diagnostics internally
 func ToStringListFromSet(ctx context.Context, dst **pb.Settings_StringList, set types.Set, diagnostics *diag.Diagnostics) {
-	if set.IsNull() {
+	if set.IsNull() || set.IsUnknown() {
 		*dst = nil
 		return
 	}
@@ -90,7 +90,7 @@ func ToStringListFromSet(ctx context.Context, dst **pb.Settings_StringList, set 
 
 // ToStringMap converts a types.Map to map[string]string and handles diagnostics internally
 func ToStringMap(ctx context.Context, dst *map[string]string, m types.Map, diagnostics *diag.Diagnostics) {
-	if m.IsNull() {
+	if m.IsNull() || m.IsUnknown() {
 		*dst = nil
 		return
 	}
@@ -103,25 +103,28 @@ func ToStringMap(ctx context.Context, dst *map[string]string, m types.Map, diagn
 }
 
 func ToStringSliceFromSet(ctx context.Context, dst *[]string, set types.Set, diagnostics *diag.Diagnostics) {
-	*dst = make([]string, 0)
-	if !set.IsNull() {
-		var values []string
-		diagnostics.Append(set.ElementsAs(ctx, &values, false)...)
-		if !diagnostics.HasError() {
-			*dst = values
-		}
+	if set.IsNull() || set.IsUnknown() {
+		*dst = nil
+		return
+	}
+	var values []string
+	diagnostics.Append(set.ElementsAs(ctx, &values, false)...)
+	if !diagnostics.HasError() {
+		*dst = values
 	}
 }
 
 // ToStringSliceFromList converts a types.List to string slice and handles diagnostics internally
 func ToStringSliceFromList(ctx context.Context, dst *[]string, list types.List, diagnostics *diag.Diagnostics) {
-	*dst = make([]string, 0)
-	if !list.IsNull() {
-		var values []string
-		diagnostics.Append(list.ElementsAs(ctx, &values, false)...)
-		if !diagnostics.HasError() {
-			*dst = values
-		}
+	if list.IsNull() || list.IsUnknown() {
+		*dst = nil
+		return
+	}
+
+	var values []string
+	diagnostics.Append(list.ElementsAs(ctx, &values, false)...)
+	if !diagnostics.HasError() {
+		*dst = values
 	}
 }
 
