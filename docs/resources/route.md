@@ -29,6 +29,7 @@ Route for Pomerium.
 - `bearer_token_format` (String) Bearer token format.
 - `description` (String) Description of the route.
 - `enable_google_cloud_serverless_authentication` (Boolean) Enable Google Cloud serverless authentication.
+- `health_checks` (Attributes Set) Health checks for the route. (see [below for nested schema](#nestedatt--health_checks))
 - `host_path_regex_rewrite_pattern` (String) Rewrites the Host header according to a regular expression matching the path.
 - `host_path_regex_rewrite_substitution` (String) Rewrites the Host header according to a regular expression matching the substitution.
 - `host_rewrite` (String) Rewrites the Host header to a new literal value.
@@ -76,6 +77,89 @@ Route for Pomerium.
 ### Read-Only
 
 - `id` (String) Unique identifier for the route.
+
+<a id="nestedatt--health_checks"></a>
+### Nested Schema for `health_checks`
+
+Optional:
+
+- `grpc_health_check` (Attributes) gRPC health check settings. (see [below for nested schema](#nestedatt--health_checks--grpc_health_check))
+- `healthy_threshold` (Number) The number of healthy health checks required before a host is marked healthy.
+- `http_health_check` (Attributes) HTTP health check settings. (see [below for nested schema](#nestedatt--health_checks--http_health_check))
+- `initial_jitter` (String) An optional jitter amount in milliseconds. If specified, Envoy will start health checking after for a random time in ms between 0 and initial_jitter.
+- `interval` (String) The interval between health checks.
+- `interval_jitter` (String) An optional jitter amount in milliseconds. If specified, during every interval Envoy will add interval_jitter to the wait time.
+- `interval_jitter_percent` (Number) An optional jitter amount as a percentage of interval_ms. If specified, during every interval Envoy will add interval_ms * interval_jitter_percent / 100 to the wait time.
+- `tcp_health_check` (Attributes) TCP health check settings. (see [below for nested schema](#nestedatt--health_checks--tcp_health_check))
+- `timeout` (String) The time to wait for a health check response. If the timeout is reached the health check attempt will be considered a failure.
+- `unhealthy_threshold` (Number) The number of unhealthy health checks required before a host is marked unhealthy.
+
+<a id="nestedatt--health_checks--grpc_health_check"></a>
+### Nested Schema for `health_checks.grpc_health_check`
+
+Optional:
+
+- `authority` (String) The value of the :authority header in the gRPC health check request.
+- `service_name` (String) An optional service name parameter which will be sent to gRPC service.
+
+
+<a id="nestedatt--health_checks--http_health_check"></a>
+### Nested Schema for `health_checks.http_health_check`
+
+Optional:
+
+- `codec_client_type` (String) Use specified application protocol for health checks.
+- `expected_statuses` (Attributes Set) Specifies a list of HTTP response statuses considered healthy. (see [below for nested schema](#nestedatt--health_checks--http_health_check--expected_statuses))
+- `host` (String) The value of the host header in the HTTP health check request.
+- `path` (String) Specifies the HTTP path that will be requested during health checking.
+- `retriable_statuses` (Attributes Set) Specifies a list of HTTP response statuses considered retriable. (see [below for nested schema](#nestedatt--health_checks--http_health_check--retriable_statuses))
+
+<a id="nestedatt--health_checks--http_health_check--expected_statuses"></a>
+### Nested Schema for `health_checks.http_health_check.expected_statuses`
+
+Required:
+
+- `end` (Number) End of status code range.
+- `start` (Number) Start of status code range.
+
+
+<a id="nestedatt--health_checks--http_health_check--retriable_statuses"></a>
+### Nested Schema for `health_checks.http_health_check.retriable_statuses`
+
+Required:
+
+- `end` (Number) End of status code range.
+- `start` (Number) Start of status code range.
+
+
+
+<a id="nestedatt--health_checks--tcp_health_check"></a>
+### Nested Schema for `health_checks.tcp_health_check`
+
+Optional:
+
+- `receive` (Attributes Set) When checking the response, 'fuzzy' matching is performed such that each payload block must be found, and in the order specified, but not necessarily contiguous. (see [below for nested schema](#nestedatt--health_checks--tcp_health_check--receive))
+- `send` (Attributes) Empty payloads imply a connect-only health check. (see [below for nested schema](#nestedatt--health_checks--tcp_health_check--send))
+
+<a id="nestedatt--health_checks--tcp_health_check--receive"></a>
+### Nested Schema for `health_checks.tcp_health_check.receive`
+
+Optional:
+
+- `binary_b64` (String) Base64 encoded binary payload.
+- `text` (String) Hex encoded payload. E.g., '000000FF'.
+
+
+<a id="nestedatt--health_checks--tcp_health_check--send"></a>
+### Nested Schema for `health_checks.tcp_health_check.send`
+
+Optional:
+
+- `binary_b64` (String) Base64 encoded binary payload.
+- `text` (String) Hex encoded payload. E.g., '000000FF'.
+
+
+
 
 <a id="nestedatt--jwt_groups_filter"></a>
 ### Nested Schema for `jwt_groups_filter`

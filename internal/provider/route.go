@@ -274,6 +274,149 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Optional:    true,
 				ElementType: types.StringType,
 			},
+			"health_checks": schema.SetNestedAttribute{
+				Description: "Health checks for the route.",
+				Optional:    true,
+				NestedObject: schema.NestedAttributeObject{
+					Attributes: map[string]schema.Attribute{
+						"timeout": schema.StringAttribute{
+							Description: "The time to wait for a health check response. If the timeout is reached the health check attempt will be considered a failure.",
+							Optional:    true,
+							CustomType:  timetypes.GoDurationType{},
+						},
+						"interval": schema.StringAttribute{
+							Description: "The interval between health checks.",
+							Optional:    true,
+							CustomType:  timetypes.GoDurationType{},
+						},
+						"initial_jitter": schema.StringAttribute{
+							Description: "An optional jitter amount in milliseconds. If specified, Envoy will start health checking after for a random time in ms between 0 and initial_jitter.",
+							Optional:    true,
+							CustomType:  timetypes.GoDurationType{},
+						},
+						"interval_jitter": schema.StringAttribute{
+							Description: "An optional jitter amount in milliseconds. If specified, during every interval Envoy will add interval_jitter to the wait time.",
+							Optional:    true,
+							CustomType:  timetypes.GoDurationType{},
+						},
+						"interval_jitter_percent": schema.Int64Attribute{
+							Description: "An optional jitter amount as a percentage of interval_ms. If specified, during every interval Envoy will add interval_ms * interval_jitter_percent / 100 to the wait time.",
+							Optional:    true,
+						},
+						"unhealthy_threshold": schema.Int64Attribute{
+							Description: "The number of unhealthy health checks required before a host is marked unhealthy.",
+							Optional:    true,
+						},
+						"healthy_threshold": schema.Int64Attribute{
+							Description: "The number of healthy health checks required before a host is marked healthy.",
+							Optional:    true,
+						},
+						"http_health_check": schema.SingleNestedAttribute{
+							Description: "HTTP health check settings.",
+							Optional:    true,
+							Attributes: map[string]schema.Attribute{
+								"host": schema.StringAttribute{
+									Description: "The value of the host header in the HTTP health check request.",
+									Optional:    true,
+								},
+								"path": schema.StringAttribute{
+									Description: "Specifies the HTTP path that will be requested during health checking.",
+									Optional:    true,
+								},
+								"expected_statuses": schema.SetNestedAttribute{
+									Description: "Specifies a list of HTTP response statuses considered healthy.",
+									Optional:    true,
+									NestedObject: schema.NestedAttributeObject{
+										Attributes: map[string]schema.Attribute{
+											"start": schema.Int64Attribute{
+												Description: "Start of status code range.",
+												Required:    true,
+											},
+											"end": schema.Int64Attribute{
+												Description: "End of status code range.",
+												Required:    true,
+											},
+										},
+									},
+								},
+								"retriable_statuses": schema.SetNestedAttribute{
+									Description: "Specifies a list of HTTP response statuses considered retriable.",
+									Optional:    true,
+									NestedObject: schema.NestedAttributeObject{
+										Attributes: map[string]schema.Attribute{
+											"start": schema.Int64Attribute{
+												Description: "Start of status code range.",
+												Required:    true,
+											},
+											"end": schema.Int64Attribute{
+												Description: "End of status code range.",
+												Required:    true,
+											},
+										},
+									},
+								},
+								"codec_client_type": schema.StringAttribute{
+									Description: "Use specified application protocol for health checks.",
+									Optional:    true,
+									Validators: []validator.String{
+										stringvalidator.OneOf("HTTP1", "HTTP2"),
+									},
+								},
+							},
+						},
+						"tcp_health_check": schema.SingleNestedAttribute{
+							Description: "TCP health check settings.",
+							Optional:    true,
+							Attributes: map[string]schema.Attribute{
+								"send": schema.SingleNestedAttribute{
+									Description: "Empty payloads imply a connect-only health check.",
+									Optional:    true,
+									Attributes: map[string]schema.Attribute{
+										"text": schema.StringAttribute{
+											Description: "Hex encoded payload. E.g., '000000FF'.",
+											Optional:    true,
+										},
+										"binary_b64": schema.StringAttribute{
+											Description: "Base64 encoded binary payload.",
+											Optional:    true,
+										},
+									},
+								},
+								"receive": schema.SetNestedAttribute{
+									Description: "When checking the response, 'fuzzy' matching is performed such that each payload block must be found, and in the order specified, but not necessarily contiguous.",
+									Optional:    true,
+									NestedObject: schema.NestedAttributeObject{
+										Attributes: map[string]schema.Attribute{
+											"text": schema.StringAttribute{
+												Description: "Hex encoded payload. E.g., '000000FF'.",
+												Optional:    true,
+											},
+											"binary_b64": schema.StringAttribute{
+												Description: "Base64 encoded binary payload.",
+												Optional:    true,
+											},
+										},
+									},
+								},
+							},
+						},
+						"grpc_health_check": schema.SingleNestedAttribute{
+							Description: "gRPC health check settings.",
+							Optional:    true,
+							Attributes: map[string]schema.Attribute{
+								"service_name": schema.StringAttribute{
+									Description: "An optional service name parameter which will be sent to gRPC service.",
+									Optional:    true,
+								},
+								"authority": schema.StringAttribute{
+									Description: "The value of the :authority header in the gRPC health check request.",
+									Optional:    true,
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }

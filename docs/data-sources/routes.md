@@ -45,6 +45,7 @@ Read-Only:
 - `description` (String) Description of the route.
 - `enable_google_cloud_serverless_authentication` (Boolean) Enable Google Cloud serverless authentication.
 - `from` (String) From URL.
+- `health_checks` (Attributes Set) Health checks for the route. (see [below for nested schema](#nestedatt--routes--health_checks))
 - `host_path_regex_rewrite_pattern` (String) Host path regex rewrite pattern.
 - `host_path_regex_rewrite_substitution` (String) Host path regex rewrite substitution.
 - `host_rewrite` (String) Host rewrite.
@@ -91,6 +92,89 @@ Optional:
 
 - `groups` (Set of String) Group IDs to include
 - `infer_from_ppl` (Boolean)
+
+
+<a id="nestedatt--routes--health_checks"></a>
+### Nested Schema for `routes.health_checks`
+
+Read-Only:
+
+- `grpc_health_check` (Attributes) gRPC health check settings. (see [below for nested schema](#nestedatt--routes--health_checks--grpc_health_check))
+- `healthy_threshold` (Number) Number of successes before marking healthy.
+- `http_health_check` (Attributes) HTTP health check settings. (see [below for nested schema](#nestedatt--routes--health_checks--http_health_check))
+- `initial_jitter` (String) An optional jitter amount for the first health check.
+- `interval` (String) The interval between health checks.
+- `interval_jitter` (String) An optional jitter amount for every interval.
+- `interval_jitter_percent` (Number) An optional jitter percentage.
+- `tcp_health_check` (Attributes) TCP health check settings. (see [below for nested schema](#nestedatt--routes--health_checks--tcp_health_check))
+- `timeout` (String) The time to wait for a health check response.
+- `unhealthy_threshold` (Number) Number of failures before marking unhealthy.
+
+<a id="nestedatt--routes--health_checks--grpc_health_check"></a>
+### Nested Schema for `routes.health_checks.grpc_health_check`
+
+Read-Only:
+
+- `authority` (String) Authority header value.
+- `service_name` (String) Service name to check.
+
+
+<a id="nestedatt--routes--health_checks--http_health_check"></a>
+### Nested Schema for `routes.health_checks.http_health_check`
+
+Read-Only:
+
+- `codec_client_type` (String) Application protocol for health checks.
+- `expected_statuses` (Attributes Set) Expected status code ranges. (see [below for nested schema](#nestedatt--routes--health_checks--http_health_check--expected_statuses))
+- `host` (String) The host header value.
+- `path` (String) The request path.
+- `retriable_statuses` (Attributes Set) Retriable status code ranges. (see [below for nested schema](#nestedatt--routes--health_checks--http_health_check--retriable_statuses))
+
+<a id="nestedatt--routes--health_checks--http_health_check--expected_statuses"></a>
+### Nested Schema for `routes.health_checks.http_health_check.expected_statuses`
+
+Read-Only:
+
+- `end` (Number) End of status code range.
+- `start` (Number) Start of status code range.
+
+
+<a id="nestedatt--routes--health_checks--http_health_check--retriable_statuses"></a>
+### Nested Schema for `routes.health_checks.http_health_check.retriable_statuses`
+
+Read-Only:
+
+- `end` (Number) End of status code range.
+- `start` (Number) Start of status code range.
+
+
+
+<a id="nestedatt--routes--health_checks--tcp_health_check"></a>
+### Nested Schema for `routes.health_checks.tcp_health_check`
+
+Read-Only:
+
+- `receive` (Attributes Set) Expected response payloads. (see [below for nested schema](#nestedatt--routes--health_checks--tcp_health_check--receive))
+- `send` (Attributes) Payload to send. (see [below for nested schema](#nestedatt--routes--health_checks--tcp_health_check--send))
+
+<a id="nestedatt--routes--health_checks--tcp_health_check--receive"></a>
+### Nested Schema for `routes.health_checks.tcp_health_check.receive`
+
+Read-Only:
+
+- `binary_b64` (String) Base64 encoded binary payload.
+- `text` (String) Hex encoded payload.
+
+
+<a id="nestedatt--routes--health_checks--tcp_health_check--send"></a>
+### Nested Schema for `routes.health_checks.tcp_health_check.send`
+
+Read-Only:
+
+- `binary_b64` (String) Base64 encoded binary payload.
+- `text` (String) Hex encoded payload.
+
+
 
 
 <a id="nestedatt--routes--rewrite_response_headers"></a>
