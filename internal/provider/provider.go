@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
 	client "github.com/pomerium/enterprise-client-go"
 )
 
@@ -138,6 +139,7 @@ func (p *PomeriumProvider) Configure(ctx context.Context, req provider.Configure
 
 func (p *PomeriumProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
+		NewClusterResource,
 		NewNamespaceResource,
 		NewNamespacePermissionResource,
 		NewRouteResource,
