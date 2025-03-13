@@ -70,6 +70,7 @@ type SettingsModel struct {
 	InstallationID                                    types.String         `tfsdk:"installation_id"`
 	JWTClaimsHeaders                                  types.Map            `tfsdk:"jwt_claims_headers"`
 	JWTGroupsFilter                                   types.Object         `tfsdk:"jwt_groups_filter"`
+	JWTIssuerFormat                                   types.String         `tfsdk:"jwt_issuer_format"`
 	LogLevel                                          types.String         `tfsdk:"log_level"`
 	LogoURL                                           types.String         `tfsdk:"logo_url"`
 	MetricsAddress                                    types.String         `tfsdk:"metrics_address"`
@@ -158,6 +159,7 @@ func ConvertSettingsToPB(
 	pbSettings.InsecureServer = src.InsecureServer.ValueBoolPointer()
 	pbSettings.InstallationId = src.InstallationID.ValueStringPointer()
 	ToStringMap(ctx, &pbSettings.JwtClaimsHeaders, src.JWTClaimsHeaders, &diagnostics)
+	pbSettings.JwtIssuerFormat = ToIssuerFormat(src.JWTIssuerFormat)
 	pbSettings.LogLevel = src.LogLevel.ValueStringPointer()
 	pbSettings.LogoUrl = src.LogoURL.ValueStringPointer()
 	pbSettings.MetricsAddress = src.MetricsAddress.ValueStringPointer()
