@@ -349,13 +349,18 @@ func FromIssuerFormat(src *pb.IssuerFormat) types.String {
 }
 
 // ToIssuerFormat converts a JWT issuer format string into a protobuf enum.
-func ToIssuerFormat(src types.String) *pb.IssuerFormat {
+func ToIssuerFormat(src types.String, diags *diag.Diagnostics) *pb.IssuerFormat {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
 	switch src.ValueString() {
-	case "host_only", "hostOnly": // the Core YAML config expects 'hostOnly'
+	case "host_only":
 		return pb.IssuerFormat_IssuerHostOnly.Enum()
 	case "uri":
 		return pb.IssuerFormat_IssuerURI.Enum()
 	default:
+		diags.AddError("unknown issuer format", fmt.Sprintf("unknown issuer format %q", src.ValueString()))
 		return nil
 	}
 }

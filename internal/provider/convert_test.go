@@ -809,18 +809,25 @@ func TestToIssuerFormat(t *testing.T) {
 	t.Parallel()
 
 	for _, tc := range []struct {
-		name   string
-		in     types.String
-		expect *pb.IssuerFormat
+		name                 string
+		in                   types.String
+		expect               *pb.IssuerFormat
+		expectedErrorDetails string
 	}{
-		{"null", types.StringNull(), nil},
-		{"unknown", types.StringValue("foobar"), nil},
-		{"host_only", types.StringValue("host_only"), pb.IssuerFormat_IssuerHostOnly.Enum()},
-		{"hostOnly", types.StringValue("hostOnly"), pb.IssuerFormat_IssuerHostOnly.Enum()},
-		{"uri", types.StringValue("uri"), pb.IssuerFormat_IssuerURI.Enum()},
+		{"null", types.StringNull(), nil, ""},
+		{"host_only", types.StringValue("host_only"), pb.IssuerFormat_IssuerHostOnly.Enum(), ""},
+		{"uri", types.StringValue("uri"), pb.IssuerFormat_IssuerURI.Enum(), ""},
+		{"unknown", types.StringValue("foobar"), nil, `unknown issuer format "foobar"`},
 	} {
-		assert.Equal(t, tc.expect, provider.ToIssuerFormat(tc.in),
+		diagnostics := diag.Diagnostics{}
+		assert.Equal(t, tc.expect, provider.ToIssuerFormat(tc.in, &diagnostics),
 			"%s: should convert %v to %v", tc.name, tc.in, tc.expect)
+		if tc.expectedErrorDetails == "" {
+			assert.False(t, diagnostics.HasError())
+		} else {
+			assert.Len(t, diagnostics, 1)
+			assert.Equal(t, tc.expectedErrorDetails, diagnostics[0].Detail())
+		}
 	}
 }
 

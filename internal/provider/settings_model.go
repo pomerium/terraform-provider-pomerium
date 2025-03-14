@@ -159,7 +159,7 @@ func ConvertSettingsToPB(
 	pbSettings.InsecureServer = src.InsecureServer.ValueBoolPointer()
 	pbSettings.InstallationId = src.InstallationID.ValueStringPointer()
 	ToStringMap(ctx, &pbSettings.JwtClaimsHeaders, src.JWTClaimsHeaders, &diagnostics)
-	pbSettings.JwtIssuerFormat = ToIssuerFormat(src.JWTIssuerFormat)
+	pbSettings.JwtIssuerFormat = ToIssuerFormat(src.JWTIssuerFormat, &diagnostics)
 	pbSettings.LogLevel = src.LogLevel.ValueStringPointer()
 	pbSettings.LogoUrl = src.LogoURL.ValueStringPointer()
 	pbSettings.MetricsAddress = src.MetricsAddress.ValueStringPointer()

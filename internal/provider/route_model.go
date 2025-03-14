@@ -590,7 +590,7 @@ func ConvertRouteToPB(
 		pbRoute.EnableGoogleCloudServerlessAuthentication = src.EnableGoogleCloudServerlessAuthentication.ValueBool()
 	}
 	pbRoute.KubernetesServiceAccountTokenFile = src.KubernetesServiceAccountTokenFile.ValueStringPointer()
-	pbRoute.JwtIssuerFormat = ToIssuerFormat(src.JWTIssuerFormat)
+	pbRoute.JwtIssuerFormat = ToIssuerFormat(src.JWTIssuerFormat, &diagnostics)
 	pbRoute.RewriteResponseHeaders = rewriteHeadersToPB(src.RewriteResponseHeaders)
 	pbRoute.BearerTokenFormat = ToBearerTokenFormat(src.BearerTokenFormat)
 	ToRouteStringList(ctx, &pbRoute.IdpAccessTokenAllowedAudiences, src.IDPAccessTokenAllowedAudiences, &diagnostics)
