@@ -464,83 +464,68 @@ var SettingsResourceSchema = schema.Schema{
 		},
 		"otel_traces_exporter": schema.StringAttribute{
 			Optional:    true,
-			Computed:    true,
 			Description: "OpenTelemetry traces exporter type",
 		},
 		"otel_traces_sampler_arg": schema.Float64Attribute{
 			Optional:    true,
-			Computed:    true,
 			Description: "OpenTelemetry traces sampler argument",
 		},
 		"otel_resource_attributes": schema.SetAttribute{
 			Optional:    true,
-			Computed:    true,
 			ElementType: types.StringType,
 			Description: "OpenTelemetry resource attributes",
 		},
 		"otel_log_level": schema.StringAttribute{
 			Optional:    true,
-			Computed:    true,
 			Description: "OpenTelemetry log level",
 		},
 		"otel_attribute_value_length_limit": schema.Int64Attribute{
 			Optional:    true,
-			Computed:    true,
 			Description: "OpenTelemetry attribute value length limit",
 		},
 		"otel_exporter_otlp_endpoint": schema.StringAttribute{
 			Optional:    true,
-			Computed:    true,
 			Description: "OpenTelemetry OTLP exporter endpoint",
 		},
 		"otel_exporter_otlp_traces_endpoint": schema.StringAttribute{
 			Optional:    true,
-			Computed:    true,
 			Description: "OpenTelemetry OTLP traces endpoint",
 		},
 		"otel_exporter_otlp_protocol": schema.StringAttribute{
 			Optional:    true,
-			Computed:    true,
 			Description: "OpenTelemetry OTLP exporter protocol",
 		},
 		"otel_exporter_otlp_traces_protocol": schema.StringAttribute{
 			Optional:    true,
-			Computed:    true,
 			Description: "OpenTelemetry OTLP traces protocol",
 		},
 		"otel_exporter_otlp_headers": schema.SetAttribute{
 			Optional:    true,
-			Computed:    true,
 			ElementType: types.StringType,
 			Description: "OpenTelemetry OTLP exporter headers",
 		},
 		"otel_exporter_otlp_traces_headers": schema.SetAttribute{
 			Optional:    true,
-			Computed:    true,
 			ElementType: types.StringType,
 			Description: "OpenTelemetry OTLP traces headers",
 		},
 		"otel_exporter_otlp_timeout": schema.StringAttribute{
 			Optional:    true,
-			Computed:    true,
 			Description: "OpenTelemetry OTLP exporter timeout",
 			CustomType:  timetypes.GoDurationType{},
 		},
 		"otel_exporter_otlp_traces_timeout": schema.StringAttribute{
 			Optional:    true,
-			Computed:    true,
 			Description: "OpenTelemetry OTLP traces timeout",
 			CustomType:  timetypes.GoDurationType{},
 		},
 		"otel_bsp_schedule_delay": schema.StringAttribute{
 			Optional:    true,
-			Computed:    true,
 			Description: "OpenTelemetry BSP schedule delay",
 			CustomType:  timetypes.GoDurationType{},
 		},
 		"otel_bsp_max_export_batch_size": schema.Int64Attribute{
 			Optional:    true,
-			Computed:    true,
 			Description: "OpenTelemetry BSP max export batch size",
 		},
 	},

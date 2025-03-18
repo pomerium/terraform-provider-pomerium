@@ -273,14 +273,10 @@ func ConvertSettingsFromPB(
 	JWTGroupsFilterFromPB(&dst.JWTGroupsFilter, src.JwtGroupsFilter)
 
 	dst.OtelTracesExporter = types.StringPointerValue(src.OtelTracesExporter)
-	if src.OtelTracesSamplerArg != nil {
-		dst.OtelTracesSamplerArg = types.Float64Value(*src.OtelTracesSamplerArg)
-	}
+	dst.OtelTracesSamplerArg = types.Float64PointerValue(src.OtelTracesSamplerArg)
 	dst.OtelResourceAttributes = FromStringSliceToSet(src.OtelResourceAttributes)
 	dst.OtelLogLevel = types.StringPointerValue(src.OtelLogLevel)
-	if src.OtelAttributeValueLengthLimit != nil {
-		dst.OtelAttributeValueLengthLimit = types.Int64Value(int64(*src.OtelAttributeValueLengthLimit))
-	}
+	dst.OtelAttributeValueLengthLimit = Int64PointerValue(src.OtelAttributeValueLengthLimit)
 	dst.OtelExporterOtlpEndpoint = types.StringPointerValue(src.OtelExporterOtlpEndpoint)
 	dst.OtelExporterOtlpTracesEndpoint = types.StringPointerValue(src.OtelExporterOtlpTracesEndpoint)
 	dst.OtelExporterOtlpProtocol = types.StringPointerValue(src.OtelExporterOtlpProtocol)
@@ -290,9 +286,7 @@ func ConvertSettingsFromPB(
 	dst.OtelExporterOtlpTimeout = FromDuration(src.OtelExporterOtlpTimeout)
 	dst.OtelExporterOtlpTracesTimeout = FromDuration(src.OtelExporterOtlpTracesTimeout)
 	dst.OtelBspScheduleDelay = FromDuration(src.OtelBspScheduleDelay)
-	if src.OtelBspMaxExportBatchSize != nil {
-		dst.OtelBspMaxExportBatchSize = types.Int64Value(int64(*src.OtelBspMaxExportBatchSize))
-	}
+	dst.OtelBspMaxExportBatchSize = Int64PointerValue(src.OtelBspMaxExportBatchSize)
 
 	return diagnostics
 }
