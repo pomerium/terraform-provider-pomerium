@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/iancoleman/strcase"
+	"golang.org/x/exp/constraints"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/structpb"
 
@@ -338,6 +339,23 @@ func UInt32ToInt64OrNull(value uint32) types.Int64 {
 		return types.Int64Value(int64(value))
 	}
 	return types.Int64Null()
+}
+
+// Int64PointerValue converts a pointer to an integer to types.Int64, returning Null Value if the pointer is nil
+func Int64PointerValue[T constraints.Integer](src *T) types.Int64 {
+	if src == nil {
+		return types.Int64Null()
+	}
+	return types.Int64Value(int64(*src))
+}
+
+// FromInt64Pointer converts Int64 pointer to *T
+func FromInt64Pointer[T constraints.Integer](v types.Int64) *T {
+	if v.IsNull() {
+		return nil
+	}
+	val := T(v.ValueInt64())
+	return &val
 }
 
 func ToRouteStringList(ctx context.Context, dst **pb.Route_StringList, src types.Set, diagnostics *diag.Diagnostics) {
