@@ -179,10 +179,7 @@ func ConvertSettingsToPB(
 	pbSettings.OtelTracesSamplerArg = src.OtelTracesSamplerArg.ValueFloat64Pointer()
 	ToStringSliceFromSet(ctx, &pbSettings.OtelResourceAttributes, src.OtelResourceAttributes, &diagnostics)
 	pbSettings.OtelLogLevel = src.OtelLogLevel.ValueStringPointer()
-	if !src.OtelAttributeValueLengthLimit.IsNull() {
-		v := int32(src.OtelAttributeValueLengthLimit.ValueInt64())
-		pbSettings.OtelAttributeValueLengthLimit = &v
-	}
+	pbSettings.OtelAttributeValueLengthLimit = FromInt64Pointer[int32](src.OtelAttributeValueLengthLimit)
 	pbSettings.OtelExporterOtlpEndpoint = src.OtelExporterOtlpEndpoint.ValueStringPointer()
 	pbSettings.OtelExporterOtlpTracesEndpoint = src.OtelExporterOtlpTracesEndpoint.ValueStringPointer()
 	pbSettings.OtelExporterOtlpProtocol = src.OtelExporterOtlpProtocol.ValueStringPointer()
@@ -192,10 +189,7 @@ func ConvertSettingsToPB(
 	ToDuration(&pbSettings.OtelExporterOtlpTimeout, src.OtelExporterOtlpTimeout, &diagnostics)
 	ToDuration(&pbSettings.OtelExporterOtlpTracesTimeout, src.OtelExporterOtlpTracesTimeout, &diagnostics)
 	ToDuration(&pbSettings.OtelBspScheduleDelay, src.OtelBspScheduleDelay, &diagnostics)
-	if !src.OtelBspMaxExportBatchSize.IsNull() {
-		v := int32(src.OtelBspMaxExportBatchSize.ValueInt64())
-		pbSettings.OtelBspMaxExportBatchSize = &v
-	}
+	pbSettings.OtelBspMaxExportBatchSize = FromInt64Pointer[int32](src.OtelBspMaxExportBatchSize)
 
 	return pbSettings, diagnostics
 }

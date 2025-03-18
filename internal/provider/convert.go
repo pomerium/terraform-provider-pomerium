@@ -349,6 +349,15 @@ func Int64PointerValue[T constraints.Integer](src *T) types.Int64 {
 	return types.Int64Value(int64(*src))
 }
 
+// FromInt64Pointer converts Int64 pointer to *T
+func FromInt64Pointer[T constraints.Integer](v types.Int64) *T {
+	if v.IsNull() {
+		return nil
+	}
+	val := T(v.ValueInt64())
+	return &val
+}
+
 func ToRouteStringList(ctx context.Context, dst **pb.Route_StringList, src types.Set, diagnostics *diag.Diagnostics) {
 	if src.IsNull() || src.IsUnknown() {
 		*dst = nil
