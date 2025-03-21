@@ -204,7 +204,6 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"jwt_groups_filter": JWTGroupsFilterSchema,
 			"jwt_issuer_format": schema.StringAttribute{
 				Optional:    true,
-				Computed:    true,
 				Description: "Format for JWT issuer strings. Use 'IssuerHostOnly' for hostname without scheme or trailing slash, or 'IssuerURI' for complete URI including scheme and trailing slash.",
 				Validators: []validator.String{
 					stringvalidator.OneOf(GetValidEnumValues[pb.IssuerFormat]()...),
