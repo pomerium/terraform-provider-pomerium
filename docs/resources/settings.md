@@ -79,6 +79,7 @@ The settings are global object.
 - `installation_id` (String) Installation ID
 - `jwt_claims_headers` (Map of String) JWT claims headers mapping
 - `jwt_groups_filter` (Attributes) JWT Groups Filter (see [below for nested schema](#nestedatt--jwt_groups_filter))
+- `jwt_issuer_format` (String) Format for JWT issuer strings. Use 'IssuerHostOnly' for hostname without scheme or trailing slash, or 'IssuerURI' for complete URI including scheme and trailing slash.
 - `log_level` (String) Log level
 - `logo_url` (String) A URL pointing to your logo. Defaults to Pomerium's Logo.
 - `metrics_address` (String) Metrics address

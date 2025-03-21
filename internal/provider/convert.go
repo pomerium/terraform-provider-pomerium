@@ -342,9 +342,8 @@ func FromIssuerFormat(src *pb.IssuerFormat) types.String {
 	n := pb.IssuerFormat_name[int32(*src)]
 	if n == "" {
 		return types.StringNull()
-	} else {
-		return types.StringValue(n)
 	}
+	return types.StringValue(n)
 }
 
 // ToIssuerFormat converts a JWT issuer format string into a protobuf enum.
