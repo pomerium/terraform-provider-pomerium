@@ -140,7 +140,7 @@ func TestConvertSettingsToPB(t *testing.T) {
 		InstallationID:                  types.StringValue("INSTALLATION_ID"),
 		JWTClaimsHeaders:                types.MapValueMust(types.StringType, map[string]attr.Value{"X": types.StringValue("Y")}),
 		JWTGroupsFilter:                 types.ObjectValueMust(map[string]attr.Type{"infer_from_ppl": types.BoolType, "groups": types.ListType{ElemType: types.StringType}}, map[string]attr.Value{"infer_from_ppl": types.BoolValue(true), "groups": types.ListValueMust(types.StringType, []attr.Value{types.StringValue("z")})}),
-		JWTIssuerFormat:                 types.StringValue("uri"),
+		JWTIssuerFormat:                 types.StringValue("IssuerURI"),
 		LogLevel:                        types.StringValue("debug"),
 		LogoURL:                         types.StringValue("https://logo.example.com"),
 		MetricsAddress:                  types.StringValue("127.0.0.1:9999"),

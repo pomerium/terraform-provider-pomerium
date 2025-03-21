@@ -257,6 +257,7 @@ func ConvertSettingsFromPB(
 	dst.InsecureServer = types.BoolPointerValue(src.InsecureServer)
 	dst.InstallationID = types.StringPointerValue(src.InstallationId)
 	dst.JWTClaimsHeaders = FromStringMap(src.JwtClaimsHeaders)
+	dst.JWTIssuerFormat = FromIssuerFormat(src.JwtIssuerFormat)
 	dst.LogLevel = types.StringPointerValue(src.LogLevel)
 	dst.LogoURL = types.StringPointerValue(src.LogoUrl)
 	dst.MetricsAddress = types.StringPointerValue(src.MetricsAddress)

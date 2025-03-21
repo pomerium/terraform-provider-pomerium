@@ -796,8 +796,8 @@ func TestFromIssuerFormat(t *testing.T) {
 		expect types.String
 	}{
 		{"null", nil, types.StringNull()},
-		{"host_only", pb.IssuerFormat_IssuerHostOnly.Enum(), types.StringValue("host_only")},
-		{"uri", pb.IssuerFormat_IssuerURI.Enum(), types.StringValue("uri")},
+		{"host_only", pb.IssuerFormat_IssuerHostOnly.Enum(), types.StringValue("IssuerHostOnly")},
+		{"uri", pb.IssuerFormat_IssuerURI.Enum(), types.StringValue("IssuerURI")},
 		{"unknown", (*pb.IssuerFormat)(proto.Int32(123)), types.StringNull()},
 	} {
 		assert.Equal(t, tc.expect, provider.FromIssuerFormat(tc.in),
@@ -815,8 +815,8 @@ func TestToIssuerFormat(t *testing.T) {
 		expectedErrorDetails string
 	}{
 		{"null", types.StringNull(), nil, ""},
-		{"host_only", types.StringValue("host_only"), pb.IssuerFormat_IssuerHostOnly.Enum(), ""},
-		{"uri", types.StringValue("uri"), pb.IssuerFormat_IssuerURI.Enum(), ""},
+		{"host_only", types.StringValue("IssuerHostOnly"), pb.IssuerFormat_IssuerHostOnly.Enum(), ""},
+		{"uri", types.StringValue("IssuerURI"), pb.IssuerFormat_IssuerURI.Enum(), ""},
 		{"unknown", types.StringValue("foobar"), nil, `unknown issuer format "foobar"`},
 	} {
 		diagnostics := diag.Diagnostics{}

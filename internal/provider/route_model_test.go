@@ -186,7 +186,7 @@ func TestConvertRoute(t *testing.T) {
 		LogoURL:                       types.StringValue("https://logo.example.com/logo.png"),
 		EnableGoogleCloudServerlessAuthentication: types.BoolValue(true),
 		KubernetesServiceAccountTokenFile:         types.StringValue("/path/to/token"),
-		JWTIssuerFormat:                           types.StringValue("uri"),
+		JWTIssuerFormat:                           types.StringValue("IssuerURI"),
 		BearerTokenFormat:                         types.StringValue("idp_access_token"),
 		IDPAccessTokenAllowedAudiences:            types.SetValueMust(types.StringType, []attr.Value{types.StringValue("aud1"), types.StringValue("aud2")}),
 		LoadBalancingPolicy:                       types.StringValue("round_robin"),

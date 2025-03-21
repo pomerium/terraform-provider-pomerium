@@ -338,13 +338,11 @@ func FromIssuerFormat(src *pb.IssuerFormat) types.String {
 		return types.StringNull()
 	}
 
-	switch *src {
-	case pb.IssuerFormat_IssuerHostOnly:
-		return types.StringValue("host_only")
-	case pb.IssuerFormat_IssuerURI:
-		return types.StringValue("uri")
-	default:
+	n := pb.IssuerFormat_name[int32(*src)]
+	if n == "" {
 		return types.StringNull()
+	} else {
+		return types.StringValue(n)
 	}
 }
 
@@ -354,15 +352,12 @@ func ToIssuerFormat(src types.String, diags *diag.Diagnostics) *pb.IssuerFormat 
 		return nil
 	}
 
-	switch src.ValueString() {
-	case "host_only":
-		return pb.IssuerFormat_IssuerHostOnly.Enum()
-	case "uri":
-		return pb.IssuerFormat_IssuerURI.Enum()
-	default:
+	v, ok := pb.IssuerFormat_value[src.ValueString()]
+	if !ok {
 		diags.AddError("unknown issuer format", fmt.Sprintf("unknown issuer format %q", src.ValueString()))
 		return nil
 	}
+	return pb.IssuerFormat(v).Enum()
 }
 
 // UInt32ToInt64OrNull converts a uint32 to types.Int64, returning null if the value is 0
