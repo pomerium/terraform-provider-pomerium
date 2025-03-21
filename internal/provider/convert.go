@@ -333,6 +333,33 @@ func ToBearerTokenFormat(src types.String) *pb.BearerTokenFormat {
 	}
 }
 
+// FromIssuerFormat converts a protobuf JWT issuer format into a string.
+func FromIssuerFormat(src *pb.IssuerFormat) types.String {
+	if src == nil {
+		return types.StringNull()
+	}
+
+	n := pb.IssuerFormat_name[int32(*src)]
+	if n == "" {
+		return types.StringNull()
+	}
+	return types.StringValue(n)
+}
+
+// ToIssuerFormat converts a JWT issuer format string into a protobuf enum.
+func ToIssuerFormat(src types.String, diags *diag.Diagnostics) *pb.IssuerFormat {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	v, ok := pb.IssuerFormat_value[src.ValueString()]
+	if !ok {
+		diags.AddError("unknown issuer format", fmt.Sprintf("unknown issuer format %q", src.ValueString()))
+		return nil
+	}
+	return pb.IssuerFormat(v).Enum()
+}
+
 // UInt32ToInt64OrNull converts a uint32 to types.Int64, returning null if the value is 0
 func UInt32ToInt64OrNull(value uint32) types.Int64 {
 	if value > 0 {

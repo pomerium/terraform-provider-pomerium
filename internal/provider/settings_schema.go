@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+
+	"github.com/pomerium/enterprise-client-go/pb"
 )
 
 //go:embed help/settings.md
@@ -192,6 +194,13 @@ var SettingsResourceSchema = schema.Schema{
 			Description: "JWT claims headers mapping",
 		},
 		"jwt_groups_filter": JWTGroupsFilterSchema,
+		"jwt_issuer_format": schema.StringAttribute{
+			Optional:    true,
+			Description: "Format for JWT issuer strings. Use 'IssuerHostOnly' for hostname without scheme or trailing slash, or 'IssuerURI' for complete URI including scheme and trailing slash.",
+			Validators: []validator.String{
+				stringvalidator.OneOf(GetValidEnumValues[pb.IssuerFormat]()...),
+			},
+		},
 		"default_upstream_timeout": schema.StringAttribute{
 			Optional:    true,
 			Description: "Default upstream timeout",

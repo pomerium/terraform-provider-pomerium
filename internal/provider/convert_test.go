@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -783,6 +784,50 @@ func TestToBearerTokenFormat(t *testing.T) {
 	} {
 		assert.Equal(t, tc.expect, provider.ToBearerTokenFormat(tc.in),
 			"%s: should convert %v to %v", tc.name, tc.in, tc.expect)
+	}
+}
+
+func TestFromIssuerFormat(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name   string
+		in     *pb.IssuerFormat
+		expect types.String
+	}{
+		{"null", nil, types.StringNull()},
+		{"host_only", pb.IssuerFormat_IssuerHostOnly.Enum(), types.StringValue("IssuerHostOnly")},
+		{"uri", pb.IssuerFormat_IssuerURI.Enum(), types.StringValue("IssuerURI")},
+		{"unknown", (*pb.IssuerFormat)(proto.Int32(123)), types.StringNull()},
+	} {
+		assert.Equal(t, tc.expect, provider.FromIssuerFormat(tc.in),
+			"%s: should convert %v to %v", tc.name, tc.in, tc.expect)
+	}
+}
+
+func TestToIssuerFormat(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name                 string
+		in                   types.String
+		expect               *pb.IssuerFormat
+		expectedErrorDetails string
+	}{
+		{"null", types.StringNull(), nil, ""},
+		{"host_only", types.StringValue("IssuerHostOnly"), pb.IssuerFormat_IssuerHostOnly.Enum(), ""},
+		{"uri", types.StringValue("IssuerURI"), pb.IssuerFormat_IssuerURI.Enum(), ""},
+		{"unknown", types.StringValue("foobar"), nil, `unknown issuer format "foobar"`},
+	} {
+		diagnostics := diag.Diagnostics{}
+		assert.Equal(t, tc.expect, provider.ToIssuerFormat(tc.in, &diagnostics),
+			"%s: should convert %v to %v", tc.name, tc.in, tc.expect)
+		if tc.expectedErrorDetails == "" {
+			assert.False(t, diagnostics.HasError())
+		} else {
+			assert.Len(t, diagnostics, 1)
+			assert.Equal(t, tc.expectedErrorDetails, diagnostics[0].Detail())
+		}
 	}
 }
 

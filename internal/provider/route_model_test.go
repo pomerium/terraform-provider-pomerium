@@ -62,7 +62,7 @@ func TestConvertRoute(t *testing.T) {
 		LogoUrl:                          ptr("https://logo.example.com/logo.png"),
 		EnableGoogleCloudServerlessAuthentication: true,
 		KubernetesServiceAccountTokenFile:         ptr("/path/to/token"),
-		JwtIssuerFormat:                           pb.IssuerFormat_IssuerURI,
+		JwtIssuerFormat:                           pb.IssuerFormat_IssuerURI.Enum(),
 		BearerTokenFormat:                         pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_ACCESS_TOKEN.Enum(),
 		IdpAccessTokenAllowedAudiences:            &pb.Route_StringList{Values: []string{"aud1", "aud2"}},
 		LoadBalancingPolicy:                       pb.LoadBalancingPolicy_LOAD_BALANCING_POLICY_ROUND_ROBIN.Enum(),
