@@ -60,6 +60,10 @@ resource "pomerium_settings" "settings" {
   }
 
   idp_access_token_allowed_audiences = ["aud1", "aud2"]
+
+  otel_traces_exporter               = "otlp"
+  otel_exporter_otlp_traces_endpoint = "http://localhost:4317"
+  otel_exporter_otlp_traces_protocol = "grpc"
 }
 
 resource "pomerium_service_account" "test_sa" {

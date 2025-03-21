@@ -15,6 +15,7 @@ require (
 	github.com/pomerium/pomerium v0.28.1-0.20250313134608-c4a5502f49f5
 	github.com/rs/zerolog v1.33.0
 	github.com/stretchr/testify v1.10.0
+	golang.org/x/exp v0.0.0-20240808152545-0cdaa3abc0fa
 	google.golang.org/grpc v1.71.0
 	google.golang.org/protobuf v1.36.5
 )
