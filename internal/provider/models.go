@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/pomerium/enterprise-client-go/pb"
 )
@@ -27,8 +28,9 @@ func ConvertServiceAccountToPB(_ context.Context, src *ServiceAccountResourceMod
 	var diags diag.Diagnostics
 
 	pbServiceAccount := &pb.PomeriumServiceAccount{
-		Id:     src.ID.ValueString(),
-		UserId: src.Name.ValueString(),
+		Id:           src.ID.ValueString(),
+		UserId:       src.Name.ValueString(),
+		OriginatorId: proto.String(OriginatorID),
 	}
 
 	if src.NamespaceID.ValueString() != "" {
