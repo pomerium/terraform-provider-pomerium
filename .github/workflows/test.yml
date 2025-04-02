@@ -32,6 +32,7 @@ jobs:
           POMERIUM_API_TOKEN: ${{ secrets.POMERIUM_API_TOKEN }}
 
   lint:
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
