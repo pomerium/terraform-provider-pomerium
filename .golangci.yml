@@ -1,6 +1,3 @@
-run:
-  deadline: 20m
-
 linters-settings:
   gci:
     custom-order: true
@@ -33,10 +30,10 @@ linters:
     - revive
     - staticcheck
     - stylecheck
-    - tenv
     - unconvert
     - unused
     - usestdlibvars
+    - usetesting
 
 issues:
   # List of regexps of issue texts to exclude, empty list by default.
@@ -48,6 +45,7 @@ issues:
     # errcheck: Almost all programs ignore errors on these functions and in most cases it's ok
     - Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*printf?|os\.(Un)?Setenv). is not checked
     - "SA1019"
+    - G115
 
   exclude-rules:
     # allow tls skip verify
