@@ -45,6 +45,13 @@ func (r *ClusterResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"namespace_id": schema.StringAttribute{
+				Computed:    true,
+				Description: "Namespace ID for the cluster.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"id": schema.StringAttribute{
 				Computed:    true,
 				Description: "Unique identifier for the cluster.",
@@ -125,6 +132,7 @@ func (r *ClusterResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
+	plan.NamespaceID = types.StringValue(respCluster.Namespace.Id)
 	plan.ParentNamespaceID = types.StringValue(respCluster.Namespace.ParentId)
 	plan.ID = types.StringValue(respCluster.Cluster.Id)
 

@@ -17,6 +17,10 @@ func getClusterDataSourceAttributes(idRequired bool) map[string]schema.Attribute
 			Computed:    true,
 			Description: "Parent namespace of the cluster.",
 		},
+		"namespace_id": schema.StringAttribute{
+			Computed:    true,
+			Description: "Namespace ID of the cluster.",
+		},
 		"id": schema.StringAttribute{
 			Required:    idRequired,
 			Computed:    !idRequired,

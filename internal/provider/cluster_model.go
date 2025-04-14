@@ -11,6 +11,7 @@ import (
 
 type ClusterModel struct {
 	ParentNamespaceID        types.String `tfsdk:"parent_namespace_id"`
+	NamespaceID              types.String `tfsdk:"namespace_id"`
 	ID                       types.String `tfsdk:"id"`
 	Name                     types.String `tfsdk:"name"`
 	DatabrokerServiceURL     types.String `tfsdk:"databroker_service_url"`
@@ -24,6 +25,7 @@ type ClusterModel struct {
 func ConvertClusterFromPB(dst *ClusterModel, src *pb.Cluster, namespace *pb.Namespace) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 	if namespace != nil {
+		dst.NamespaceID = types.StringValue(namespace.Id)
 		dst.ParentNamespaceID = types.StringValue(namespace.ParentId)
 	}
 	dst.ID = types.StringValue(src.Id)
