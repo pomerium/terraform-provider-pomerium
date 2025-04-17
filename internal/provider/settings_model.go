@@ -29,6 +29,7 @@ type SettingsModel struct {
 	ClientCA                                          types.String         `tfsdk:"client_ca"`
 	ClientCAFile                                      types.String         `tfsdk:"client_ca_file"`
 	ClientCAKeyPairID                                 types.String         `tfsdk:"client_ca_key_pair_id"`
+	ClusterID                                         types.String         `tfsdk:"cluster_id"`
 	CookieDomain                                      types.String         `tfsdk:"cookie_domain"`
 	CookieExpire                                      timetypes.GoDuration `tfsdk:"cookie_expire"`
 	CookieHTTPOnly                                    types.Bool           `tfsdk:"cookie_http_only"`
@@ -47,6 +48,7 @@ type SettingsModel struct {
 	GRPCAddress                                       types.String         `tfsdk:"grpc_address"`
 	GRPCInsecure                                      types.Bool           `tfsdk:"grpc_insecure"`
 	HTTPRedirectAddr                                  types.String         `tfsdk:"http_redirect_addr"`
+	ID                                                types.String         `tfsdk:"id"`
 	IdentityProviderAuth0                             types.Object         `tfsdk:"identity_provider_auth0"`
 	IdentityProviderAzure                             types.Object         `tfsdk:"identity_provider_azure"`
 	IdentityProviderCognito                           types.Object         `tfsdk:"identity_provider_cognito"`
@@ -74,6 +76,21 @@ type SettingsModel struct {
 	LogLevel                                          types.String         `tfsdk:"log_level"`
 	LogoURL                                           types.String         `tfsdk:"logo_url"`
 	MetricsAddress                                    types.String         `tfsdk:"metrics_address"`
+	OtelAttributeValueLengthLimit                     types.Int64          `tfsdk:"otel_attribute_value_length_limit"`
+	OtelBspMaxExportBatchSize                         types.Int64          `tfsdk:"otel_bsp_max_export_batch_size"`
+	OtelBspScheduleDelay                              timetypes.GoDuration `tfsdk:"otel_bsp_schedule_delay"`
+	OtelExporterOtlpEndpoint                          types.String         `tfsdk:"otel_exporter_otlp_endpoint"`
+	OtelExporterOtlpHeaders                           types.Set            `tfsdk:"otel_exporter_otlp_headers"`
+	OtelExporterOtlpProtocol                          types.String         `tfsdk:"otel_exporter_otlp_protocol"`
+	OtelExporterOtlpTimeout                           timetypes.GoDuration `tfsdk:"otel_exporter_otlp_timeout"`
+	OtelExporterOtlpTracesEndpoint                    types.String         `tfsdk:"otel_exporter_otlp_traces_endpoint"`
+	OtelExporterOtlpTracesHeaders                     types.Set            `tfsdk:"otel_exporter_otlp_traces_headers"`
+	OtelExporterOtlpTracesProtocol                    types.String         `tfsdk:"otel_exporter_otlp_traces_protocol"`
+	OtelExporterOtlpTracesTimeout                     timetypes.GoDuration `tfsdk:"otel_exporter_otlp_traces_timeout"`
+	OtelLogLevel                                      types.String         `tfsdk:"otel_log_level"`
+	OtelResourceAttributes                            types.Set            `tfsdk:"otel_resource_attributes"`
+	OtelTracesExporter                                types.String         `tfsdk:"otel_traces_exporter"`
+	OtelTracesSamplerArg                              types.Float64        `tfsdk:"otel_traces_sampler_arg"`
 	PassIdentityHeaders                               types.Bool           `tfsdk:"pass_identity_headers"`
 	PrimaryColor                                      types.String         `tfsdk:"primary_color"`
 	ProxyLogLevel                                     types.String         `tfsdk:"proxy_log_level"`
@@ -85,21 +102,6 @@ type SettingsModel struct {
 	TimeoutIdle                                       timetypes.GoDuration `tfsdk:"timeout_idle"`
 	TimeoutRead                                       timetypes.GoDuration `tfsdk:"timeout_read"`
 	TimeoutWrite                                      timetypes.GoDuration `tfsdk:"timeout_write"`
-	OtelTracesExporter                                types.String         `tfsdk:"otel_traces_exporter"`
-	OtelTracesSamplerArg                              types.Float64        `tfsdk:"otel_traces_sampler_arg"`
-	OtelResourceAttributes                            types.Set            `tfsdk:"otel_resource_attributes"`
-	OtelLogLevel                                      types.String         `tfsdk:"otel_log_level"`
-	OtelAttributeValueLengthLimit                     types.Int64          `tfsdk:"otel_attribute_value_length_limit"`
-	OtelExporterOtlpEndpoint                          types.String         `tfsdk:"otel_exporter_otlp_endpoint"`
-	OtelExporterOtlpTracesEndpoint                    types.String         `tfsdk:"otel_exporter_otlp_traces_endpoint"`
-	OtelExporterOtlpProtocol                          types.String         `tfsdk:"otel_exporter_otlp_protocol"`
-	OtelExporterOtlpTracesProtocol                    types.String         `tfsdk:"otel_exporter_otlp_traces_protocol"`
-	OtelExporterOtlpHeaders                           types.Set            `tfsdk:"otel_exporter_otlp_headers"`
-	OtelExporterOtlpTracesHeaders                     types.Set            `tfsdk:"otel_exporter_otlp_traces_headers"`
-	OtelExporterOtlpTimeout                           timetypes.GoDuration `tfsdk:"otel_exporter_otlp_timeout"`
-	OtelExporterOtlpTracesTimeout                     timetypes.GoDuration `tfsdk:"otel_exporter_otlp_traces_timeout"`
-	OtelBspScheduleDelay                              timetypes.GoDuration `tfsdk:"otel_bsp_schedule_delay"`
-	OtelBspMaxExportBatchSize                         types.Int64          `tfsdk:"otel_bsp_max_export_batch_size"`
 }
 
 func ConvertSettingsToPB(
@@ -127,6 +129,7 @@ func ConvertSettingsToPB(
 	pbSettings.ClientCa = src.ClientCA.ValueStringPointer()
 	pbSettings.ClientCaFile = src.ClientCAFile.ValueStringPointer()
 	pbSettings.ClientCaKeyPairId = src.ClientCAKeyPairID.ValueStringPointer()
+	pbSettings.ClusterId = src.ClusterID.ValueStringPointer()
 	pbSettings.CookieDomain = src.CookieDomain.ValueStringPointer()
 	ToDuration(&pbSettings.CookieExpire, src.CookieExpire, &diagnostics)
 	pbSettings.CookieHttpOnly = src.CookieHTTPOnly.ValueBoolPointer()
@@ -145,6 +148,7 @@ func ConvertSettingsToPB(
 	pbSettings.GrpcAddress = src.GRPCAddress.ValueStringPointer()
 	pbSettings.GrpcInsecure = src.GRPCInsecure.ValueBoolPointer()
 	pbSettings.HttpRedirectAddr = src.HTTPRedirectAddr.ValueStringPointer()
+	pbSettings.Id = src.ID.ValueString()
 	IdentityProviderSettingsToPB(ctx, pbSettings, src, &diagnostics)
 	ToDuration(&pbSettings.IdentityProviderRefreshInterval, src.IdentityProviderRefreshInterval, &diagnostics)
 	ToDuration(&pbSettings.IdentityProviderRefreshTimeout, src.IdentityProviderRefreshTimeout, &diagnostics)
@@ -220,6 +224,7 @@ func ConvertSettingsFromPB(
 	dst.ClientCA = types.StringPointerValue(src.ClientCa)
 	dst.ClientCAFile = types.StringPointerValue(src.ClientCaFile)
 	dst.ClientCAKeyPairID = types.StringPointerValue(src.ClientCaKeyPairId)
+	dst.ClusterID = types.StringPointerValue(src.ClusterId)
 	dst.CookieDomain = types.StringPointerValue(src.CookieDomain)
 	dst.CookieExpire = FromDuration(src.CookieExpire)
 	dst.CookieHTTPOnly = types.BoolPointerValue(src.CookieHttpOnly)
@@ -238,6 +243,7 @@ func ConvertSettingsFromPB(
 	dst.GRPCAddress = types.StringPointerValue(src.GrpcAddress)
 	dst.GRPCInsecure = types.BoolPointerValue(src.GrpcInsecure)
 	dst.HTTPRedirectAddr = types.StringPointerValue(src.HttpRedirectAddr)
+	dst.ID = types.StringValue(src.Id)
 	dst.IdentityProviderRefreshInterval = FromDuration(src.IdentityProviderRefreshInterval)
 	dst.IdentityProviderRefreshTimeout = FromDuration(src.IdentityProviderRefreshTimeout)
 	dst.IDPAccessTokenAllowedAudiences = FromStringList(src.IdpAccessTokenAllowedAudiences)

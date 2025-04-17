@@ -58,6 +58,10 @@ func (r *NamespaceResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 				Description: "ID of the parent namespace (optional).",
 				Optional:    true,
 			},
+			"cluster_id": schema.StringAttribute{
+				Description: "ID of the cluster (optional).",
+				Computed:    true,
+			},
 		},
 	}
 }

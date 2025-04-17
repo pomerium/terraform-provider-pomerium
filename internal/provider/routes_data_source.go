@@ -30,6 +30,7 @@ type RoutesDataSourceModel struct {
 	Offset      types.Int64  `tfsdk:"offset"`
 	Limit       types.Int64  `tfsdk:"limit"`
 	OrderBy     types.String `tfsdk:"order_by"`
+	ClusterID   types.String `tfsdk:"cluster_id"`
 	Routes      []RouteModel `tfsdk:"routes"`
 	TotalCount  types.Int64  `tfsdk:"total_count"`
 }
@@ -64,6 +65,10 @@ func (d *RoutesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 				Validators: []validator.String{
 					stringvalidator.OneOf("newest", "oldest", "name", "from"),
 				},
+			},
+			"cluster_id": schema.StringAttribute{
+				Optional:    true,
+				Description: "List routes belonging to cluster.",
 			},
 			"routes": schema.ListNestedAttribute{
 				Computed: true,
@@ -110,6 +115,7 @@ func (d *RoutesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		Offset:    data.Offset.ValueInt64Pointer(),
 		Limit:     data.Limit.ValueInt64Pointer(),
 		OrderBy:   data.OrderBy.ValueStringPointer(),
+		ClusterId: data.ClusterID.ValueStringPointer(),
 	}
 	routesResp, err := d.client.RouteService.ListRoutes(ctx, listReq)
 	if err != nil {

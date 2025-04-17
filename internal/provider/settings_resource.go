@@ -6,6 +6,8 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
@@ -87,7 +89,9 @@ func (r *SettingsResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	respSettings, err := r.client.SettingsService.GetSettings(ctx, &pb.GetSettingsRequest{})
+	respSettings, err := r.client.SettingsService.GetSettings(ctx, &pb.GetSettingsRequest{
+		ClusterId: state.ClusterID.ValueStringPointer(),
+	})
 	if err != nil {
 		resp.Diagnostics.AddError("get settings", err.Error())
 		return
@@ -116,7 +120,7 @@ func (r *SettingsResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	_, err := r.client.SettingsService.SetSettings(ctx, &pb.SetSettingsRequest{
+	respSettings, err := r.client.SettingsService.SetSettings(ctx, &pb.SetSettingsRequest{
 		Settings: planSettings,
 	})
 	if err != nil {
@@ -124,6 +128,7 @@ func (r *SettingsResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
+	plan.ID = types.StringValue(respSettings.GetSettings().GetId())
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 

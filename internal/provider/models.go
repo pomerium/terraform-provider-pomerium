@@ -72,9 +72,10 @@ func ConvertServiceAccountFromPB(dst *ServiceAccountModel, src *pb.PomeriumServi
 
 // NamespaceModel represents the shared model for namespace resources and data sources
 type NamespaceModel struct {
-	ID       types.String `tfsdk:"id"`
-	Name     types.String `tfsdk:"name"`
-	ParentID types.String `tfsdk:"parent_id"`
+	ID        types.String `tfsdk:"id"`
+	Name      types.String `tfsdk:"name"`
+	ParentID  types.String `tfsdk:"parent_id"`
+	ClusterID types.String `tfsdk:"cluster_id"`
 }
 
 func ConvertNamespaceToPB(_ context.Context, src *NamespaceResourceModel) (*pb.Namespace, diag.Diagnostics) {
@@ -84,6 +85,7 @@ func ConvertNamespaceToPB(_ context.Context, src *NamespaceResourceModel) (*pb.N
 		OriginatorId: OriginatorID,
 		Id:           src.ID.ValueString(),
 		Name:         src.Name.ValueString(),
+		ClusterId:    src.ClusterID.ValueStringPointer(),
 	}
 
 	if !src.ParentID.IsNull() {
@@ -104,6 +106,8 @@ func ConvertNamespaceFromPB(dst *NamespaceResourceModel, src *pb.Namespace) diag
 	} else {
 		dst.ParentID = types.StringNull()
 	}
+
+	dst.ClusterID = types.StringPointerValue(src.ClusterId)
 
 	return diagnostics
 }
