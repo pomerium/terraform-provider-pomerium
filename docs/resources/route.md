@@ -27,6 +27,7 @@ Route for Pomerium.
 - `allow_spdy` (Boolean) If applied, this setting enables Pomerium to proxy SPDY protocol upgrades.
 - `allow_websockets` (Boolean) If applied, this setting enables Pomerium to proxy websocket connections.
 - `bearer_token_format` (String) Bearer token format.
+- `depends_on_hosts` (Set of String) Additional login redirect hosts.
 - `description` (String) Description of the route.
 - `enable_google_cloud_serverless_authentication` (Boolean) Enable Google Cloud serverless authentication.
 - `health_checks` (Attributes Set) Health checks for the route. (see [below for nested schema](#nestedatt--health_checks))

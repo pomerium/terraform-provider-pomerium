@@ -136,6 +136,7 @@ func TestConvertRoute(t *testing.T) {
 				},
 			},
 		},
+		DependsOn: []string{"foo.example.com", "bar.example.com:8443"},
 	}
 
 	tfRoute := provider.RouteModel{
@@ -321,6 +322,10 @@ func TestConvertRoute(t *testing.T) {
 				),
 			},
 		),
+		DependsOnHosts: types.SetValueMust(types.StringType, []attr.Value{
+			types.StringValue("foo.example.com"),
+			types.StringValue("bar.example.com:8443"),
+		}),
 	}
 
 	t.Run("pb to tf", func(t *testing.T) {

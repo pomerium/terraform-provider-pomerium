@@ -63,6 +63,7 @@ type RouteModel struct {
 	TLSUpstreamServerName                     types.String         `tfsdk:"tls_upstream_server_name"`
 	To                                        types.Set            `tfsdk:"to"`
 	HealthChecks                              types.Set            `tfsdk:"health_checks"`
+	DependsOnHosts                            types.Set            `tfsdk:"depends_on_hosts"`
 }
 
 var rewriteHeaderAttrTypes = map[string]attr.Type{
@@ -597,6 +598,7 @@ func ConvertRouteToPB(
 	pbRoute.OriginatorId = OriginatorID
 	OptionalEnumValueToPB(&pbRoute.LoadBalancingPolicy, src.LoadBalancingPolicy, "LOAD_BALANCING_POLICY", &diagnostics)
 	healthChecksToPB(&pbRoute.HealthChecks, src.HealthChecks, &diagnostics)
+	ToStringSliceFromSet(ctx, &pbRoute.DependsOn, src.DependsOnHosts, &diagnostics)
 
 	return pbRoute, diagnostics
 }
@@ -658,6 +660,7 @@ func ConvertRouteFromPB(
 	dst.IDPAccessTokenAllowedAudiences = FromStringList(src.IdpAccessTokenAllowedAudiences)
 	dst.LoadBalancingPolicy = OptionalEnumValueFromPB(src.LoadBalancingPolicy, "LOAD_BALANCING_POLICY")
 	healthChecksFromPB(&dst.HealthChecks, src.HealthChecks, &diagnostics)
+	dst.DependsOnHosts = FromStringSliceToSet(src.DependsOn)
 
 	return diagnostics
 }
