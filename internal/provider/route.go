@@ -416,6 +416,11 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 					},
 				},
 			},
+			"depends_on_hosts": schema.SetAttribute{
+				Description: "Additional login redirect hosts.",
+				Optional:    true,
+				ElementType: types.StringType,
+			},
 		},
 	}
 }
