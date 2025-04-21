@@ -30,6 +30,7 @@ Route data source
 - `allow_spdy` (Boolean) Allow SPDY.
 - `allow_websockets` (Boolean) Allow websockets.
 - `bearer_token_format` (String) Bearer token format.
+- `depends_on_hosts` (Set of String) Additional login redirect hosts.
 - `description` (String) Description of the route.
 - `enable_google_cloud_serverless_authentication` (Boolean) Enable Google Cloud serverless authentication.
 - `from` (String) From URL.

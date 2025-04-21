@@ -377,6 +377,11 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 				},
 			},
 		},
+		"depends_on_hosts": schema.SetAttribute{
+			Description: "Additional login redirect hosts.",
+			Computed:    true,
+			ElementType: types.StringType,
+		},
 	}
 }
 
