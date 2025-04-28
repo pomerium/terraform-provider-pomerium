@@ -50,6 +50,7 @@ func ConvertClusterToPB(src *ClusterModel) (*pb.Cluster, diag.Diagnostics) {
 		InsecureSkipVerify:       src.InsecureSkipVerify.ValueBoolPointer(),
 		OverrideCertificateName:  src.OverrideCertificateName.ValueStringPointer(),
 		CertificateAuthorityFile: src.CertificateAuthorityFile.ValueStringPointer(),
+		OriginatorId:             OriginatorID,
 	}
 	if bs, err := base64.StdEncoding.DecodeString(src.SharedSecretB64.ValueString()); err != nil {
 		diagnostics.AddError("invalid shared secret", err.Error())
