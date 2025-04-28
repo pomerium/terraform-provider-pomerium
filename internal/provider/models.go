@@ -85,7 +85,10 @@ func ConvertNamespaceToPB(_ context.Context, src *NamespaceResourceModel) (*pb.N
 		OriginatorId: OriginatorID,
 		Id:           src.ID.ValueString(),
 		Name:         src.Name.ValueString(),
-		ClusterId:    src.ClusterID.ValueStringPointer(),
+	}
+
+	if !src.ClusterID.IsNull() && !src.ClusterID.IsUnknown() {
+		pbNamespace.ClusterId = src.ClusterID.ValueStringPointer()
 	}
 
 	if !src.ParentID.IsNull() {

@@ -93,8 +93,9 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	plan.ID = types.StringValue(respNamespace.Namespace.Id)
+	plan.ClusterID = types.StringPointerValue(respNamespace.Namespace.ClusterId)
 
-	tflog.Trace(ctx, "Created a namespace", map[string]interface{}{
+	tflog.Trace(ctx, "Created a namespace", map[string]any{
 		"id":   plan.ID.ValueString(),
 		"name": plan.Name.ValueString(),
 	})
