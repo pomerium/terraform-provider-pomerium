@@ -50,6 +50,11 @@ func (d *NamespacesDataSource) Schema(_ context.Context, _ datasource.SchemaRequ
 							Computed:    true,
 							Description: "ID of the parent namespace.",
 						},
+						"cluster_id": schema.StringAttribute{
+							Computed:    true,
+							Optional:    true,
+							Description: "ID of the cluster (optional).",
+						},
 					},
 				},
 			},
