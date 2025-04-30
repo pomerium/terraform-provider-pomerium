@@ -312,7 +312,7 @@ func FromBearerTokenFormat(src *pb.BearerTokenFormat) types.String {
 	}
 }
 
-// ToBearerTokenFormat converts a bearker token format string into a protobuf enum.
+// ToBearerTokenFormat converts a bearer token format string into a protobuf enum.
 func ToBearerTokenFormat(src types.String) *pb.BearerTokenFormat {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
@@ -330,6 +330,50 @@ func ToBearerTokenFormat(src types.String) *pb.BearerTokenFormat {
 		return pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_ACCESS_TOKEN.Enum()
 	case "idp_identity_token":
 		return pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_IDENTITY_TOKEN.Enum()
+	}
+}
+
+// FromCodecType converts a protobuf codec type into a string.
+func FromCodecType(src *pb.CodecType) types.String {
+	if src == nil {
+		return types.StringNull()
+	}
+
+	switch *src {
+	default:
+		fallthrough
+	case pb.CodecType_CODEC_TYPE_UNKNOWN:
+		return types.StringValue("")
+	case pb.CodecType_CODEC_TYPE_AUTO:
+		return types.StringValue("auto")
+	case pb.CodecType_CODEC_TYPE_HTTP1:
+		return types.StringValue("http1")
+	case pb.CodecType_CODEC_TYPE_HTTP2:
+		return types.StringValue("http2")
+	case pb.CodecType_CODEC_TYPE_HTTP3:
+		return types.StringValue("http3")
+	}
+}
+
+// ToCodecType converts a codec type string into a protobuf enum.
+func ToCodecType(src types.String) *pb.CodecType {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	switch src.ValueString() {
+	default:
+		fallthrough
+	case "":
+		return pb.CodecType_CODEC_TYPE_UNKNOWN.Enum()
+	case "auto":
+		return pb.CodecType_CODEC_TYPE_AUTO.Enum()
+	case "http1":
+		return pb.CodecType_CODEC_TYPE_HTTP1.Enum()
+	case "http2":
+		return pb.CodecType_CODEC_TYPE_HTTP2.Enum()
+	case "http3":
+		return pb.CodecType_CODEC_TYPE_HTTP3.Enum()
 	}
 }
 
