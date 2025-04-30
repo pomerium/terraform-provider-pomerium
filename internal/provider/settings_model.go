@@ -30,6 +30,7 @@ type SettingsModel struct {
 	ClientCAFile                                      types.String         `tfsdk:"client_ca_file"`
 	ClientCAKeyPairID                                 types.String         `tfsdk:"client_ca_key_pair_id"`
 	ClusterID                                         types.String         `tfsdk:"cluster_id"`
+	CodecType                                         types.String         `tfsdk:"codec_type"`
 	CookieDomain                                      types.String         `tfsdk:"cookie_domain"`
 	CookieExpire                                      timetypes.GoDuration `tfsdk:"cookie_expire"`
 	CookieHTTPOnly                                    types.Bool           `tfsdk:"cookie_http_only"`
@@ -130,6 +131,7 @@ func ConvertSettingsToPB(
 	pbSettings.ClientCaFile = src.ClientCAFile.ValueStringPointer()
 	pbSettings.ClientCaKeyPairId = src.ClientCAKeyPairID.ValueStringPointer()
 	pbSettings.ClusterId = src.ClusterID.ValueStringPointer()
+	pbSettings.CodecType = ToCodecType(src.CodecType)
 	pbSettings.CookieDomain = src.CookieDomain.ValueStringPointer()
 	ToDuration(&pbSettings.CookieExpire, src.CookieExpire, &diagnostics)
 	pbSettings.CookieHttpOnly = src.CookieHTTPOnly.ValueBoolPointer()
@@ -225,6 +227,7 @@ func ConvertSettingsFromPB(
 	dst.ClientCAFile = types.StringPointerValue(src.ClientCaFile)
 	dst.ClientCAKeyPairID = types.StringPointerValue(src.ClientCaKeyPairId)
 	dst.ClusterID = types.StringPointerValue(src.ClusterId)
+	dst.CodecType = FromCodecType(src.CodecType)
 	dst.CookieDomain = types.StringPointerValue(src.CookieDomain)
 	dst.CookieExpire = FromDuration(src.CookieExpire)
 	dst.CookieHTTPOnly = types.BoolPointerValue(src.CookieHttpOnly)

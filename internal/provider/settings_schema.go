@@ -555,5 +555,12 @@ var SettingsResourceSchema = schema.Schema{
 			Optional:    true,
 			Description: "OpenTelemetry BSP max export batch size",
 		},
+		"codec_type": schema.StringAttribute{
+			Optional:    true,
+			Description: "Codec Type",
+			Validators: []validator.String{
+				stringvalidator.OneOf("auto", "http1", "http2", "http3"),
+			},
+		},
 	},
 }
