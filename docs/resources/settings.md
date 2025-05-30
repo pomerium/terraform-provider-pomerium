@@ -38,6 +38,8 @@ The settings are global object.
 - `client_ca` (String) Client CA
 - `client_ca_file` (String) Client CA file
 - `client_ca_key_pair_id` (String) Client CA key pair ID
+- `cluster_id` (String) Cluster ID of settings
+- `codec_type` (String) Codec Type
 - `cookie_domain` (String) Cookie domain
 - `cookie_expire` (String) Cookie expire
 - `cookie_http_only` (Boolean) Cookie HTTP only
@@ -56,8 +58,10 @@ The settings are global object.
 - `grpc_address` (String) gRPC address
 - `grpc_insecure` (Boolean) gRPC insecure
 - `http_redirect_addr` (String) HTTP redirect address
+- `id` (String) ID of settings
 - `identity_provider_auth0` (Attributes) Auth0 directory sync options (see [below for nested schema](#nestedatt--identity_provider_auth0))
 - `identity_provider_azure` (Attributes) Azure EntraID directory sync options (see [below for nested schema](#nestedatt--identity_provider_azure))
+- `identity_provider_blob` (Attributes) Blob directory sync options (see [below for nested schema](#nestedatt--identity_provider_blob))
 - `identity_provider_cognito` (Attributes) Cognito directory sync options (see [below for nested schema](#nestedatt--identity_provider_cognito))
 - `identity_provider_github` (Attributes) GitHub directory sync options (see [below for nested schema](#nestedatt--identity_provider_github))
 - `identity_provider_gitlab` (Attributes) GitLab directory sync options (see [below for nested schema](#nestedatt--identity_provider_gitlab))
@@ -128,6 +132,14 @@ Required:
 - `client_id` (String)
 - `client_secret` (String, Sensitive)
 - `directory_id` (String)
+
+
+<a id="nestedatt--identity_provider_blob"></a>
+### Nested Schema for `identity_provider_blob`
+
+Required:
+
+- `source` (String)
 
 
 <a id="nestedatt--identity_provider_cognito"></a>

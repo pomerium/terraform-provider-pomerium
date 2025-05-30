@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -23,6 +24,11 @@ type (
 		ClientID     types.String `tfsdk:"client_id"`
 		ClientSecret types.String `tfsdk:"client_secret"`
 		DirectoryID  types.String `tfsdk:"directory_id"`
+	}
+
+	// BlobOptions are the options used for Blob.
+	BlobOptions struct {
+		Source types.String `tfsdk:"source"`
 	}
 
 	// CognitoOptions are the options used for Cognito.
@@ -85,6 +91,8 @@ func IdentityProviderSettingsFromPB(
 		PBStructToTF[Auth0Options](&dst.IdentityProviderAuth0, src.IdentityProviderOptions, diags)
 	case "azure":
 		PBStructToTF[AzureOptions](&dst.IdentityProviderAzure, src.IdentityProviderOptions, diags)
+	case "blob":
+		PBStructToTF[BlobOptions](&dst.IdentityProviderBlob, src.IdentityProviderOptions, diags)
 	case "cognito":
 		PBStructToTF[CognitoOptions](&dst.IdentityProviderCognito, src.IdentityProviderOptions, diags)
 	case "github":
@@ -115,6 +123,9 @@ func IdentityProviderSettingsToPB(
 	}
 	if !src.IdentityProviderAzure.IsNull() {
 		setIdpSettings[AzureOptions](ctx, "azure", dst, src.IdentityProviderAzure, diags)
+	}
+	if !src.IdentityProviderBlob.IsNull() {
+		setIdpSettings[BlobOptions](ctx, "blob", dst, src.IdentityProviderBlob, diags)
 	}
 	if !src.IdentityProviderCognito.IsNull() {
 		setIdpSettings[CognitoOptions](ctx, "cognito", dst, src.IdentityProviderCognito, diags)

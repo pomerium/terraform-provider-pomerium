@@ -17,6 +17,7 @@ List all policies
 
 ### Optional
 
+- `cluster_id` (String) List policies belonging to cluster.
 - `limit` (Number) List limit.
 - `namespace_id` (String) Namespace to list policies in.
 - `offset` (Number) List offset.
