@@ -17,6 +17,7 @@ List all routes
 
 ### Optional
 
+- `cluster_id` (String) List routes belonging to cluster.
 - `limit` (Number) List limit.
 - `namespace_id` (String) Namespace to list routes in.
 - `offset` (Number) List offset.

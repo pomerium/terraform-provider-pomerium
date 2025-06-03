@@ -25,4 +25,5 @@ Namespace for Pomerium.
 
 ### Read-Only
 
+- `cluster_id` (String) ID of the cluster (optional).
 - `id` (String) Unique identifier for the namespace.

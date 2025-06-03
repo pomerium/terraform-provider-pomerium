@@ -24,6 +24,7 @@ func idpOneOf(name string) []validator.Object {
 	for _, n := range []string{
 		"identity_provider_auth0",
 		"identity_provider_azure",
+		"identity_provider_blob",
 		"identity_provider_cognito",
 		"identity_provider_github",
 		"identity_provider_gitlab",
@@ -339,6 +340,17 @@ var SettingsResourceSchema = schema.Schema{
 				},
 				"directory_id": schema.StringAttribute{
 					Required: true,
+				},
+			},
+		},
+		"identity_provider_blob": schema.SingleNestedAttribute{
+			Optional:    true,
+			Description: "Blob directory sync options",
+			Validators:  idpOneOf("identity_provider_blob"),
+			Attributes: map[string]schema.Attribute{
+				"source": schema.StringAttribute{
+					Required:    true,
+					Description: "URL of a blob directory, e.g. s3://my-bucket?region=us-west-1",
 				},
 			},
 		},

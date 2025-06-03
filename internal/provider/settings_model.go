@@ -52,6 +52,7 @@ type SettingsModel struct {
 	ID                                                types.String         `tfsdk:"id"`
 	IdentityProviderAuth0                             types.Object         `tfsdk:"identity_provider_auth0"`
 	IdentityProviderAzure                             types.Object         `tfsdk:"identity_provider_azure"`
+	IdentityProviderBlob                              types.Object         `tfsdk:"identity_provider_blob"`
 	IdentityProviderCognito                           types.Object         `tfsdk:"identity_provider_cognito"`
 	IdentityProviderGitHub                            types.Object         `tfsdk:"identity_provider_github"`
 	IdentityProviderGitLab                            types.Object         `tfsdk:"identity_provider_gitlab"`

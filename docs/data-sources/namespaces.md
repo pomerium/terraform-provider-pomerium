@@ -22,6 +22,10 @@ List all namespaces
 <a id="nestedatt--namespaces"></a>
 ### Nested Schema for `namespaces`
 
+Optional:
+
+- `cluster_id` (String) ID of the cluster (optional).
+
 Read-Only:
 
 - `id` (String) Unique identifier for the namespace.
