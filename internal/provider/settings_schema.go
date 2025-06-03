@@ -349,7 +349,8 @@ var SettingsResourceSchema = schema.Schema{
 			Validators:  idpOneOf("identity_provider_blob"),
 			Attributes: map[string]schema.Attribute{
 				"source": schema.StringAttribute{
-					Required: true,
+					Required:    true,
+					Description: "URL of a blob directory, e.g. s3://my-bucket?region=us-west-1",
 				},
 			},
 		},

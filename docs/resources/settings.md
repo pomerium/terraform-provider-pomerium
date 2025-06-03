@@ -139,7 +139,7 @@ Required:
 
 Required:
 
-- `source` (String)
+- `source` (String) URL of a blob directory, e.g. s3://my-bucket?region=us-west-1
 
 
 <a id="nestedatt--identity_provider_cognito"></a>
