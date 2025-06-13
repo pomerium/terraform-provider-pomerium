@@ -421,6 +421,7 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Optional:    true,
 				ElementType: types.StringType,
 			},
+			"circuit_breaker_thresholds": circuitBreakerThresholdsAttribute,
 		},
 	}
 }
