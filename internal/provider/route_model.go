@@ -18,9 +18,12 @@ type RouteModel struct {
 	AllowSPDY                                 types.Bool           `tfsdk:"allow_spdy"`
 	AllowWebsockets                           types.Bool           `tfsdk:"allow_websockets"`
 	BearerTokenFormat                         types.String         `tfsdk:"bearer_token_format"`
+	CircuitBreakerThresholds                  types.Object         `tfsdk:"circuit_breaker_thresholds"`
+	DependsOnHosts                            types.Set            `tfsdk:"depends_on_hosts"`
 	Description                               types.String         `tfsdk:"description"`
 	EnableGoogleCloudServerlessAuthentication types.Bool           `tfsdk:"enable_google_cloud_serverless_authentication"`
 	From                                      types.String         `tfsdk:"from"`
+	HealthChecks                              types.Set            `tfsdk:"health_checks"`
 	HostPathRegexRewritePattern               types.String         `tfsdk:"host_path_regex_rewrite_pattern"`
 	HostPathRegexRewriteSubstitution          types.String         `tfsdk:"host_path_regex_rewrite_substitution"`
 	HostRewrite                               types.String         `tfsdk:"host_rewrite"`
@@ -34,8 +37,8 @@ type RouteModel struct {
 	JWTIssuerFormat                           types.String         `tfsdk:"jwt_issuer_format"`
 	KubernetesServiceAccountToken             types.String         `tfsdk:"kubernetes_service_account_token"`
 	KubernetesServiceAccountTokenFile         types.String         `tfsdk:"kubernetes_service_account_token_file"`
-	LogoURL                                   types.String         `tfsdk:"logo_url"`
 	LoadBalancingPolicy                       types.String         `tfsdk:"load_balancing_policy"`
+	LogoURL                                   types.String         `tfsdk:"logo_url"`
 	Name                                      types.String         `tfsdk:"name"`
 	NamespaceID                               types.String         `tfsdk:"namespace_id"`
 	PassIdentityHeaders                       types.Bool           `tfsdk:"pass_identity_headers"`
@@ -62,8 +65,6 @@ type RouteModel struct {
 	TLSUpstreamAllowRenegotiation             types.Bool           `tfsdk:"tls_upstream_allow_renegotiation"`
 	TLSUpstreamServerName                     types.String         `tfsdk:"tls_upstream_server_name"`
 	To                                        types.Set            `tfsdk:"to"`
-	HealthChecks                              types.Set            `tfsdk:"health_checks"`
-	DependsOnHosts                            types.Set            `tfsdk:"depends_on_hosts"`
 }
 
 var rewriteHeaderAttrTypes = map[string]attr.Type{
@@ -544,63 +545,64 @@ func ConvertRouteToPB(
 	ctx context.Context,
 	src *RouteResourceModel,
 ) (*pb.Route, diag.Diagnostics) {
-	pbRoute := new(pb.Route)
+	dst := new(pb.Route)
 	var diagnostics diag.Diagnostics
 
-	pbRoute.Id = src.ID.ValueString()
-	pbRoute.Name = src.Name.ValueString()
-	pbRoute.From = src.From.ValueString()
-	pbRoute.NamespaceId = src.NamespaceID.ValueString()
-	pbRoute.StatName = src.StatName.ValueString()
-	pbRoute.Prefix = src.Prefix.ValueStringPointer()
-	pbRoute.Path = src.Path.ValueStringPointer()
-	pbRoute.Regex = src.Regex.ValueStringPointer()
-	pbRoute.PrefixRewrite = src.PrefixRewrite.ValueStringPointer()
-	pbRoute.RegexRewritePattern = src.RegexRewritePattern.ValueStringPointer()
-	pbRoute.RegexRewriteSubstitution = src.RegexRewriteSubstitution.ValueStringPointer()
-	pbRoute.HostRewrite = src.HostRewrite.ValueStringPointer()
-	pbRoute.HostRewriteHeader = src.HostRewriteHeader.ValueStringPointer()
-	pbRoute.HostPathRegexRewritePattern = src.HostPathRegexRewritePattern.ValueStringPointer()
-	pbRoute.HostPathRegexRewriteSubstitution = src.HostPathRegexRewriteSubstitution.ValueStringPointer()
-	pbRoute.RegexPriorityOrder = src.RegexPriorityOrder.ValueInt64Pointer()
-	ToDuration(&pbRoute.Timeout, src.Timeout, &diagnostics)
-	ToDuration(&pbRoute.IdleTimeout, src.IdleTimeout, &diagnostics)
-	pbRoute.AllowWebsockets = src.AllowWebsockets.ValueBoolPointer()
-	pbRoute.AllowSpdy = src.AllowSPDY.ValueBoolPointer()
-	pbRoute.TlsSkipVerify = src.TLSSkipVerify.ValueBoolPointer()
-	pbRoute.TlsUpstreamServerName = src.TLSUpstreamServerName.ValueStringPointer()
-	pbRoute.TlsDownstreamServerName = src.TLSDownstreamServerName.ValueStringPointer()
-	pbRoute.TlsUpstreamAllowRenegotiation = src.TLSUpstreamAllowRenegotiation.ValueBoolPointer()
-	ToStringMap(ctx, &pbRoute.SetRequestHeaders, src.SetRequestHeaders, &diagnostics)
-	ToStringSliceFromSet(ctx, &pbRoute.RemoveRequestHeaders, src.RemoveRequestHeaders, &diagnostics)
-	ToStringMap(ctx, &pbRoute.SetResponseHeaders, src.SetResponseHeaders, &diagnostics)
-	pbRoute.PreserveHostHeader = src.PreserveHostHeader.ValueBoolPointer()
-	pbRoute.PassIdentityHeaders = src.PassIdentityHeaders.ValueBoolPointer()
-	pbRoute.KubernetesServiceAccountToken = src.KubernetesServiceAccountToken.ValueStringPointer()
-	pbRoute.IdpClientId = src.IDPClientID.ValueStringPointer()
-	pbRoute.IdpClientSecret = src.IDPClientSecret.ValueStringPointer()
-	pbRoute.ShowErrorDetails = src.ShowErrorDetails.ValueBool()
-	JWTGroupsFilterToPB(ctx, &pbRoute.JwtGroupsFilter, src.JWTGroupsFilter, &diagnostics)
-	ToStringSliceFromSet(ctx, &pbRoute.To, src.To, &diagnostics)
-	ToStringSliceFromSet(ctx, &pbRoute.PolicyIds, src.Policies, &diagnostics)
-	pbRoute.TlsClientKeyPairId = src.TLSClientKeyPairID.ValueStringPointer()
-	pbRoute.TlsCustomCaKeyPairId = src.TLSCustomCAKeyPairID.ValueStringPointer()
-	pbRoute.Description = src.Description.ValueStringPointer()
-	pbRoute.LogoUrl = src.LogoURL.ValueStringPointer()
+	dst.Id = src.ID.ValueString()
+	dst.Name = src.Name.ValueString()
+	dst.From = src.From.ValueString()
+	dst.NamespaceId = src.NamespaceID.ValueString()
+	dst.StatName = src.StatName.ValueString()
+	dst.Prefix = src.Prefix.ValueStringPointer()
+	dst.Path = src.Path.ValueStringPointer()
+	dst.Regex = src.Regex.ValueStringPointer()
+	dst.PrefixRewrite = src.PrefixRewrite.ValueStringPointer()
+	dst.RegexRewritePattern = src.RegexRewritePattern.ValueStringPointer()
+	dst.RegexRewriteSubstitution = src.RegexRewriteSubstitution.ValueStringPointer()
+	dst.HostRewrite = src.HostRewrite.ValueStringPointer()
+	dst.HostRewriteHeader = src.HostRewriteHeader.ValueStringPointer()
+	dst.HostPathRegexRewritePattern = src.HostPathRegexRewritePattern.ValueStringPointer()
+	dst.HostPathRegexRewriteSubstitution = src.HostPathRegexRewriteSubstitution.ValueStringPointer()
+	dst.RegexPriorityOrder = src.RegexPriorityOrder.ValueInt64Pointer()
+	ToDuration(&dst.Timeout, src.Timeout, &diagnostics)
+	ToDuration(&dst.IdleTimeout, src.IdleTimeout, &diagnostics)
+	dst.AllowWebsockets = src.AllowWebsockets.ValueBoolPointer()
+	dst.AllowSpdy = src.AllowSPDY.ValueBoolPointer()
+	dst.TlsSkipVerify = src.TLSSkipVerify.ValueBoolPointer()
+	dst.TlsUpstreamServerName = src.TLSUpstreamServerName.ValueStringPointer()
+	dst.TlsDownstreamServerName = src.TLSDownstreamServerName.ValueStringPointer()
+	dst.TlsUpstreamAllowRenegotiation = src.TLSUpstreamAllowRenegotiation.ValueBoolPointer()
+	ToStringMap(ctx, &dst.SetRequestHeaders, src.SetRequestHeaders, &diagnostics)
+	ToStringSliceFromSet(ctx, &dst.RemoveRequestHeaders, src.RemoveRequestHeaders, &diagnostics)
+	ToStringMap(ctx, &dst.SetResponseHeaders, src.SetResponseHeaders, &diagnostics)
+	dst.PreserveHostHeader = src.PreserveHostHeader.ValueBoolPointer()
+	dst.PassIdentityHeaders = src.PassIdentityHeaders.ValueBoolPointer()
+	dst.KubernetesServiceAccountToken = src.KubernetesServiceAccountToken.ValueStringPointer()
+	dst.IdpClientId = src.IDPClientID.ValueStringPointer()
+	dst.IdpClientSecret = src.IDPClientSecret.ValueStringPointer()
+	dst.ShowErrorDetails = src.ShowErrorDetails.ValueBool()
+	JWTGroupsFilterToPB(ctx, &dst.JwtGroupsFilter, src.JWTGroupsFilter, &diagnostics)
+	ToStringSliceFromSet(ctx, &dst.To, src.To, &diagnostics)
+	ToStringSliceFromSet(ctx, &dst.PolicyIds, src.Policies, &diagnostics)
+	dst.TlsClientKeyPairId = src.TLSClientKeyPairID.ValueStringPointer()
+	dst.TlsCustomCaKeyPairId = src.TLSCustomCAKeyPairID.ValueStringPointer()
+	dst.Description = src.Description.ValueStringPointer()
+	dst.LogoUrl = src.LogoURL.ValueStringPointer()
 	if !src.EnableGoogleCloudServerlessAuthentication.IsNull() {
-		pbRoute.EnableGoogleCloudServerlessAuthentication = src.EnableGoogleCloudServerlessAuthentication.ValueBool()
+		dst.EnableGoogleCloudServerlessAuthentication = src.EnableGoogleCloudServerlessAuthentication.ValueBool()
 	}
-	pbRoute.KubernetesServiceAccountTokenFile = src.KubernetesServiceAccountTokenFile.ValueStringPointer()
-	pbRoute.JwtIssuerFormat = ToIssuerFormat(src.JWTIssuerFormat, &diagnostics)
-	pbRoute.RewriteResponseHeaders = rewriteHeadersToPB(src.RewriteResponseHeaders)
-	pbRoute.BearerTokenFormat = ToBearerTokenFormat(src.BearerTokenFormat)
-	ToRouteStringList(ctx, &pbRoute.IdpAccessTokenAllowedAudiences, src.IDPAccessTokenAllowedAudiences, &diagnostics)
-	pbRoute.OriginatorId = OriginatorID
-	OptionalEnumValueToPB(&pbRoute.LoadBalancingPolicy, src.LoadBalancingPolicy, "LOAD_BALANCING_POLICY", &diagnostics)
-	healthChecksToPB(&pbRoute.HealthChecks, src.HealthChecks, &diagnostics)
-	ToStringSliceFromSet(ctx, &pbRoute.DependsOn, src.DependsOnHosts, &diagnostics)
+	dst.KubernetesServiceAccountTokenFile = src.KubernetesServiceAccountTokenFile.ValueStringPointer()
+	dst.JwtIssuerFormat = ToIssuerFormat(src.JWTIssuerFormat, &diagnostics)
+	dst.RewriteResponseHeaders = rewriteHeadersToPB(src.RewriteResponseHeaders)
+	dst.BearerTokenFormat = ToBearerTokenFormat(src.BearerTokenFormat)
+	ToRouteStringList(ctx, &dst.IdpAccessTokenAllowedAudiences, src.IDPAccessTokenAllowedAudiences, &diagnostics)
+	dst.OriginatorId = OriginatorID
+	OptionalEnumValueToPB(&dst.LoadBalancingPolicy, src.LoadBalancingPolicy, "LOAD_BALANCING_POLICY", &diagnostics)
+	healthChecksToPB(&dst.HealthChecks, src.HealthChecks, &diagnostics)
+	ToStringSliceFromSet(ctx, &dst.DependsOn, src.DependsOnHosts, &diagnostics)
+	dst.CircuitBreakerThresholds = CircuitBreakerThresholdsToPB(src.CircuitBreakerThresholds)
 
-	return pbRoute, diagnostics
+	return dst, diagnostics
 }
 
 func ConvertRouteFromPB(
@@ -661,6 +663,7 @@ func ConvertRouteFromPB(
 	dst.LoadBalancingPolicy = OptionalEnumValueFromPB(src.LoadBalancingPolicy, "LOAD_BALANCING_POLICY")
 	healthChecksFromPB(&dst.HealthChecks, src.HealthChecks, &diagnostics)
 	dst.DependsOnHosts = FromStringSliceToSet(src.DependsOn)
+	dst.CircuitBreakerThresholds = CircuitBreakerThresholdsFromPB(src.CircuitBreakerThresholds, &diagnostics)
 
 	return diagnostics
 }

@@ -35,6 +35,7 @@ The settings are global object.
 - `certificate_authority` (String) Certificate authority
 - `certificate_authority_file` (String) Certificate authority file
 - `certificate_authority_key_pair_id` (String) Certificate authority key pair ID
+- `circuit_breaker_thresholds` (Attributes) Circuit breaker thresholds for the route. (see [below for nested schema](#nestedatt--circuit_breaker_thresholds))
 - `client_ca` (String) Client CA
 - `client_ca_file` (String) Client CA file
 - `client_ca_key_pair_id` (String) Client CA key pair ID
@@ -113,6 +114,18 @@ The settings are global object.
 - `timeout_idle` (String) Sets the time at which a downstream or upstream connection will be terminated if no active streams.
 - `timeout_read` (String) Sets the amount of time for the client to receive the entire request stream.
 - `timeout_write` (String) Sets max stream duration of an HTTP request/response exchange. Must be greater than read timeout.
+
+<a id="nestedatt--circuit_breaker_thresholds"></a>
+### Nested Schema for `circuit_breaker_thresholds`
+
+Optional:
+
+- `max_connection_pools` (Number) The maximum number of connection pools per cluster that Envoy will concurrently support at once. If not specified, the default is unlimited. Set this for clusters which create a large number of connection pools.
+- `max_connections` (Number) The maximum number of connections that Envoy will make to the upstream cluster. If not specified, the default is 1024.
+- `max_pending_requests` (Number) The maximum number of pending requests that Envoy will allow to the upstream cluster. If not specified, the default is 1024. This limit is applied as a connection limit for non-HTTP traffic.
+- `max_requests` (Number) The maximum number of parallel requests that Envoy will make to the upstream cluster. If not specified, the default is 1024. This limit does not apply to non-HTTP traffic.
+- `max_retries` (Number) The maximum number of parallel retries that Envoy will allow to the upstream cluster. If not specified, the default is 3.
+
 
 <a id="nestedatt--identity_provider_auth0"></a>
 ### Nested Schema for `identity_provider_auth0`
