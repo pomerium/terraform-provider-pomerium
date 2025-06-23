@@ -382,6 +382,7 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 			Computed:    true,
 			ElementType: types.StringType,
 		},
+		"circuit_breaker_thresholds": circuitBreakerThresholdsAttribute,
 	}
 }
 

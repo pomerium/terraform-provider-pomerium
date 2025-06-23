@@ -27,6 +27,7 @@ Route for Pomerium.
 - `allow_spdy` (Boolean) If applied, this setting enables Pomerium to proxy SPDY protocol upgrades.
 - `allow_websockets` (Boolean) If applied, this setting enables Pomerium to proxy websocket connections.
 - `bearer_token_format` (String) Bearer token format.
+- `circuit_breaker_thresholds` (Attributes) Circuit breaker thresholds for the route. (see [below for nested schema](#nestedatt--circuit_breaker_thresholds))
 - `depends_on_hosts` (Set of String) Additional login redirect hosts.
 - `description` (String) Description of the route.
 - `enable_google_cloud_serverless_authentication` (Boolean) Enable Google Cloud serverless authentication.
@@ -78,6 +79,18 @@ Route for Pomerium.
 ### Read-Only
 
 - `id` (String) Unique identifier for the route.
+
+<a id="nestedatt--circuit_breaker_thresholds"></a>
+### Nested Schema for `circuit_breaker_thresholds`
+
+Optional:
+
+- `max_connection_pools` (Number) The maximum number of connection pools per cluster that Envoy will concurrently support at once. If not specified, the default is unlimited. Set this for clusters which create a large number of connection pools.
+- `max_connections` (Number) The maximum number of connections that Envoy will make to the upstream cluster. If not specified, the default is 1024.
+- `max_pending_requests` (Number) The maximum number of pending requests that Envoy will allow to the upstream cluster. If not specified, the default is 1024. This limit is applied as a connection limit for non-HTTP traffic.
+- `max_requests` (Number) The maximum number of parallel requests that Envoy will make to the upstream cluster. If not specified, the default is 1024. This limit does not apply to non-HTTP traffic.
+- `max_retries` (Number) The maximum number of parallel retries that Envoy will allow to the upstream cluster. If not specified, the default is 3.
+
 
 <a id="nestedatt--health_checks"></a>
 ### Nested Schema for `health_checks`

@@ -21,6 +21,7 @@ Route data source
 
 ### Optional
 
+- `circuit_breaker_thresholds` (Attributes) Circuit breaker thresholds for the route. (see [below for nested schema](#nestedatt--circuit_breaker_thresholds))
 - `jwt_groups_filter` (Attributes) JWT Groups Filter (see [below for nested schema](#nestedatt--jwt_groups_filter))
 - `jwt_issuer_format` (String) Format for JWT issuer strings. Use 'IssuerHostOnly' for hostname without scheme or trailing slash, or 'IssuerURI' for complete URI including scheme and trailing slash.
 - `load_balancing_policy` (String) Load balancing policy.
@@ -72,6 +73,18 @@ Route data source
 - `tls_upstream_allow_renegotiation` (Boolean) TLS upstream allow renegotiation.
 - `tls_upstream_server_name` (String) TLS upstream server name.
 - `to` (Set of String) To URLs.
+
+<a id="nestedatt--circuit_breaker_thresholds"></a>
+### Nested Schema for `circuit_breaker_thresholds`
+
+Optional:
+
+- `max_connection_pools` (Number) The maximum number of connection pools per cluster that Envoy will concurrently support at once. If not specified, the default is unlimited. Set this for clusters which create a large number of connection pools.
+- `max_connections` (Number) The maximum number of connections that Envoy will make to the upstream cluster. If not specified, the default is 1024.
+- `max_pending_requests` (Number) The maximum number of pending requests that Envoy will allow to the upstream cluster. If not specified, the default is 1024. This limit is applied as a connection limit for non-HTTP traffic.
+- `max_requests` (Number) The maximum number of parallel requests that Envoy will make to the upstream cluster. If not specified, the default is 1024. This limit does not apply to non-HTTP traffic.
+- `max_retries` (Number) The maximum number of parallel retries that Envoy will allow to the upstream cluster. If not specified, the default is 3.
+
 
 <a id="nestedatt--jwt_groups_filter"></a>
 ### Nested Schema for `jwt_groups_filter`
