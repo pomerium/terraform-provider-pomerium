@@ -575,5 +575,27 @@ var SettingsResourceSchema = schema.Schema{
 			},
 		},
 		"circuit_breaker_thresholds": circuitBreakerThresholdsAttribute,
+		"ssh_address": schema.StringAttribute{
+			Optional:    true,
+			Description: "SSH Address",
+		},
+		"ssh_host_key_files": schema.SetAttribute{
+			Optional:    true,
+			Description: "SSH Host Key Files",
+			ElementType: types.StringType,
+		},
+		"ssh_host_keys": schema.SetAttribute{
+			Optional:    true,
+			Description: "SSH Host Keys",
+			ElementType: types.StringType,
+		},
+		"ssh_user_ca_key": schema.StringAttribute{
+			Optional:    true,
+			Description: "SSH User CA Key",
+		},
+		"ssh_user_ca_key_file": schema.StringAttribute{
+			Optional:    true,
+			Description: "SSH User CA Key File",
+		},
 	},
 }

@@ -102,6 +102,11 @@ type SettingsModel struct {
 	SecondaryColor                                    types.String         `tfsdk:"secondary_color"`
 	SetResponseHeaders                                types.Map            `tfsdk:"set_response_headers"`
 	SkipXFFAppend                                     types.Bool           `tfsdk:"skip_xff_append"`
+	SSHAddress                                        types.String         `tfsdk:"ssh_address"`
+	SSHHostKeyFiles                                   types.Set            `tfsdk:"ssh_host_key_files"`
+	SSHHostKeys                                       types.Set            `tfsdk:"ssh_host_keys"`
+	SSHUserCAKey                                      types.String         `tfsdk:"ssh_user_ca_key"`
+	SSHUserCAKeyFile                                  types.String         `tfsdk:"ssh_user_ca_key_file"`
 	TimeoutIdle                                       timetypes.GoDuration `tfsdk:"timeout_idle"`
 	TimeoutRead                                       timetypes.GoDuration `tfsdk:"timeout_read"`
 	TimeoutWrite                                      timetypes.GoDuration `tfsdk:"timeout_write"`
@@ -181,6 +186,11 @@ func ConvertSettingsToPB(
 	dst.SecondaryColor = src.SecondaryColor.ValueStringPointer()
 	ToStringMap(ctx, &dst.SetResponseHeaders, src.SetResponseHeaders, &diagnostics)
 	dst.SkipXffAppend = src.SkipXFFAppend.ValueBoolPointer()
+	dst.SshAddress = src.SSHAddress.ValueStringPointer()
+	ToSettingsStringList(ctx, &dst.SshHostKeyFiles, src.SSHHostKeyFiles, &diagnostics)
+	ToSettingsStringList(ctx, &dst.SshHostKeys, src.SSHHostKeys, &diagnostics)
+	dst.SshUserCaKey = src.SSHUserCAKey.ValueStringPointer()
+	dst.SshUserCaKeyFile = src.SSHUserCAKeyFile.ValueStringPointer()
 	ToDuration(&dst.TimeoutIdle, src.TimeoutIdle, &diagnostics)
 	ToDuration(&dst.TimeoutRead, src.TimeoutRead, &diagnostics)
 	ToDuration(&dst.TimeoutWrite, src.TimeoutWrite, &diagnostics)
@@ -276,6 +286,11 @@ func ConvertSettingsFromPB(
 	dst.SecondaryColor = types.StringPointerValue(src.SecondaryColor)
 	dst.SetResponseHeaders = FromStringMap(src.SetResponseHeaders)
 	dst.SkipXFFAppend = types.BoolPointerValue(src.SkipXffAppend)
+	dst.SSHAddress = types.StringPointerValue(src.SshAddress)
+	dst.SSHHostKeyFiles = FromStringList(src.SshHostKeyFiles)
+	dst.SSHHostKeys = FromStringList(src.SshHostKeys)
+	dst.SSHUserCAKey = types.StringPointerValue(src.SshUserCaKey)
+	dst.SSHUserCAKeyFile = types.StringPointerValue(src.SshUserCaKeyFile)
 	dst.TimeoutIdle = FromDuration(src.TimeoutIdle)
 	dst.TimeoutRead = FromDuration(src.TimeoutRead)
 	dst.TimeoutWrite = FromDuration(src.TimeoutWrite)
