@@ -383,6 +383,10 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 			ElementType: types.StringType,
 		},
 		"circuit_breaker_thresholds": circuitBreakerThresholdsAttribute,
+		"healthy_panic_threshold": schema.Int32Attribute{
+			Description: "If the number of healthy hosts falls below this percentage, traffic will be balanced among all hosts regardless of health, allowing some requests to fail. 0% disables this behavior.",
+			Optional:    true,
+		},
 	}
 }
 
