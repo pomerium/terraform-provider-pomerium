@@ -22,6 +22,7 @@ Route data source
 ### Optional
 
 - `circuit_breaker_thresholds` (Attributes) Circuit breaker thresholds for the route. (see [below for nested schema](#nestedatt--circuit_breaker_thresholds))
+- `healthy_panic_threshold` (Number) If the number of healthy hosts falls below this percentage, traffic will be balanced among all hosts regardless of health, allowing some requests to fail. 0% disables this behavior.
 - `jwt_groups_filter` (Attributes) JWT Groups Filter (see [below for nested schema](#nestedatt--jwt_groups_filter))
 - `jwt_issuer_format` (String) Format for JWT issuer strings. Use 'IssuerHostOnly' for hostname without scheme or trailing slash, or 'IssuerURI' for complete URI including scheme and trailing slash.
 - `load_balancing_policy` (String) Load balancing policy.
