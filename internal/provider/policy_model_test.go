@@ -1,7 +1,6 @@
 package provider_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -28,7 +27,7 @@ func TestConvertPolicyToPB(t *testing.T) {
 		Rego:         []string{"REGO"},
 		Remediation:  "REMEDIATION",
 	}
-	actual, diag := provider.ConvertPolicyToPB(context.Background(), &provider.PolicyModel{
+	actual, diag := provider.ConvertPolicyToPB(t.Context(), &provider.PolicyModel{
 		Description: types.StringValue("DESCRIPTION"),
 		Enforced:    types.BoolValue(true),
 		Explanation: types.StringValue("EXPLANATION"),

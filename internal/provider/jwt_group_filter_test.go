@@ -1,7 +1,6 @@
 package provider_test
 
 import (
-	"context"
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
@@ -63,7 +62,7 @@ func TestJWTGroupsFilterFromPB(t *testing.T) {
 }
 
 func TestJWTGroupsFilterToPB(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	tests := []struct {
 		name     string
 		input    types.Object
