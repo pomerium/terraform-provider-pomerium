@@ -47,7 +47,7 @@ Two authentication methods are supported:
 ## Documentation
 
 - [Provider Documentation](https://registry.terraform.io/providers/pomerium/pomerium/latest/docs)
-- [Example Configurations](https://github.com/pomerium/enterprise-terraform-provider/tree/main/examples)
+- [Example Configurations](https://github.com/pomerium/enterprise-terraform-provider/tree/main/example)
 - [Kubernetes Deployment Guide](https://github.com/pomerium/install/tree/main/enterprise/terraform/kubernetes)
 
 ## Resources and Data Sources
@@ -64,4 +64,4 @@ Data sources:
 - `pomerium_namespace`
 - `pomerium_route`
 
-For detailed examples, see our [examples directory](examples/) or the [provider documentation](https://registry.terraform.io/providers/pomerium/pomerium/latest/docs).
+For detailed examples, see our [example directory](example/) or the [provider documentation](https://registry.terraform.io/providers/pomerium/pomerium/latest/docs).
