@@ -1,7 +1,6 @@
 package provider_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -95,7 +94,7 @@ func TestConvertSettingsToPB(t *testing.T) {
 		TimeoutRead:                     durationpb.New(4 * time.Minute),
 		TimeoutWrite:                    durationpb.New(5 * time.Minute),
 	}
-	actual, diag := provider.ConvertSettingsToPB(context.Background(), &provider.SettingsModel{
+	actual, diag := provider.ConvertSettingsToPB(t.Context(), &provider.SettingsModel{
 		AccessLogFields:               types.SetValueMust(types.StringType, []attr.Value{types.StringValue("authority"), types.StringValue("duration"), types.StringValue("path")}),
 		Address:                       types.StringValue("127.0.0.1:8443"),
 		AuthenticateCallbackPath:      types.StringValue("/oauth2/callback"),

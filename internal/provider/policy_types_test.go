@@ -1,7 +1,6 @@
 package provider_test
 
 import (
-	"context"
 	_ "embed"
 	"testing"
 
@@ -44,7 +43,7 @@ func TestPolicyTypes(t *testing.T) {
 	}
 	for name, testCase := range testCases {
 		t.Run(name, func(t *testing.T) {
-			gotValue, err := provider.PolicyLanguageType{}.ValueFromTerraform(context.Background(), testCase.in)
+			gotValue, err := provider.PolicyLanguageType{}.ValueFromTerraform(t.Context(), testCase.in)
 			if testCase.expectedErr != nil {
 				require.EqualError(t, err, testCase.expectedErr.Error())
 				return
@@ -52,7 +51,7 @@ func TestPolicyTypes(t *testing.T) {
 			got, ok := gotValue.(provider.PolicyLanguage)
 			require.True(t, ok)
 			require.NoError(t, err)
-			equals, diag := testCase.expected.StringSemanticEquals(context.Background(), got)
+			equals, diag := testCase.expected.StringSemanticEquals(t.Context(), got)
 			assert.False(t, diag.HasError())
 			assert.True(t, equals)
 		})
