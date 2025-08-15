@@ -32,6 +32,7 @@ Route for Pomerium.
 - `description` (String) Description of the route.
 - `enable_google_cloud_serverless_authentication` (Boolean) Enable Google Cloud serverless authentication.
 - `health_checks` (Attributes Set) Health checks for the route. (see [below for nested schema](#nestedatt--health_checks))
+- `healthy_panic_threshold` (Number) If the number of healthy hosts falls below this percentage, traffic will be balanced among all hosts regardless of health, allowing some requests to fail. 0% disables this behavior.
 - `host_path_regex_rewrite_pattern` (String) Rewrites the Host header according to a regular expression matching the path.
 - `host_path_regex_rewrite_substitution` (String) Rewrites the Host header according to a regular expression matching the substitution.
 - `host_rewrite` (String) Rewrites the Host header to a new literal value.

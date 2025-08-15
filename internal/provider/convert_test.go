@@ -1,7 +1,6 @@
 package provider_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -139,7 +138,7 @@ func TestToDuration(t *testing.T) {
 }
 
 func TestToStringListFromSet(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	tests := []struct {
 		name        string
 		input       types.Set
@@ -490,7 +489,7 @@ func TestFromStringMap(t *testing.T) {
 }
 
 func TestToStringSliceFromSet(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	tests := []struct {
 		name     string
 		input    types.Set
@@ -599,7 +598,7 @@ func TestStringSliceExclude(t *testing.T) {
 }
 
 func TestToStringSliceFromList(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	tests := []struct {
 		name     string
 		input    types.List
@@ -642,7 +641,7 @@ func TestToStringSliceFromList(t *testing.T) {
 }
 
 func TestToStringMap(t *testing.T) {
-	ctx := context.Background()
+	ctx := t.Context()
 	tests := []struct {
 		name     string
 		input    types.Map
@@ -869,7 +868,7 @@ func TestToRouteStringList(t *testing.T) {
 			0,
 		},
 	} {
-		ctx := context.Background()
+		ctx := t.Context()
 		var diagnostics diag.Diagnostics
 		dst := new(*pb.Route_StringList)
 		provider.ToRouteStringList(ctx, dst, tc.in, &diagnostics)
@@ -916,7 +915,7 @@ func TestToSettingsStringList(t *testing.T) {
 			0,
 		},
 	} {
-		ctx := context.Background()
+		ctx := t.Context()
 		var diagnostics diag.Diagnostics
 		dst := new(*pb.Settings_StringList)
 		provider.ToSettingsStringList(ctx, dst, tc.in, &diagnostics)

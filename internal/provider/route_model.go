@@ -24,6 +24,7 @@ type RouteModel struct {
 	EnableGoogleCloudServerlessAuthentication types.Bool           `tfsdk:"enable_google_cloud_serverless_authentication"`
 	From                                      types.String         `tfsdk:"from"`
 	HealthChecks                              types.Set            `tfsdk:"health_checks"`
+	HealthyPanicThreshold                     types.Int32          `tfsdk:"healthy_panic_threshold"`
 	HostPathRegexRewritePattern               types.String         `tfsdk:"host_path_regex_rewrite_pattern"`
 	HostPathRegexRewriteSubstitution          types.String         `tfsdk:"host_path_regex_rewrite_substitution"`
 	HostRewrite                               types.String         `tfsdk:"host_rewrite"`
@@ -601,6 +602,7 @@ func ConvertRouteToPB(
 	healthChecksToPB(&dst.HealthChecks, src.HealthChecks, &diagnostics)
 	ToStringSliceFromSet(ctx, &dst.DependsOn, src.DependsOnHosts, &diagnostics)
 	dst.CircuitBreakerThresholds = CircuitBreakerThresholdsToPB(src.CircuitBreakerThresholds)
+	dst.HealthyPanicThreshold = src.HealthyPanicThreshold.ValueInt32Pointer()
 
 	return dst, diagnostics
 }
@@ -664,6 +666,7 @@ func ConvertRouteFromPB(
 	healthChecksFromPB(&dst.HealthChecks, src.HealthChecks, &diagnostics)
 	dst.DependsOnHosts = FromStringSliceToSet(src.DependsOn)
 	dst.CircuitBreakerThresholds = CircuitBreakerThresholdsFromPB(src.CircuitBreakerThresholds, &diagnostics)
+	dst.HealthyPanicThreshold = types.Int32PointerValue(src.HealthyPanicThreshold)
 
 	return diagnostics
 }
