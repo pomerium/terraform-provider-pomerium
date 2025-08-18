@@ -1,7 +1,6 @@
 package provider_test
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -136,7 +135,8 @@ func TestConvertRoute(t *testing.T) {
 				},
 			},
 		},
-		DependsOn: []string{"foo.example.com", "bar.example.com:8443"},
+		DependsOn:             []string{"foo.example.com", "bar.example.com:8443"},
+		HealthyPanicThreshold: ptr(int32(33)),
 	}
 
 	tfRoute := provider.RouteModel{
@@ -326,6 +326,7 @@ func TestConvertRoute(t *testing.T) {
 			types.StringValue("foo.example.com"),
 			types.StringValue("bar.example.com:8443"),
 		}),
+		HealthyPanicThreshold: types.Int32Value(33),
 	}
 
 	t.Run("pb to tf", func(t *testing.T) {
@@ -338,7 +339,7 @@ func TestConvertRoute(t *testing.T) {
 		}
 	})
 	t.Run("tf to pb", func(t *testing.T) {
-		ctx := context.Background()
+		ctx := t.Context()
 
 		got, diags := provider.ConvertRouteToPB(ctx, &tfRoute)
 		require.False(t, diags.HasError(), "ConvertRouteToPB returned diagnostics errors")
