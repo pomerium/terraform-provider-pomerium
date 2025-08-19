@@ -44,6 +44,10 @@ type SettingsModel struct {
 	DatabrokerServiceURL                              types.String         `tfsdk:"databroker_service_url"`
 	DefaultUpstreamTimeout                            timetypes.GoDuration `tfsdk:"default_upstream_timeout"`
 	DNSLookupFamily                                   types.String         `tfsdk:"dns_lookup_family"`
+	DNSQueryTimeout                                   timetypes.GoDuration `tfsdk:"dns_query_timeout"`
+	DNSQueryTries                                     types.Int64          `tfsdk:"dns_query_tries"`
+	DNSUDPMaxQueries                                  types.Int64          `tfsdk:"dns_udp_max_queries"`
+	DNSUseTCP                                         types.Bool           `tfsdk:"dns_use_tcp"`
 	ErrorMessageFirstParagraph                        types.String         `tfsdk:"error_message_first_paragraph"`
 	FaviconURL                                        types.String         `tfsdk:"favicon_url"`
 	GoogleCloudServerlessAuthenticationServiceAccount types.String         `tfsdk:"google_cloud_serverless_authentication_service_account"`
@@ -152,6 +156,10 @@ func ConvertSettingsToPB(
 	dst.DatabrokerServiceUrl = src.DatabrokerServiceURL.ValueStringPointer()
 	ToDuration(&dst.DefaultUpstreamTimeout, src.DefaultUpstreamTimeout, &diagnostics)
 	dst.DnsLookupFamily = src.DNSLookupFamily.ValueStringPointer()
+	ToDuration(&dst.DnsQueryTimeout, src.DNSQueryTimeout, &diagnostics)
+	dst.DnsQueryTries = FromInt64Pointer[uint32](src.DNSQueryTries)
+	dst.DnsUdpMaxQueries = FromInt64Pointer[uint32](src.DNSUDPMaxQueries)
+	dst.DnsUseTcp = src.DNSUseTCP.ValueBoolPointer()
 	dst.ErrorMessageFirstParagraph = src.ErrorMessageFirstParagraph.ValueStringPointer()
 	dst.FaviconUrl = src.FaviconURL.ValueStringPointer()
 	dst.GoogleCloudServerlessAuthenticationServiceAccount = src.GoogleCloudServerlessAuthenticationServiceAccount.ValueStringPointer()
@@ -254,6 +262,10 @@ func ConvertSettingsFromPB(
 	dst.DatabrokerServiceURL = types.StringPointerValue(src.DatabrokerServiceUrl)
 	dst.DefaultUpstreamTimeout = FromDuration(src.DefaultUpstreamTimeout)
 	dst.DNSLookupFamily = types.StringPointerValue(src.DnsLookupFamily)
+	dst.DNSQueryTimeout = FromDuration(src.DnsQueryTimeout)
+	dst.DNSQueryTries = Int64PointerValue(src.DnsQueryTries)
+	dst.DNSUDPMaxQueries = Int64PointerValue(src.DnsUdpMaxQueries)
+	dst.DNSUseTCP = types.BoolPointerValue(src.DnsUseTcp)
 	dst.ErrorMessageFirstParagraph = types.StringPointerValue(src.ErrorMessageFirstParagraph)
 	dst.FaviconURL = types.StringPointerValue(src.FaviconUrl)
 	dst.GoogleCloudServerlessAuthenticationServiceAccount = types.StringPointerValue(src.GoogleCloudServerlessAuthenticationServiceAccount)
