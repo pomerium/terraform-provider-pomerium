@@ -83,9 +83,28 @@ var SettingsResourceSchema = schema.Schema{
 			Optional:    true,
 			Description: "Insecure server",
 		},
+		"dns_failure_refresh_rate": schema.StringAttribute{
+			Optional:    true,
+			Description: "The rate at which DNS lookups are refreshed when requests are failing.",
+			CustomType:  timetypes.GoDurationType{},
+		},
 		"dns_lookup_family": schema.StringAttribute{
 			Optional:    true,
 			Description: "DNS lookup family",
+		},
+		"dns_query_timeout": schema.StringAttribute{
+			Optional:    true,
+			Description: "The amount of time each name server is given to respond to a query on the first try of any given server.",
+			CustomType:  timetypes.GoDurationType{},
+		},
+		"dns_query_tries": schema.Int64Attribute{
+			Optional:    true,
+			Description: "The maximum number of query attempts the resolver will make before giving up. Each attempt may use a different name server.",
+		},
+		"dns_refresh_rate": schema.StringAttribute{
+			Optional:    true,
+			Description: "The rate at which DNS lookups are refreshed.",
+			CustomType:  timetypes.GoDurationType{},
 		},
 		"dns_udp_max_queries": schema.Int64Attribute{
 			Optional:    true,
@@ -94,15 +113,6 @@ var SettingsResourceSchema = schema.Schema{
 		"dns_use_tcp": schema.BoolAttribute{
 			Optional:    true,
 			Description: "Use TCP for all DNS queries instead of the default protocol UDP.",
-		},
-		"dns_query_tries": schema.Int64Attribute{
-			Optional:    true,
-			Description: "The maximum number of query attempts the resolver will make before giving up. Each attempt may use a different name server.",
-		},
-		"dns_query_timeout": schema.StringAttribute{
-			Optional:    true,
-			Description: "The amount of time each name server is given to respond to a query on the first try of any given server.",
-			CustomType:  timetypes.GoDurationType{},
 		},
 		"http_redirect_addr": schema.StringAttribute{
 			Optional:    true,
