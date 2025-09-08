@@ -47,7 +47,7 @@ type SettingsModel struct {
 	DNSLookupFamily                                   types.String         `tfsdk:"dns_lookup_family"`
 	DNSQueryTimeout                                   timetypes.GoDuration `tfsdk:"dns_query_timeout"`
 	DNSQueryTries                                     types.Int64          `tfsdk:"dns_query_tries"`
-	DNSRefreshRate                                    timetypes.GoDuration `tfsdk:"dns_failure_refresh_rate"`
+	DNSRefreshRate                                    timetypes.GoDuration `tfsdk:"dns_refresh_rate"`
 	DNSUDPMaxQueries                                  types.Int64          `tfsdk:"dns_udp_max_queries"`
 	DNSUseTCP                                         types.Bool           `tfsdk:"dns_use_tcp"`
 	ErrorMessageFirstParagraph                        types.String         `tfsdk:"error_message_first_paragraph"`
