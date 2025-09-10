@@ -43,9 +43,11 @@ type SettingsModel struct {
 	DarkmodeSecondaryColor                            types.String         `tfsdk:"darkmode_secondary_color"`
 	DatabrokerServiceURL                              types.String         `tfsdk:"databroker_service_url"`
 	DefaultUpstreamTimeout                            timetypes.GoDuration `tfsdk:"default_upstream_timeout"`
+	DNSFailureRefreshRate                             timetypes.GoDuration `tfsdk:"dns_failure_refresh_rate"`
 	DNSLookupFamily                                   types.String         `tfsdk:"dns_lookup_family"`
 	DNSQueryTimeout                                   timetypes.GoDuration `tfsdk:"dns_query_timeout"`
 	DNSQueryTries                                     types.Int64          `tfsdk:"dns_query_tries"`
+	DNSRefreshRate                                    timetypes.GoDuration `tfsdk:"dns_refresh_rate"`
 	DNSUDPMaxQueries                                  types.Int64          `tfsdk:"dns_udp_max_queries"`
 	DNSUseTCP                                         types.Bool           `tfsdk:"dns_use_tcp"`
 	ErrorMessageFirstParagraph                        types.String         `tfsdk:"error_message_first_paragraph"`
@@ -155,9 +157,11 @@ func ConvertSettingsToPB(
 	dst.DarkmodeSecondaryColor = src.DarkmodeSecondaryColor.ValueStringPointer()
 	dst.DatabrokerServiceUrl = src.DatabrokerServiceURL.ValueStringPointer()
 	ToDuration(&dst.DefaultUpstreamTimeout, src.DefaultUpstreamTimeout, &diagnostics)
+	ToDuration(&dst.DnsFailureRefreshRate, src.DNSFailureRefreshRate, &diagnostics)
 	dst.DnsLookupFamily = src.DNSLookupFamily.ValueStringPointer()
 	ToDuration(&dst.DnsQueryTimeout, src.DNSQueryTimeout, &diagnostics)
 	dst.DnsQueryTries = FromInt64Pointer[uint32](src.DNSQueryTries)
+	ToDuration(&dst.DnsRefreshRate, src.DNSRefreshRate, &diagnostics)
 	dst.DnsUdpMaxQueries = FromInt64Pointer[uint32](src.DNSUDPMaxQueries)
 	dst.DnsUseTcp = src.DNSUseTCP.ValueBoolPointer()
 	dst.ErrorMessageFirstParagraph = src.ErrorMessageFirstParagraph.ValueStringPointer()
@@ -261,9 +265,11 @@ func ConvertSettingsFromPB(
 	dst.DarkmodeSecondaryColor = types.StringPointerValue(src.DarkmodeSecondaryColor)
 	dst.DatabrokerServiceURL = types.StringPointerValue(src.DatabrokerServiceUrl)
 	dst.DefaultUpstreamTimeout = FromDuration(src.DefaultUpstreamTimeout)
+	dst.DNSFailureRefreshRate = FromDuration(src.DnsFailureRefreshRate)
 	dst.DNSLookupFamily = types.StringPointerValue(src.DnsLookupFamily)
 	dst.DNSQueryTimeout = FromDuration(src.DnsQueryTimeout)
 	dst.DNSQueryTries = Int64PointerValue(src.DnsQueryTries)
+	dst.DNSRefreshRate = FromDuration(src.DnsRefreshRate)
 	dst.DNSUDPMaxQueries = Int64PointerValue(src.DnsUdpMaxQueries)
 	dst.DNSUseTCP = types.BoolPointerValue(src.DnsUseTcp)
 	dst.ErrorMessageFirstParagraph = types.StringPointerValue(src.ErrorMessageFirstParagraph)
