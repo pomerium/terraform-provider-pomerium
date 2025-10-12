@@ -1,0 +1,28 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    groups:
+      go:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "github.com/pomerium/*"
+  - package-ecosystem: "gomod"
+    directory: "/"
+    schedule:
+      interval: "daily"
+    groups:
+      pomerium:
+        patterns:
+          - "github.com/pomerium/*"
