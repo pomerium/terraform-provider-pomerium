@@ -137,10 +137,6 @@ var SettingsResourceSchema = schema.Schema{
 			Optional:    true,
 			Description: "The externally accessible URL for the authenticate service.",
 		},
-		"authenticate_callback_path": schema.StringAttribute{
-			Optional:    true,
-			Description: "Authenticate callback path",
-		},
 		"cookie_name": schema.StringAttribute{
 			Optional:    true,
 			Description: "Cookie name",

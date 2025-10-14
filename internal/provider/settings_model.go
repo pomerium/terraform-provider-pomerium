@@ -13,7 +13,6 @@ import (
 type SettingsModel struct {
 	AccessLogFields                                   types.Set            `tfsdk:"access_log_fields"`
 	Address                                           types.String         `tfsdk:"address"`
-	AuthenticateCallbackPath                          types.String         `tfsdk:"authenticate_callback_path"`
 	AuthenticateServiceURL                            types.String         `tfsdk:"authenticate_service_url"`
 	AuthorizeLogFields                                types.Set            `tfsdk:"authorize_log_fields"`
 	AuthorizeServiceURL                               types.String         `tfsdk:"authorize_service_url"`
@@ -127,7 +126,6 @@ func ConvertSettingsToPB(
 
 	ToStringListFromSet(ctx, &dst.AccessLogFields, src.AccessLogFields, &diagnostics)
 	dst.Address = src.Address.ValueStringPointer()
-	dst.AuthenticateCallbackPath = src.AuthenticateCallbackPath.ValueStringPointer()
 	dst.AuthenticateServiceUrl = src.AuthenticateServiceURL.ValueStringPointer()
 	ToStringListFromSet(ctx, &dst.AuthorizeLogFields, src.AuthorizeLogFields, &diagnostics)
 	dst.AuthorizeServiceUrl = src.AuthorizeServiceURL.ValueStringPointer()
@@ -235,7 +233,6 @@ func ConvertSettingsFromPB(
 
 	dst.AccessLogFields = FromStringListToSet(src.AccessLogFields)
 	dst.Address = types.StringPointerValue(src.Address)
-	dst.AuthenticateCallbackPath = types.StringPointerValue(src.AuthenticateCallbackPath)
 	dst.AuthenticateServiceURL = types.StringPointerValue(src.AuthenticateServiceUrl)
 	dst.AuthorizeLogFields = FromStringListToSet(src.AuthorizeLogFields)
 	dst.AuthorizeServiceURL = types.StringPointerValue(src.AuthorizeServiceUrl)
