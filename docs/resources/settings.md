@@ -22,7 +22,6 @@ The settings are global object.
 
 - `access_log_fields` (Set of String) Displays HTTP request logs from the Pomerium Proxy service.
 - `address` (String) Specifies the IP Address and Port to serve HTTP requests from.
-- `authenticate_callback_path` (String) Authenticate callback path
 - `authenticate_service_url` (String) The externally accessible URL for the authenticate service.
 - `authorize_log_fields` (Set of String) Displays HTTP request logs from the Pomerium Authorize service.
 - `authorize_service_url` (String) Authorize service URL
@@ -52,7 +51,13 @@ The settings are global object.
 - `darkmode_secondary_color` (String) A hex code that determines the secondary color for the Enterprise Console and Route Error Details pages when in Dark Mode.
 - `databroker_service_url` (String) Databroker service URL
 - `default_upstream_timeout` (String) Default upstream timeout
+- `dns_failure_refresh_rate` (String) The rate at which DNS lookups are refreshed when requests are failing.
 - `dns_lookup_family` (String) DNS lookup family
+- `dns_query_timeout` (String) The amount of time each name server is given to respond to a query on the first try of any given server.
+- `dns_query_tries` (Number) The maximum number of query attempts the resolver will make before giving up. Each attempt may use a different name server.
+- `dns_refresh_rate` (String) The rate at which DNS lookups are refreshed.
+- `dns_udp_max_queries` (Number) Caps the number of UDP based DNS queries on a single port.
+- `dns_use_tcp` (Boolean) Use TCP for all DNS queries instead of the default protocol UDP.
 - `error_message_first_paragraph` (String) A paragraph that will appear on all Route Error Pages in the top section.
 - `favicon_url` (String) A Url pointing to your favicon. Defaults to Pomerium's Favicon.
 - `google_cloud_serverless_authentication_service_account` (String) Google Cloud Serverless Authentication service account credentials.

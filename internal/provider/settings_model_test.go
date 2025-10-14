@@ -23,7 +23,6 @@ func TestConvertSettingsToPB(t *testing.T) {
 	expected := &pb.Settings{
 		AccessLogFields:               &pb.Settings_StringList{Values: []string{"authority", "duration", "path"}},
 		Address:                       proto.String("127.0.0.1:8443"),
-		AuthenticateCallbackPath:      proto.String("/oauth2/callback"),
 		AuthenticateServiceUrl:        proto.String("https://authenticate.example.com"),
 		AuthorizeLogFields:            &pb.Settings_StringList{Values: []string{"request-id", "path", "ip"}},
 		AuthorizeServiceUrl:           proto.String("https://authorize.example.com"),
@@ -103,7 +102,6 @@ func TestConvertSettingsToPB(t *testing.T) {
 	actual, diag := provider.ConvertSettingsToPB(t.Context(), &provider.SettingsModel{
 		AccessLogFields:               types.SetValueMust(types.StringType, []attr.Value{types.StringValue("authority"), types.StringValue("duration"), types.StringValue("path")}),
 		Address:                       types.StringValue("127.0.0.1:8443"),
-		AuthenticateCallbackPath:      types.StringValue("/oauth2/callback"),
 		AuthenticateServiceURL:        types.StringValue("https://authenticate.example.com"),
 		AuthorizeLogFields:            types.SetValueMust(types.StringType, []attr.Value{types.StringValue("request-id"), types.StringValue("path"), types.StringValue("ip")}),
 		AuthorizeServiceURL:           types.StringValue("https://authorize.example.com"),
