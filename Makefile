@@ -1,3 +1,5 @@
+.PHONY: all
+all: generate build test lint
 
 .PHONY: lint
 lint:
@@ -14,6 +16,9 @@ build:
 docs:
 	@echo "@==> $@"
 	go run github.com/hashicorp/terraform-plugin-docs/cmd/tfplugindocs@latest generate --provider-dir . -provider-name pomerium
+
+.PHONY: generate
+generate: docs
 
 .PHONY: test
 test:
