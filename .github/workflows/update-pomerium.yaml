@@ -26,7 +26,7 @@ jobs:
         run: |
           git config --global user.email "apparitor@users.noreply.github.com"
           git config --global user.name "GitHub Actions"
-          git add deps/github.com/pomerium
+          git add .
           git diff --cached --exit-code || echo "changed=true" >> $GITHUB_OUTPUT
 
       - name: Create Pull Request
