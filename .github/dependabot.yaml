@@ -18,12 +18,3 @@ updates:
           - "*"
         exclude-patterns:
           - "github.com/pomerium/*"
-  - package-ecosystem: "gomod"
-    target-branch: main # see https://github.com/dependabot/dependabot-core/issues/1778#issuecomment-1988140219
-    directory: "/"
-    schedule:
-      interval: "daily"
-    groups:
-      pomerium:
-        patterns:
-          - "github.com/pomerium/*"

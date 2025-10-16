@@ -5,15 +5,19 @@ on:
 
 jobs:
   dependabot:
-    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    if: ${{ github.actor == 'dependabot[bot]' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
         with:
           ref: ${{ github.head_ref }}
-          submodules: "true"
           token: ${{ secrets.APPARITOR_GITHUB_TOKEN }}
+
+      - name: Setup Go
+        uses: actions/setup-go@44694675825211faa026b3c33043df3e48a5fa00
+        with:
+          go-version: 1.24.x
 
       - name: Generate
         run: make generate
@@ -23,3 +27,11 @@ jobs:
         with:
           github_token: ${{ secrets.APPARITOR_GITHUB_TOKEN }}
           commit_message: "dependabot: generate"
+
+  build:
+    if: ${{ github.actor == 'dependabot[bot]' }}
+    name: Build
+    needs: generate
+    uses: ./.github/workflows/reusable-build.yaml
+    with:
+      ref: ${{ github.head_ref }}
