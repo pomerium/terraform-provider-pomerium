@@ -147,6 +147,7 @@ func (p *PomeriumProvider) Resources(_ context.Context) []func() resource.Resour
 		NewSettingsResource,
 		NewServiceAccountResource,
 		NewKeyChainResource,
+		NewExternalDataSourceResource,
 	}
 }
 
@@ -162,6 +163,7 @@ func (p *PomeriumProvider) DataSources(_ context.Context) []func() datasource.Da
 		NewNamespacesDataSource,
 		NewPolicyDataSource,
 		NewPoliciesDataSource,
+		NewExternalDataSourceDataSource,
 	}
 }
 
