@@ -11,7 +11,7 @@ require (
 	github.com/hashicorp/terraform-plugin-framework-timetypes v0.5.0
 	github.com/hashicorp/terraform-plugin-framework-validators v0.19.0
 	github.com/hashicorp/terraform-plugin-go v0.29.0
-	github.com/hashicorp/terraform-plugin-log v0.9.0
+	github.com/hashicorp/terraform-plugin-log v0.10.0
 	github.com/iancoleman/strcase v0.3.0
 	github.com/pomerium/enterprise-client-go v0.30.2-0.20251201185849-ce24d529bd4f
 	github.com/pomerium/pomerium v0.30.7-0.20251201232757-7de8231d9a7e
