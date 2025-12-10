@@ -3,9 +3,9 @@ all: generate build test lint
 
 .PHONY: lint
 lint:
-	@echo "@==> $@"
-	@VERSION=$$(go run github.com/mikefarah/yq/v4@v4.34.1 '.jobs.lint.steps[] | select(.uses == "golangci/golangci-lint-action*") | .with.version' .github/workflows/reusable-build.yaml) && \
-	go run github.com/golangci/golangci-lint/cmd/golangci-lint@$$VERSION run --fix --timeout=20m ./...
+	@echo "==> $@"
+	@go run ./internal/tools/get-tools.go && \
+	./bin/golangci-lint run --fix --timeout=10m ./...
 
 .PHONY: build
 build:
