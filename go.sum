@@ -101,8 +101,8 @@ github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRI
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pomerium/enterprise-client-go v0.30.2-0.20251209023924-60ffbca08650 h1:6ABEk/rW9HRDrbFhW5wLVOdZYyxG72Gh9ZUEKJ5HOJg=
 github.com/pomerium/enterprise-client-go v0.30.2-0.20251209023924-60ffbca08650/go.mod h1:BxfX0Ihl5snMGD/sHV84yXvL6YVtACMRJyGAnMYo2vM=
-github.com/pomerium/pomerium v0.30.7-0.20251210215322-6edb43f0105c h1:/m7tQwg1uDBpqUa+/R6f1gqJLUSHZv6XrQnne51sTWc=
-github.com/pomerium/pomerium v0.30.7-0.20251210215322-6edb43f0105c/go.mod h1:LAkPl4uPgBlEK9FM33Ayg2u9ihz6kHZryDKBz+wZurE=
+github.com/pomerium/pomerium v0.30.7-0.20251211185733-3ca3ba342986 h1:lJ44UuubN3oMCdi81nvFVtaeorTbAjZc8jpmSpPjN2w=
+github.com/pomerium/pomerium v0.30.7-0.20251211185733-3ca3ba342986/go.mod h1:0zQp/MzVMYSAKATBxOFXtXlOkMfkgAJ8KHb51+AJ25I=
 github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 h1:bsUq1dX0N8AOIL7EB/X911+m4EHsnWEHeJ0c+3TTBrg=
 github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
 github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR38lUII=
