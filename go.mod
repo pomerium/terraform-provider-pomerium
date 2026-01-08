@@ -11,11 +11,11 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.29.0
 	github.com/hashicorp/terraform-plugin-log v0.10.0
 	github.com/iancoleman/strcase v0.3.0
-	github.com/pomerium/enterprise-client-go v0.30.2-0.20251229160350-245c55aef519
-	github.com/pomerium/pomerium v0.30.7-0.20251229230027-f5198e79f46c
+	github.com/pomerium/enterprise-client-go v0.30.2-0.20260106224833-99c4703404ee
+	github.com/pomerium/pomerium v0.30.7-0.20260108013349-52df2ebd68a8
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
-	golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b
+	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93
 	google.golang.org/grpc v1.78.0
 	google.golang.org/protobuf v1.36.11
 )
@@ -36,7 +36,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mitchellh/go-testing-interface v1.14.1 // indirect
 	github.com/oklog/run v1.1.0 // indirect
-	github.com/open-policy-agent/opa v1.10.0 // indirect
+	github.com/open-policy-agent/opa v1.12.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
