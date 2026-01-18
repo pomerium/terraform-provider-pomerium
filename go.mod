@@ -11,8 +11,8 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.29.0
 	github.com/hashicorp/terraform-plugin-log v0.10.0
 	github.com/iancoleman/strcase v0.3.0
-	github.com/pomerium/enterprise-client-go v0.30.2-0.20260116153512-b9906a928dba
-	github.com/pomerium/pomerium v0.30.7-0.20260116173349-e72a0e785633
+	github.com/pomerium/enterprise-client-go v0.30.2-0.20260117041626-9e553f320d94
+	github.com/pomerium/pomerium v0.30.7-0.20260117041604-e6ca99d1618a
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93
