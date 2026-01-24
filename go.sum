@@ -99,10 +99,10 @@ github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINE
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRIccs7FGNTlIRMkT8wgtp5eCXdBlqhYGL6U=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/pomerium/enterprise-client-go v0.32.1-0.20260122162849-cd1eec415840 h1:OwXWgCTE58fkS8OaIKHjhreyc9PZbC4Z+hKp/MZzxK0=
-github.com/pomerium/enterprise-client-go v0.32.1-0.20260122162849-cd1eec415840/go.mod h1:/yRen5eTncqgnftzGYNF0ma38d9Su99B1O3+8JwAWaA=
-github.com/pomerium/pomerium v0.32.1-0.20260122205720-cc9a401b9b1e h1:9Bc0o3jB8nC26SYTZ1JPczx8XtGgEt52KVVj1xKBn3A=
-github.com/pomerium/pomerium v0.32.1-0.20260122205720-cc9a401b9b1e/go.mod h1:SOBbqS6/cDrZCB2Sr8Ud72sb7bLIlFREYe98VlgJAHU=
+github.com/pomerium/enterprise-client-go v0.32.1-0.20260123111919-8fcbb62e4a4c h1:XlrybC3a0lT3pnU7n/NiUKAcXmAlkzhilB+hKy2ElcE=
+github.com/pomerium/enterprise-client-go v0.32.1-0.20260123111919-8fcbb62e4a4c/go.mod h1:/yRen5eTncqgnftzGYNF0ma38d9Su99B1O3+8JwAWaA=
+github.com/pomerium/pomerium v0.32.1-0.20260124002006-52e3982a561a h1:ZdUIbsm1HP0DSgJtkIZOl66XLCRjrZmJNk6wj0xqff4=
+github.com/pomerium/pomerium v0.32.1-0.20260124002006-52e3982a561a/go.mod h1:jCPisL14wjT3Yy9I3cNnQI67wNKiKbwl7ZnLu2Gowzw=
 github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 h1:bsUq1dX0N8AOIL7EB/X911+m4EHsnWEHeJ0c+3TTBrg=
 github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
 github.com/rogpeppe/go-internal v1.14.1 h1:UQB4HGPB6osV0SQTLymcB4TgvyWu6ZyliaW0tI/otEQ=
