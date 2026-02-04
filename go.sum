@@ -1,3 +1,5 @@
+connectrpc.com/connect v1.19.1 h1:R5M57z05+90EfEvCY1b7hBxDVOUl45PrtXtAV2fOC14=
+connectrpc.com/connect v1.19.1/go.mod h1:tN20fjdGlewnSFeZxLKb0xwIZ6ozc3OQs2hTXy4du9w=
 github.com/bufbuild/protocompile v0.14.1 h1:iA73zAf/fyljNjQKwYzUHD6AD4R8KMasmwa/FBatYVw=
 github.com/bufbuild/protocompile v0.14.1/go.mod h1:ppVdAIhbr2H8asPk6k4pY7t9zB1OU5DoEw9xY/FUi1c=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
@@ -38,6 +40,8 @@ github.com/hashicorp/go-plugin v1.7.0 h1:YghfQH/0QmPNc/AZMTFE3ac8fipZyZECHdDPshf
 github.com/hashicorp/go-plugin v1.7.0/go.mod h1:BExt6KEaIYx804z8k4gRzRLEvxKVb+kn0NMcihqOqb8=
 github.com/hashicorp/go-uuid v1.0.3 h1:2gKiV6YVmrJ1i2CKKa9obLvRieoRGviZFL26PcT/Co8=
 github.com/hashicorp/go-uuid v1.0.3/go.mod h1:6SBZvOh/SIDV7/2o3Jml5SYk/TvGqwFJ/bN7x4byOro=
+github.com/hashicorp/golang-lru/v2 v2.0.7 h1:a+bsQ5rvGLjzHuww6tVxozPZFVghXaHOwFs4luLUK2k=
+github.com/hashicorp/golang-lru/v2 v2.0.7/go.mod h1:QeFd9opnmA6QUJc5vARoKUSoFhyfM2/ZepoAG6RGpeM=
 github.com/hashicorp/terraform-plugin-framework v1.17.0 h1:JdX50CFrYcYFY31gkmitAEAzLKoBgsK+iaJjDC8OexY=
 github.com/hashicorp/terraform-plugin-framework v1.17.0/go.mod h1:4OUXKdHNosX+ys6rLgVlgklfxN3WHR5VHSOABeS/BM0=
 github.com/hashicorp/terraform-plugin-framework-timetypes v0.5.0 h1:v3DapR8gsp3EM8fKMh6up9cJUFQ2iRaFsYLP8UJnCco=
@@ -101,6 +105,8 @@ github.com/pomerium/enterprise-client-go v0.32.1-0.20260202142636-ba90aedd171d h
 github.com/pomerium/enterprise-client-go v0.32.1-0.20260202142636-ba90aedd171d/go.mod h1:/yRen5eTncqgnftzGYNF0ma38d9Su99B1O3+8JwAWaA=
 github.com/pomerium/pomerium v0.32.1-0.20260202224449-34bf581ffc30 h1:lJ7MRbfFMhzKMhUa/5wdKBtIR/vSkvpUNcj8bG5vWCY=
 github.com/pomerium/pomerium v0.32.1-0.20260202224449-34bf581ffc30/go.mod h1:euHmWizmi53PR8ktX0D9dPCPsklUKIUICmktAHHSIzU=
+github.com/pomerium/sdk-go v0.0.10-0.20260204192129-506ae8f1619f h1:nwidS3zAJNAiW7iKU2uKKO38LX8J6/xtmLh0YNuaElI=
+github.com/pomerium/sdk-go v0.0.10-0.20260204192129-506ae8f1619f/go.mod h1:rI86l08qSGTJy6RCQmgX2byZEnbza0fzqJ93nwfS+q0=
 github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 h1:bsUq1dX0N8AOIL7EB/X911+m4EHsnWEHeJ0c+3TTBrg=
 github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9/go.mod h1:bCqnVzQkZxMG4s8nGwiZ5l3QUCyqpo9Y+/ZMZ9VjZe4=
 github.com/rogpeppe/go-internal v1.14.1 h1:UQB4HGPB6osV0SQTLymcB4TgvyWu6ZyliaW0tI/otEQ=

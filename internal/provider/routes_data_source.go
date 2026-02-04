@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 
+	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	client "github.com/pomerium/enterprise-client-go"
-	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 var _ datasource.DataSource = &RoutesDataSource{}
@@ -21,7 +21,7 @@ func NewRoutesDataSource() datasource.DataSource {
 }
 
 type RoutesDataSource struct {
-	client *client.Client
+	client *Client
 }
 
 type RoutesDataSourceModel struct {
@@ -89,7 +89,7 @@ func (d *RoutesDataSource) Configure(_ context.Context, req datasource.Configure
 		return
 	}
 
-	client, ok := req.ProviderData.(*client.Client)
+	client, ok := req.ProviderData.(*Client)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
@@ -109,32 +109,25 @@ func (d *RoutesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	listReq := &pb.ListRoutesRequest{
-		Namespace: data.NamespaceID.ValueString(),
-		Query:     data.Query.ValueStringPointer(),
-		Offset:    data.Offset.ValueInt64Pointer(),
-		Limit:     data.Limit.ValueInt64Pointer(),
-		OrderBy:   data.OrderBy.ValueStringPointer(),
-		ClusterId: data.ClusterID.ValueStringPointer(),
-	}
-	routesResp, err := d.client.RouteService.ListRoutes(ctx, listReq)
+	listReq := &pomerium.ListRoutesRequest{}
+	routesResp, err := d.client.shared.ListRoutes(ctx, connect.NewRequest(listReq))
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading routes", err.Error())
 		return
 	}
 
-	routes := make([]RouteModel, 0, len(routesResp.Routes))
-	for _, route := range routesResp.Routes {
-		var routeModel RouteModel
-		diags := ConvertRouteFromPB(&routeModel, route)
-		if diags.HasError() {
-			resp.Diagnostics.Append(diags...)
+	routes := make([]RouteModel, 0, len(routesResp.Msg.Routes))
+	for _, route := range routesResp.Msg.Routes {
+		c := newProtoToModelConverter()
+		routeModel := c.Route(route)
+		if c.diagnostics.HasError() {
+			resp.Diagnostics.Append(c.diagnostics...)
 			return
 		}
-		routes = append(routes, routeModel)
+		routes = append(routes, *routeModel)
 	}
 
 	data.Routes = routes
-	data.TotalCount = types.Int64Value(routesResp.GetTotalCount())
+	data.TotalCount = types.Int64Value(int64(routesResp.Msg.GetTotalCount()))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -3,6 +3,7 @@ module github.com/pomerium/enterprise-terraform-provider
 go 1.25.4
 
 require (
+	connectrpc.com/connect v1.19.1
 	github.com/go-jose/go-jose/v3 v3.0.4
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/terraform-plugin-framework v1.17.0
@@ -13,6 +14,7 @@ require (
 	github.com/iancoleman/strcase v0.3.0
 	github.com/pomerium/enterprise-client-go v0.32.1-0.20260202142636-ba90aedd171d
 	github.com/pomerium/pomerium v0.32.1-0.20260202224449-34bf581ffc30
+	github.com/pomerium/sdk-go v0.0.10-0.20260204192129-506ae8f1619f
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93
@@ -29,6 +31,7 @@ require (
 	github.com/hashicorp/go-hclog v1.6.3 // indirect
 	github.com/hashicorp/go-plugin v1.7.0 // indirect
 	github.com/hashicorp/go-uuid v1.0.3 // indirect
+	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
 	github.com/hashicorp/terraform-registry-address v0.4.0 // indirect
 	github.com/hashicorp/terraform-svchost v0.1.1 // indirect
 	github.com/hashicorp/yamux v0.1.2 // indirect

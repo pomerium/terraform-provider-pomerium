@@ -8,7 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -19,7 +18,7 @@ func NewServiceAccountsDataSource() datasource.DataSource {
 }
 
 type ServiceAccountsDataSource struct {
-	client *client.Client
+	client *Client
 }
 
 type ServiceAccountsDataSourceModel struct {
@@ -79,11 +78,11 @@ func (d *ServiceAccountsDataSource) Configure(_ context.Context, req datasource.
 		return
 	}
 
-	client, ok := req.ProviderData.(*client.Client)
+	client, ok := req.ProviderData.(*Client)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T.", req.ProviderData),
+			fmt.Sprintf("Expected *Client, got: %T.", req.ProviderData),
 		)
 		return
 	}
@@ -102,7 +101,7 @@ func (d *ServiceAccountsDataSource) Read(ctx context.Context, req datasource.Rea
 	listReq := &pb.ListPomeriumServiceAccountsRequest{
 		Namespace: data.NamespaceID.ValueString(),
 	}
-	serviceAccountsResp, err := d.client.PomeriumServiceAccountService.ListPomeriumServiceAccounts(ctx, listReq)
+	serviceAccountsResp, err := d.client.ListServiceAccounts(ctx, listReq)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading service accounts", err.Error())
 		return

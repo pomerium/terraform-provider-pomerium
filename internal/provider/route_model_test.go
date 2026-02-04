@@ -204,7 +204,7 @@ func TestConvertRoute(t *testing.T) {
 		RewriteResponseHeaders: types.SetValueMust(
 			provider.RewriteHeaderObjectType(),
 			[]attr.Value{types.ObjectValueMust(
-				provider.RewriteHeaderAttrTypes(),
+				provider.RewriteHeaderObjectType().AttrTypes,
 				map[string]attr.Value{
 					"header": types.StringValue("X-Rewrite-Header"),
 					"value":  types.StringValue("new-value"),

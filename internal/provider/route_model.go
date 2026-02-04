@@ -68,17 +68,6 @@ type RouteModel struct {
 	To                                        types.Set            `tfsdk:"to"`
 }
 
-var rewriteHeaderAttrTypes = map[string]attr.Type{
-	"header": types.StringType,
-	"value":  types.StringType,
-	"prefix": types.StringType,
-}
-
-// RewriteHeaderAttrTypes returns the attribute type map for rewrite headers
-func RewriteHeaderAttrTypes() map[string]attr.Type {
-	return rewriteHeaderAttrTypes
-}
-
 func rewriteHeadersToPB(src types.Set) []*pb.RouteRewriteHeader {
 	if (src).IsNull() {
 		return nil
@@ -122,15 +111,19 @@ func rewriteHeadersFromPB(headers []*pb.RouteRewriteHeader) types.Set {
 			"value":  types.StringValue(header.Value),
 			"prefix": prefixValue,
 		}
-		obj, _ := types.ObjectValue(rewriteHeaderAttrTypes, attrs)
+		obj, _ := types.ObjectValue(RewriteHeaderObjectType().AttrTypes, attrs)
 		elements = append(elements, obj)
 	}
 	result, _ := types.SetValue(RewriteHeaderObjectType(), elements)
 	return result
 }
 
-func RewriteHeaderObjectType() attr.Type {
-	return types.ObjectType{AttrTypes: rewriteHeaderAttrTypes}
+func RewriteHeaderObjectType() types.ObjectType {
+	return types.ObjectType{AttrTypes: map[string]attr.Type{
+		"header": types.StringType,
+		"value":  types.StringType,
+		"prefix": types.StringType,
+	}}
 }
 
 // Type definitions for health check objects
