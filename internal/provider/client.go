@@ -57,6 +57,22 @@ func NewClient(apiURL, apiToken string, tlsConfig *tls.Config) *Client {
 	}
 }
 
+func (c *Client) ListClusters(
+	ctx context.Context,
+	req *pb.ListClustersRequest,
+) (*pb.ListClustersResponse, error) {
+	var res *pb.ListClustersResponse
+	err := c.byProduct(ctx,
+		func() error { return fmt.Errorf("clusters are not supported by core") },
+		func(enterpriseClient *client.Client) error {
+			var err error
+			res, err = enterpriseClient.ClustersService.ListClusters(ctx, req)
+			return err
+		},
+		func() error { return fmt.Errorf("clusters are not supported by zero") })
+	return res, err
+}
+
 func (c *Client) ListServiceAccounts(
 	ctx context.Context,
 	req *pb.ListPomeriumServiceAccountsRequest,

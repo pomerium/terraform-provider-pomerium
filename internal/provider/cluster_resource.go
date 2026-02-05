@@ -117,8 +117,9 @@ func (r *ClusterResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	pbCluster, diags := ConvertClusterToPB(&plan)
-	resp.Diagnostics.Append(diags...)
+	c := newModelToConsoleConverter()
+	pbCluster := c.Cluster(&plan)
+	resp.Diagnostics.Append(c.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -164,8 +165,9 @@ func (r *ClusterResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	diags := ConvertClusterFromPB(&state, respCluster.Cluster, respCluster.Namespace)
-	resp.Diagnostics.Append(diags...)
+	c := newConsoleToModelConverter()
+	state = *c.Cluster(respCluster.Cluster, respCluster.Namespace)
+	resp.Diagnostics.Append(c.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -181,8 +183,9 @@ func (r *ClusterResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	pbCluster, diags := ConvertClusterToPB(&plan)
-	resp.Diagnostics.Append(diags...)
+	modelToConsole := newModelToConsoleConverter()
+	pbCluster := modelToConsole.Cluster(&plan)
+	resp.Diagnostics.Append(modelToConsole.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -195,8 +198,9 @@ func (r *ClusterResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	diags = ConvertClusterFromPB(&plan, respCluster.Cluster, respCluster.Namespace)
-	resp.Diagnostics.Append(diags...)
+	consoleToModel := newConsoleToModelConverter()
+	plan = *consoleToModel.Cluster(respCluster.Cluster, respCluster.Namespace)
+	resp.Diagnostics.Append(consoleToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

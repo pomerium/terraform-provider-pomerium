@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 
-	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -17,7 +16,7 @@ type ClustersDataSourceModel struct {
 
 // A ClustersDataSource retrieves data about clusters.
 type ClustersDataSource struct {
-	client *client.Client
+	client *Client
 }
 
 // NewClustersDataSource creates a new clusters data source.
@@ -48,11 +47,11 @@ func (d *ClustersDataSource) Configure(_ context.Context, req datasource.Configu
 		return
 	}
 
-	client, ok := req.ProviderData.(*client.Client)
+	client, ok := req.ProviderData.(*Client)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T.", req.ProviderData),
+			fmt.Sprintf("Expected *Client, got: %T.", req.ProviderData),
 		)
 		return
 	}
@@ -68,7 +67,7 @@ func (d *ClustersDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	clustersResp, err := d.client.ClustersService.ListClusters(ctx, &pb.ListClustersRequest{})
+	clustersResp, err := d.client.ListClusters(ctx, &pb.ListClustersRequest{})
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading clusters", err.Error())
 		return
@@ -76,13 +75,13 @@ func (d *ClustersDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 	clusters := make([]ClusterModel, 0, len(clustersResp.Clusters))
 	for _, cluster := range clustersResp.Clusters {
-		var clusterModel ClusterModel
-		diags := ConvertClusterFromPB(&clusterModel, cluster, nil)
-		if diags.HasError() {
-			resp.Diagnostics.Append(diags...)
+		c := newConsoleToModelConverter()
+		clusterModel := c.Cluster(cluster, nil)
+		if c.diagnostics.HasError() {
+			resp.Diagnostics.Append(c.diagnostics...)
 			return
 		}
-		clusters = append(clusters, clusterModel)
+		clusters = append(clusters, *clusterModel)
 	}
 
 	data.Clusters = clusters

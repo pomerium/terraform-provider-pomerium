@@ -118,7 +118,7 @@ func (d *RoutesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 
 	routes := make([]RouteModel, 0, len(routesResp.Msg.Routes))
 	for _, route := range routesResp.Msg.Routes {
-		c := newProtoToModelConverter()
+		c := newCoreToModelConverter()
 		routeModel := c.Route(route)
 		if c.diagnostics.HasError() {
 			resp.Diagnostics.Append(c.diagnostics...)

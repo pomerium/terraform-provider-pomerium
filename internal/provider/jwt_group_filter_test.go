@@ -7,10 +7,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/pomerium/enterprise-client-go/pb"
-	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/testing/protocmp"
+
+	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
 )
 
 func TestJWTGroupsFilterFromPB(t *testing.T) {
@@ -22,7 +23,7 @@ func TestJWTGroupsFilterFromPB(t *testing.T) {
 		{
 			name:     "nil input",
 			input:    nil,
-			expected: types.ObjectNull(provider.JWTGroupsFilterSchemaAttr),
+			expected: types.ObjectNull(provider.JWTGroupsFilterType.AttrTypes),
 		},
 		{
 			name: "empty groups",
@@ -30,7 +31,7 @@ func TestJWTGroupsFilterFromPB(t *testing.T) {
 				Groups:       []string{},
 				InferFromPpl: P(false),
 			},
-			expected: types.ObjectValueMust(provider.JWTGroupsFilterSchemaAttr, map[string]attr.Value{
+			expected: types.ObjectValueMust(provider.JWTGroupsFilterType.AttrTypes, map[string]attr.Value{
 				"groups":         types.SetValueMust(types.StringType, []attr.Value{}),
 				"infer_from_ppl": types.BoolValue(false),
 			}),
@@ -41,7 +42,7 @@ func TestJWTGroupsFilterFromPB(t *testing.T) {
 				Groups:       []string{"group1", "group2"},
 				InferFromPpl: P(true),
 			},
-			expected: types.ObjectValueMust(provider.JWTGroupsFilterSchemaAttr, map[string]attr.Value{
+			expected: types.ObjectValueMust(provider.JWTGroupsFilterType.AttrTypes, map[string]attr.Value{
 				"groups": types.SetValueMust(types.StringType, []attr.Value{
 					types.StringValue("group1"),
 					types.StringValue("group2"),
@@ -70,12 +71,12 @@ func TestJWTGroupsFilterToPB(t *testing.T) {
 	}{
 		{
 			name:     "null input",
-			input:    types.ObjectNull(provider.JWTGroupsFilterSchemaAttr),
+			input:    types.ObjectNull(provider.JWTGroupsFilterType.AttrTypes),
 			expected: nil,
 		},
 		{
 			name: "empty groups",
-			input: types.ObjectValueMust(provider.JWTGroupsFilterSchemaAttr, map[string]attr.Value{
+			input: types.ObjectValueMust(provider.JWTGroupsFilterType.AttrTypes, map[string]attr.Value{
 				"groups":         types.SetValueMust(types.StringType, []attr.Value{}),
 				"infer_from_ppl": types.BoolValue(false),
 			}),
@@ -86,7 +87,7 @@ func TestJWTGroupsFilterToPB(t *testing.T) {
 		},
 		{
 			name: "with groups",
-			input: types.ObjectValueMust(provider.JWTGroupsFilterSchemaAttr, map[string]attr.Value{
+			input: types.ObjectValueMust(provider.JWTGroupsFilterType.AttrTypes, map[string]attr.Value{
 				"groups": types.SetValueMust(types.StringType, []attr.Value{
 					types.StringValue("group1"),
 					types.StringValue("group2"),
