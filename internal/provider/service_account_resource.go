@@ -2,8 +2,8 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
+	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -14,8 +14,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	client "github.com/pomerium/enterprise-client-go"
-	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 var (
@@ -28,7 +27,7 @@ func NewServiceAccountResource() resource.Resource {
 }
 
 type ServiceAccountResource struct {
-	client *client.Client
+	client *Client
 }
 
 type ServiceAccountResourceModel struct {
@@ -92,58 +91,47 @@ func (r *ServiceAccountResource) Schema(_ context.Context, _ resource.SchemaRequ
 }
 
 func (r *ServiceAccountResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-
-	c, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Provider Data Type",
-			fmt.Sprintf("Expected *client.Client, got: %T.", req.ProviderData),
-		)
-		return
-	}
-
-	r.client = c
+	r.client = ConfigureClient(req, resp)
 }
 
 func (r *ServiceAccountResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan ServiceAccountResourceModel
+	var state ServiceAccountResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	pbServiceAccount, diags := ConvertServiceAccountToPB(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+	modelToCore := newModelToCoreConverter()
+	coreServiceAccount := modelToCore.ServiceAccount(&state)
+	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	respServiceAccount, err := r.client.PomeriumServiceAccountService.AddPomeriumServiceAccount(ctx, &pb.AddPomeriumServiceAccountRequest{
-		ServiceAccount: pbServiceAccount,
-	})
+	respServiceAccount, err := r.client.shared.CreateServiceAccount(ctx, connect.NewRequest(&pomerium.CreateServiceAccountRequest{
+		ServiceAccount: coreServiceAccount,
+	}))
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating service account", err.Error())
 		return
 	}
 
-	diags = ConvertServiceAccountFromPB(&plan.ServiceAccountModel, respServiceAccount.ServiceAccount)
-	resp.Diagnostics.Append(diags...)
+	coreToModel := newCoreToModelConverter()
+	state.ServiceAccountModel = *coreToModel.ServiceAccount(respServiceAccount.Msg.ServiceAccount)
+	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	plan.JWT = types.StringValue(respServiceAccount.JWT)
+	state.JWT = types.StringValue(respServiceAccount.Msg.Jwt)
 
 	tflog.Trace(ctx, "Created a service account", map[string]interface{}{
-		"id":   plan.ID.ValueString(),
-		"name": plan.Name.ValueString(),
+		"id":   state.ID.ValueString(),
+		"name": state.Name.ValueString(),
 	})
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *ServiceAccountResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -154,9 +142,9 @@ func (r *ServiceAccountResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	respServiceAccount, err := r.client.PomeriumServiceAccountService.GetPomeriumServiceAccount(ctx, &pb.GetPomeriumServiceAccountRequest{
+	respServiceAccount, err := r.client.shared.GetServiceAccount(ctx, connect.NewRequest(&pomerium.GetServiceAccountRequest{
 		Id: state.ID.ValueString(),
-	})
+	}))
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			resp.State.RemoveResource(ctx)
@@ -166,8 +154,9 @@ func (r *ServiceAccountResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	diags := ConvertServiceAccountFromPB(&state.ServiceAccountModel, respServiceAccount.ServiceAccount)
-	resp.Diagnostics.Append(diags...)
+	coreToModel := newCoreToModelConverter()
+	state.ServiceAccountModel = *coreToModel.ServiceAccount(respServiceAccount.Msg.ServiceAccount)
+	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -183,15 +172,16 @@ func (r *ServiceAccountResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	pbServiceAccount, diags := ConvertServiceAccountToPB(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+	modelToCore := newModelToCoreConverter()
+	dst := modelToCore.ServiceAccount(&plan)
+	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	_, err := r.client.PomeriumServiceAccountService.SetPomeriumServiceAccount(ctx, &pb.SetPomeriumServiceAccountRequest{
-		ServiceAccount: pbServiceAccount,
-	})
+	_, err := r.client.shared.UpdateServiceAccount(ctx, connect.NewRequest(&pomerium.UpdateServiceAccountRequest{
+		ServiceAccount: dst,
+	}))
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating service account", err.Error())
 		return
@@ -208,9 +198,9 @@ func (r *ServiceAccountResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	_, err := r.client.PomeriumServiceAccountService.DeletePomeriumServiceAccount(ctx, &pb.DeletePomeriumServiceAccountRequest{
+	_, err := r.client.shared.DeleteServiceAccount(ctx, connect.NewRequest(&pomerium.DeleteServiceAccountRequest{
 		Id: state.ID.ValueString(),
-	})
+	}))
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting service account", err.Error())
 		return

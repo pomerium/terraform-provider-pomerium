@@ -2,14 +2,13 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
+	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
+	"google.golang.org/protobuf/proto"
 
-	client "github.com/pomerium/enterprise-client-go"
-	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 var (
@@ -22,7 +21,7 @@ func NewSettingsResource() resource.Resource {
 }
 
 type SettingsResource struct {
-	client *client.Client
+	client *Client
 }
 
 func (r *SettingsResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -34,51 +33,38 @@ func (r *SettingsResource) Schema(_ context.Context, _ resource.SchemaRequest, r
 }
 
 func (r *SettingsResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-
-	c, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected Config, got: %T.", req.ProviderData),
-		)
-		return
-	}
-
-	r.client = c
+	r.client = ConfigureClient(req, resp)
 }
 
 func (r *SettingsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan SettingsModel
+	var state SettingsModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	planSettings, diags := ConvertSettingsToPB(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	modelToCore := newModelToCoreConverter()
+	updateReq := modelToCore.UpdateSettingsRequest(&state)
+	resp.Diagnostics.Append(modelToCore.diagnostics...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	respSettings, err := r.client.SettingsService.SetSettings(ctx, &pb.SetSettingsRequest{
-		Settings: planSettings,
-	})
+	updateRes, err := r.client.shared.UpdateSettings(ctx, updateReq)
 	if err != nil {
 		resp.Diagnostics.AddError("set settings", err.Error())
 		return
 	}
 
-	diags = ConvertSettingsFromPB(&plan, respSettings.Settings)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	coreToModel := newCoreToModelConverter()
+	state = *coreToModel.Settings(updateRes.Msg.GetSettings())
+	resp.Diagnostics.Append(coreToModel.diagnostics...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *SettingsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -89,17 +75,26 @@ func (r *SettingsResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	respSettings, err := r.client.SettingsService.GetSettings(ctx, &pb.GetSettingsRequest{
-		ClusterId: state.ClusterID.ValueStringPointer(),
+	listReq := connect.NewRequest(&pomerium.ListSettingsRequest{
+		Limit: proto.Uint64(1),
 	})
+	if !state.ClusterID.IsNull() {
+		listReq.Header().Set("Cluster-Id", state.ClusterID.ValueString())
+	}
+
+	listRes, err := r.client.shared.ListSettings(ctx, listReq)
 	if err != nil {
 		resp.Diagnostics.AddError("get settings", err.Error())
 		return
+	} else if len(listRes.Msg.Settings) == 0 {
+		resp.Diagnostics.AddError("no settings found", "no settings found")
+		return
 	}
 
-	diags := ConvertSettingsFromPB(&state, respSettings.Settings)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	coreToModel := newCoreToModelConverter()
+	state = *coreToModel.Settings(listRes.Msg.GetSettings()[0])
+	resp.Diagnostics.Append(coreToModel.diagnostics...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -107,29 +102,33 @@ func (r *SettingsResource) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (r *SettingsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan SettingsModel
+	var state SettingsModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	planSettings, diags := ConvertSettingsToPB(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	modelToCore := newModelToCoreConverter()
+	updateReq := modelToCore.UpdateSettingsRequest(&state)
+	resp.Diagnostics.Append(modelToCore.diagnostics...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	respSettings, err := r.client.SettingsService.SetSettings(ctx, &pb.SetSettingsRequest{
-		Settings: planSettings,
-	})
+	updateRes, err := r.client.shared.UpdateSettings(ctx, updateReq)
 	if err != nil {
 		resp.Diagnostics.AddError("set settings", err.Error())
 		return
 	}
 
-	plan.ID = types.StringValue(respSettings.GetSettings().GetId())
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	coreToModel := newCoreToModelConverter()
+	state = *coreToModel.Settings(updateRes.Msg.GetSettings())
+	resp.Diagnostics.Append(coreToModel.diagnostics...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *SettingsResource) Delete(ctx context.Context, _ resource.DeleteRequest, resp *resource.DeleteResponse) {

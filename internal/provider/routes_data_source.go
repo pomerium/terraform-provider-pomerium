@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -82,20 +81,7 @@ func (d *RoutesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 }
 
 func (d *RoutesDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-
-	client, ok := req.ProviderData.(*Client)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T.", req.ProviderData),
-		)
-		return
-	}
-
-	d.client = client
+	d.client = ConfigureClient(req, resp)
 }
 
 func (d *RoutesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

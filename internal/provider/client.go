@@ -10,6 +10,7 @@ import (
 	"sync"
 
 	"connectrpc.com/connect"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
@@ -58,6 +59,54 @@ func NewClient(apiURL, apiToken string, tlsConfig *tls.Config) *Client {
 			sdk.WithURL(apiURL),
 		),
 	}
+}
+
+func (c *Client) AddCluster(
+	ctx context.Context,
+	req *pb.AddClusterRequest,
+) (*pb.AddClusterResponse, error) {
+	var res *pb.AddClusterResponse
+	err := c.byProduct(ctx,
+		func() error { return fmt.Errorf("clusters are not supported by core") },
+		func(enterpriseClient *client.Client) error {
+			var err error
+			res, err = enterpriseClient.ClustersService.AddCluster(ctx, req)
+			return err
+		},
+		func(_ sdk.ZeroClient) error { return fmt.Errorf("clusters are not supported by zero") })
+	return res, err
+}
+
+func (c *Client) DeleteCluster(
+	ctx context.Context,
+	req *pb.DeleteClusterRequest,
+) (*pb.DeleteClusterResponse, error) {
+	var res *pb.DeleteClusterResponse
+	err := c.byProduct(ctx,
+		func() error { return fmt.Errorf("clusters are not supported by core") },
+		func(enterpriseClient *client.Client) error {
+			var err error
+			res, err = enterpriseClient.ClustersService.DeleteCluster(ctx, req)
+			return err
+		},
+		func(_ sdk.ZeroClient) error { return fmt.Errorf("clusters are not supported by zero") })
+	return res, err
+}
+
+func (c *Client) DeleteExternalDataSource(
+	ctx context.Context,
+	req *pb.DeleteExternalDataSourceRequest,
+) (*emptypb.Empty, error) {
+	var res *emptypb.Empty
+	err := c.byProduct(ctx,
+		func() error { return fmt.Errorf("external data sources are not supported by core") },
+		func(enterpriseClient *client.Client) error {
+			var err error
+			res, err = enterpriseClient.ExternalDataSourceService.DeleteExternalDataSource(ctx, req)
+			return err
+		},
+		func(_ sdk.ZeroClient) error { return fmt.Errorf("external data sources are not supported by zero") })
+	return res, err
 }
 
 func (c *Client) DeleteNamespace(
@@ -140,22 +189,6 @@ func (c *Client) GetNamespace(
 	return res, err
 }
 
-func (c *Client) ListClusters(
-	ctx context.Context,
-	req *pb.ListClustersRequest,
-) (*pb.ListClustersResponse, error) {
-	var res *pb.ListClustersResponse
-	err := c.byProduct(ctx,
-		func() error { return fmt.Errorf("clusters are not supported by core") },
-		func(enterpriseClient *client.Client) error {
-			var err error
-			res, err = enterpriseClient.ClustersService.ListClusters(ctx, req)
-			return err
-		},
-		func(_ sdk.ZeroClient) error { return fmt.Errorf("clusters are not supported by zero") })
-	return res, err
-}
-
 func (c *Client) GetNamespacePermission(
 	ctx context.Context,
 	req *pb.GetNamespacePermissionRequest,
@@ -172,6 +205,22 @@ func (c *Client) GetNamespacePermission(
 	return res, err
 }
 
+func (c *Client) ListClusters(
+	ctx context.Context,
+	req *pb.ListClustersRequest,
+) (*pb.ListClustersResponse, error) {
+	var res *pb.ListClustersResponse
+	err := c.byProduct(ctx,
+		func() error { return fmt.Errorf("clusters are not supported by core") },
+		func(enterpriseClient *client.Client) error {
+			var err error
+			res, err = enterpriseClient.ClustersService.ListClusters(ctx, req)
+			return err
+		},
+		func(_ sdk.ZeroClient) error { return fmt.Errorf("clusters are not supported by zero") })
+	return res, err
+}
+
 func (c *Client) ListNamespaces(
 	ctx context.Context,
 	req *pb.ListNamespacesRequest,
@@ -185,6 +234,22 @@ func (c *Client) ListNamespaces(
 			return err
 		},
 		func(_ sdk.ZeroClient) error { return fmt.Errorf("namespaces are not supported by zero") })
+	return res, err
+}
+
+func (c *Client) SetExternalDataSource(
+	ctx context.Context,
+	req *pb.SetExternalDataSourceRequest,
+) (*pb.SetExternalDataSourceResponse, error) {
+	var res *pb.SetExternalDataSourceResponse
+	err := c.byProduct(ctx,
+		func() error { return fmt.Errorf("external data sources are not supported by core") },
+		func(enterpriseClient *client.Client) error {
+			var err error
+			res, err = enterpriseClient.ExternalDataSourceService.SetExternalDataSource(ctx, req)
+			return err
+		},
+		func(_ sdk.ZeroClient) error { return fmt.Errorf("external data sources are not supported by zero") })
 	return res, err
 }
 
@@ -217,6 +282,22 @@ func (c *Client) SetNamespacePermission(
 			return err
 		},
 		func(_ sdk.ZeroClient) error { return fmt.Errorf("namespace permissions are not supported by zero") })
+	return res, err
+}
+
+func (c *Client) UpdateCluster(
+	ctx context.Context,
+	req *pb.UpdateClusterRequest,
+) (*pb.UpdateClusterResponse, error) {
+	var res *pb.UpdateClusterResponse
+	err := c.byProduct(ctx,
+		func() error { return fmt.Errorf("clusters are not supported by core") },
+		func(enterpriseClient *client.Client) error {
+			var err error
+			res, err = enterpriseClient.ClustersService.UpdateCluster(ctx, req)
+			return err
+		},
+		func(_ sdk.ZeroClient) error { return fmt.Errorf("clusters are not supported by zero") })
 	return res, err
 }
 

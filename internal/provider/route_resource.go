@@ -2,8 +2,8 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
+	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -17,8 +17,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -33,7 +33,7 @@ func NewRouteResource() resource.Resource {
 
 // RouteResource defines the resource implementation.
 type RouteResource struct {
-	client *client.Client
+	client *Client
 }
 
 // RouteResourceModel describes the resource data model.
@@ -431,58 +431,43 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 }
 
 func (r *RouteResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-
-	c, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected Config, got: %T.", req.ProviderData),
-		)
-
-		return
-	}
-
-	r.client = c
+	r.client = ConfigureClient(req, resp)
 }
 
 func (r *RouteResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan RouteResourceModel
+	var state RouteResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	pbRoute, diags := ConvertRouteToPB(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	modelToCore := newModelToCoreConverter()
+	createReq := modelToCore.CreateRouteRequest(&state)
+	resp.Diagnostics.Append(modelToCore.diagnostics...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	respRoute, err := r.client.RouteService.SetRoute(ctx, &pb.SetRouteRequest{
-		Route: pbRoute,
-	})
+	createRes, err := r.client.shared.CreateRoute(ctx, createReq)
 	if err != nil {
 		resp.Diagnostics.AddError("set route", err.Error())
 		return
 	}
 
-	diags = ConvertRouteFromPB(&plan, respRoute.Route)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	coreToModel := newCoreToModelConverter()
+	state = *coreToModel.Route(createRes.Msg.GetRoute())
+	resp.Diagnostics.Append(coreToModel.diagnostics...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Trace(ctx, "Created a route", map[string]interface{}{
-		"id":   plan.ID.ValueString(),
-		"name": plan.Name.ValueString(),
+		"id":   state.ID.ValueString(),
+		"name": state.Name.ValueString(),
 	})
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *RouteResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -493,9 +478,9 @@ func (r *RouteResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	respRoute, err := r.client.RouteService.GetRoute(ctx, &pb.GetRouteRequest{
+	getRes, err := r.client.shared.GetRoute(ctx, connect.NewRequest(&pomerium.GetRouteRequest{
 		Id: state.ID.ValueString(),
-	})
+	}))
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			resp.State.RemoveResource(ctx)
@@ -505,9 +490,10 @@ func (r *RouteResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	diags := ConvertRouteFromPB(&state, respRoute.Route)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	coreToModel := newCoreToModelConverter()
+	state = *coreToModel.Route(getRes.Msg.GetRoute())
+	resp.Diagnostics.Append(coreToModel.diagnostics...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -515,34 +501,34 @@ func (r *RouteResource) Read(ctx context.Context, req resource.ReadRequest, resp
 }
 
 func (r *RouteResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan RouteResourceModel
+	var state RouteResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	pbRoute, diags := ConvertRouteToPB(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	modelToCore := newModelToCoreConverter()
+	updateReq := modelToCore.UpdateRouteRequest(&state)
+	resp.Diagnostics.Append(modelToCore.diagnostics...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	respRoute, err := r.client.RouteService.SetRoute(ctx, &pb.SetRouteRequest{
-		Route: pbRoute,
-	})
+	updateRes, err := r.client.shared.UpdateRoute(ctx, updateReq)
 	if err != nil {
 		resp.Diagnostics.AddError("set route", err.Error())
 		return
 	}
 
-	diags = ConvertRouteFromPB(&plan, respRoute.Route)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	coreToModel := newCoreToModelConverter()
+	state = *coreToModel.Route(updateRes.Msg.GetRoute())
+	resp.Diagnostics.Append(coreToModel.diagnostics...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *RouteResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -553,9 +539,9 @@ func (r *RouteResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	_, err := r.client.RouteService.DeleteRoute(ctx, &pb.DeleteRouteRequest{
+	_, err := r.client.shared.DeleteRoute(ctx, connect.NewRequest(&pomerium.DeleteRouteRequest{
 		Id: data.ID.ValueString(),
-	})
+	}))
 	if err != nil {
 		resp.Diagnostics.AddError("delete route", err.Error())
 		return

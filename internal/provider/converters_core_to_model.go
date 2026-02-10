@@ -25,6 +25,39 @@ func newCoreToModelConverter() *coreToModelConverter {
 	}
 }
 
+func (c *coreToModelConverter) BearerTokenFormat(src *pomerium.BearerTokenFormat) types.String {
+	if src == nil {
+		return types.StringNull()
+	}
+	switch *src {
+	case pomerium.BearerTokenFormat_BEARER_TOKEN_FORMAT_DEFAULT:
+		return types.StringValue("default")
+	case pomerium.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_ACCESS_TOKEN:
+		return types.StringValue("idp_access_token")
+	case pomerium.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_IDENTITY_TOKEN:
+		return types.StringValue("idp_identity_token")
+	case pomerium.BearerTokenFormat_BEARER_TOKEN_FORMAT_UNKNOWN:
+		fallthrough
+	default:
+		return types.StringValue("")
+	}
+}
+
+func (c *coreToModelConverter) CircuitBreakerThresholds(src *pomerium.CircuitBreakerThresholds) types.Object {
+	if src == nil {
+		return types.ObjectNull(CircuitBreakerThresholdsAttributes)
+	}
+	dst, d := types.ObjectValue(CircuitBreakerThresholdsAttributes, map[string]attr.Value{
+		"max_connections":      Int64PointerValue(src.MaxConnections),
+		"max_pending_requests": Int64PointerValue(src.MaxPendingRequests),
+		"max_requests":         Int64PointerValue(src.MaxRequests),
+		"max_retries":          Int64PointerValue(src.MaxRetries),
+		"max_connection_pools": Int64PointerValue(src.MaxConnectionPools),
+	})
+	c.diagnostics.Append(d...)
+	return dst
+}
+
 func (c *coreToModelConverter) Duration(src *durationpb.Duration) timetypes.GoDuration {
 	if src == nil {
 		return timetypes.NewGoDurationNull()
@@ -32,11 +65,166 @@ func (c *coreToModelConverter) Duration(src *durationpb.Duration) timetypes.GoDu
 	return timetypes.NewGoDurationValue(src.AsDuration())
 }
 
+func (c *coreToModelConverter) GRPCHealthCheck(src *pomerium.HealthCheck_GrpcHealthCheck) types.Object {
+	if src == nil {
+		return types.ObjectNull(GrpcHealthCheckObjectType().AttrTypes)
+	}
+	dst, d := types.ObjectValue(GrpcHealthCheckObjectType().AttrTypes, map[string]attr.Value{
+		"authority":    types.StringValue(src.Authority),
+		"service_name": types.StringValue(src.ServiceName),
+	})
+	c.diagnostics.Append(d...)
+	return dst
+}
+
+func (c *coreToModelConverter) HealthCheck(src *pomerium.HealthCheck) types.Object {
+	if src == nil {
+		return types.ObjectNull(HealthCheckObjectType().AttrTypes)
+	}
+	dst, d := types.ObjectValue(HealthCheckObjectType().AttrTypes, map[string]attr.Value{
+		"grpc_health_check":       c.GRPCHealthCheck(src.GetGrpcHealthCheck()),
+		"healthy_threshold":       UInt32ToInt64OrNull(src.HealthyThreshold.GetValue()),
+		"http_health_check":       c.HTTPHealthCheck(src.GetHttpHealthCheck()),
+		"initial_jitter":          c.Duration(src.InitialJitter),
+		"interval_jitter_percent": UInt32ToInt64OrNull(src.IntervalJitterPercent),
+		"interval_jitter":         c.Duration(src.IntervalJitter),
+		"interval":                c.Duration(src.Interval),
+		"tcp_health_check":        c.TCPHealthCheck(src.GetTcpHealthCheck()),
+		"timeout":                 c.Duration(src.Timeout),
+		"unhealthy_threshold":     UInt32ToInt64OrNull(src.UnhealthyThreshold.GetValue()),
+	})
+	c.diagnostics.Append(d...)
+	return dst
+}
+
+func (c *coreToModelConverter) HealthCheckPayload(src *pomerium.HealthCheck_Payload) types.Object {
+	if src == nil {
+		return types.ObjectNull(HealthCheckPayloadObjectType().AttrTypes)
+	}
+	dst, d := types.ObjectValue(HealthCheckPayloadObjectType().AttrTypes, map[string]attr.Value{
+		"binary_b64": c.HealthCheckPayloadBinary(src),
+		"text":       c.HealthCheckPayloadText(src),
+	})
+	c.diagnostics.Append(d...)
+	return dst
+}
+
+func (c *coreToModelConverter) HealthCheckPayloadBinary(src *pomerium.HealthCheck_Payload) types.String {
+	if src == nil {
+		return types.StringNull()
+	}
+
+	payload, ok := src.Payload.(*pomerium.HealthCheck_Payload_Binary)
+	if !ok {
+		return types.StringNull()
+	}
+
+	return types.StringValue(base64.StdEncoding.EncodeToString(payload.Binary))
+}
+
+func (c *coreToModelConverter) HealthCheckPayloadText(src *pomerium.HealthCheck_Payload) types.String {
+	if src == nil {
+		return types.StringNull()
+	}
+
+	payload, ok := src.Payload.(*pomerium.HealthCheck_Payload_Text)
+	if !ok {
+		return types.StringNull()
+	}
+
+	return types.StringValue(payload.Text)
+}
+
+func (c *coreToModelConverter) HealthCheckPayloads(srcs []*pomerium.HealthCheck_Payload) types.Set {
+	return buildSetOfObjects(&c.diagnostics, HealthCheckPayloadObjectType(), srcs, c.HealthCheckPayload)
+}
+
+func (c *coreToModelConverter) HealthChecks(srcs []*pomerium.HealthCheck) types.Set {
+	return buildSetOfObjects(&c.diagnostics, HealthCheckObjectType(), srcs, c.HealthCheck)
+}
+
+func (c *coreToModelConverter) HTTPHealthCheck(src *pomerium.HealthCheck_HttpHealthCheck) types.Object {
+	if src == nil {
+		return types.ObjectNull(HTTPHealthCheckObjectType().AttrTypes)
+	}
+	dst, d := types.ObjectValue(HTTPHealthCheckObjectType().AttrTypes, map[string]attr.Value{
+		"codec_client_type":  types.StringValue(src.CodecClientType.String()),
+		"expected_statuses":  c.Int64Ranges(src.ExpectedStatuses),
+		"host":               types.StringValue(src.Host),
+		"path":               types.StringValue(src.Path),
+		"retriable_statuses": c.Int64Ranges(src.RetriableStatuses),
+	})
+	c.diagnostics.Append(d...)
+	return dst
+}
+
+func (c *coreToModelConverter) Int64Range(src *pomerium.HealthCheck_Int64Range) types.Object {
+	if src == nil {
+		return types.ObjectNull(Int64RangeObjectType().AttrTypes)
+	}
+	dst, d := types.ObjectValue(Int64RangeObjectType().AttrTypes, map[string]attr.Value{
+		"end":   types.Int64Value(src.End),
+		"start": types.Int64Value(src.Start),
+	})
+	c.diagnostics.Append(d...)
+	return dst
+}
+
+func (c *coreToModelConverter) Int64Ranges(srcs []*pomerium.HealthCheck_Int64Range) types.Set {
+	return buildSetOfObjects(&c.diagnostics, Int64RangeObjectType(), srcs, c.Int64Range)
+}
+
+func (c *coreToModelConverter) IssuerFormat(src *pomerium.IssuerFormat) types.String {
+	if src == nil {
+		return types.StringNull()
+	}
+	switch *src {
+	case pomerium.IssuerFormat_IssuerHostOnly:
+		return types.StringValue("IssuerHostOnly")
+	case pomerium.IssuerFormat_IssuerURI:
+		return types.StringValue("IssuerUri")
+	default:
+		return types.StringUnknown()
+	}
+}
+
+func (c *coreToModelConverter) JWTGroupsFilter(src *pomerium.Route) types.Object {
+	if src == nil {
+		return types.ObjectNull(JWTGroupsFilterType.AttrTypes)
+	}
+	dst, d := types.ObjectValue(JWTGroupsFilterType.AttrTypes, map[string]attr.Value{
+		"groups":         buildSetOfStrings(src.JwtGroupsFilter),
+		"infer_from_ppl": types.BoolPointerValue(src.JwtGroupsFilterInferFromPpl),
+	})
+	c.diagnostics.Append(d...)
+	return dst
+}
+
+func (c *coreToModelConverter) KeyPair(src *pomerium.KeyPair) *KeyPairResourceModel {
+	if src == nil {
+		return nil
+	}
+	return &KeyPairResourceModel{
+		Certificate: types.StringValue(string(src.Certificate)),
+		ID:          types.StringPointerValue(src.Id),
+		Key:         types.StringValue(string(src.Key)),
+		Name:        types.StringPointerValue(src.Name),
+		NamespaceID: types.StringPointerValue(src.NamespaceId),
+	}
+}
+
+func (c *coreToModelConverter) LoadBalancingPolicy(src *pomerium.LoadBalancingPolicy) types.String {
+	if src == nil {
+		return types.StringNull()
+	}
+	return types.StringValue(src.String())
+}
+
 func (c *coreToModelConverter) Policy(src *pomerium.Policy) *PolicyResourceModel {
 	if src == nil {
 		return nil
 	}
-	ppl, err := PolicyLanguageType{}.Parse(types.StringPointerValue(src.SourcePpl))
+	ppl, err := new(PolicyLanguageType).Parse(types.StringPointerValue(src.SourcePpl))
 	if err != nil {
 		c.diagnostics.AddError("error parsing ppl", err.Error())
 	}
@@ -109,181 +297,6 @@ func (c *coreToModelConverter) Route(src *pomerium.Route) *RouteResourceModel {
 	}
 }
 
-func (c *coreToModelConverter) BearerTokenFormat(src *pomerium.BearerTokenFormat) types.String {
-	if src == nil {
-		return types.StringNull()
-	}
-	switch *src {
-	case pomerium.BearerTokenFormat_BEARER_TOKEN_FORMAT_DEFAULT:
-		return types.StringValue("default")
-	case pomerium.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_ACCESS_TOKEN:
-		return types.StringValue("idp_access_token")
-	case pomerium.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_IDENTITY_TOKEN:
-		return types.StringValue("idp_identity_token")
-	case pomerium.BearerTokenFormat_BEARER_TOKEN_FORMAT_UNKNOWN:
-		fallthrough
-	default:
-		return types.StringValue("")
-	}
-}
-
-func (c *coreToModelConverter) CircuitBreakerThresholds(src *pomerium.CircuitBreakerThresholds) types.Object {
-	if src == nil {
-		return types.ObjectNull(CircuitBreakerThresholdsAttributes)
-	}
-	dst, d := types.ObjectValue(CircuitBreakerThresholdsAttributes, map[string]attr.Value{
-		"max_connections":      Int64PointerValue(src.MaxConnections),
-		"max_pending_requests": Int64PointerValue(src.MaxPendingRequests),
-		"max_requests":         Int64PointerValue(src.MaxRequests),
-		"max_retries":          Int64PointerValue(src.MaxRetries),
-		"max_connection_pools": Int64PointerValue(src.MaxConnectionPools),
-	})
-	c.diagnostics.Append(d...)
-	return dst
-}
-
-func (c *coreToModelConverter) GRPCHealthCheck(src *pomerium.HealthCheck_GrpcHealthCheck) types.Object {
-	if src == nil {
-		return types.ObjectNull(GrpcHealthCheckObjectType().AttrTypes)
-	}
-	dst, d := types.ObjectValue(GrpcHealthCheckObjectType().AttrTypes, map[string]attr.Value{
-		"authority":    types.StringValue(src.Authority),
-		"service_name": types.StringValue(src.ServiceName),
-	})
-	c.diagnostics.Append(d...)
-	return dst
-}
-
-func (c *coreToModelConverter) HealthCheck(src *pomerium.HealthCheck) types.Object {
-	if src == nil {
-		return types.ObjectNull(HealthCheckObjectType().AttrTypes)
-	}
-	dst, d := types.ObjectValue(HealthCheckObjectType().AttrTypes, map[string]attr.Value{
-		"grpc_health_check":       c.GRPCHealthCheck(src.GetGrpcHealthCheck()),
-		"healthy_threshold":       UInt32ToInt64OrNull(src.HealthyThreshold.GetValue()),
-		"http_health_check":       c.HTTPHealthCheck(src.GetHttpHealthCheck()),
-		"initial_jitter":          c.Duration(src.InitialJitter),
-		"interval_jitter_percent": UInt32ToInt64OrNull(src.IntervalJitterPercent),
-		"interval_jitter":         c.Duration(src.IntervalJitter),
-		"interval":                c.Duration(src.Interval),
-		"tcp_health_check":        c.TCPHealthCheck(src.GetTcpHealthCheck()),
-		"timeout":                 c.Duration(src.Timeout),
-		"unhealthy_threshold":     UInt32ToInt64OrNull(src.UnhealthyThreshold.GetValue()),
-	})
-	c.diagnostics.Append(d...)
-	return dst
-}
-
-func (c *coreToModelConverter) HealthCheckPayload(src *pomerium.HealthCheck_Payload) types.Object {
-	if src == nil {
-		return types.ObjectNull(HealthCheckPayloadObjectType().AttrTypes)
-	}
-	dst, d := types.ObjectValue(HealthCheckPayloadObjectType().AttrTypes, map[string]attr.Value{
-		"binary_b64": c.HealthCheckPayloadBinary(src),
-		"text":       c.HealthCheckPayloadText(src),
-	})
-	c.diagnostics.Append(d...)
-	return dst
-}
-
-func (c *coreToModelConverter) HealthCheckPayloads(srcs []*pomerium.HealthCheck_Payload) types.Set {
-	return buildSetOfObjects(&c.diagnostics, HealthCheckPayloadObjectType(), srcs, c.HealthCheckPayload)
-}
-
-func (c *coreToModelConverter) HealthCheckPayloadBinary(src *pomerium.HealthCheck_Payload) types.String {
-	if src == nil {
-		return types.StringNull()
-	}
-
-	payload, ok := src.Payload.(*pomerium.HealthCheck_Payload_Binary)
-	if !ok {
-		return types.StringNull()
-	}
-
-	return types.StringValue(base64.StdEncoding.EncodeToString(payload.Binary))
-}
-
-func (c *coreToModelConverter) HealthCheckPayloadText(src *pomerium.HealthCheck_Payload) types.String {
-	if src == nil {
-		return types.StringNull()
-	}
-
-	payload, ok := src.Payload.(*pomerium.HealthCheck_Payload_Text)
-	if !ok {
-		return types.StringNull()
-	}
-
-	return types.StringValue(payload.Text)
-}
-
-func (c *coreToModelConverter) HealthChecks(srcs []*pomerium.HealthCheck) types.Set {
-	return buildSetOfObjects(&c.diagnostics, HealthCheckObjectType(), srcs, c.HealthCheck)
-}
-
-func (c *coreToModelConverter) HTTPHealthCheck(src *pomerium.HealthCheck_HttpHealthCheck) types.Object {
-	if src == nil {
-		return types.ObjectNull(HTTPHealthCheckObjectType().AttrTypes)
-	}
-	dst, d := types.ObjectValue(HTTPHealthCheckObjectType().AttrTypes, map[string]attr.Value{
-		"codec_client_type":  types.StringValue(src.CodecClientType.String()),
-		"expected_statuses":  c.Int64Ranges(src.ExpectedStatuses),
-		"host":               types.StringValue(src.Host),
-		"path":               types.StringValue(src.Path),
-		"retriable_statuses": c.Int64Ranges(src.RetriableStatuses),
-	})
-	c.diagnostics.Append(d...)
-	return dst
-}
-
-func (c *coreToModelConverter) Int64Range(src *pomerium.HealthCheck_Int64Range) types.Object {
-	if src == nil {
-		return types.ObjectNull(Int64RangeObjectType().AttrTypes)
-	}
-	dst, d := types.ObjectValue(Int64RangeObjectType().AttrTypes, map[string]attr.Value{
-		"end":   types.Int64Value(src.End),
-		"start": types.Int64Value(src.Start),
-	})
-	c.diagnostics.Append(d...)
-	return dst
-}
-
-func (c *coreToModelConverter) Int64Ranges(srcs []*pomerium.HealthCheck_Int64Range) types.Set {
-	return buildSetOfObjects(&c.diagnostics, Int64RangeObjectType(), srcs, c.Int64Range)
-}
-
-func (c *coreToModelConverter) IssuerFormat(src *pomerium.IssuerFormat) types.String {
-	if src == nil {
-		return types.StringNull()
-	}
-	switch *src {
-	case pomerium.IssuerFormat_IssuerHostOnly:
-		return types.StringValue("IssuerHostOnly")
-	case pomerium.IssuerFormat_IssuerURI:
-		return types.StringValue("IssuerUri")
-	default:
-		return types.StringUnknown()
-	}
-}
-
-func (c *coreToModelConverter) JWTGroupsFilter(src *pomerium.Route) types.Object {
-	if src == nil {
-		return types.ObjectNull(JWTGroupsFilterType.AttrTypes)
-	}
-	dst, d := types.ObjectValue(JWTGroupsFilterType.AttrTypes, map[string]attr.Value{
-		"groups":         buildSetOfStrings(src.JwtGroupsFilter),
-		"infer_from_ppl": types.BoolPointerValue(src.JwtGroupsFilterInferFromPpl),
-	})
-	c.diagnostics.Append(d...)
-	return dst
-}
-
-func (c *coreToModelConverter) LoadBalancingPolicy(src *pomerium.LoadBalancingPolicy) types.String {
-	if src == nil {
-		return types.StringNull()
-	}
-	return types.StringValue(src.String())
-}
-
 func (c *coreToModelConverter) RouteRewriteHeader(src *pomerium.RouteRewriteHeader) types.Object {
 	if src == nil {
 		return types.ObjectNull(RewriteHeaderObjectType().AttrTypes)
@@ -315,11 +328,16 @@ func (c *coreToModelConverter) ServiceAccount(src *pomerium.ServiceAccount) *Ser
 	}
 }
 
-func (c *coreToModelConverter) Timestamp(src *timestamppb.Timestamp) types.String {
-	if src == nil || src.AsTime().IsZero() {
-		return types.StringNull()
+func (c *coreToModelConverter) Settings(src *pomerium.Settings) *SettingsModel {
+	if src == nil {
+		return nil
 	}
-	return types.StringValue(src.AsTime().Format(time.RFC3339))
+	return &SettingsModel{
+		AccessLogFields:        buildSetOfStrings(src.GetAccessLogFields().GetValues()),
+		Address:                types.StringPointerValue(src.Address),
+		AuthenticateServiceURL: types.StringPointerValue(src.AuthenticateServiceUrl),
+		AuthorizeLogFields:     buildSetOfStrings(src.GetAuthorizeLogFields().GetValues()),
+	}
 }
 
 func (c *coreToModelConverter) TCPHealthCheck(src *pomerium.HealthCheck_TcpHealthCheck) types.Object {
@@ -332,4 +350,11 @@ func (c *coreToModelConverter) TCPHealthCheck(src *pomerium.HealthCheck_TcpHealt
 	})
 	c.diagnostics.Append(d...)
 	return dst
+}
+
+func (c *coreToModelConverter) Timestamp(src *timestamppb.Timestamp) types.String {
+	if src == nil || src.AsTime().IsZero() {
+		return types.StringNull()
+	}
+	return types.StringValue(src.AsTime().Format(time.RFC3339))
 }

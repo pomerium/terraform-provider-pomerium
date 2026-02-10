@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
 	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -75,20 +74,7 @@ func (d *ServiceAccountsDataSource) Schema(_ context.Context, _ datasource.Schem
 }
 
 func (d *ServiceAccountsDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-
-	client, ok := req.ProviderData.(*Client)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *Client, got: %T.", req.ProviderData),
-		)
-		return
-	}
-
-	d.client = client
+	d.client = ConfigureClient(req, resp)
 }
 
 func (d *ServiceAccountsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {

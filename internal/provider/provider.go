@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	_ "embed" // embed is used to embed the provider description
-	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -92,12 +91,6 @@ func (p *PomeriumProvider) Configure(ctx context.Context, req provider.Configure
 		return
 	}
 
-	apiURL, err := url.Parse(data.APIURL.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError("failed to parse api_url", err.Error())
-		return
-	}
-
 	tlsConfig := &tls.Config{InsecureSkipVerify: data.TLSInsecureSkipVerify.ValueBool()}
 	var token string
 	if !data.ServiceAccountToken.IsNull() {
@@ -107,9 +100,9 @@ func (p *PomeriumProvider) Configure(ctx context.Context, req provider.Configure
 			return
 		}
 	} else if !data.SharedSecretB64.IsNull() {
-		token, err = GenerateBootstrapServiceAccountToken(data.SharedSecretB64.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError("failed to decode shared_secret_b64", err.Error())
+		token = data.SharedSecretB64.ValueString()
+		if token == "" {
+			resp.Diagnostics.AddError("shared_secret_b64 is empty", "shared_secret_b64 is empty")
 			return
 		}
 	} else {
@@ -117,15 +110,16 @@ func (p *PomeriumProvider) Configure(ctx context.Context, req provider.Configure
 		return
 	}
 
-	resp.ResourceData = NewClient(apiURL.String(), token, tlsConfig)
-	resp.DataSourceData = resp.ResourceData
+	c := NewClient(data.APIURL.ValueString(), token, tlsConfig)
+	resp.ResourceData = c
+	resp.DataSourceData = c
 }
 
 func (p *PomeriumProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewClusterResource,
 		NewExternalDataSourceResource,
-		NewKeyChainResource,
+		NewKeyPairResource,
 		NewNamespacePermissionResource,
 		NewNamespaceResource,
 		NewPolicyResource,

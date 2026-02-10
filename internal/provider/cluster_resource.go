@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -13,7 +12,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -21,7 +19,7 @@ type ClusterResourceModel = ClusterModel
 
 // A ClusterResource manages clusters.
 type ClusterResource struct {
-	client *client.Client
+	client *Client
 }
 
 // NewClusterResource creates a new clusters resource.
@@ -93,20 +91,7 @@ func (r *ClusterResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 }
 
 func (r *ClusterResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-
-	c, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Provider Data Type",
-			fmt.Sprintf("Expected *client.Client, got: %T.", req.ProviderData),
-		)
-		return
-	}
-
-	r.client = c
+	r.client = ConfigureClient(req, resp)
 }
 
 func (r *ClusterResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -124,7 +109,7 @@ func (r *ClusterResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	respCluster, err := r.client.ClustersService.AddCluster(ctx, &pb.AddClusterRequest{
+	respCluster, err := r.client.AddCluster(ctx, &pb.AddClusterRequest{
 		ParentNamespaceId: plan.ParentNamespaceID.ValueString(),
 		Cluster:           pbCluster,
 	})
@@ -153,7 +138,7 @@ func (r *ClusterResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	respCluster, err := r.client.ClustersService.GetCluster(ctx, &pb.GetClusterRequest{
+	respCluster, err := r.client.GetCluster(ctx, &pb.GetClusterRequest{
 		Id: state.ID.ValueString(),
 	})
 	if err != nil {
@@ -190,7 +175,7 @@ func (r *ClusterResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	respCluster, err := r.client.ClustersService.UpdateCluster(ctx, &pb.UpdateClusterRequest{
+	respCluster, err := r.client.UpdateCluster(ctx, &pb.UpdateClusterRequest{
 		Cluster: pbCluster,
 	})
 	if err != nil {
@@ -216,7 +201,7 @@ func (r *ClusterResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	_, err := r.client.ClustersService.DeleteCluster(ctx, &pb.DeleteClusterRequest{
+	_, err := r.client.DeleteCluster(ctx, &pb.DeleteClusterRequest{
 		Id: state.ID.ValueString(),
 	})
 	if err != nil {

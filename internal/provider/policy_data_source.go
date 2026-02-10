@@ -2,14 +2,13 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
+	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	client "github.com/pomerium/enterprise-client-go"
-	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 var _ datasource.DataSource = &PolicyDataSource{}
@@ -19,7 +18,7 @@ func NewPolicyDataSource() datasource.DataSource {
 }
 
 type PolicyDataSource struct {
-	client *client.Client
+	client *Client
 }
 
 func (d *PolicyDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -73,20 +72,7 @@ func (d *PolicyDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 }
 
 func (d *PolicyDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-
-	client, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T.", req.ProviderData),
-		)
-		return
-	}
-
-	d.client = client
+	d.client = ConfigureClient(req, resp)
 }
 
 func (d *PolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -97,21 +83,20 @@ func (d *PolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	policyResp, err := d.client.PolicyService.GetPolicy(ctx, &pb.GetPolicyRequest{
+	getRes, err := d.client.shared.GetPolicy(ctx, connect.NewRequest(&pomerium.GetPolicyRequest{
 		Id: data.ID.ValueString(),
-	})
+	}))
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading policy", err.Error())
 		return
 	}
 
-	var out PolicyModel
-
-	diags := ConvertPolicyFromPB(&out, policyResp.Policy)
-	resp.Diagnostics.Append(diags...)
+	coreToModel := newCoreToModelConverter()
+	data = *coreToModel.Policy(getRes.Msg.GetPolicy())
+	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &out)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

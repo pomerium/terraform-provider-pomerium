@@ -2,8 +2,8 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
+	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -16,8 +16,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	client "github.com/pomerium/enterprise-client-go"
-	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 // Ensure provider-defined types fully satisfy framework interfaces.
@@ -34,7 +33,7 @@ func NewPolicyResource() resource.Resource {
 
 // PolicyResource defines the resource implementation.
 type PolicyResource struct {
-	client *client.Client
+	client *Client
 }
 
 // PolicyResourceModel describes the resource data model.
@@ -102,52 +101,43 @@ func (r *PolicyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 }
 
 func (r *PolicyResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-
-	c, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Provider Data Type",
-			fmt.Sprintf("Expected *client.Client, got: %T.", req.ProviderData),
-		)
-		return
-	}
-
-	r.client = c
+	r.client = ConfigureClient(req, resp)
 }
 
 func (r *PolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan PolicyResourceModel
+	var state PolicyResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	pbPolicy, diags := ConvertPolicyToPB(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+	modelToCore := newModelToCoreConverter()
+	createReq := modelToCore.CreatePolicyRequest(&state)
+	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	respPolicy, err := r.client.PolicyService.SetPolicy(ctx, &pb.SetPolicyRequest{
-		Policy: pbPolicy,
-	})
+	createRes, err := r.client.shared.CreatePolicy(ctx, createReq)
 	if err != nil {
 		resp.Diagnostics.AddError("Error creating policy", err.Error())
 		return
 	}
 
-	plan.ID = types.StringValue(respPolicy.Policy.Id)
+	coreToModel := newCoreToModelConverter()
+	state = *coreToModel.Policy(createRes.Msg.GetPolicy())
+	resp.Diagnostics.Append(coreToModel.diagnostics...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	tflog.Trace(ctx, "Created a policy", map[string]interface{}{
-		"id":   plan.ID.ValueString(),
-		"name": plan.Name.ValueString(),
+		"id":   state.ID.ValueString(),
+		"name": state.Name.ValueString(),
 	})
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *PolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -158,9 +148,9 @@ func (r *PolicyResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	respPolicy, err := r.client.PolicyService.GetPolicy(ctx, &pb.GetPolicyRequest{
+	getRes, err := r.client.shared.GetPolicy(ctx, connect.NewRequest(&pomerium.GetPolicyRequest{
 		Id: state.ID.ValueString(),
-	})
+	}))
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
 			resp.State.RemoveResource(ctx)
@@ -170,8 +160,9 @@ func (r *PolicyResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	diags := ConvertPolicyFromPB(&state, respPolicy.Policy)
-	resp.Diagnostics.Append(diags...)
+	coreToModel := newCoreToModelConverter()
+	state = *coreToModel.Policy(getRes.Msg.GetPolicy())
+	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -180,28 +171,34 @@ func (r *PolicyResource) Read(ctx context.Context, req resource.ReadRequest, res
 }
 
 func (r *PolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan PolicyResourceModel
+	var state PolicyResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	pbPolicy, diags := ConvertPolicyToPB(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+	modelToCore := newModelToCoreConverter()
+	updateReq := modelToCore.UpdatePolicyRequest(&state)
+	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	_, err := r.client.PolicyService.SetPolicy(ctx, &pb.SetPolicyRequest{
-		Policy: pbPolicy,
-	})
+	updateRes, err := r.client.shared.UpdatePolicy(ctx, updateReq)
 	if err != nil {
 		resp.Diagnostics.AddError("Error updating policy", err.Error())
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	coreToModel := newCoreToModelConverter()
+	state = *coreToModel.Policy(updateRes.Msg.GetPolicy())
+	resp.Diagnostics.Append(coreToModel.diagnostics...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *PolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -212,9 +209,9 @@ func (r *PolicyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	_, err := r.client.PolicyService.DeletePolicy(ctx, &pb.DeletePolicyRequest{
+	_, err := r.client.shared.DeletePolicy(ctx, connect.NewRequest(&pomerium.DeletePolicyRequest{
 		Id: state.ID.ValueString(),
-	})
+	}))
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting policy", err.Error())
 		return

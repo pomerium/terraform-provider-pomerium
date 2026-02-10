@@ -5,21 +5,21 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	client "github.com/pomerium/enterprise-client-go"
-	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
 )
 
 func TestConfigureClient(t *testing.T) {
 	t.Parallel()
 
-	mockClient := &client.Client{}
+	mockClient := &provider.Client{}
 
 	tests := []struct {
 		name           string
 		req            any
 		resp           any
-		expectedClient *client.Client
+		expectedClient *provider.Client
 		expectError    bool
 	}{
 		{

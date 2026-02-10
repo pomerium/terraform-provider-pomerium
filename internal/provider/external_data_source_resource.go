@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -15,7 +14,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -30,7 +28,7 @@ func NewExternalDataSourceResource() resource.Resource {
 
 // ExternalDataSourceResource defines the resource implementation.
 type ExternalDataSourceResource struct {
-	client *client.Client
+	client *Client
 }
 
 // ExternalDataSourceResourceModel describes the resource data model.
@@ -95,21 +93,7 @@ func (r *ExternalDataSourceResource) Schema(_ context.Context, _ resource.Schema
 }
 
 func (r *ExternalDataSourceResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-
-	c, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Resource Configure Type",
-			fmt.Sprintf("Expected Config, got: %T.", req.ProviderData),
-		)
-
-		return
-	}
-
-	r.client = c
+	r.client = ConfigureClient(req, resp)
 }
 
 func (r *ExternalDataSourceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -127,7 +111,7 @@ func (r *ExternalDataSourceResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	respExternalDataSource, err := r.client.ExternalDataSourceService.SetExternalDataSource(ctx, &pb.SetExternalDataSourceRequest{
+	respExternalDataSource, err := r.client.SetExternalDataSource(ctx, &pb.SetExternalDataSourceRequest{
 		ExternalDataSource: pbExternalDataSource,
 	})
 	if err != nil {
@@ -156,7 +140,7 @@ func (r *ExternalDataSourceResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	respExternalDataSource, err := r.client.ExternalDataSourceService.GetExternalDataSource(ctx, &pb.GetExternalDataSourceRequest{
+	respExternalDataSource, err := r.client.GetExternalDataSource(ctx, &pb.GetExternalDataSourceRequest{
 		Id: state.ID.ValueString(),
 	})
 	if err != nil {
@@ -191,7 +175,7 @@ func (r *ExternalDataSourceResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	respExternalDataSource, err := r.client.ExternalDataSourceService.SetExternalDataSource(ctx, &pb.SetExternalDataSourceRequest{
+	respExternalDataSource, err := r.client.SetExternalDataSource(ctx, &pb.SetExternalDataSourceRequest{
 		ExternalDataSource: pbExternalDataSource,
 	})
 	if err != nil {
@@ -216,7 +200,7 @@ func (r *ExternalDataSourceResource) Delete(ctx context.Context, req resource.De
 		return
 	}
 
-	_, err := r.client.ExternalDataSourceService.DeleteExternalDataSource(ctx, &pb.DeleteExternalDataSourceRequest{
+	_, err := r.client.DeleteExternalDataSource(ctx, &pb.DeleteExternalDataSourceRequest{
 		Id: data.ID.ValueString(),
 	})
 	if err != nil {
