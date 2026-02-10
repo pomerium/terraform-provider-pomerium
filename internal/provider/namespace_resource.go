@@ -12,7 +12,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -29,7 +28,7 @@ func NewNamespaceResource() resource.Resource {
 
 // NamespaceResource defines the resource implementation.
 type NamespaceResource struct {
-	client *client.Client
+	client *Client
 }
 
 // NamespaceResourceModel describes the resource data model.

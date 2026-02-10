@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -18,7 +17,7 @@ func NewNamespacesDataSource() datasource.DataSource {
 }
 
 type NamespacesDataSource struct {
-	client *client.Client
+	client *Client
 }
 
 type NamespacesDataSourceModel struct {

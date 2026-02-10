@@ -12,10 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	client "github.com/pomerium/enterprise-client-go"
-	"github.com/pomerium/enterprise-client-go/pb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/pomerium/enterprise-client-go/pb"
 )
 
 //go:embed help/namespace_permissions.md
@@ -26,7 +26,7 @@ func NewNamespacePermissionResource() resource.Resource {
 }
 
 type NamespacePermissionResource struct {
-	client *client.Client
+	client *Client
 }
 
 func (r *NamespacePermissionResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

@@ -8,11 +8,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	client "github.com/pomerium/enterprise-client-go"
 )
 
 // ConfigureClient is a helper to configure resources and data sources with the API client
-func ConfigureClient(req any, resp any) *client.Client {
+func ConfigureClient(req any, resp any) *Client {
 	var providerData any
 	switch r := req.(type) {
 	case datasource.ConfigureRequest:
@@ -37,11 +36,11 @@ func ConfigureClient(req any, resp any) *client.Client {
 		return nil
 	}
 
-	client, ok := providerData.(*client.Client)
+	client, ok := providerData.(*Client)
 	if !ok {
 		diag.AddError(
 			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T.", providerData),
+			fmt.Sprintf("Expected *Client, got: %T.", providerData),
 		)
 		return nil
 	}

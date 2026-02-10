@@ -4,8 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	_ "embed" // embed is used to embed the provider description
-	"net"
-	"net/url"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -16,8 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
-	client "github.com/pomerium/enterprise-client-go"
 )
 
 var (
@@ -95,22 +91,9 @@ func (p *PomeriumProvider) Configure(ctx context.Context, req provider.Configure
 		return
 	}
 
-	apiURL, err := url.Parse(data.APIURL.ValueString())
-	if err != nil {
-		resp.Diagnostics.AddError("failed to parse api_url", err.Error())
-		return
-	}
-	host, port := apiURL.Hostname(), apiURL.Port()
-	if host == "" {
-		resp.Diagnostics.AddError("api_url is missing hostname", "api_url is missing hostname")
-		return
-	}
-	if port == "" {
-		port = "443"
-	}
-
 	tlsConfig := &tls.Config{InsecureSkipVerify: data.TLSInsecureSkipVerify.ValueBool()}
 	var token string
+	var err error
 	if !data.ServiceAccountToken.IsNull() {
 		token = data.ServiceAccountToken.ValueString()
 		if token == "" {
@@ -127,7 +110,8 @@ func (p *PomeriumProvider) Configure(ctx context.Context, req provider.Configure
 		resp.Diagnostics.AddError("service_account_token or shared_secret_b64 is required", "service_account_token or shared_secret_b64 is required")
 		return
 	}
-	c, err := client.NewClient(ctx, net.JoinHostPort(host, port), token, client.WithTlsConfig(tlsConfig))
+
+	c, err := NewClient(data.APIURL.ValueString(), token, tlsConfig)
 	if err != nil {
 		resp.Diagnostics.AddError("failed to create Pomerium Enterprise API client", err.Error())
 		return
@@ -140,14 +124,14 @@ func (p *PomeriumProvider) Configure(ctx context.Context, req provider.Configure
 func (p *PomeriumProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewClusterResource,
-		NewNamespaceResource,
-		NewNamespacePermissionResource,
-		NewRouteResource,
-		NewPolicyResource,
-		NewSettingsResource,
-		NewServiceAccountResource,
-		NewKeyChainResource,
 		NewExternalDataSourceResource,
+		NewKeyPairResource,
+		NewNamespacePermissionResource,
+		NewNamespaceResource,
+		NewPolicyResource,
+		NewRouteResource,
+		NewServiceAccountResource,
+		NewSettingsResource,
 	}
 }
 
@@ -155,15 +139,15 @@ func (p *PomeriumProvider) DataSources(_ context.Context) []func() datasource.Da
 	return []func() datasource.DataSource{
 		NewClusterDataSource,
 		NewClustersDataSource,
-		NewServiceAccountDataSource,
-		NewServiceAccountsDataSource,
-		NewRouteDataSource,
-		NewRoutesDataSource,
+		NewExternalDataSourceDataSource,
 		NewNamespaceDataSource,
 		NewNamespacesDataSource,
-		NewPolicyDataSource,
 		NewPoliciesDataSource,
-		NewExternalDataSourceDataSource,
+		NewPolicyDataSource,
+		NewRouteDataSource,
+		NewRoutesDataSource,
+		NewServiceAccountDataSource,
+		NewServiceAccountsDataSource,
 	}
 }
 

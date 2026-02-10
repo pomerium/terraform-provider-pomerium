@@ -11,7 +11,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -26,7 +25,7 @@ func NewExternalDataSourceDataSource() datasource.DataSource {
 
 // ExternalDataSourceDataSource defines the data source implementation.
 type ExternalDataSourceDataSource struct {
-	client *client.Client
+	client *Client
 }
 
 // ExternalDataSourceDataSourceModel describes the data source data model.
@@ -88,21 +87,7 @@ func (d *ExternalDataSourceDataSource) Schema(_ context.Context, _ datasource.Sc
 }
 
 func (d *ExternalDataSourceDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-
-	c, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T.", req.ProviderData),
-		)
-
-		return
-	}
-
-	d.client = c
+	d.client = ConfigureClient(req, resp)
 }
 
 func (d *ExternalDataSourceDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
