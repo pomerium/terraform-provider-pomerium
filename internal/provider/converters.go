@@ -6,6 +6,26 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+func buildList[T any](diagnostics *diag.Diagnostics, elementType attr.Type, srcs []T, fn func(T) attr.Value) types.List {
+	if srcs == nil {
+		return types.ListNull(elementType)
+	}
+	elements := make([]attr.Value, len(srcs))
+	for i, v := range srcs {
+		elements[i] = fn(v)
+	}
+	dst, d := types.ListValue(elementType, elements)
+	diagnostics.Append(d...)
+	return dst
+}
+
+func buildListOfStrings(srcs []string) types.List {
+	return buildList(new(diag.Diagnostics), types.StringType, srcs,
+		func(src string) attr.Value {
+			return types.StringValue(src)
+		})
+}
+
 func buildMap[T any](diagnostics *diag.Diagnostics, elementType attr.Type, src map[string]T, fn func(T) attr.Value) types.Map {
 	if src == nil {
 		return types.MapNull(elementType)

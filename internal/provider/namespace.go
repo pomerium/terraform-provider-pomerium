@@ -12,7 +12,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -29,7 +28,7 @@ func NewNamespaceResource() resource.Resource {
 
 // NamespaceResource defines the resource implementation.
 type NamespaceResource struct {
-	client *client.Client
+	client *Client
 }
 
 // NamespaceResourceModel describes the resource data model.
@@ -84,7 +83,7 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	respNamespace, err := r.client.NamespaceService.SetNamespace(ctx, &pb.SetNamespaceRequest{
+	respNamespace, err := r.client.SetNamespace(ctx, &pb.SetNamespaceRequest{
 		Namespace: pbNamespace,
 	})
 	if err != nil {
@@ -111,7 +110,7 @@ func (r *NamespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	respNamespace, err := r.client.NamespaceService.GetNamespace(ctx, &pb.GetNamespaceRequest{
+	respNamespace, err := r.client.GetNamespace(ctx, &pb.GetNamespaceRequest{
 		Id: state.ID.ValueString(),
 	})
 	if err != nil {
@@ -146,7 +145,7 @@ func (r *NamespaceResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	_, err := r.client.NamespaceService.SetNamespace(ctx, &pb.SetNamespaceRequest{
+	_, err := r.client.SetNamespace(ctx, &pb.SetNamespaceRequest{
 		Namespace: pbNamespace,
 	})
 	if err != nil {
@@ -165,7 +164,7 @@ func (r *NamespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	_, err := r.client.NamespaceService.DeleteNamespace(ctx, &pb.DeleteNamespaceRequest{
+	_, err := r.client.DeleteNamespace(ctx, &pb.DeleteNamespaceRequest{
 		Id: state.ID.ValueString(),
 	})
 	if err != nil {

@@ -4,14 +4,11 @@ import (
 	"context"
 	"fmt"
 
-	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
-	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 var _ datasource.DataSource = &RoutesDataSource{}
@@ -109,8 +106,7 @@ func (d *RoutesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	listReq := &pomerium.ListRoutesRequest{}
-	routesResp, err := d.client.shared.ListRoutes(ctx, connect.NewRequest(listReq))
+	routesResp, err := d.client.shared.ListRoutes(ctx, newModelToCoreConverter().ListRoutesRequest(&data))
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading routes", err.Error())
 		return
@@ -118,10 +114,10 @@ func (d *RoutesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 
 	routes := make([]RouteModel, 0, len(routesResp.Msg.Routes))
 	for _, route := range routesResp.Msg.Routes {
-		c := newCoreToModelConverter()
-		routeModel := c.Route(route)
-		if c.diagnostics.HasError() {
-			resp.Diagnostics.Append(c.diagnostics...)
+		coreToModel := newCoreToModelConverter()
+		routeModel := coreToModel.Route(route)
+		if coreToModel.diagnostics.HasError() {
+			resp.Diagnostics.Append(coreToModel.diagnostics...)
 			return
 		}
 		routes = append(routes, *routeModel)

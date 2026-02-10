@@ -2,16 +2,12 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
-	client "github.com/pomerium/enterprise-client-go"
-	"github.com/pomerium/enterprise-client-go/pb"
 )
 
 var _ datasource.DataSource = &PoliciesDataSource{}
@@ -21,7 +17,7 @@ func NewPoliciesDataSource() datasource.DataSource {
 }
 
 type PoliciesDataSource struct {
-	client *client.Client
+	client *Client
 }
 
 type PoliciesDataSourceModel struct {
@@ -125,20 +121,7 @@ func (d *PoliciesDataSource) Schema(_ context.Context, _ datasource.SchemaReques
 }
 
 func (d *PoliciesDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-
-	client, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T.", req.ProviderData),
-		)
-		return
-	}
-
-	d.client = client
+	d.client = ConfigureClient(req, resp)
 }
 
 func (d *PoliciesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -149,33 +132,24 @@ func (d *PoliciesDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	listReq := &pb.ListPoliciesRequest{
-		Namespace: data.NamespaceID.ValueString(),
-		Query:     data.Query.ValueStringPointer(),
-		Offset:    data.Offset.ValueInt64Pointer(),
-		Limit:     data.Limit.ValueInt64Pointer(),
-		OrderBy:   data.OrderBy.ValueStringPointer(),
-		ClusterId: data.ClusterID.ValueStringPointer(),
-	}
-
-	policiesResp, err := d.client.PolicyService.ListPolicies(ctx, listReq)
+	policiesResp, err := d.client.shared.ListPolicies(ctx, newModelToCoreConverter().ListPoliciesRequest(&data))
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading policies", err.Error())
 		return
 	}
 
-	policies := make([]PolicyModel, 0, len(policiesResp.Policies))
-	for _, policy := range policiesResp.Policies {
-		var policyModel PolicyModel
-		diags := ConvertPolicyFromPB(&policyModel, policy)
-		if diags.HasError() {
-			resp.Diagnostics.Append(diags...)
+	dsts := make([]PolicyModel, 0, len(policiesResp.Msg.GetPolicies()))
+	for _, src := range policiesResp.Msg.GetPolicies() {
+		coreToModel := newCoreToModelConverter()
+		dst := coreToModel.Policy(src)
+		if coreToModel.diagnostics.HasError() {
+			resp.Diagnostics.Append(coreToModel.diagnostics...)
 			return
 		}
-		policies = append(policies, policyModel)
+		dsts = append(dsts, *dst)
 	}
 
-	data.Policies = policies
-	data.TotalCount = types.Int64Value(policiesResp.GetTotalCount())
+	data.Policies = dsts
+	data.TotalCount = types.Int64Value(int64(policiesResp.Msg.GetTotalCount()))
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

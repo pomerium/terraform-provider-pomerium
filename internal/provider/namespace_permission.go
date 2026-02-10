@@ -12,10 +12,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	client "github.com/pomerium/enterprise-client-go"
-	"github.com/pomerium/enterprise-client-go/pb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/pomerium/enterprise-client-go/pb"
 )
 
 //go:embed help/namespace_permissions.md
@@ -26,7 +26,7 @@ func NewNamespacePermissionResource() resource.Resource {
 }
 
 type NamespacePermissionResource struct {
-	client *client.Client
+	client *Client
 }
 
 func (r *NamespacePermissionResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -88,7 +88,7 @@ func (r *NamespacePermissionResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	respNP, err := r.client.NamespacePermissionService.SetNamespacePermission(ctx, &pb.SetNamespacePermissionRequest{
+	respNP, err := r.client.SetNamespacePermission(ctx, &pb.SetNamespacePermissionRequest{
 		NamespacePermission: pbNamespacePermission,
 	})
 	if err != nil {
@@ -117,7 +117,7 @@ func (r *NamespacePermissionResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	respNP, err := r.client.NamespacePermissionService.GetNamespacePermission(ctx, &pb.GetNamespacePermissionRequest{
+	respNP, err := r.client.GetNamespacePermission(ctx, &pb.GetNamespacePermissionRequest{
 		Id: state.ID.ValueString(),
 	})
 	if err != nil {
@@ -149,7 +149,7 @@ func (r *NamespacePermissionResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	_, err := r.client.NamespacePermissionService.SetNamespacePermission(ctx, &pb.SetNamespacePermissionRequest{
+	_, err := r.client.SetNamespacePermission(ctx, &pb.SetNamespacePermissionRequest{
 		NamespacePermission: pbNamespacePermission,
 	})
 	if err != nil {
@@ -167,7 +167,7 @@ func (r *NamespacePermissionResource) Delete(ctx context.Context, req resource.D
 		return
 	}
 
-	_, err := r.client.NamespacePermissionService.DeleteNamespacePermission(ctx, &pb.DeleteNamespacePermissionRequest{
+	_, err := r.client.DeleteNamespacePermission(ctx, &pb.DeleteNamespacePermissionRequest{
 		Id: plan.ID.ValueString(),
 	})
 	if err != nil {

@@ -32,6 +32,27 @@ func (c *coreToModelConverter) Duration(src *durationpb.Duration) timetypes.GoDu
 	return timetypes.NewGoDurationValue(src.AsDuration())
 }
 
+func (c *coreToModelConverter) Policy(src *pomerium.Policy) *PolicyResourceModel {
+	if src == nil {
+		return nil
+	}
+	ppl, err := PolicyLanguageType{}.Parse(types.StringPointerValue(src.SourcePpl))
+	if err != nil {
+		c.diagnostics.AddError("error parsing ppl", err.Error())
+	}
+	return &PolicyResourceModel{
+		Description: types.StringPointerValue(src.Description),
+		Enforced:    types.BoolPointerValue(src.Enforced),
+		Explanation: types.StringPointerValue(src.Explanation),
+		ID:          types.StringPointerValue(src.Id),
+		Name:        types.StringPointerValue(src.Name),
+		NamespaceID: types.StringPointerValue(src.NamespaceId),
+		PPL:         ppl,
+		Rego:        buildListOfStrings(src.Rego),
+		Remediation: types.StringPointerValue(src.Remediation),
+	}
+}
+
 func (c *coreToModelConverter) Route(src *pomerium.Route) *RouteResourceModel {
 	return &RouteResourceModel{
 		AllowSPDY:                types.BoolValue(src.AllowSpdy),

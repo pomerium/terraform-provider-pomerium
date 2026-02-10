@@ -60,6 +60,38 @@ func NewClient(apiURL, apiToken string, tlsConfig *tls.Config) *Client {
 	}
 }
 
+func (c *Client) DeleteNamespace(
+	ctx context.Context,
+	req *pb.DeleteNamespaceRequest,
+) (*pb.DeleteNamespaceResponse, error) {
+	var res *pb.DeleteNamespaceResponse
+	err := c.byProduct(ctx,
+		func() error { return fmt.Errorf("namespace are not supported by core") },
+		func(enterpriseClient *client.Client) error {
+			var err error
+			res, err = enterpriseClient.NamespaceService.DeleteNamespace(ctx, req)
+			return err
+		},
+		func(_ sdk.ZeroClient) error { return fmt.Errorf("namespace are not supported by zero") })
+	return res, err
+}
+
+func (c *Client) DeleteNamespacePermission(
+	ctx context.Context,
+	req *pb.DeleteNamespacePermissionRequest,
+) (*pb.DeleteNamespacePermissionResponse, error) {
+	var res *pb.DeleteNamespacePermissionResponse
+	err := c.byProduct(ctx,
+		func() error { return fmt.Errorf("namespace permissions are not supported by core") },
+		func(enterpriseClient *client.Client) error {
+			var err error
+			res, err = enterpriseClient.NamespacePermissionService.DeleteNamespacePermission(ctx, req)
+			return err
+		},
+		func(_ sdk.ZeroClient) error { return fmt.Errorf("namespace permissions are not supported by zero") })
+	return res, err
+}
+
 func (c *Client) GetCluster(
 	ctx context.Context,
 	req *pb.GetClusterRequest,
@@ -76,6 +108,38 @@ func (c *Client) GetCluster(
 	return res, err
 }
 
+func (c *Client) GetExternalDataSource(
+	ctx context.Context,
+	req *pb.GetExternalDataSourceRequest,
+) (*pb.GetExternalDataSourceResponse, error) {
+	var res *pb.GetExternalDataSourceResponse
+	err := c.byProduct(ctx,
+		func() error { return fmt.Errorf("external data sources are not supported by core") },
+		func(enterpriseClient *client.Client) error {
+			var err error
+			res, err = enterpriseClient.ExternalDataSourceService.GetExternalDataSource(ctx, req)
+			return err
+		},
+		func(_ sdk.ZeroClient) error { return fmt.Errorf("external data sources are not supported by zero") })
+	return res, err
+}
+
+func (c *Client) GetNamespace(
+	ctx context.Context,
+	req *pb.GetNamespaceRequest,
+) (*pb.GetNamespaceResponse, error) {
+	var res *pb.GetNamespaceResponse
+	err := c.byProduct(ctx,
+		func() error { return fmt.Errorf("namespaces are not supported by core") },
+		func(enterpriseClient *client.Client) error {
+			var err error
+			res, err = enterpriseClient.NamespaceService.GetNamespace(ctx, req)
+			return err
+		},
+		func(_ sdk.ZeroClient) error { return fmt.Errorf("namespaces are not supported by zero") })
+	return res, err
+}
+
 func (c *Client) ListClusters(
 	ctx context.Context,
 	req *pb.ListClustersRequest,
@@ -89,6 +153,70 @@ func (c *Client) ListClusters(
 			return err
 		},
 		func(_ sdk.ZeroClient) error { return fmt.Errorf("clusters are not supported by zero") })
+	return res, err
+}
+
+func (c *Client) GetNamespacePermission(
+	ctx context.Context,
+	req *pb.GetNamespacePermissionRequest,
+) (*pb.GetNamespacePermissionResponse, error) {
+	var res *pb.GetNamespacePermissionResponse
+	err := c.byProduct(ctx,
+		func() error { return fmt.Errorf("namespace permissions are not supported by core") },
+		func(enterpriseClient *client.Client) error {
+			var err error
+			res, err = enterpriseClient.NamespacePermissionService.GetNamespacePermission(ctx, req)
+			return err
+		},
+		func(_ sdk.ZeroClient) error { return fmt.Errorf("namespace permissions are not supported by zero") })
+	return res, err
+}
+
+func (c *Client) ListNamespaces(
+	ctx context.Context,
+	req *pb.ListNamespacesRequest,
+) (*pb.ListNamespacesResponse, error) {
+	var res *pb.ListNamespacesResponse
+	err := c.byProduct(ctx,
+		func() error { return fmt.Errorf("namespaces are not supported by core") },
+		func(enterpriseClient *client.Client) error {
+			var err error
+			res, err = enterpriseClient.NamespaceService.ListNamespaces(ctx, req)
+			return err
+		},
+		func(_ sdk.ZeroClient) error { return fmt.Errorf("namespaces are not supported by zero") })
+	return res, err
+}
+
+func (c *Client) SetNamespace(
+	ctx context.Context,
+	req *pb.SetNamespaceRequest,
+) (*pb.SetNamespaceResponse, error) {
+	var res *pb.SetNamespaceResponse
+	err := c.byProduct(ctx,
+		func() error { return fmt.Errorf("namespaces are not supported by core") },
+		func(enterpriseClient *client.Client) error {
+			var err error
+			res, err = enterpriseClient.NamespaceService.SetNamespace(ctx, req)
+			return err
+		},
+		func(_ sdk.ZeroClient) error { return fmt.Errorf("namespaces are not supported by zero") })
+	return res, err
+}
+
+func (c *Client) SetNamespacePermission(
+	ctx context.Context,
+	req *pb.SetNamespacePermissionRequest,
+) (*pb.SetNamespacePermissionResponse, error) {
+	var res *pb.SetNamespacePermissionResponse
+	err := c.byProduct(ctx,
+		func() error { return fmt.Errorf("namespace permissions are not supported by core") },
+		func(enterpriseClient *client.Client) error {
+			var err error
+			res, err = enterpriseClient.NamespacePermissionService.SetNamespacePermission(ctx, req)
+			return err
+		},
+		func(_ sdk.ZeroClient) error { return fmt.Errorf("namespace permissions are not supported by zero") })
 	return res, err
 }
 

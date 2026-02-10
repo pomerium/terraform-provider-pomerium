@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -18,7 +17,7 @@ func NewNamespacesDataSource() datasource.DataSource {
 }
 
 type NamespacesDataSource struct {
-	client *client.Client
+	client *Client
 }
 
 type NamespacesDataSourceModel struct {
@@ -69,7 +68,7 @@ func (d *NamespacesDataSource) Configure(_ context.Context, req datasource.Confi
 func (d *NamespacesDataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data NamespacesDataSourceModel
 
-	namespacesResp, err := d.client.NamespaceService.ListNamespaces(ctx, &pb.ListNamespacesRequest{})
+	namespacesResp, err := d.client.ListNamespaces(ctx, &pb.ListNamespacesRequest{})
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading namespaces", err.Error())
 		return
