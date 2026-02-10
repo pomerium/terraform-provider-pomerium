@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -11,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 var _ datasource.DataSource = &RouteDataSource{}
@@ -395,7 +396,7 @@ func NewRouteDataSource() datasource.DataSource {
 }
 
 type RouteDataSource struct {
-	client *client.Client
+	client *Client
 }
 
 func (d *RouteDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -414,11 +415,11 @@ func (d *RouteDataSource) Configure(_ context.Context, req datasource.ConfigureR
 		return
 	}
 
-	client, ok := req.ProviderData.(*client.Client)
+	client, ok := req.ProviderData.(*Client)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T.", req.ProviderData),
+			fmt.Sprintf("Expected *Client, got: %T.", req.ProviderData),
 		)
 		return
 	}
@@ -434,16 +435,17 @@ func (d *RouteDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	routeResp, err := d.client.RouteService.GetRoute(ctx, &pb.GetRouteRequest{
+	routeResp, err := d.client.shared.GetRoute(ctx, connect.NewRequest(&pomerium.GetRouteRequest{
 		Id: data.ID.ValueString(),
-	})
+	}))
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading route", err.Error())
 		return
 	}
 
-	diags := ConvertRouteFromPB(&data, routeResp.Route)
-	resp.Diagnostics.Append(diags...)
+	coreToModel := newCoreToModelConverter()
+	data = *coreToModel.Route(routeResp.Msg.GetRoute())
+	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
