@@ -4,11 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 
-	client "github.com/pomerium/enterprise-client-go"
-	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 var _ datasource.DataSource = &ServiceAccountDataSource{}
@@ -18,7 +18,7 @@ func NewServiceAccountDataSource() datasource.DataSource {
 }
 
 type ServiceAccountDataSource struct {
-	client *client.Client
+	client *Client
 }
 
 func (d *ServiceAccountDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -62,11 +62,11 @@ func (d *ServiceAccountDataSource) Configure(_ context.Context, req datasource.C
 		return
 	}
 
-	client, ok := req.ProviderData.(*client.Client)
+	client, ok := req.ProviderData.(*Client)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T.", req.ProviderData),
+			fmt.Sprintf("Expected *Client, got: %T.", req.ProviderData),
 		)
 		return
 	}
@@ -82,16 +82,17 @@ func (d *ServiceAccountDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	serviceAccountResp, err := d.client.PomeriumServiceAccountService.GetPomeriumServiceAccount(ctx, &pb.GetPomeriumServiceAccountRequest{
+	serviceAccountResp, err := d.client.shared.GetServiceAccount(ctx, connect.NewRequest(&pomerium.GetServiceAccountRequest{
 		Id: data.ID.ValueString(),
-	})
+	}))
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading service account", err.Error())
 		return
 	}
 
-	diags := ConvertServiceAccountFromPB(&data, serviceAccountResp.ServiceAccount)
-	resp.Diagnostics.Append(diags...)
+	coreToModel := newCoreToModelConverter()
+	data = *coreToModel.ServiceAccount(serviceAccountResp.Msg.GetServiceAccount())
+	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

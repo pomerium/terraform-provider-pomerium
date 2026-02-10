@@ -20,14 +20,16 @@ import (
 // A Client is a Pomerium API client that supports the open source version of
 // Pomerium, the Enterprise Console and Pomerium Zero.
 type Client struct {
-	apiURL    string
-	apiToken  string
-	tlsConfig *tls.Config
+	apiURL     string
+	apiToken   string
+	tlsConfig  *tls.Config
+	httpClient *http.Client
 
 	shared pomerium.ConfigServiceClient
 
 	mu         sync.RWMutex
 	enterprise *client.Client
+	zero       sdk.ZeroClient
 }
 
 // NewClient creates a new Client.
@@ -45,9 +47,10 @@ func NewClient(apiURL, apiToken string, tlsConfig *tls.Config) *Client {
 	}
 
 	return &Client{
-		apiURL:    apiURL,
-		apiToken:  apiToken,
-		tlsConfig: tlsConfig,
+		apiURL:     apiURL,
+		apiToken:   apiToken,
+		tlsConfig:  tlsConfig,
+		httpClient: httpClient,
 
 		shared: sdk.NewClient(
 			sdk.WithAPIToken(apiToken),
@@ -55,6 +58,22 @@ func NewClient(apiURL, apiToken string, tlsConfig *tls.Config) *Client {
 			sdk.WithURL(apiURL),
 		),
 	}
+}
+
+func (c *Client) GetCluster(
+	ctx context.Context,
+	req *pb.GetClusterRequest,
+) (*pb.GetClusterResponse, error) {
+	var res *pb.GetClusterResponse
+	err := c.byProduct(ctx,
+		func() error { return fmt.Errorf("clusters are not supported by core") },
+		func(enterpriseClient *client.Client) error {
+			var err error
+			res, err = enterpriseClient.ClustersService.GetCluster(ctx, req)
+			return err
+		},
+		func(_ sdk.ZeroClient) error { return fmt.Errorf("clusters are not supported by zero") })
+	return res, err
 }
 
 func (c *Client) ListClusters(
@@ -69,23 +88,7 @@ func (c *Client) ListClusters(
 			res, err = enterpriseClient.ClustersService.ListClusters(ctx, req)
 			return err
 		},
-		func() error { return fmt.Errorf("clusters are not supported by zero") })
-	return res, err
-}
-
-func (c *Client) ListServiceAccounts(
-	ctx context.Context,
-	req *pb.ListPomeriumServiceAccountsRequest,
-) (*pb.ListPomeriumServiceAccountsResponse, error) {
-	var res *pb.ListPomeriumServiceAccountsResponse
-	err := c.byProduct(ctx,
-		func() error { return fmt.Errorf("service accounts are not supported by core") },
-		func(enterpriseClient *client.Client) error {
-			var err error
-			res, err = enterpriseClient.PomeriumServiceAccountService.ListPomeriumServiceAccounts(ctx, req)
-			return err
-		},
-		func() error { return fmt.Errorf("service accounts are not supported by zero") })
+		func(_ sdk.ZeroClient) error { return fmt.Errorf("clusters are not supported by zero") })
 	return res, err
 }
 
@@ -128,10 +131,39 @@ func (c *Client) getEnterpriseClient() (*client.Client, error) {
 	return c.enterprise, nil
 }
 
+func (c *Client) getZeroClient() (sdk.ZeroClient, error) {
+	c.mu.RLock()
+	zeroClient := c.zero
+	c.mu.RUnlock()
+
+	if zeroClient != nil {
+		return zeroClient, nil
+	}
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	if c.zero != nil {
+		return c.zero, nil
+	}
+
+	var err error
+	c.zero, err = sdk.NewZeroClient(
+		sdk.WithAPIToken(c.apiToken),
+		sdk.WithHTTPClient(c.httpClient),
+		sdk.WithURL(c.apiURL),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error creating zero client: %w", err)
+	}
+
+	return c.zero, nil
+}
+
 func (c *Client) byProduct(ctx context.Context,
 	onCore func() error,
 	onEnterprise func(enterpriseClient *client.Client) error,
-	onZero func() error,
+	onZero func(zeroClient sdk.ZeroClient) error,
 ) error {
 	res, err := c.shared.GetServerInfo(ctx, connect.NewRequest(&pomerium.GetServerInfoRequest{}))
 	if err != nil {
@@ -146,7 +178,11 @@ func (c *Client) byProduct(ctx context.Context,
 		}
 		return onEnterprise(enterpriseClient)
 	case pomerium.ServerType_SERVER_TYPE_ZERO:
-		return onZero()
+		zeroClient, err := c.getZeroClient()
+		if err != nil {
+			return fmt.Errorf("error creating zero client: %w", err)
+		}
+		return onZero(zeroClient)
 	case pomerium.ServerType_SERVER_TYPE_CORE:
 		fallthrough
 	default:

@@ -2,12 +2,15 @@ package provider
 
 import (
 	"encoding/base64"
+	"strings"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/pomerium/sdk-go/proto/pomerium"
 )
@@ -70,8 +73,8 @@ func (c *coreToModelConverter) Route(src *pomerium.Route) *RouteResourceModel {
 		RegexRewriteSubstitution:          types.StringValue(src.RegexRewriteSubstitution),
 		RemoveRequestHeaders:              buildSetOfStrings(src.RemoveRequestHeaders),
 		RewriteResponseHeaders:            c.RouteRewriteHeaders(src.RewriteResponseHeaders),
-		SetRequestHeaders:                 c.Map(src.SetRequestHeaders),
-		SetResponseHeaders:                c.Map(src.SetResponseHeaders),
+		SetRequestHeaders:                 buildMapOfStrings(src.SetRequestHeaders),
+		SetResponseHeaders:                buildMapOfStrings(src.SetResponseHeaders),
 		ShowErrorDetails:                  types.BoolValue(src.ShowErrorDetails),
 		StatName:                          types.StringPointerValue(src.StatName),
 		Timeout:                           c.Duration(src.Timeout),
@@ -260,17 +263,6 @@ func (c *coreToModelConverter) LoadBalancingPolicy(src *pomerium.LoadBalancingPo
 	return types.StringValue(src.String())
 }
 
-func (c *coreToModelConverter) Map(src map[string]string) types.Map {
-	if src == nil {
-		return types.MapNull(types.StringType)
-	}
-	elements := make(map[string]attr.Value)
-	for k, v := range src {
-		elements[k] = types.StringValue(v)
-	}
-	return types.MapValueMust(types.StringType, elements)
-}
-
 func (c *coreToModelConverter) RouteRewriteHeader(src *pomerium.RouteRewriteHeader) types.Object {
 	if src == nil {
 		return types.ObjectNull(RewriteHeaderObjectType().AttrTypes)
@@ -286,6 +278,27 @@ func (c *coreToModelConverter) RouteRewriteHeader(src *pomerium.RouteRewriteHead
 
 func (c *coreToModelConverter) RouteRewriteHeaders(srcs []*pomerium.RouteRewriteHeader) types.Set {
 	return buildSetOfObjects(&c.diagnostics, RewriteHeaderObjectType(), srcs, c.RouteRewriteHeader)
+}
+
+func (c *coreToModelConverter) ServiceAccount(src *pomerium.ServiceAccount) *ServiceAccountModel {
+	if src == nil {
+		return nil
+	}
+	return &ServiceAccountModel{
+		ID:          types.StringPointerValue(src.Id),
+		Name:        types.StringValue(strings.TrimSuffix(src.GetUserId(), "@"+src.GetNamespaceId()+".pomerium")),
+		NamespaceID: types.StringPointerValue(src.NamespaceId),
+		Description: types.StringPointerValue(src.Description),
+		UserID:      types.StringPointerValue(src.UserId),
+		ExpiresAt:   c.Timestamp(src.ExpiresAt),
+	}
+}
+
+func (c *coreToModelConverter) Timestamp(src *timestamppb.Timestamp) types.String {
+	if src == nil || src.AsTime().IsZero() {
+		return types.StringNull()
+	}
+	return types.StringValue(src.AsTime().Format(time.RFC3339))
 }
 
 func (c *coreToModelConverter) TCPHealthCheck(src *pomerium.HealthCheck_TcpHealthCheck) types.Object {

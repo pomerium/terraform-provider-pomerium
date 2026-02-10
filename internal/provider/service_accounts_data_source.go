@@ -4,11 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 var _ datasource.DataSource = &ServiceAccountsDataSource{}
@@ -98,24 +99,24 @@ func (d *ServiceAccountsDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	listReq := &pb.ListPomeriumServiceAccountsRequest{
-		Namespace: data.NamespaceID.ValueString(),
+	listReq := connect.NewRequest(&pomerium.ListServiceAccountsRequest{})
+	if !data.NamespaceID.IsNull() {
+		listReq.Header().Set("Namespace-Id", data.NamespaceID.ValueString())
 	}
-	serviceAccountsResp, err := d.client.ListServiceAccounts(ctx, listReq)
+	serviceAccountsResp, err := d.client.shared.ListServiceAccounts(ctx, listReq)
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading service accounts", err.Error())
 		return
 	}
 
-	serviceAccounts := make([]ServiceAccountModel, 0, len(serviceAccountsResp.ServiceAccounts))
-	for _, sa := range serviceAccountsResp.ServiceAccounts {
-		var saModel ServiceAccountModel
-		diags := ConvertServiceAccountFromPB(&saModel, sa)
-		if diags.HasError() {
-			resp.Diagnostics.Append(diags...)
+	serviceAccounts := make([]ServiceAccountModel, 0, len(serviceAccountsResp.Msg.ServiceAccounts))
+	for _, src := range serviceAccountsResp.Msg.ServiceAccounts {
+		c := newCoreToModelConverter()
+		serviceAccounts = append(serviceAccounts, *c.ServiceAccount(src))
+		if c.diagnostics.HasError() {
+			resp.Diagnostics.Append(c.diagnostics...)
 			return
 		}
-		serviceAccounts = append(serviceAccounts, saModel)
 	}
 
 	data.ServiceAccounts = serviceAccounts

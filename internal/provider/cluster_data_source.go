@@ -7,7 +7,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 
-	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -62,7 +61,7 @@ type ClusterDataSourceModel = ClusterModel
 
 // A ClusterDataSource retrieves data about a cluster.
 type ClusterDataSource struct {
-	client *client.Client
+	client *Client
 }
 
 // NewClusterDataSource creates a new cluster data source.
@@ -86,7 +85,7 @@ func (d *ClusterDataSource) Configure(_ context.Context, req datasource.Configur
 		return
 	}
 
-	client, ok := req.ProviderData.(*client.Client)
+	client, ok := req.ProviderData.(*Client)
 	if !ok {
 		resp.Diagnostics.AddError(
 			"Unexpected Data Source Configure Type",
@@ -106,7 +105,7 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	clusterResp, err := d.client.ClustersService.GetCluster(ctx, &pb.GetClusterRequest{
+	clusterResp, err := d.client.GetCluster(ctx, &pb.GetClusterRequest{
 		Id: data.ID.ValueString(),
 	})
 	if err != nil {
