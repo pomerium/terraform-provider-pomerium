@@ -95,15 +95,15 @@ func (r *ServiceAccountResource) Configure(_ context.Context, req resource.Confi
 }
 
 func (r *ServiceAccountResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var state ServiceAccountResourceModel
+	var model ServiceAccountResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	modelToCore := newModelToCoreConverter()
-	coreServiceAccount := modelToCore.ServiceAccount(&state)
+	coreServiceAccount := modelToCore.ServiceAccount(&model)
 	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -118,32 +118,32 @@ func (r *ServiceAccountResource) Create(ctx context.Context, req resource.Create
 	}
 
 	coreToModel := newCoreToModelConverter()
-	state.ServiceAccountModel = *coreToModel.ServiceAccount(respServiceAccount.Msg.ServiceAccount)
+	model.ServiceAccountModel = *coreToModel.ServiceAccount(respServiceAccount.Msg.ServiceAccount)
 	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	state.JWT = types.StringValue(respServiceAccount.Msg.Jwt)
+	model.JWT = types.StringValue(respServiceAccount.Msg.Jwt)
 
 	tflog.Trace(ctx, "Created a service account", map[string]interface{}{
-		"id":   state.ID.ValueString(),
-		"name": state.Name.ValueString(),
+		"id":   model.ID.ValueString(),
+		"name": model.Name.ValueString(),
 	})
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *ServiceAccountResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state ServiceAccountResourceModel
+	var model ServiceAccountResourceModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	respServiceAccount, err := r.client.shared.GetServiceAccount(ctx, connect.NewRequest(&pomerium.GetServiceAccountRequest{
-		Id: state.ID.ValueString(),
+		Id: model.ID.ValueString(),
 	}))
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
@@ -155,25 +155,25 @@ func (r *ServiceAccountResource) Read(ctx context.Context, req resource.ReadRequ
 	}
 
 	coreToModel := newCoreToModelConverter()
-	state.ServiceAccountModel = *coreToModel.ServiceAccount(respServiceAccount.Msg.ServiceAccount)
+	model.ServiceAccountModel = *coreToModel.ServiceAccount(respServiceAccount.Msg.ServiceAccount)
 	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *ServiceAccountResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan ServiceAccountResourceModel
+	var model ServiceAccountResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	modelToCore := newModelToCoreConverter()
-	dst := modelToCore.ServiceAccount(&plan)
+	dst := modelToCore.ServiceAccount(&model)
 	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -187,19 +187,19 @@ func (r *ServiceAccountResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *ServiceAccountResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state ServiceAccountResourceModel
+	var model ServiceAccountResourceModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	_, err := r.client.shared.DeleteServiceAccount(ctx, connect.NewRequest(&pomerium.DeleteServiceAccountRequest{
-		Id: state.ID.ValueString(),
+		Id: model.ID.ValueString(),
 	}))
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting service account", err.Error())

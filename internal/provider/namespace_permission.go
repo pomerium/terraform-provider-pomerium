@@ -75,14 +75,14 @@ func (r *NamespacePermissionResource) Configure(_ context.Context, req resource.
 }
 
 func (r *NamespacePermissionResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan NamespacePermissionModel
+	var model NamespacePermissionModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	pbNamespacePermission, diags := ConvertNamespacePermissionToPB(&plan)
+	pbNamespacePermission, diags := ConvertNamespacePermissionToPB(&model)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -96,29 +96,29 @@ func (r *NamespacePermissionResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	plan.ID = types.StringValue(respNP.NamespacePermission.Id)
+	model.ID = types.StringValue(respNP.NamespacePermission.Id)
 
 	tflog.Trace(ctx, "Created a namespace permission", map[string]interface{}{
-		"id":           plan.ID.ValueString(),
-		"namespace_id": plan.NamespaceID.ValueString(),
-		"role":         plan.Role.ValueString(),
-		"subject_id":   plan.SubjectID.ValueString(),
-		"subject_type": plan.SubjectType.ValueString(),
+		"id":           model.ID.ValueString(),
+		"namespace_id": model.NamespaceID.ValueString(),
+		"role":         model.Role.ValueString(),
+		"subject_id":   model.SubjectID.ValueString(),
+		"subject_type": model.SubjectType.ValueString(),
 	})
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *NamespacePermissionResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state NamespacePermissionModel
+	var model NamespacePermissionModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	respNP, err := r.client.GetNamespacePermission(ctx, &pb.GetNamespacePermissionRequest{
-		Id: state.ID.ValueString(),
+		Id: model.ID.ValueString(),
 	})
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
@@ -129,21 +129,21 @@ func (r *NamespacePermissionResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	diags := ConvertNamespacePermissionFromPB(&state, respNP.NamespacePermission)
+	diags := ConvertNamespacePermissionFromPB(&model, respNP.NamespacePermission)
 	resp.Diagnostics.Append(diags...)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *NamespacePermissionResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan NamespacePermissionModel
+	var model NamespacePermissionModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	pbNamespacePermission, diags := ConvertNamespacePermissionToPB(&plan)
+	pbNamespacePermission, diags := ConvertNamespacePermissionToPB(&model)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -156,25 +156,25 @@ func (r *NamespacePermissionResource) Update(ctx context.Context, req resource.U
 		resp.Diagnostics.AddError("failed to update namespace permission", err.Error())
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *NamespacePermissionResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var plan NamespacePermissionModel
+	var model NamespacePermissionModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	_, err := r.client.DeleteNamespacePermission(ctx, &pb.DeleteNamespacePermissionRequest{
-		Id: plan.ID.ValueString(),
+		Id: model.ID.ValueString(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("failed to delete namespace permission", err.Error())
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *NamespacePermissionResource) ImportState(_ context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

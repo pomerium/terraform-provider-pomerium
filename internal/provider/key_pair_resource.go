@@ -72,15 +72,15 @@ func (r *KeyPairResource) Configure(_ context.Context, req resource.ConfigureReq
 }
 
 func (r *KeyPairResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var state KeyPairResourceModel
+	var model KeyPairResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	modelToCore := newModelToCoreConverter()
-	createReq := modelToCore.CreateKeyPairRequest(&state)
+	createReq := modelToCore.CreateKeyPairRequest(&model)
 	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -93,29 +93,29 @@ func (r *KeyPairResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	coreToModel := newCoreToModelConverter()
-	state = *coreToModel.KeyPair(createRes.Msg.GetKeyPair())
+	model = *coreToModel.KeyPair(createRes.Msg.GetKeyPair())
 	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Trace(ctx, "Created a key pair", map[string]interface{}{
-		"id": state.ID.ValueString(),
+		"id": model.ID.ValueString(),
 	})
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *KeyPairResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state KeyPairResourceModel
+	var model KeyPairResourceModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	getRes, err := r.client.shared.GetKeyPair(ctx, connect.NewRequest(&pomerium.GetKeyPairRequest{
-		Id: state.ID.ValueString(),
+		Id: model.ID.ValueString(),
 	}))
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
@@ -127,25 +127,25 @@ func (r *KeyPairResource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	coreToModel := newCoreToModelConverter()
-	state = *coreToModel.KeyPair(getRes.Msg.GetKeyPair())
+	model = *coreToModel.KeyPair(getRes.Msg.GetKeyPair())
 	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *KeyPairResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var state KeyPairResourceModel
+	var model KeyPairResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	modelToCore := newModelToCoreConverter()
-	updateReq := modelToCore.UpdateKeyPairRequest(&state)
+	updateReq := modelToCore.UpdateKeyPairRequest(&model)
 	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -158,25 +158,25 @@ func (r *KeyPairResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	coreToModel := newCoreToModelConverter()
-	state = *coreToModel.KeyPair(updateRes.Msg.GetKeyPair())
+	model = *coreToModel.KeyPair(updateRes.Msg.GetKeyPair())
 	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *KeyPairResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state KeyPairResourceModel
+	var model KeyPairResourceModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	_, err := r.client.shared.DeleteKeyPair(ctx, connect.NewRequest(&pomerium.DeleteKeyPairRequest{
-		Id: state.ID.ValueString(),
+		Id: model.ID.ValueString(),
 	}))
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting key pair", err.Error())

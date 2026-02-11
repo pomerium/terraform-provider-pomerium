@@ -435,15 +435,15 @@ func (r *RouteResource) Configure(_ context.Context, req resource.ConfigureReque
 }
 
 func (r *RouteResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var state RouteResourceModel
+	var model RouteResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	modelToCore := newModelToCoreConverter()
-	createReq := modelToCore.CreateRouteRequest(&state)
+	createReq := modelToCore.CreateRouteRequest(&model)
 	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -456,30 +456,30 @@ func (r *RouteResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	coreToModel := newCoreToModelConverter()
-	state = *coreToModel.Route(createRes.Msg.GetRoute())
+	model = *coreToModel.Route(createRes.Msg.GetRoute())
 	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Trace(ctx, "Created a route", map[string]interface{}{
-		"id":   state.ID.ValueString(),
-		"name": state.Name.ValueString(),
+		"id":   model.ID.ValueString(),
+		"name": model.Name.ValueString(),
 	})
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *RouteResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state RouteResourceModel
+	var model RouteResourceModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	getRes, err := r.client.shared.GetRoute(ctx, connect.NewRequest(&pomerium.GetRouteRequest{
-		Id: state.ID.ValueString(),
+		Id: model.ID.ValueString(),
 	}))
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
@@ -491,25 +491,25 @@ func (r *RouteResource) Read(ctx context.Context, req resource.ReadRequest, resp
 	}
 
 	coreToModel := newCoreToModelConverter()
-	state = *coreToModel.Route(getRes.Msg.GetRoute())
+	model = *coreToModel.Route(getRes.Msg.GetRoute())
 	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *RouteResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var state RouteResourceModel
+	var model RouteResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	modelToCore := newModelToCoreConverter()
-	updateReq := modelToCore.UpdateRouteRequest(&state)
+	updateReq := modelToCore.UpdateRouteRequest(&model)
 	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -522,13 +522,13 @@ func (r *RouteResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	coreToModel := newCoreToModelConverter()
-	state = *coreToModel.Route(updateRes.Msg.GetRoute())
+	model = *coreToModel.Route(updateRes.Msg.GetRoute())
 	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *RouteResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

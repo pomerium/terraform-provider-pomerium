@@ -97,15 +97,15 @@ func (r *ExternalDataSourceResource) Configure(_ context.Context, req resource.C
 }
 
 func (r *ExternalDataSourceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan ExternalDataSourceResourceModel
+	var model ExternalDataSourceResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &model)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	pbExternalDataSource, diags := ConvertExternalDataSourceToPB(ctx, &plan)
+	pbExternalDataSource, diags := ConvertExternalDataSourceToPB(ctx, &model)
 	resp.Diagnostics.Append(diags...)
 	if diags.HasError() {
 		return
@@ -119,29 +119,29 @@ func (r *ExternalDataSourceResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	diags = ConvertExternalDataSourceFromPB(&plan, respExternalDataSource.ExternalDataSource)
+	diags = ConvertExternalDataSourceFromPB(&model, respExternalDataSource.ExternalDataSource)
 	resp.Diagnostics.Append(diags...)
 	if diags.HasError() {
 		return
 	}
 
 	tflog.Trace(ctx, "Created an external data source", map[string]interface{}{
-		"id": plan.ID.ValueString(),
+		"id": model.ID.ValueString(),
 	})
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *ExternalDataSourceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state ExternalDataSourceResourceModel
+	var model ExternalDataSourceResourceModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	respExternalDataSource, err := r.client.GetExternalDataSource(ctx, &pb.GetExternalDataSourceRequest{
-		Id: state.ID.ValueString(),
+		Id: model.ID.ValueString(),
 	})
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
@@ -152,24 +152,24 @@ func (r *ExternalDataSourceResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	diags := ConvertExternalDataSourceFromPB(&state, respExternalDataSource.ExternalDataSource)
+	diags := ConvertExternalDataSourceFromPB(&model, respExternalDataSource.ExternalDataSource)
 	resp.Diagnostics.Append(diags...)
 	if diags.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *ExternalDataSourceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan ExternalDataSourceResourceModel
+	var model ExternalDataSourceResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	pbExternalDataSource, diags := ConvertExternalDataSourceToPB(ctx, &plan)
+	pbExternalDataSource, diags := ConvertExternalDataSourceToPB(ctx, &model)
 	resp.Diagnostics.Append(diags...)
 	if diags.HasError() {
 		return
@@ -183,13 +183,13 @@ func (r *ExternalDataSourceResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	diags = ConvertExternalDataSourceFromPB(&plan, respExternalDataSource.ExternalDataSource)
+	diags = ConvertExternalDataSourceFromPB(&model, respExternalDataSource.ExternalDataSource)
 	resp.Diagnostics.Append(diags...)
 	if diags.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *ExternalDataSourceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

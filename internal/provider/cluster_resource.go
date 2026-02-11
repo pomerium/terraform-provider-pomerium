@@ -95,22 +95,22 @@ func (r *ClusterResource) Configure(_ context.Context, req resource.ConfigureReq
 }
 
 func (r *ClusterResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan ClusterResourceModel
+	var model ClusterResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	c := newModelToConsoleConverter()
-	pbCluster := c.Cluster(&plan)
+	pbCluster := c.Cluster(&model)
 	resp.Diagnostics.Append(c.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	respCluster, err := r.client.AddCluster(ctx, &pb.AddClusterRequest{
-		ParentNamespaceId: plan.ParentNamespaceID.ValueString(),
+		ParentNamespaceId: model.ParentNamespaceID.ValueString(),
 		Cluster:           pbCluster,
 	})
 	if err != nil {
@@ -118,28 +118,28 @@ func (r *ClusterResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	plan.NamespaceID = types.StringValue(respCluster.Namespace.Id)
-	plan.ParentNamespaceID = types.StringValue(respCluster.Namespace.ParentId)
-	plan.ID = types.StringValue(respCluster.Cluster.Id)
+	model.NamespaceID = types.StringValue(respCluster.Namespace.Id)
+	model.ParentNamespaceID = types.StringValue(respCluster.Namespace.ParentId)
+	model.ID = types.StringValue(respCluster.Cluster.Id)
 
 	tflog.Trace(ctx, "Created a cluster", map[string]any{
-		"id":   plan.ID.ValueString(),
-		"name": plan.Name.ValueString(),
+		"id":   model.ID.ValueString(),
+		"name": model.Name.ValueString(),
 	})
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *ClusterResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state ClusterResourceModel
+	var model ClusterResourceModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	respCluster, err := r.client.GetCluster(ctx, &pb.GetClusterRequest{
-		Id: state.ID.ValueString(),
+		Id: model.ID.ValueString(),
 	})
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
@@ -151,25 +151,25 @@ func (r *ClusterResource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	c := newConsoleToModelConverter()
-	state = *c.Cluster(respCluster.Cluster, respCluster.Namespace)
+	model = *c.Cluster(respCluster.Cluster, respCluster.Namespace)
 	resp.Diagnostics.Append(c.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *ClusterResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan ClusterResourceModel
+	var model ClusterResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	modelToConsole := newModelToConsoleConverter()
-	pbCluster := modelToConsole.Cluster(&plan)
+	pbCluster := modelToConsole.Cluster(&model)
 	resp.Diagnostics.Append(modelToConsole.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -184,25 +184,25 @@ func (r *ClusterResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	consoleToModel := newConsoleToModelConverter()
-	plan = *consoleToModel.Cluster(respCluster.Cluster, respCluster.Namespace)
+	model = *consoleToModel.Cluster(respCluster.Cluster, respCluster.Namespace)
 	resp.Diagnostics.Append(consoleToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *ClusterResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state ClusterResourceModel
+	var model ClusterResourceModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	_, err := r.client.DeleteCluster(ctx, &pb.DeleteClusterRequest{
-		Id: state.ID.ValueString(),
+		Id: model.ID.ValueString(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting cluster", err.Error())

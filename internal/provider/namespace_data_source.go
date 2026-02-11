@@ -53,26 +53,27 @@ func (d *NamespaceDataSource) Configure(_ context.Context, req datasource.Config
 }
 
 func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data NamespaceModel
+	var model NamespaceModel
 
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	namespaceResp, err := d.client.GetNamespace(ctx, &pb.GetNamespaceRequest{
-		Id: data.ID.ValueString(),
+		Id: model.ID.ValueString(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading namespace", err.Error())
 		return
 	}
 
-	diags := ConvertNamespaceFromPB(&data, namespaceResp.Namespace)
-	resp.Diagnostics.Append(diags...)
+	consoleToModel := newConsoleToModelConverter()
+	model = *consoleToModel.Namespace(namespaceResp.GetNamespace())
+	resp.Diagnostics.Append(consoleToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }

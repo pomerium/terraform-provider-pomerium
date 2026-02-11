@@ -44,6 +44,18 @@ func (c *consoleToModelConverter) Cluster(src *pb.Cluster, namespace *pb.Namespa
 	}
 }
 
+func (c *consoleToModelConverter) Namespace(src *pb.Namespace) *NamespaceModel {
+	if src == nil {
+		return nil
+	}
+	return &NamespaceModel{
+		ClusterID: types.StringPointerValue(src.ClusterId),
+		ID:        types.StringValue(src.Id),
+		Name:      types.StringValue(src.Name),
+		ParentID:  c.NullOnEmptyString(src.ParentId),
+	}
+}
+
 func (c *consoleToModelConverter) NullOnEmptyString(src string) types.String {
 	if src == "" {
 		return types.StringNull()

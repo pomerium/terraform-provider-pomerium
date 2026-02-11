@@ -105,15 +105,15 @@ func (r *PolicyResource) Configure(_ context.Context, req resource.ConfigureRequ
 }
 
 func (r *PolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var state PolicyResourceModel
+	var model PolicyResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	modelToCore := newModelToCoreConverter()
-	createReq := modelToCore.CreatePolicyRequest(&state)
+	createReq := modelToCore.CreatePolicyRequest(&model)
 	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -126,30 +126,30 @@ func (r *PolicyResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	coreToModel := newCoreToModelConverter()
-	state = *coreToModel.Policy(createRes.Msg.GetPolicy())
+	model = *coreToModel.Policy(createRes.Msg.GetPolicy())
 	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	tflog.Trace(ctx, "Created a policy", map[string]interface{}{
-		"id":   state.ID.ValueString(),
-		"name": state.Name.ValueString(),
+		"id":   model.ID.ValueString(),
+		"name": model.Name.ValueString(),
 	})
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *PolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state PolicyResourceModel
+	var model PolicyResourceModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	getRes, err := r.client.shared.GetPolicy(ctx, connect.NewRequest(&pomerium.GetPolicyRequest{
-		Id: state.ID.ValueString(),
+		Id: model.ID.ValueString(),
 	}))
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
@@ -161,25 +161,25 @@ func (r *PolicyResource) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 
 	coreToModel := newCoreToModelConverter()
-	state = *coreToModel.Policy(getRes.Msg.GetPolicy())
+	model = *coreToModel.Policy(getRes.Msg.GetPolicy())
 	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *PolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var state PolicyResourceModel
+	var model PolicyResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	modelToCore := newModelToCoreConverter()
-	updateReq := modelToCore.UpdatePolicyRequest(&state)
+	updateReq := modelToCore.UpdatePolicyRequest(&model)
 	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -192,25 +192,25 @@ func (r *PolicyResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	coreToModel := newCoreToModelConverter()
-	state = *coreToModel.Policy(updateRes.Msg.GetPolicy())
+	model = *coreToModel.Policy(updateRes.Msg.GetPolicy())
 	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *PolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state PolicyResourceModel
+	var model PolicyResourceModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	_, err := r.client.shared.DeletePolicy(ctx, connect.NewRequest(&pomerium.DeletePolicyRequest{
-		Id: state.ID.ValueString(),
+		Id: model.ID.ValueString(),
 	}))
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting policy", err.Error())

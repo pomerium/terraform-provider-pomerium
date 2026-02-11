@@ -37,15 +37,15 @@ func (r *SettingsResource) Configure(_ context.Context, req resource.ConfigureRe
 }
 
 func (r *SettingsResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var state SettingsModel
+	var model SettingsModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	modelToCore := newModelToCoreConverter()
-	updateReq := modelToCore.UpdateSettingsRequest(&state)
+	updateReq := modelToCore.UpdateSettingsRequest(&model)
 	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -58,19 +58,19 @@ func (r *SettingsResource) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	coreToModel := newCoreToModelConverter()
-	state = *coreToModel.Settings(updateRes.Msg.GetSettings())
+	model = *coreToModel.Settings(updateRes.Msg.GetSettings())
 	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *SettingsResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state SettingsModel
+	var model SettingsModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -78,8 +78,8 @@ func (r *SettingsResource) Read(ctx context.Context, req resource.ReadRequest, r
 	listReq := connect.NewRequest(&pomerium.ListSettingsRequest{
 		Limit: proto.Uint64(1),
 	})
-	if !state.ClusterID.IsNull() {
-		listReq.Header().Set("Cluster-Id", state.ClusterID.ValueString())
+	if !model.ClusterID.IsNull() {
+		listReq.Header().Set("Cluster-Id", model.ClusterID.ValueString())
 	}
 
 	listRes, err := r.client.shared.ListSettings(ctx, listReq)
@@ -92,25 +92,25 @@ func (r *SettingsResource) Read(ctx context.Context, req resource.ReadRequest, r
 	}
 
 	coreToModel := newCoreToModelConverter()
-	state = *coreToModel.Settings(listRes.Msg.GetSettings()[0])
+	model = *coreToModel.Settings(listRes.Msg.GetSettings()[0])
 	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *SettingsResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var state SettingsModel
+	var model SettingsModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	modelToCore := newModelToCoreConverter()
-	updateReq := modelToCore.UpdateSettingsRequest(&state)
+	updateReq := modelToCore.UpdateSettingsRequest(&model)
 	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -123,12 +123,12 @@ func (r *SettingsResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	coreToModel := newCoreToModelConverter()
-	state = *coreToModel.Settings(updateRes.Msg.GetSettings())
+	model = *coreToModel.Settings(updateRes.Msg.GetSettings())
 	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *SettingsResource) Delete(ctx context.Context, _ resource.DeleteRequest, resp *resource.DeleteResponse) {

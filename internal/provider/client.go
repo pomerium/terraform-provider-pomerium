@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"crypto/tls"
+	"encoding/base64"
 	"fmt"
 	"net"
 	"net/http"
@@ -10,7 +11,10 @@ import (
 	"sync"
 
 	"connectrpc.com/connect"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
+
+	"github.com/google/uuid"
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
@@ -259,7 +263,16 @@ func (c *Client) SetNamespace(
 ) (*pb.SetNamespaceResponse, error) {
 	var res *pb.SetNamespaceResponse
 	err := c.byProduct(ctx,
-		func() error { return fmt.Errorf("namespaces are not supported by core") },
+		func() error {
+			namespace := proto.CloneOf(req.Namespace)
+			if namespace.Id == "" {
+				namespace.Id = uuid.NewString()
+			}
+			res = &pb.SetNamespaceResponse{
+				Namespace: namespace,
+			}
+			return nil
+		},
 		func(enterpriseClient *client.Client) error {
 			var err error
 			res, err = enterpriseClient.NamespaceService.SetNamespace(ctx, req)
@@ -329,9 +342,17 @@ func (c *Client) getEnterpriseClient() (*client.Client, error) {
 		port = "443"
 	}
 
+	token := c.apiToken
+	if key, err := base64.StdEncoding.DecodeString(token); err == nil && len(key) == 32 {
+		token, err = GenerateBootstrapServiceAccountToken(token)
+		if err != nil {
+			return nil, fmt.Errorf("error generating bootstrap service account: %w", err)
+		}
+	}
+
 	c.enterprise, err = client.NewClient(context.Background(),
 		net.JoinHostPort(host, port),
-		c.apiToken,
+		token,
 		client.WithTlsConfig(c.tlsConfig))
 	if err != nil {
 		return nil, fmt.Errorf("error creating enterprise client: %w", err)

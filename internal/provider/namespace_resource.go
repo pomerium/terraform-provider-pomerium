@@ -70,14 +70,14 @@ func (r *NamespaceResource) Configure(_ context.Context, req resource.ConfigureR
 }
 
 func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan NamespaceResourceModel
+	var model NamespaceResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	pbNamespace, diags := ConvertNamespaceToPB(ctx, &plan)
+	pbNamespace, diags := ConvertNamespaceToPB(ctx, &model)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -91,27 +91,27 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	plan.ID = types.StringValue(respNamespace.Namespace.Id)
-	plan.ClusterID = types.StringPointerValue(respNamespace.Namespace.ClusterId)
+	model.ID = types.StringValue(respNamespace.Namespace.Id)
+	model.ClusterID = types.StringPointerValue(respNamespace.Namespace.ClusterId)
 
 	tflog.Trace(ctx, "Created a namespace", map[string]any{
-		"id":   plan.ID.ValueString(),
-		"name": plan.Name.ValueString(),
+		"id":   model.ID.ValueString(),
+		"name": model.Name.ValueString(),
 	})
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *NamespaceResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	var state NamespaceResourceModel
+	var model NamespaceResourceModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	respNamespace, err := r.client.GetNamespace(ctx, &pb.GetNamespaceRequest{
-		Id: state.ID.ValueString(),
+		Id: model.ID.ValueString(),
 	})
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
@@ -122,24 +122,24 @@ func (r *NamespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	diags := ConvertNamespaceFromPB(&state, respNamespace.Namespace)
+	diags := ConvertNamespaceFromPB(&model, respNamespace.Namespace)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *NamespaceResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan NamespaceResourceModel
+	var model NamespaceResourceModel
 
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	pbNamespace, diags := ConvertNamespaceToPB(ctx, &plan)
+	pbNamespace, diags := ConvertNamespaceToPB(ctx, &model)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -153,19 +153,19 @@ func (r *NamespaceResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
 
 func (r *NamespaceResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state NamespaceResourceModel
+	var model NamespaceResourceModel
 
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	_, err := r.client.DeleteNamespace(ctx, &pb.DeleteNamespaceRequest{
-		Id: state.ID.ValueString(),
+		Id: model.ID.ValueString(),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Error deleting namespace", err.Error())

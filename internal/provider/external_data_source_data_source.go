@@ -91,30 +91,30 @@ func (d *ExternalDataSourceDataSource) Configure(_ context.Context, req datasour
 }
 
 func (d *ExternalDataSourceDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var state ExternalDataSourceDataSourceModel
+	var model ExternalDataSourceDataSourceModel
 
-	resp.Diagnostics.Append(req.Config.Get(ctx, &state)...)
+	resp.Diagnostics.Append(req.Config.Get(ctx, &model)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
 	respExternalDataSource, err := d.client.GetExternalDataSource(ctx, &pb.GetExternalDataSourceRequest{
-		Id: state.ID.ValueString(),
+		Id: model.ID.ValueString(),
 	})
 	if err != nil {
 		if status.Code(err) == codes.NotFound {
-			resp.Diagnostics.AddError("External Data Source not found", fmt.Sprintf("External Data Source with ID %s not found", state.ID.ValueString()))
+			resp.Diagnostics.AddError("External Data Source not found", fmt.Sprintf("External Data Source with ID %s not found", model.ID.ValueString()))
 			return
 		}
 		resp.Diagnostics.AddError("get external data source", err.Error())
 		return
 	}
 
-	diags := ConvertExternalDataSourceFromPB(&state, respExternalDataSource.ExternalDataSource)
+	diags := ConvertExternalDataSourceFromPB(&model, respExternalDataSource.ExternalDataSource)
 	resp.Diagnostics.Append(diags...)
 	if diags.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
 }
