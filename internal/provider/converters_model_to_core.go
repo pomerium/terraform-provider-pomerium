@@ -15,12 +15,12 @@ import (
 )
 
 type modelToCoreConverter struct {
-	diagnostics diag.Diagnostics
+	diagnostics *diag.Diagnostics
 }
 
-func newModelToCoreConverter() *modelToCoreConverter {
+func newModelToCoreConverter(diagnostics *diag.Diagnostics) *modelToCoreConverter {
 	return &modelToCoreConverter{
-		diagnostics: nil,
+		diagnostics: diagnostics,
 	}
 }
 
@@ -47,7 +47,7 @@ func (c *modelToCoreConverter) CreateRouteRequest(src *RouteResourceModel) *conn
 		return nil
 	}
 	return connect.NewRequest(&pomerium.CreateRouteRequest{
-		Route: c.Route(src),
+		Route: c.Route(src, nil),
 	})
 }
 
@@ -145,21 +145,26 @@ func (c *modelToCoreConverter) Policy(src *PolicyResourceModel) *pomerium.Policy
 	}
 }
 
-func (c *modelToCoreConverter) Route(src *RouteResourceModel) *pomerium.Route {
+func (c *modelToCoreConverter) Route(src *RouteResourceModel, current *pomerium.Route) *pomerium.Route {
 	if src == nil {
 		return nil
 	}
-	return &pomerium.Route{
+	dst := proto.CloneOf(current)
+	if dst == nil {
+		dst = new(pomerium.Route)
+	}
+	proto.Merge(dst, &pomerium.Route{
+		Description:  src.Description.ValueStringPointer(),
+		From:         src.From.ValueString(),
 		Id:           src.ID.ValueStringPointer(),
+		LogoUrl:      src.LogoURL.ValueStringPointer(),
+		Name:         src.Name.ValueStringPointer(),
 		NamespaceId:  src.NamespaceID.ValueStringPointer(),
 		OriginatorId: proto.String(OriginatorID),
-		Name:         src.Name.ValueStringPointer(),
 		StatName:     src.StatName.ValueStringPointer(),
-		Description:  src.Description.ValueStringPointer(),
-		LogoUrl:      src.LogoURL.ValueStringPointer(),
-		From:         src.From.ValueString(),
 		To:           c.StringSliceFromSet(src.To),
-	}
+	})
+	return dst
 }
 
 func (c *modelToCoreConverter) ServiceAccount(src *ServiceAccountResourceModel) *pomerium.ServiceAccount {
@@ -246,7 +251,7 @@ func (c *modelToCoreConverter) UpdateRouteRequest(src *RouteResourceModel) *conn
 		return nil
 	}
 	return connect.NewRequest(&pomerium.UpdateRouteRequest{
-		Route: c.Route(src),
+		Route: c.Route(src, nil),
 	})
 }
 

@@ -102,9 +102,8 @@ func (r *ServiceAccountResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	modelToCore := newModelToCoreConverter()
+	modelToCore := newModelToCoreConverter(&resp.Diagnostics)
 	coreServiceAccount := modelToCore.ServiceAccount(&model)
-	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -117,9 +116,8 @@ func (r *ServiceAccountResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	coreToModel := newCoreToModelConverter()
+	coreToModel := newCoreToModelConverter(&resp.Diagnostics)
 	model.ServiceAccountModel = *coreToModel.ServiceAccount(respServiceAccount.Msg.ServiceAccount)
-	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -154,9 +152,8 @@ func (r *ServiceAccountResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	coreToModel := newCoreToModelConverter()
+	coreToModel := newCoreToModelConverter(&resp.Diagnostics)
 	model.ServiceAccountModel = *coreToModel.ServiceAccount(respServiceAccount.Msg.ServiceAccount)
-	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -172,9 +169,8 @@ func (r *ServiceAccountResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	modelToCore := newModelToCoreConverter()
+	modelToCore := newModelToCoreConverter(&resp.Diagnostics)
 	dst := modelToCore.ServiceAccount(&model)
-	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

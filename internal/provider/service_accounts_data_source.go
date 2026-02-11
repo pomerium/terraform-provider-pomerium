@@ -97,10 +97,9 @@ func (d *ServiceAccountsDataSource) Read(ctx context.Context, req datasource.Rea
 
 	serviceAccounts := make([]ServiceAccountModel, 0, len(serviceAccountsResp.Msg.ServiceAccounts))
 	for _, src := range serviceAccountsResp.Msg.ServiceAccounts {
-		c := newCoreToModelConverter()
+		c := newCoreToModelConverter(&resp.Diagnostics)
 		serviceAccounts = append(serviceAccounts, *c.ServiceAccount(src))
 		if c.diagnostics.HasError() {
-			resp.Diagnostics.Append(c.diagnostics...)
 			return
 		}
 	}

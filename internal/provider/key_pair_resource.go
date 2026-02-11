@@ -79,9 +79,8 @@ func (r *KeyPairResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	modelToCore := newModelToCoreConverter()
+	modelToCore := newModelToCoreConverter(&resp.Diagnostics)
 	createReq := modelToCore.CreateKeyPairRequest(&model)
-	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -92,9 +91,8 @@ func (r *KeyPairResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	coreToModel := newCoreToModelConverter()
+	coreToModel := newCoreToModelConverter(&resp.Diagnostics)
 	model = *coreToModel.KeyPair(createRes.Msg.GetKeyPair())
-	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -126,9 +124,8 @@ func (r *KeyPairResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	coreToModel := newCoreToModelConverter()
+	coreToModel := newCoreToModelConverter(&resp.Diagnostics)
 	model = *coreToModel.KeyPair(getRes.Msg.GetKeyPair())
-	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -144,9 +141,8 @@ func (r *KeyPairResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	modelToCore := newModelToCoreConverter()
+	modelToCore := newModelToCoreConverter(&resp.Diagnostics)
 	updateReq := modelToCore.UpdateKeyPairRequest(&model)
-	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -157,9 +153,8 @@ func (r *KeyPairResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	coreToModel := newCoreToModelConverter()
+	coreToModel := newCoreToModelConverter(&resp.Diagnostics)
 	model = *coreToModel.KeyPair(updateRes.Msg.GetKeyPair())
-	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

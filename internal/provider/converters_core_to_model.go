@@ -16,12 +16,12 @@ import (
 )
 
 type coreToModelConverter struct {
-	diagnostics diag.Diagnostics
+	diagnostics *diag.Diagnostics
 }
 
-func newCoreToModelConverter() *coreToModelConverter {
+func newCoreToModelConverter(diagnostics *diag.Diagnostics) *coreToModelConverter {
 	return &coreToModelConverter{
-		diagnostics: nil,
+		diagnostics: diagnostics,
 	}
 }
 
@@ -136,11 +136,11 @@ func (c *coreToModelConverter) HealthCheckPayloadText(src *pomerium.HealthCheck_
 }
 
 func (c *coreToModelConverter) HealthCheckPayloads(srcs []*pomerium.HealthCheck_Payload) types.Set {
-	return buildSetOfObjects(&c.diagnostics, HealthCheckPayloadObjectType(), srcs, c.HealthCheckPayload)
+	return buildSetOfObjects(c.diagnostics, HealthCheckPayloadObjectType(), srcs, c.HealthCheckPayload)
 }
 
 func (c *coreToModelConverter) HealthChecks(srcs []*pomerium.HealthCheck) types.Set {
-	return buildSetOfObjects(&c.diagnostics, HealthCheckObjectType(), srcs, c.HealthCheck)
+	return buildSetOfObjects(c.diagnostics, HealthCheckObjectType(), srcs, c.HealthCheck)
 }
 
 func (c *coreToModelConverter) HTTPHealthCheck(src *pomerium.HealthCheck_HttpHealthCheck) types.Object {
@@ -171,7 +171,7 @@ func (c *coreToModelConverter) Int64Range(src *pomerium.HealthCheck_Int64Range) 
 }
 
 func (c *coreToModelConverter) Int64Ranges(srcs []*pomerium.HealthCheck_Int64Range) types.Set {
-	return buildSetOfObjects(&c.diagnostics, Int64RangeObjectType(), srcs, c.Int64Range)
+	return buildSetOfObjects(c.diagnostics, Int64RangeObjectType(), srcs, c.Int64Range)
 }
 
 func (c *coreToModelConverter) IssuerFormat(src *pomerium.IssuerFormat) types.String {
@@ -241,7 +241,7 @@ func (c *coreToModelConverter) Policy(src *pomerium.Policy) *PolicyResourceModel
 	}
 }
 
-func (c *coreToModelConverter) Route(src *pomerium.Route) *RouteResourceModel {
+func (c *coreToModelConverter) Route(src *pomerium.Route, _ *RouteResourceModel) *RouteResourceModel {
 	return &RouteResourceModel{
 		AllowSPDY:                types.BoolValue(src.AllowSpdy),
 		AllowWebsockets:          types.BoolValue(src.AllowWebsockets),
@@ -311,7 +311,7 @@ func (c *coreToModelConverter) RouteRewriteHeader(src *pomerium.RouteRewriteHead
 }
 
 func (c *coreToModelConverter) RouteRewriteHeaders(srcs []*pomerium.RouteRewriteHeader) types.Set {
-	return buildSetOfObjects(&c.diagnostics, RewriteHeaderObjectType(), srcs, c.RouteRewriteHeader)
+	return buildSetOfObjects(c.diagnostics, RewriteHeaderObjectType(), srcs, c.RouteRewriteHeader)
 }
 
 func (c *coreToModelConverter) ServiceAccount(src *pomerium.ServiceAccount) *ServiceAccountModel {

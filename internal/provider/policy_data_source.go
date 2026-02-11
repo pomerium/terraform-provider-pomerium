@@ -91,9 +91,8 @@ func (d *PolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	coreToModel := newCoreToModelConverter()
+	coreToModel := newCoreToModelConverter(&resp.Diagnostics)
 	data = *coreToModel.Policy(getRes.Msg.GetPolicy())
-	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

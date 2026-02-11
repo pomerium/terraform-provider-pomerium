@@ -76,9 +76,8 @@ func (d *ServiceAccountDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	coreToModel := newCoreToModelConverter()
+	coreToModel := newCoreToModelConverter(&resp.Diagnostics)
 	data = *coreToModel.ServiceAccount(serviceAccountResp.Msg.GetServiceAccount())
-	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

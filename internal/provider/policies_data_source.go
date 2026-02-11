@@ -132,7 +132,7 @@ func (d *PoliciesDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	policiesResp, err := d.client.shared.ListPolicies(ctx, newModelToCoreConverter().ListPoliciesRequest(&data))
+	policiesResp, err := d.client.shared.ListPolicies(ctx, newModelToCoreConverter(&resp.Diagnostics).ListPoliciesRequest(&data))
 	if err != nil {
 		resp.Diagnostics.AddError("Error reading policies", err.Error())
 		return
@@ -140,10 +140,9 @@ func (d *PoliciesDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 	dsts := make([]PolicyModel, 0, len(policiesResp.Msg.GetPolicies()))
 	for _, src := range policiesResp.Msg.GetPolicies() {
-		coreToModel := newCoreToModelConverter()
+		coreToModel := newCoreToModelConverter(&resp.Diagnostics)
 		dst := coreToModel.Policy(src)
 		if coreToModel.diagnostics.HasError() {
-			resp.Diagnostics.Append(coreToModel.diagnostics...)
 			return
 		}
 		dsts = append(dsts, *dst)

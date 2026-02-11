@@ -442,9 +442,8 @@ func (r *RouteResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	modelToCore := newModelToCoreConverter()
+	modelToCore := newModelToCoreConverter(&resp.Diagnostics)
 	createReq := modelToCore.CreateRouteRequest(&model)
-	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -455,9 +454,8 @@ func (r *RouteResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	coreToModel := newCoreToModelConverter()
-	model = *coreToModel.Route(createRes.Msg.GetRoute())
-	resp.Diagnostics.Append(coreToModel.diagnostics...)
+	coreToModel := newCoreToModelConverter(&resp.Diagnostics)
+	model = *coreToModel.Route(createRes.Msg.GetRoute(), nil)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -490,9 +488,8 @@ func (r *RouteResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	coreToModel := newCoreToModelConverter()
-	model = *coreToModel.Route(getRes.Msg.GetRoute())
-	resp.Diagnostics.Append(coreToModel.diagnostics...)
+	coreToModel := newCoreToModelConverter(&resp.Diagnostics)
+	model = *coreToModel.Route(getRes.Msg.GetRoute(), nil)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -501,53 +498,28 @@ func (r *RouteResource) Read(ctx context.Context, req resource.ReadRequest, resp
 }
 
 func (r *RouteResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var model RouteResourceModel
-
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &model)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	modelToCore := newModelToCoreConverter()
-	updateReq := modelToCore.UpdateRouteRequest(&model)
-	resp.Diagnostics.Append(modelToCore.diagnostics...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	updateRes, err := r.client.shared.UpdateRoute(ctx, updateReq)
-	if err != nil {
-		resp.Diagnostics.AddError("set route", err.Error())
-		return
-	}
-
-	coreToModel := newCoreToModelConverter()
-	model = *coreToModel.Route(updateRes.Msg.GetRoute())
-	resp.Diagnostics.Append(coreToModel.diagnostics...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &model)...)
+	updateResource(ctx, req, resp,
+		newModelToCoreConverter(&resp.Diagnostics).Route,
+		newCoreToModelConverter(&resp.Diagnostics).Route,
+		func(ctx context.Context, route *pomerium.Route) (*pomerium.Route, error) {
+			res, err := r.client.shared.UpdateRoute(ctx, connect.NewRequest(&pomerium.UpdateRouteRequest{
+				Route: route,
+			}))
+			if err != nil {
+				return nil, err
+			}
+			return res.Msg.GetRoute(), nil
+		},
+	)
 }
 
 func (r *RouteResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var data RouteResourceModel
-
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	_, err := r.client.shared.DeleteRoute(ctx, connect.NewRequest(&pomerium.DeleteRouteRequest{
-		Id: data.ID.ValueString(),
-	}))
-	if err != nil {
-		resp.Diagnostics.AddError("delete route", err.Error())
-		return
-	}
-
-	resp.State.RemoveResource(ctx)
+	deleteResource[RouteResourceModel](ctx, req, resp, func(ctx context.Context, id string) error {
+		_, err := r.client.shared.DeleteRoute(ctx, connect.NewRequest(&pomerium.DeleteRouteRequest{
+			Id: id,
+		}))
+		return err
+	})
 }
 
 func (r *RouteResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

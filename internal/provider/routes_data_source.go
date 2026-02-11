@@ -84,32 +84,31 @@ func (d *RoutesDataSource) Configure(_ context.Context, req datasource.Configure
 	d.client = ConfigureClient(req, resp)
 }
 
-func (d *RoutesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data RoutesDataSourceModel
+func (d *RoutesDataSource) Read(ctx context.Context, req datasource.ReadRequest, res *datasource.ReadResponse) {
+	readDataSource(ctx, req, res,
+		func(model *RoutesDataSourceModel) {
+			listReq := newModelToCoreConverter(&res.Diagnostics).ListRoutesRequest(model)
+			if res.Diagnostics.HasError() {
+				return
+			}
 
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+			listRes, err := d.client.shared.ListRoutes(ctx, listReq)
+			if err != nil {
+				res.Diagnostics.AddError("Error reading routes", err.Error())
+				return
+			}
 
-	routesResp, err := d.client.shared.ListRoutes(ctx, newModelToCoreConverter().ListRoutesRequest(&data))
-	if err != nil {
-		resp.Diagnostics.AddError("Error reading routes", err.Error())
-		return
-	}
+			routes := make([]RouteModel, 0, len(listRes.Msg.GetRoutes()))
+			for _, route := range listRes.Msg.GetRoutes() {
+				coreToModel := newCoreToModelConverter(&res.Diagnostics)
+				routeModel := coreToModel.Route(route, nil)
+				if coreToModel.diagnostics.HasError() {
+					return
+				}
+				routes = append(routes, *routeModel)
+			}
 
-	routes := make([]RouteModel, 0, len(routesResp.Msg.Routes))
-	for _, route := range routesResp.Msg.Routes {
-		coreToModel := newCoreToModelConverter()
-		routeModel := coreToModel.Route(route)
-		if coreToModel.diagnostics.HasError() {
-			resp.Diagnostics.Append(coreToModel.diagnostics...)
-			return
-		}
-		routes = append(routes, *routeModel)
-	}
-
-	data.Routes = routes
-	data.TotalCount = types.Int64Value(int64(routesResp.Msg.GetTotalCount()))
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+			model.Routes = routes
+			model.TotalCount = types.Int64Value(int64(listRes.Msg.GetTotalCount()))
+		})
 }

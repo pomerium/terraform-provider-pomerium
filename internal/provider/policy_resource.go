@@ -112,9 +112,8 @@ func (r *PolicyResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	modelToCore := newModelToCoreConverter()
+	modelToCore := newModelToCoreConverter(&resp.Diagnostics)
 	createReq := modelToCore.CreatePolicyRequest(&model)
-	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -125,9 +124,8 @@ func (r *PolicyResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	coreToModel := newCoreToModelConverter()
+	coreToModel := newCoreToModelConverter(&resp.Diagnostics)
 	model = *coreToModel.Policy(createRes.Msg.GetPolicy())
-	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -160,9 +158,8 @@ func (r *PolicyResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	coreToModel := newCoreToModelConverter()
+	coreToModel := newCoreToModelConverter(&resp.Diagnostics)
 	model = *coreToModel.Policy(getRes.Msg.GetPolicy())
-	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -178,9 +175,8 @@ func (r *PolicyResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	modelToCore := newModelToCoreConverter()
+	modelToCore := newModelToCoreConverter(&resp.Diagnostics)
 	updateReq := modelToCore.UpdatePolicyRequest(&model)
-	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -191,9 +187,8 @@ func (r *PolicyResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	coreToModel := newCoreToModelConverter()
+	coreToModel := newCoreToModelConverter(&resp.Diagnostics)
 	model = *coreToModel.Policy(updateRes.Msg.GetPolicy())
-	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

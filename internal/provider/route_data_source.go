@@ -429,9 +429,8 @@ func (d *RouteDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	coreToModel := newCoreToModelConverter()
-	data = *coreToModel.Route(routeResp.Msg.GetRoute())
-	resp.Diagnostics.Append(coreToModel.diagnostics...)
+	coreToModel := newCoreToModelConverter(&resp.Diagnostics)
+	data = *coreToModel.Route(routeResp.Msg.GetRoute(), nil)
 	if resp.Diagnostics.HasError() {
 		return
 	}

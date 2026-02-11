@@ -68,6 +68,10 @@ type RouteModel struct {
 	To                                        types.Set            `tfsdk:"to"`
 }
 
+func (model RouteModel) GetID() types.String {
+	return model.ID
+}
+
 func rewriteHeadersToPB(src types.Set) []*pb.RouteRewriteHeader {
 	if (src).IsNull() {
 		return nil

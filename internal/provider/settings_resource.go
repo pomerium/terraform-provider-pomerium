@@ -44,9 +44,8 @@ func (r *SettingsResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	modelToCore := newModelToCoreConverter()
+	modelToCore := newModelToCoreConverter(&resp.Diagnostics)
 	updateReq := modelToCore.UpdateSettingsRequest(&model)
-	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -57,9 +56,8 @@ func (r *SettingsResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	coreToModel := newCoreToModelConverter()
+	coreToModel := newCoreToModelConverter(&resp.Diagnostics)
 	model = *coreToModel.Settings(updateRes.Msg.GetSettings())
-	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -91,9 +89,8 @@ func (r *SettingsResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	coreToModel := newCoreToModelConverter()
+	coreToModel := newCoreToModelConverter(&resp.Diagnostics)
 	model = *coreToModel.Settings(listRes.Msg.GetSettings()[0])
-	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -109,9 +106,8 @@ func (r *SettingsResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	modelToCore := newModelToCoreConverter()
+	modelToCore := newModelToCoreConverter(&resp.Diagnostics)
 	updateReq := modelToCore.UpdateSettingsRequest(&model)
-	resp.Diagnostics.Append(modelToCore.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -122,9 +118,8 @@ func (r *SettingsResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	coreToModel := newCoreToModelConverter()
+	coreToModel := newCoreToModelConverter(&resp.Diagnostics)
 	model = *coreToModel.Settings(updateRes.Msg.GetSettings())
-	resp.Diagnostics.Append(coreToModel.diagnostics...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
