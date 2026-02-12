@@ -350,7 +350,7 @@ func (c *ModelToEnterpriseConverter) Namespace(src NamespaceModel) *enterprise.N
 		ModifiedAt:   nil, // not supported
 		Name:         src.Name.ValueString(),
 		OriginatorId: OriginatorID,
-		ParentId:     *c.NullableString(src.ParentID),
+		ParentId:     src.ParentID.ValueString(),
 		PolicyCount:  0, // not supported
 		RouteCount:   0, // not supported
 	}
@@ -401,7 +401,7 @@ func (c *ModelToEnterpriseConverter) Route(src RouteModel) *enterprise.Route {
 		CircuitBreakerThresholds: c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
 		DependsOn:                c.StringSliceFromSet(path.Root("depends_on"), src.DependsOnHosts),
 		Description:              src.Description.ValueStringPointer(),
-		EnableGoogleCloudServerlessAuthentication: *c.NullableBool(src.EnableGoogleCloudServerlessAuthentication),
+		EnableGoogleCloudServerlessAuthentication: src.EnableGoogleCloudServerlessAuthentication.ValueBool(),
 		From:                              src.From.ValueString(),
 		HealthChecks:                      fromSetOfObjects(src.HealthChecks, HealthCheckObjectType(), c.HealthCheck),
 		HealthyPanicThreshold:             src.HealthyPanicThreshold.ValueInt32Pointer(),
@@ -564,7 +564,7 @@ func (c *ModelToEnterpriseConverter) Settings(src SettingsModel) *enterprise.Set
 		OtelExporterOtlpProtocol:        src.OtelExporterOtlpProtocol.ValueStringPointer(),
 		OtelExporterOtlpTimeout:         c.Duration(path.Root("otel_exporter_otlp_timeout"), src.OtelExporterOtlpTimeout),
 		OtelExporterOtlpTracesEndpoint:  src.OtelExporterOtlpTracesEndpoint.ValueStringPointer(),
-		OtelExporterOtlpTracesHeaders:   c.StringSliceFromSet(path.Root("otel_exporter_otlp_traces_headers"), src.OtelExporterOtlpHeaders),
+		OtelExporterOtlpTracesHeaders:   c.StringSliceFromSet(path.Root("otel_exporter_otlp_traces_headers"), src.OtelExporterOtlpTracesHeaders),
 		OtelExporterOtlpTracesProtocol:  src.OtelExporterOtlpTracesProtocol.ValueStringPointer(),
 		OtelExporterOtlpTracesTimeout:   c.Duration(path.Root("otel_exporter_otlp_traces_timeout"), src.OtelExporterOtlpTracesTimeout),
 		OtelLogLevel:                    src.OtelLogLevel.ValueStringPointer(),

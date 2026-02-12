@@ -481,7 +481,7 @@ func fromSetOfObjects[T any](srcs types.Set, elementType types.ObjectType, fn fu
 
 func toSetOfObjects[T any](srcs []T, elementType types.ObjectType, fn func(src T) types.Object) types.Set {
 	if len(srcs) == 0 {
-		return types.SetNull(HealthCheckObjectType())
+		return types.SetNull(elementType)
 	}
 
 	elements := make([]attr.Value, len(srcs))
