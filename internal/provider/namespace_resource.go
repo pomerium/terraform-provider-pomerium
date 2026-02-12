@@ -79,8 +79,7 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbNamespace, diags := ConvertNamespaceToPB(ctx, &plan)
-		resp.Diagnostics.Append(diags...)
+		pbNamespace := NewModelToEnterpriseConverter(&resp.Diagnostics).Namespace(plan)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -131,8 +130,7 @@ func (r *NamespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 			return
 		}
 
-		diags := ConvertNamespaceFromPB(&state, getRes.Namespace)
-		resp.Diagnostics.Append(diags...)
+		state = NewEnterpriseToModelConverter(&resp.Diagnostics).Namespace(getRes.GetNamespace())
 	})...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -150,8 +148,7 @@ func (r *NamespaceResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbNamespace, diags := ConvertNamespaceToPB(ctx, &plan)
-		resp.Diagnostics.Append(diags...)
+		pbNamespace := NewModelToEnterpriseConverter(&resp.Diagnostics).Namespace(plan)
 		if resp.Diagnostics.HasError() {
 			return
 		}

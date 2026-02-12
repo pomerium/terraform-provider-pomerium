@@ -34,6 +34,21 @@ func (c *ModelToEnterpriseConverter) CreateKeyPairRequest(src KeyPairModel) *ent
 	}
 }
 
+func (c *ModelToEnterpriseConverter) Namespace(src NamespaceModel) *enterprise.Namespace {
+	return &enterprise.Namespace{
+		ClusterId:    c.NullableString(src.ClusterID),
+		CreatedAt:    nil, // not supported
+		DeletedAt:    nil, // not supported
+		Id:           src.ID.ValueString(),
+		ModifiedAt:   nil, // not supported
+		Name:         src.Name.ValueString(),
+		OriginatorId: OriginatorID,
+		ParentId:     *c.NullableString(src.ParentID),
+		PolicyCount:  0, // not supported
+		RouteCount:   0, // not supported
+	}
+}
+
 func (c *ModelToEnterpriseConverter) NullableString(src types.String) *string {
 	if src.IsNull() || src.IsUnknown() {
 		return nil

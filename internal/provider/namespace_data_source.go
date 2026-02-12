@@ -71,8 +71,7 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 			return
 		}
 
-		diags := ConvertNamespaceFromPB(&data, getRes.Namespace)
-		resp.Diagnostics.Append(diags...)
+		data = NewEnterpriseToModelConverter(&resp.Diagnostics).Namespace(getRes.GetNamespace())
 	})...)
 	if resp.Diagnostics.HasError() {
 		return

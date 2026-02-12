@@ -1,12 +1,7 @@
 package provider
 
 import (
-	"context"
-
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
-	"github.com/pomerium/enterprise-client-go/pb"
 )
 
 const OriginatorID = "terraform"
@@ -24,43 +19,6 @@ type NamespaceModel struct {
 	Name      types.String `tfsdk:"name"`
 	ParentID  types.String `tfsdk:"parent_id"`
 	ClusterID types.String `tfsdk:"cluster_id"`
-}
-
-func ConvertNamespaceToPB(_ context.Context, src *NamespaceResourceModel) (*pb.Namespace, diag.Diagnostics) {
-	var diagnostics diag.Diagnostics
-
-	pbNamespace := &pb.Namespace{
-		OriginatorId: OriginatorID,
-		Id:           src.ID.ValueString(),
-		Name:         src.Name.ValueString(),
-	}
-
-	if !src.ClusterID.IsNull() && !src.ClusterID.IsUnknown() {
-		pbNamespace.ClusterId = src.ClusterID.ValueStringPointer()
-	}
-
-	if !src.ParentID.IsNull() {
-		pbNamespace.ParentId = src.ParentID.ValueString()
-	}
-
-	return pbNamespace, diagnostics
-}
-
-func ConvertNamespaceFromPB(dst *NamespaceResourceModel, src *pb.Namespace) diag.Diagnostics {
-	var diagnostics diag.Diagnostics
-
-	dst.ID = types.StringValue(src.Id)
-	dst.Name = types.StringValue(src.Name)
-
-	if src.ParentId != "" {
-		dst.ParentID = types.StringValue(src.ParentId)
-	} else {
-		dst.ParentID = types.StringNull()
-	}
-
-	dst.ClusterID = types.StringPointerValue(src.ClusterId)
-
-	return diagnostics
 }
 
 type PolicyModel struct {

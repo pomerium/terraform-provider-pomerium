@@ -21,6 +21,15 @@ func NewEnterpriseToModelConverter(diagnostics *diag.Diagnostics) *EnterpriseToM
 	}
 }
 
+func (c *EnterpriseToModelConverter) Namespace(src *enterprise.Namespace) NamespaceModel {
+	return NamespaceModel{
+		ClusterID: types.StringPointerValue(src.ClusterId),
+		ID:        types.StringValue(src.Id),
+		Name:      types.StringValue(src.Name),
+		ParentID:  types.StringPointerValue(zeroToNil(src.ParentId)),
+	}
+}
+
 func (c *EnterpriseToModelConverter) Policy(src *enterprise.Policy) PolicyModel {
 	ppl, err := PolicyLanguageType{}.Parse(types.StringValue(src.Ppl))
 	if err != nil {
