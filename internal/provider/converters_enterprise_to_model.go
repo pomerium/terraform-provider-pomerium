@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -27,6 +28,22 @@ func (c *EnterpriseToModelConverter) Base64String(src []byte) types.String {
 		return types.StringNull()
 	}
 	return types.StringValue(base64.StdEncoding.EncodeToString(src))
+}
+
+func (c *EnterpriseToModelConverter) CircuitBreakerThresholds(src *enterprise.CircuitBreakerThresholds) types.Object {
+	if src == nil {
+		return types.ObjectNull(CircuitBreakerThresholdsAttributes)
+	}
+
+	dst, diagnostics := types.ObjectValue(CircuitBreakerThresholdsAttributes, map[string]attr.Value{
+		"max_connections":      Int64PointerValue(src.MaxConnections),
+		"max_pending_requests": Int64PointerValue(src.MaxPendingRequests),
+		"max_requests":         Int64PointerValue(src.MaxRequests),
+		"max_retries":          Int64PointerValue(src.MaxRetries),
+		"max_connection_pools": Int64PointerValue(src.MaxConnectionPools),
+	})
+	c.diagnostics.Append(diagnostics...)
+	return dst
 }
 
 func (c *EnterpriseToModelConverter) Cluster(src *enterprise.Cluster, namespace *enterprise.Namespace) ClusterModel {

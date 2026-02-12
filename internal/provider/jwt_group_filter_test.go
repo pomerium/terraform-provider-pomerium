@@ -7,10 +7,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/testing/protocmp"
+
 	"github.com/pomerium/enterprise-client-go/pb"
 	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
-	"github.com/stretchr/testify/assert"
-	"google.golang.org/protobuf/testing/protocmp"
 )
 
 func TestJWTGroupsFilterFromPB(t *testing.T) {
@@ -28,7 +30,7 @@ func TestJWTGroupsFilterFromPB(t *testing.T) {
 			name: "empty groups",
 			input: &pb.JwtGroupsFilter{
 				Groups:       []string{},
-				InferFromPpl: P(false),
+				InferFromPpl: proto.Bool(false),
 			},
 			expected: types.ObjectValueMust(provider.JWTGroupsFilterSchemaAttr, map[string]attr.Value{
 				"groups":         types.SetValueMust(types.StringType, []attr.Value{}),
@@ -39,7 +41,7 @@ func TestJWTGroupsFilterFromPB(t *testing.T) {
 			name: "with groups",
 			input: &pb.JwtGroupsFilter{
 				Groups:       []string{"group1", "group2"},
-				InferFromPpl: P(true),
+				InferFromPpl: proto.Bool(true),
 			},
 			expected: types.ObjectValueMust(provider.JWTGroupsFilterSchemaAttr, map[string]attr.Value{
 				"groups": types.SetValueMust(types.StringType, []attr.Value{
@@ -81,7 +83,7 @@ func TestJWTGroupsFilterToPB(t *testing.T) {
 			}),
 			expected: &pb.JwtGroupsFilter{
 				Groups:       []string{},
-				InferFromPpl: P(false),
+				InferFromPpl: proto.Bool(false),
 			},
 		},
 		{
@@ -95,7 +97,7 @@ func TestJWTGroupsFilterToPB(t *testing.T) {
 			}),
 			expected: &pb.JwtGroupsFilter{
 				Groups:       []string{"group1", "group2"},
-				InferFromPpl: P(true),
+				InferFromPpl: proto.Bool(true),
 			},
 		},
 	}

@@ -37,6 +37,27 @@ func (c *ModelToEnterpriseConverter) BytesFromBase64(src types.String) []byte {
 	return dst
 }
 
+func (c *ModelToEnterpriseConverter) CircuitBreakerThresholds(src types.Object) *enterprise.CircuitBreakerThresholds {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	attrs := src.Attributes()
+	maxConnectionPools, _ := attrs["max_connection_pools"].(types.Int64)
+	maxConnections, _ := attrs["max_connections"].(types.Int64)
+	maxPendingRequests, _ := attrs["max_pending_requests"].(types.Int64)
+	maxRequests, _ := attrs["max_requests"].(types.Int64)
+	maxRetries, _ := attrs["max_retries"].(types.Int64)
+
+	return &enterprise.CircuitBreakerThresholds{
+		MaxConnectionPools: c.NullableUint32(maxConnectionPools),
+		MaxConnections:     c.NullableUint32(maxConnections),
+		MaxPendingRequests: c.NullableUint32(maxPendingRequests),
+		MaxRequests:        c.NullableUint32(maxRequests),
+		MaxRetries:         c.NullableUint32(maxRetries),
+	}
+}
+
 func (c *ModelToEnterpriseConverter) Cluster(src ClusterModel) *enterprise.Cluster {
 	return &enterprise.Cluster{
 		CertificateAuthority:     c.BytesFromBase64(src.CertificateAuthorityB64),
@@ -107,6 +128,13 @@ func (c *ModelToEnterpriseConverter) NullableString(src types.String) *string {
 		return nil
 	}
 	return src.ValueStringPointer()
+}
+
+func (c *ModelToEnterpriseConverter) NullableUint32(src types.Int64) *uint32 {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	return proto.Uint32(uint32(src.ValueInt64()))
 }
 
 func (c *ModelToEnterpriseConverter) Policy(src PolicyModel) *enterprise.Policy {

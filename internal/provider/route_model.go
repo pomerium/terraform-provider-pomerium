@@ -601,7 +601,7 @@ func ConvertRouteToPB(
 	OptionalEnumValueToPB(&dst.LoadBalancingPolicy, src.LoadBalancingPolicy, "LOAD_BALANCING_POLICY", &diagnostics)
 	healthChecksToPB(&dst.HealthChecks, src.HealthChecks, &diagnostics)
 	ToStringSliceFromSet(ctx, &dst.DependsOn, src.DependsOnHosts, &diagnostics)
-	dst.CircuitBreakerThresholds = CircuitBreakerThresholdsToPB(src.CircuitBreakerThresholds)
+	dst.CircuitBreakerThresholds = NewModelToEnterpriseConverter(&diagnostics).CircuitBreakerThresholds(src.CircuitBreakerThresholds)
 	dst.HealthyPanicThreshold = src.HealthyPanicThreshold.ValueInt32Pointer()
 
 	return dst, diagnostics
@@ -665,7 +665,7 @@ func ConvertRouteFromPB(
 	dst.LoadBalancingPolicy = OptionalEnumValueFromPB(src.LoadBalancingPolicy, "LOAD_BALANCING_POLICY")
 	healthChecksFromPB(&dst.HealthChecks, src.HealthChecks, &diagnostics)
 	dst.DependsOnHosts = FromStringSliceToSet(src.DependsOn)
-	dst.CircuitBreakerThresholds = CircuitBreakerThresholdsFromPB(src.CircuitBreakerThresholds, &diagnostics)
+	dst.CircuitBreakerThresholds = NewEnterpriseToModelConverter(&diagnostics).CircuitBreakerThresholds(src.CircuitBreakerThresholds)
 	dst.HealthyPanicThreshold = types.Int32PointerValue(src.HealthyPanicThreshold)
 
 	return diagnostics

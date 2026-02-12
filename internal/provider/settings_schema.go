@@ -597,7 +597,7 @@ var SettingsResourceSchema = schema.Schema{
 				stringvalidator.OneOf("auto", "http1", "http2", "http3"),
 			},
 		},
-		"circuit_breaker_thresholds": circuitBreakerThresholdsAttribute,
+		"circuit_breaker_thresholds": CircuitBreakerThresholdsSchema,
 		"ssh_address": schema.StringAttribute{
 			Optional:    true,
 			Description: "SSH Address",
