@@ -45,8 +45,7 @@ func (r *SettingsResource) Create(ctx context.Context, req resource.CreateReques
 	}
 
 	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		planSettings, diags := ConvertSettingsToPB(ctx, &plan)
-		resp.Diagnostics.Append(diags...)
+		planSettings := NewModelToEnterpriseConverter(&resp.Diagnostics).Settings(plan)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -60,8 +59,7 @@ func (r *SettingsResource) Create(ctx context.Context, req resource.CreateReques
 			return
 		}
 
-		diags = ConvertSettingsFromPB(&plan, setRes.Settings)
-		resp.Diagnostics.Append(diags...)
+		plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Settings(setRes.GetSettings())
 	})...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -88,8 +86,7 @@ func (r *SettingsResource) Read(ctx context.Context, req resource.ReadRequest, r
 			return
 		}
 
-		diags := ConvertSettingsFromPB(&state, getRes.Settings)
-		resp.Diagnostics.Append(diags...)
+		state = NewEnterpriseToModelConverter(&resp.Diagnostics).Settings(getRes.GetSettings())
 	})...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -107,8 +104,7 @@ func (r *SettingsResource) Update(ctx context.Context, req resource.UpdateReques
 	}
 
 	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		planSettings, diags := ConvertSettingsToPB(ctx, &plan)
-		resp.Diagnostics.Append(diags...)
+		planSettings := NewModelToEnterpriseConverter(&resp.Diagnostics).Settings(plan)
 		if resp.Diagnostics.HasError() {
 			return
 		}
