@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -113,6 +114,24 @@ func (c *ModelToEnterpriseConverter) ExternalDataSource(src ExternalDataSourceMo
 		PollingMinDelay:  c.Duration(path.Root("polling_min_delay"), src.PollingMinDelay),
 		RecordType:       src.RecordType.ValueString(),
 		Url:              src.URL.ValueString(),
+	}
+}
+
+func (c *ModelToEnterpriseConverter) JWTGroupsFilter(src types.Object) *enterprise.JwtGroupsFilter {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	var obj struct {
+		Groups       []string `tfsdk:"groups"`
+		InferFromPpl *bool    `tfsdk:"infer_from_ppl"`
+	}
+	c.diagnostics.Append(src.As(context.Background(), &obj, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    true,
+		UnhandledUnknownAsEmpty: false,
+	})...)
+	return &enterprise.JwtGroupsFilter{
+		Groups:       obj.Groups,
+		InferFromPpl: obj.InferFromPpl,
 	}
 }
 

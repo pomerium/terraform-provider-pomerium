@@ -55,16 +55,15 @@ func TestJWTGroupsFilterFromPB(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var result types.Object
-			provider.JWTGroupsFilterFromPB(&result, tc.input)
-			diff := cmp.Diff(tc.expected, result)
-			assert.Empty(t, diff)
+			var diagnostics diag.Diagnostics
+			result := provider.NewEnterpriseToModelConverter(&diagnostics).JWTGroupsFilter(tc.input)
+			assert.Empty(t, cmp.Diff(tc.expected, result))
+			assert.Empty(t, diagnostics)
 		})
 	}
 }
 
 func TestJWTGroupsFilterToPB(t *testing.T) {
-	ctx := t.Context()
 	tests := []struct {
 		name     string
 		input    types.Object
@@ -104,12 +103,10 @@ func TestJWTGroupsFilterToPB(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			var diags diag.Diagnostics
-			var result *pb.JwtGroupsFilter
-			provider.JWTGroupsFilterToPB(ctx, &result, tc.input, &diags)
-			assert.False(t, diags.HasError())
-			diff := cmp.Diff(tc.expected, result, protocmp.Transform())
-			assert.Empty(t, diff)
+			var diagnostics diag.Diagnostics
+			result := provider.NewModelToEnterpriseConverter(&diagnostics).JWTGroupsFilter(tc.input)
+			assert.Empty(t, cmp.Diff(tc.expected, result, protocmp.Transform()))
+			assert.Empty(t, diagnostics)
 		})
 	}
 }

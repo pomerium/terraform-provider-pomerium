@@ -76,6 +76,27 @@ func (c *EnterpriseToModelConverter) ExternalDataSource(src *enterprise.External
 	}
 }
 
+func (c *EnterpriseToModelConverter) JWTGroupsFilter(src *enterprise.JwtGroupsFilter) types.Object {
+	if src == nil {
+		return types.ObjectNull(JWTGroupsFilterSchemaAttributes)
+	}
+
+	attrs := make(map[string]attr.Value)
+	if src.Groups == nil {
+		attrs["groups"] = types.SetNull(types.StringType)
+	} else {
+		var vals []attr.Value
+		for _, v := range src.Groups {
+			vals = append(vals, types.StringValue(v))
+		}
+		attrs["groups"] = types.SetValueMust(types.StringType, vals)
+	}
+
+	attrs["infer_from_ppl"] = types.BoolPointerValue(src.InferFromPpl)
+
+	return types.ObjectValueMust(JWTGroupsFilterSchemaAttributes, attrs)
+}
+
 func (c *EnterpriseToModelConverter) Namespace(src *enterprise.Namespace) NamespaceModel {
 	return NamespaceModel{
 		ClusterID: types.StringPointerValue(src.ClusterId),

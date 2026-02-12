@@ -204,7 +204,7 @@ func ConvertSettingsToPB(
 	ToDuration(&dst.TimeoutIdle, src.TimeoutIdle, &diagnostics)
 	ToDuration(&dst.TimeoutRead, src.TimeoutRead, &diagnostics)
 	ToDuration(&dst.TimeoutWrite, src.TimeoutWrite, &diagnostics)
-	JWTGroupsFilterToPB(ctx, &dst.JwtGroupsFilter, src.JWTGroupsFilter, &diagnostics)
+	dst.JwtGroupsFilter = NewModelToEnterpriseConverter(&diagnostics).JWTGroupsFilter(src.JWTGroupsFilter)
 
 	dst.OtelTracesExporter = src.OtelTracesExporter.ValueStringPointer()
 	dst.OtelTracesSamplerArg = src.OtelTracesSamplerArg.ValueFloat64Pointer()
@@ -310,7 +310,7 @@ func ConvertSettingsFromPB(
 	dst.TimeoutRead = FromDuration(src.TimeoutRead)
 	dst.TimeoutWrite = FromDuration(src.TimeoutWrite)
 	IdentityProviderSettingsFromPB(dst, src, &diagnostics)
-	JWTGroupsFilterFromPB(&dst.JWTGroupsFilter, src.JwtGroupsFilter)
+	dst.JWTGroupsFilter = NewEnterpriseToModelConverter(&diagnostics).JWTGroupsFilter(src.JwtGroupsFilter)
 
 	dst.OtelTracesExporter = types.StringPointerValue(src.OtelTracesExporter)
 	dst.OtelTracesSamplerArg = types.Float64PointerValue(src.OtelTracesSamplerArg)
