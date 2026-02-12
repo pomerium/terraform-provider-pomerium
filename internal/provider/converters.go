@@ -452,3 +452,11 @@ func ToSettingsStringList(ctx context.Context, dst **pb.Settings_StringList, src
 		*dst = &pb.Settings_StringList{Values: values}
 	}
 }
+
+func zeroToNil[T comparable](v T) *T {
+	var def T
+	if def == v {
+		return nil
+	}
+	return &v
+}

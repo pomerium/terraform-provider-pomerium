@@ -2,12 +2,9 @@ package provider
 
 import (
 	"context"
-	"strings"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"google.golang.org/protobuf/proto"
 
 	"github.com/pomerium/enterprise-client-go/pb"
 )
@@ -22,63 +19,6 @@ type KeyPairModel struct {
 	NamespaceID types.String `tfsdk:"namespace_id"`
 }
 
-// ServiceAccountModel represents the shared model for service account resources and data sources
-type ServiceAccountModel struct {
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
-	NamespaceID types.String `tfsdk:"namespace_id"`
-	Description types.String `tfsdk:"description"`
-	UserID      types.String `tfsdk:"user_id"`
-	ExpiresAt   types.String `tfsdk:"expires_at"`
-}
-
-func ConvertServiceAccountToPB(_ context.Context, src *ServiceAccountResourceModel) (*pb.PomeriumServiceAccount, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	pbServiceAccount := &pb.PomeriumServiceAccount{
-		Id:           src.ID.ValueString(),
-		UserId:       src.Name.ValueString(),
-		OriginatorId: proto.String(OriginatorID),
-	}
-
-	if src.NamespaceID.ValueString() != "" {
-		pbServiceAccount.NamespaceId = src.NamespaceID.ValueStringPointer()
-	}
-
-	if !src.Description.IsNull() {
-		desc := src.Description.ValueString()
-		pbServiceAccount.Description = &desc
-	}
-
-	return pbServiceAccount, diags
-}
-
-func ConvertServiceAccountFromPB(dst *ServiceAccountModel, src *pb.PomeriumServiceAccount) diag.Diagnostics {
-	var diagnostics diag.Diagnostics
-
-	dst.ID = types.StringValue(src.Id)
-	dst.Name = types.StringValue(strings.TrimSuffix(src.UserId, "@"+src.GetNamespaceId()+".pomerium"))
-	if src.NamespaceId != nil {
-		dst.NamespaceID = types.StringValue(*src.NamespaceId)
-	} else {
-		dst.NamespaceID = types.StringNull()
-	}
-	if src.Description != nil {
-		dst.Description = types.StringValue(*src.Description)
-	} else {
-		dst.Description = types.StringNull()
-	}
-	dst.UserID = types.StringValue(src.UserId)
-	if src.ExpiresAt != nil {
-		dst.ExpiresAt = types.StringValue(src.ExpiresAt.AsTime().Format(time.RFC3339))
-	} else {
-		dst.ExpiresAt = types.StringNull()
-	}
-
-	return diagnostics
-}
-
-// NamespaceModel represents the shared model for namespace resources and data sources
 type NamespaceModel struct {
 	ID        types.String `tfsdk:"id"`
 	Name      types.String `tfsdk:"name"`
@@ -123,7 +63,6 @@ func ConvertNamespaceFromPB(dst *NamespaceResourceModel, src *pb.Namespace) diag
 	return diagnostics
 }
 
-// PolicyModel represents the shared model for policy resources and data sources
 type PolicyModel struct {
 	Description types.String   `tfsdk:"description"`
 	Enforced    types.Bool     `tfsdk:"enforced"`
@@ -134,4 +73,13 @@ type PolicyModel struct {
 	PPL         PolicyLanguage `tfsdk:"ppl"`
 	Rego        types.List     `tfsdk:"rego"`
 	Remediation types.String   `tfsdk:"remediation"`
+}
+
+type ServiceAccountModel struct {
+	ID          types.String `tfsdk:"id"`
+	Name        types.String `tfsdk:"name"`
+	NamespaceID types.String `tfsdk:"namespace_id"`
+	Description types.String `tfsdk:"description"`
+	UserID      types.String `tfsdk:"user_id"`
+	ExpiresAt   types.String `tfsdk:"expires_at"`
 }

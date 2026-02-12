@@ -78,8 +78,7 @@ func (d *ServiceAccountDataSource) Read(ctx context.Context, req datasource.Read
 			return
 		}
 
-		diags := ConvertServiceAccountFromPB(&data, getRes.ServiceAccount)
-		resp.Diagnostics.Append(diags...)
+		data = NewEnterpriseToModelConverter(&resp.Diagnostics).ServiceAccount(getRes.GetServiceAccount())
 	})...)
 	if resp.Diagnostics.HasError() {
 		return
