@@ -79,43 +79,6 @@ func FromStringMap(m map[string]string) types.Map {
 	return types.MapValueMust(types.StringType, elements)
 }
 
-// ToStringMap converts a types.Map to map[string]string and handles diagnostics internally
-func ToStringMap(ctx context.Context, dst *map[string]string, m types.Map, diagnostics *diag.Diagnostics) {
-	if m.IsNull() || m.IsUnknown() {
-		*dst = nil
-		return
-	}
-
-	result := make(map[string]string)
-	diagnostics.Append(m.ElementsAs(ctx, &result, false)...)
-	if !diagnostics.HasError() {
-		*dst = result
-	}
-}
-
-// ToDuration converts a timetypes.Duration to durationpb.Duration
-func ToDuration(dst **durationpb.Duration, src timetypes.GoDuration, diagnostics *diag.Diagnostics) {
-	if src.IsNull() || src.IsUnknown() {
-		*dst = nil
-		return
-	}
-
-	d, diags := src.ValueGoDuration()
-	diagnostics.Append(diags...)
-	if diagnostics.HasError() {
-		return
-	}
-	*dst = durationpb.New(d)
-}
-
-// FromDuration converts a durationpb.Duration to a timetypes.GoDuration
-func FromDuration(d *durationpb.Duration) timetypes.GoDuration {
-	if d == nil {
-		return timetypes.NewGoDurationNull()
-	}
-	return timetypes.NewGoDurationValue(d.AsDuration())
-}
-
 // GoStructToPB converts a Go struct to a protobuf Struct.
 // It only supports protobuf types.String field types
 // Field names are converted to snake_case.
@@ -371,39 +334,6 @@ func Int64PointerValue[T constraints.Integer](src *T) types.Int64 {
 		return types.Int64Null()
 	}
 	return types.Int64Value(int64(*src))
-}
-
-// FromInt64Pointer converts Int64 pointer to *T
-func FromInt64Pointer[T constraints.Integer](v types.Int64) *T {
-	if v.IsNull() {
-		return nil
-	}
-	val := T(v.ValueInt64())
-	return &val
-}
-
-func ToRouteStringList(ctx context.Context, dst **pb.Route_StringList, src types.Set, diagnostics *diag.Diagnostics) {
-	if src.IsNull() || src.IsUnknown() {
-		*dst = nil
-		return
-	}
-	var values []string
-	diagnostics.Append(src.ElementsAs(ctx, &values, false)...)
-	if !diagnostics.HasError() {
-		*dst = &pb.Route_StringList{Values: values}
-	}
-}
-
-func ToSettingsStringList(ctx context.Context, dst **pb.Settings_StringList, src types.Set, diagnostics *diag.Diagnostics) {
-	if src.IsNull() || src.IsUnknown() {
-		*dst = nil
-		return
-	}
-	var values []string
-	diagnostics.Append(src.ElementsAs(ctx, &values, false)...)
-	if !diagnostics.HasError() {
-		*dst = &pb.Settings_StringList{Values: values}
-	}
 }
 
 type baseModelConverter struct {

@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"
@@ -177,6 +178,51 @@ func TestModelToEnterpriseConverter(t *testing.T) {
 		}
 	})
 
+	t.Run("RouteStringList", func(t *testing.T) {
+		t.Parallel()
+
+		for _, tc := range []struct {
+			name       string
+			in         types.Set
+			expect     *pb.Route_StringList
+			errorCount int
+		}{
+			{
+				"null",
+				types.SetNull(types.StringType),
+				nil,
+				0,
+			},
+			{
+				"unknown",
+				types.SetUnknown(types.StringType),
+				nil,
+				0,
+			},
+			{
+				"empty",
+				types.SetValueMust(types.StringType, []attr.Value{}),
+				&pb.Route_StringList{Values: []string{}},
+				0,
+			},
+			{
+				"entries",
+				types.SetValueMust(types.StringType, []attr.Value{
+					types.StringValue("a"), types.StringValue("b"), types.StringValue("c"),
+				}),
+				&pb.Route_StringList{Values: []string{
+					"a", "b", "c",
+				}},
+				0,
+			},
+		} {
+			var diagnostics diag.Diagnostics
+			dst := provider.NewModelToEnterpriseConverter(&diagnostics).RouteStringList(path.Empty(), tc.in)
+			assert.Empty(t, diagnostics)
+			assert.Empty(t, cmp.Diff(tc.expect, dst, protocmp.Transform()))
+		}
+	})
+
 	t.Run("Settings", func(t *testing.T) {
 		t.Parallel()
 
@@ -341,6 +387,51 @@ func TestModelToEnterpriseConverter(t *testing.T) {
 		assert.Empty(t, diagnostics)
 		if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
 			t.Errorf("unexpected difference: %s", diff)
+		}
+	})
+
+	t.Run("SettingsStringList", func(t *testing.T) {
+		t.Parallel()
+
+		for _, tc := range []struct {
+			name       string
+			in         types.Set
+			expect     *pb.Settings_StringList
+			errorCount int
+		}{
+			{
+				"null",
+				types.SetNull(types.StringType),
+				nil,
+				0,
+			},
+			{
+				"unknown",
+				types.SetUnknown(types.StringType),
+				nil,
+				0,
+			},
+			{
+				"empty",
+				types.SetValueMust(types.StringType, []attr.Value{}),
+				&pb.Settings_StringList{Values: []string{}},
+				0,
+			},
+			{
+				"entries",
+				types.SetValueMust(types.StringType, []attr.Value{
+					types.StringValue("a"), types.StringValue("b"), types.StringValue("c"),
+				}),
+				&pb.Settings_StringList{Values: []string{
+					"a", "b", "c",
+				}},
+				0,
+			},
+		} {
+			var diagnostics diag.Diagnostics
+			dst := provider.NewModelToEnterpriseConverter(&diagnostics).SettingsStringList(path.Empty(), tc.in)
+			assert.Empty(t, diagnostics)
+			assert.Empty(t, cmp.Diff(tc.expect, dst, protocmp.Transform()))
 		}
 	})
 }

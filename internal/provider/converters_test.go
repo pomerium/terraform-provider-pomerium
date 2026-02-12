@@ -26,6 +26,59 @@ import (
 func TestBaseModelConverter(t *testing.T) {
 	t.Parallel()
 
+	t.Run("Duration", func(t *testing.T) {
+		t.Parallel()
+
+		tests := []struct {
+			name        string
+			input       timetypes.GoDuration
+			expected    *durationpb.Duration
+			expectError bool
+		}{
+			{
+				name:     "null duration",
+				input:    timetypes.NewGoDurationNull(),
+				expected: nil,
+			},
+			{
+				name:     "unknown duration",
+				input:    timetypes.NewGoDurationUnknown(),
+				expected: nil,
+			},
+			{
+				name:     "zero duration",
+				input:    timetypes.NewGoDurationValueFromStringMust("0s"),
+				expected: durationpb.New(0),
+			},
+			{
+				name:     "normal duration",
+				input:    timetypes.NewGoDurationValueFromStringMust("1h1m0s"),
+				expected: durationpb.New(time.Hour + time.Minute),
+			},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				t.Parallel()
+
+				var diagnostics diag.Diagnostics
+				result := provider.NewModelToEnterpriseConverter(&diagnostics).Duration(path.Empty(), tt.input)
+
+				if tt.expectError {
+					assert.True(t, diagnostics.HasError())
+					return
+				}
+
+				assert.Empty(t, diagnostics)
+				if tt.expected == nil {
+					assert.Nil(t, result)
+				} else {
+					assert.Equal(t, tt.expected.AsDuration(), result.AsDuration())
+				}
+			})
+		}
+	})
+
 	t.Run("StringMap", func(t *testing.T) {
 		t.Parallel()
 
@@ -207,6 +260,45 @@ func TestBaseModelConverter(t *testing.T) {
 	})
 }
 
+func TestBaseProtoConverter(t *testing.T) {
+	t.Parallel()
+
+	t.Run("Duration", func(t *testing.T) {
+		tests := []struct {
+			name     string
+			input    *durationpb.Duration
+			expected timetypes.GoDuration
+		}{
+			{
+				name:     "nil duration",
+				input:    nil,
+				expected: timetypes.NewGoDurationNull(),
+			},
+			{
+				name:     "zero duration",
+				input:    durationpb.New(0),
+				expected: timetypes.NewGoDurationValueFromStringMust("0s"),
+			},
+			{
+				name:     "normal duration",
+				input:    durationpb.New(time.Hour + time.Minute),
+				expected: timetypes.NewGoDurationValueFromStringMust("1h1m0s"),
+			},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				t.Parallel()
+
+				var diagnostics diag.Diagnostics
+				result := provider.NewEnterpriseToModelConverter(&diagnostics).Duration(tt.input)
+				assert.Empty(t, diagnostics)
+				assert.Empty(t, cmp.Diff(tt.expected, result, protocmp.Transform()))
+			})
+		}
+	})
+}
+
 func TestFromStringSlice(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -238,87 +330,6 @@ func TestFromStringSlice(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := provider.FromStringSliceToList(tt.input)
 			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
-func TestFromDurationP(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    *durationpb.Duration
-		expected timetypes.GoDuration
-	}{
-		{
-			name:     "nil duration",
-			input:    nil,
-			expected: timetypes.NewGoDurationNull(),
-		},
-		{
-			name:     "zero duration",
-			input:    durationpb.New(0),
-			expected: timetypes.NewGoDurationValueFromStringMust("0s"),
-		},
-		{
-			name:     "normal duration",
-			input:    durationpb.New(time.Hour + time.Minute),
-			expected: timetypes.NewGoDurationValueFromStringMust("1h1m0s"),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := provider.FromDuration(tt.input)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
-func TestToDuration(t *testing.T) {
-	tests := []struct {
-		name        string
-		input       timetypes.GoDuration
-		expected    *durationpb.Duration
-		expectError bool
-	}{
-		{
-			name:     "null duration",
-			input:    timetypes.NewGoDurationNull(),
-			expected: nil,
-		},
-		{
-			name:     "unknown duration",
-			input:    timetypes.NewGoDurationUnknown(),
-			expected: nil,
-		},
-		{
-			name:     "zero duration",
-			input:    timetypes.NewGoDurationValueFromStringMust("0s"),
-			expected: durationpb.New(0),
-		},
-		{
-			name:     "normal duration",
-			input:    timetypes.NewGoDurationValueFromStringMust("1h1m0s"),
-			expected: durationpb.New(time.Hour + time.Minute),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var result *durationpb.Duration
-			diagnostics := diag.Diagnostics{}
-			provider.ToDuration(&result, tt.input, &diagnostics)
-
-			if tt.expectError {
-				assert.True(t, diagnostics.HasError())
-				return
-			}
-
-			assert.False(t, diagnostics.HasError())
-			if tt.expected == nil {
-				assert.Nil(t, result)
-			} else {
-				assert.Equal(t, tt.expected.AsDuration(), result.AsDuration())
-			}
 		})
 	}
 }
@@ -788,99 +799,5 @@ func TestToIssuerFormat(t *testing.T) {
 			assert.Len(t, diagnostics, 1)
 			assert.Equal(t, tc.expectedErrorDetails, diagnostics[0].Detail())
 		}
-	}
-}
-
-func TestToRouteStringList(t *testing.T) {
-	t.Parallel()
-
-	for _, tc := range []struct {
-		name       string
-		in         types.Set
-		expect     *pb.Route_StringList
-		errorCount int
-	}{
-		{
-			"null",
-			types.SetNull(types.StringType),
-			nil,
-			0,
-		},
-		{
-			"unknown",
-			types.SetUnknown(types.StringType),
-			nil,
-			0,
-		},
-		{
-			"empty",
-			types.SetValueMust(types.StringType, []attr.Value{}),
-			&pb.Route_StringList{Values: []string{}},
-			0,
-		},
-		{
-			"entries",
-			types.SetValueMust(types.StringType, []attr.Value{
-				types.StringValue("a"), types.StringValue("b"), types.StringValue("c"),
-			}),
-			&pb.Route_StringList{Values: []string{
-				"a", "b", "c",
-			}},
-			0,
-		},
-	} {
-		ctx := t.Context()
-		var diagnostics diag.Diagnostics
-		dst := new(*pb.Route_StringList)
-		provider.ToRouteStringList(ctx, dst, tc.in, &diagnostics)
-		assert.Equal(t, tc.expect, *dst)
-		assert.Equal(t, tc.errorCount, diagnostics.ErrorsCount())
-	}
-}
-
-func TestToSettingsStringList(t *testing.T) {
-	t.Parallel()
-
-	for _, tc := range []struct {
-		name       string
-		in         types.Set
-		expect     *pb.Settings_StringList
-		errorCount int
-	}{
-		{
-			"null",
-			types.SetNull(types.StringType),
-			nil,
-			0,
-		},
-		{
-			"unknown",
-			types.SetUnknown(types.StringType),
-			nil,
-			0,
-		},
-		{
-			"empty",
-			types.SetValueMust(types.StringType, []attr.Value{}),
-			&pb.Settings_StringList{Values: []string{}},
-			0,
-		},
-		{
-			"entries",
-			types.SetValueMust(types.StringType, []attr.Value{
-				types.StringValue("a"), types.StringValue("b"), types.StringValue("c"),
-			}),
-			&pb.Settings_StringList{Values: []string{
-				"a", "b", "c",
-			}},
-			0,
-		},
-	} {
-		ctx := t.Context()
-		var diagnostics diag.Diagnostics
-		dst := new(*pb.Settings_StringList)
-		provider.ToSettingsStringList(ctx, dst, tc.in, &diagnostics)
-		assert.Equal(t, tc.expect, *dst)
-		assert.Equal(t, tc.errorCount, diagnostics.ErrorsCount())
 	}
 }
