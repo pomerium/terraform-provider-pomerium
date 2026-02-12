@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"encoding/base64"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -19,6 +20,37 @@ type ModelToEnterpriseConverter struct {
 func NewModelToEnterpriseConverter(diagnostics *diag.Diagnostics) *ModelToEnterpriseConverter {
 	return &ModelToEnterpriseConverter{
 		diagnostics: diagnostics,
+	}
+}
+
+func (c *ModelToEnterpriseConverter) BytesFromBase64(src types.String) []byte {
+	if src.IsNull() || src.IsUnknown() || src.ValueString() == "" {
+		return nil
+	}
+
+	dst, err := base64.StdEncoding.DecodeString(src.ValueString())
+	if err != nil {
+		c.diagnostics.AddError("invalid base64 string", err.Error())
+		return nil
+	}
+
+	return dst
+}
+
+func (c *ModelToEnterpriseConverter) Cluster(src ClusterModel) *enterprise.Cluster {
+	return &enterprise.Cluster{
+		CertificateAuthority:     c.BytesFromBase64(src.CertificateAuthorityB64),
+		CertificateAuthorityFile: c.NullableString(src.CertificateAuthorityFile),
+		CreatedAt:                nil,
+		DatabrokerServiceUrl:     src.DatabrokerServiceURL.ValueString(),
+		DeletedAt:                nil,
+		Id:                       src.ID.ValueString(),
+		InsecureSkipVerify:       c.NullableBool(src.InsecureSkipVerify),
+		ModifiedAt:               nil,
+		Name:                     src.Name.ValueString(),
+		OriginatorId:             OriginatorID,
+		OverrideCertificateName:  c.NullableString(src.OverrideCertificateName),
+		SharedSecret:             c.BytesFromBase64(src.SharedSecretB64),
 	}
 }
 
@@ -47,6 +79,13 @@ func (c *ModelToEnterpriseConverter) Namespace(src NamespaceModel) *enterprise.N
 		PolicyCount:  0, // not supported
 		RouteCount:   0, // not supported
 	}
+}
+
+func (c *ModelToEnterpriseConverter) NullableBool(src types.Bool) *bool {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	return src.ValueBoolPointer()
 }
 
 func (c *ModelToEnterpriseConverter) NullableString(src types.String) *string {

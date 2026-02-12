@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"encoding/base64"
 	"strings"
 	"time"
 
@@ -18,6 +19,28 @@ type EnterpriseToModelConverter struct {
 func NewEnterpriseToModelConverter(diagnostics *diag.Diagnostics) *EnterpriseToModelConverter {
 	return &EnterpriseToModelConverter{
 		diagnostics: diagnostics,
+	}
+}
+
+func (c *EnterpriseToModelConverter) Base64String(src []byte) types.String {
+	if len(src) == 0 {
+		return types.StringNull()
+	}
+	return types.StringValue(base64.StdEncoding.EncodeToString(src))
+}
+
+func (c *EnterpriseToModelConverter) Cluster(src *enterprise.Cluster, namespace *enterprise.Namespace) ClusterModel {
+	return ClusterModel{
+		CertificateAuthorityB64:  c.Base64String(src.CertificateAuthority),
+		CertificateAuthorityFile: types.StringPointerValue(src.CertificateAuthorityFile),
+		DatabrokerServiceURL:     types.StringValue(src.DatabrokerServiceUrl),
+		ID:                       types.StringValue(src.Id),
+		InsecureSkipVerify:       types.BoolPointerValue(src.InsecureSkipVerify),
+		Name:                     types.StringValue(src.Name),
+		NamespaceID:              types.StringPointerValue(zeroToNil(namespace.GetId())),
+		OverrideCertificateName:  types.StringPointerValue(src.OverrideCertificateName),
+		ParentNamespaceID:        types.StringPointerValue(zeroToNil(namespace.GetParentId())),
+		SharedSecretB64:          c.Base64String(src.SharedSecret),
 	}
 }
 

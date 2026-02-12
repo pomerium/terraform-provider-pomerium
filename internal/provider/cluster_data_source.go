@@ -102,8 +102,7 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 			return
 		}
 
-		diags := ConvertClusterFromPB(&data, getRes.Cluster, getRes.Namespace)
-		resp.Diagnostics.Append(diags...)
+		data = NewEnterpriseToModelConverter(&resp.Diagnostics).Cluster(getRes.GetCluster(), getRes.GetNamespace())
 	})...)
 	if resp.Diagnostics.HasError() {
 		return
