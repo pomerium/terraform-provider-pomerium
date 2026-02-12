@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -17,7 +16,7 @@ type ClustersDataSourceModel struct {
 
 // A ClustersDataSource retrieves data about clusters.
 type ClustersDataSource struct {
-	client *client.Client
+	client *Client
 }
 
 // NewClustersDataSource creates a new clusters data source.
@@ -44,20 +43,7 @@ func (*ClustersDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 }
 
 func (d *ClustersDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-
-	client, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T.", req.ProviderData),
-		)
-		return
-	}
-
-	d.client = client
+	d.client = ConfigureClient(req, resp)
 }
 
 func (d *ClustersDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -68,23 +54,30 @@ func (d *ClustersDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	clustersResp, err := d.client.ClustersService.ListClusters(ctx, &pb.ListClustersRequest{})
-	if err != nil {
-		resp.Diagnostics.AddError("Error reading clusters", err.Error())
+	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		listReq := &pb.ListClustersRequest{}
+		listRes, err := client.ClustersService.ListClusters(ctx, listReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading clusters", err.Error())
+			return
+		}
+
+		clusters := make([]ClusterModel, 0, len(listRes.Clusters))
+		for _, cluster := range listRes.Clusters {
+			var clusterModel ClusterModel
+			diags := ConvertClusterFromPB(&clusterModel, cluster, nil)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			clusters = append(clusters, clusterModel)
+		}
+
+		data.Clusters = clusters
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	clusters := make([]ClusterModel, 0, len(clustersResp.Clusters))
-	for _, cluster := range clustersResp.Clusters {
-		var clusterModel ClusterModel
-		diags := ConvertClusterFromPB(&clusterModel, cluster, nil)
-		if diags.HasError() {
-			resp.Diagnostics.Append(diags...)
-			return
-		}
-		clusters = append(clusters, clusterModel)
-	}
-
-	data.Clusters = clusters
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

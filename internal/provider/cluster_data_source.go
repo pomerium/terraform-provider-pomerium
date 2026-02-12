@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -62,7 +61,7 @@ type ClusterDataSourceModel = ClusterModel
 
 // A ClusterDataSource retrieves data about a cluster.
 type ClusterDataSource struct {
-	client *client.Client
+	client *Client
 }
 
 // NewClusterDataSource creates a new cluster data source.
@@ -82,20 +81,7 @@ func (*ClusterDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, 
 }
 
 func (d *ClusterDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-
-	client, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T.", req.ProviderData),
-		)
-		return
-	}
-
-	d.client = client
+	d.client = ConfigureClient(req, resp)
 }
 
 func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -106,16 +92,19 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	clusterResp, err := d.client.ClustersService.GetCluster(ctx, &pb.GetClusterRequest{
-		Id: data.ID.ValueString(),
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error reading cluster", err.Error())
-		return
-	}
+	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		getReq := &pb.GetClusterRequest{
+			Id: data.ID.ValueString(),
+		}
+		getRes, err := client.ClustersService.GetCluster(ctx, getReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading cluster", err.Error())
+			return
+		}
 
-	diags := ConvertClusterFromPB(&data, clusterResp.Cluster, clusterResp.Namespace)
-	resp.Diagnostics.Append(diags...)
+		diags := ConvertClusterFromPB(&data, getRes.Cluster, getRes.Namespace)
+		resp.Diagnostics.Append(diags...)
+	})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

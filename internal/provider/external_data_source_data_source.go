@@ -26,7 +26,7 @@ func NewExternalDataSourceDataSource() datasource.DataSource {
 
 // ExternalDataSourceDataSource defines the data source implementation.
 type ExternalDataSourceDataSource struct {
-	client *client.Client
+	client *Client
 }
 
 // ExternalDataSourceDataSourceModel describes the data source data model.
@@ -88,21 +88,7 @@ func (d *ExternalDataSourceDataSource) Schema(_ context.Context, _ datasource.Sc
 }
 
 func (d *ExternalDataSourceDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-
-	c, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T.", req.ProviderData),
-		)
-
-		return
-	}
-
-	d.client = c
+	d.client = ConfigureClient(req, resp)
 }
 
 func (d *ExternalDataSourceDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -113,21 +99,24 @@ func (d *ExternalDataSourceDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	respExternalDataSource, err := d.client.ExternalDataSourceService.GetExternalDataSource(ctx, &pb.GetExternalDataSourceRequest{
-		Id: state.ID.ValueString(),
-	})
-	if err != nil {
-		if status.Code(err) == codes.NotFound {
-			resp.Diagnostics.AddError("External Data Source not found", fmt.Sprintf("External Data Source with ID %s not found", state.ID.ValueString()))
+	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		getReq := &pb.GetExternalDataSourceRequest{
+			Id: state.ID.ValueString(),
+		}
+		getRes, err := client.ExternalDataSourceService.GetExternalDataSource(ctx, getReq)
+		if err != nil {
+			if status.Code(err) == codes.NotFound {
+				resp.Diagnostics.AddError("External Data Source not found", fmt.Sprintf("External Data Source with ID %s not found", state.ID.ValueString()))
+				return
+			}
+			resp.Diagnostics.AddError("get external data source", err.Error())
 			return
 		}
-		resp.Diagnostics.AddError("get external data source", err.Error())
-		return
-	}
 
-	diags := ConvertExternalDataSourceFromPB(&state, respExternalDataSource.ExternalDataSource)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+		diags := ConvertExternalDataSourceFromPB(&state, getRes.ExternalDataSource)
+		resp.Diagnostics.Append(diags...)
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 

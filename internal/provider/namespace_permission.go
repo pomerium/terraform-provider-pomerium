@@ -12,10 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
-	client "github.com/pomerium/enterprise-client-go"
-	"github.com/pomerium/enterprise-client-go/pb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	client "github.com/pomerium/enterprise-client-go"
+	"github.com/pomerium/enterprise-client-go/pb"
 )
 
 //go:embed help/namespace_permissions.md
@@ -26,7 +27,7 @@ func NewNamespacePermissionResource() resource.Resource {
 }
 
 type NamespacePermissionResource struct {
-	client *client.Client
+	client *Client
 }
 
 func (r *NamespacePermissionResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -82,23 +83,29 @@ func (r *NamespacePermissionResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	pbNamespacePermission, diags := ConvertNamespacePermissionToPB(&plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		pbNamespacePermission, diags := ConvertNamespacePermissionToPB(&plan)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		setReq := &pb.SetNamespacePermissionRequest{
+			NamespacePermission: pbNamespacePermission,
+		}
+		setRes, err := client.NamespacePermissionService.SetNamespacePermission(ctx, setReq)
+		if err != nil {
+			resp.Diagnostics.AddError("failed to create namespace permission", err.Error())
+			return
+		}
+
+		plan.ID = types.StringValue(setRes.NamespacePermission.Id)
+	})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	respNP, err := r.client.NamespacePermissionService.SetNamespacePermission(ctx, &pb.SetNamespacePermissionRequest{
-		NamespacePermission: pbNamespacePermission,
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("failed to create namespace permission", err.Error())
-		return
-	}
-
-	plan.ID = types.StringValue(respNP.NamespacePermission.Id)
-
-	tflog.Trace(ctx, "Created a namespace permission", map[string]interface{}{
+	tflog.Trace(ctx, "Created a namespace permission", map[string]any{
 		"id":           plan.ID.ValueString(),
 		"namespace_id": plan.NamespaceID.ValueString(),
 		"role":         plan.Role.ValueString(),
@@ -117,20 +124,26 @@ func (r *NamespacePermissionResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	respNP, err := r.client.NamespacePermissionService.GetNamespacePermission(ctx, &pb.GetNamespacePermissionRequest{
-		Id: state.ID.ValueString(),
-	})
-	if err != nil {
-		if status.Code(err) == codes.NotFound {
-			resp.State.RemoveResource(ctx)
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		getReq := &pb.GetNamespacePermissionRequest{
+			Id: state.ID.ValueString(),
+		}
+		getRes, err := client.NamespacePermissionService.GetNamespacePermission(ctx, getReq)
+		if err != nil {
+			if status.Code(err) == codes.NotFound {
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			resp.Diagnostics.AddError("failed to read namespace permission", err.Error())
 			return
 		}
-		resp.Diagnostics.AddError("failed to read namespace permission", err.Error())
+
+		diags := ConvertNamespacePermissionFromPB(&state, getRes.NamespacePermission)
+		resp.Diagnostics.Append(diags...)
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	diags := ConvertNamespacePermissionFromPB(&state, respNP.NamespacePermission)
-	resp.Diagnostics.Append(diags...)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -143,17 +156,23 @@ func (r *NamespacePermissionResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	pbNamespacePermission, diags := ConvertNamespacePermissionToPB(&plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		pbNamespacePermission, diags := ConvertNamespacePermissionToPB(&plan)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		setReq := &pb.SetNamespacePermissionRequest{
+			NamespacePermission: pbNamespacePermission,
+		}
+		_, err := client.NamespacePermissionService.SetNamespacePermission(ctx, setReq)
+		if err != nil {
+			resp.Diagnostics.AddError("failed to update namespace permission", err.Error())
+		}
+	})...)
 	if resp.Diagnostics.HasError() {
 		return
-	}
-
-	_, err := r.client.NamespacePermissionService.SetNamespacePermission(ctx, &pb.SetNamespacePermissionRequest{
-		NamespacePermission: pbNamespacePermission,
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("failed to update namespace permission", err.Error())
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -167,14 +186,20 @@ func (r *NamespacePermissionResource) Delete(ctx context.Context, req resource.D
 		return
 	}
 
-	_, err := r.client.NamespacePermissionService.DeleteNamespacePermission(ctx, &pb.DeleteNamespacePermissionRequest{
-		Id: plan.ID.ValueString(),
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("failed to delete namespace permission", err.Error())
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		deleteReq := &pb.DeleteNamespacePermissionRequest{
+			Id: plan.ID.ValueString(),
+		}
+		_, err := client.NamespacePermissionService.DeleteNamespacePermission(ctx, deleteReq)
+		if err != nil {
+			resp.Diagnostics.AddError("failed to delete namespace permission", err.Error())
+		}
+	})...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.State.RemoveResource(ctx)
 }
 
 func (r *NamespacePermissionResource) ImportState(_ context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

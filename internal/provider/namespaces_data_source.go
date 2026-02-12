@@ -18,7 +18,7 @@ func NewNamespacesDataSource() datasource.DataSource {
 }
 
 type NamespacesDataSource struct {
-	client *client.Client
+	client *Client
 }
 
 type NamespacesDataSourceModel struct {
@@ -69,25 +69,32 @@ func (d *NamespacesDataSource) Configure(_ context.Context, req datasource.Confi
 func (d *NamespacesDataSource) Read(ctx context.Context, _ datasource.ReadRequest, resp *datasource.ReadResponse) {
 	var data NamespacesDataSourceModel
 
-	namespacesResp, err := d.client.NamespaceService.ListNamespaces(ctx, &pb.ListNamespacesRequest{})
-	if err != nil {
-		resp.Diagnostics.AddError("Error reading namespaces", err.Error())
+	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		listReq := &pb.ListNamespacesRequest{}
+		listRes, err := client.NamespaceService.ListNamespaces(ctx, listReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading namespaces", err.Error())
+			return
+		}
+
+		namespaces := make([]NamespaceModel, 0, len(listRes.Namespaces))
+		for _, ns := range listRes.Namespaces {
+			var namespace NamespaceModel
+			namespace.ID = types.StringValue(ns.Id)
+			namespace.Name = types.StringValue(ns.Name)
+			if ns.ParentId != "" {
+				namespace.ParentID = types.StringValue(ns.ParentId)
+			} else {
+				namespace.ParentID = types.StringNull()
+			}
+			namespaces = append(namespaces, namespace)
+		}
+
+		data.Namespaces = namespaces
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	namespaces := make([]NamespaceModel, 0, len(namespacesResp.Namespaces))
-	for _, ns := range namespacesResp.Namespaces {
-		var namespace NamespaceModel
-		namespace.ID = types.StringValue(ns.Id)
-		namespace.Name = types.StringValue(ns.Name)
-		if ns.ParentId != "" {
-			namespace.ParentID = types.StringValue(ns.ParentId)
-		} else {
-			namespace.ParentID = types.StringNull()
-		}
-		namespaces = append(namespaces, namespace)
-	}
-
-	data.Namespaces = namespaces
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

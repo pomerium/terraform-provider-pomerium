@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -21,7 +20,7 @@ func NewRoutesDataSource() datasource.DataSource {
 }
 
 type RoutesDataSource struct {
-	client *client.Client
+	client *Client
 }
 
 type RoutesDataSourceModel struct {
@@ -85,20 +84,7 @@ func (d *RoutesDataSource) Schema(_ context.Context, _ datasource.SchemaRequest,
 }
 
 func (d *RoutesDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-
-	client, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T.", req.ProviderData),
-		)
-		return
-	}
-
-	d.client = client
+	d.client = ConfigureClient(req, resp)
 }
 
 func (d *RoutesDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -109,32 +95,38 @@ func (d *RoutesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	listReq := &pb.ListRoutesRequest{
-		Namespace: data.NamespaceID.ValueString(),
-		Query:     data.Query.ValueStringPointer(),
-		Offset:    data.Offset.ValueInt64Pointer(),
-		Limit:     data.Limit.ValueInt64Pointer(),
-		OrderBy:   data.OrderBy.ValueStringPointer(),
-		ClusterId: data.ClusterID.ValueStringPointer(),
-	}
-	routesResp, err := d.client.RouteService.ListRoutes(ctx, listReq)
-	if err != nil {
-		resp.Diagnostics.AddError("Error reading routes", err.Error())
+	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		listReq := &pb.ListRoutesRequest{
+			Namespace: data.NamespaceID.ValueString(),
+			Query:     data.Query.ValueStringPointer(),
+			Offset:    data.Offset.ValueInt64Pointer(),
+			Limit:     data.Limit.ValueInt64Pointer(),
+			OrderBy:   data.OrderBy.ValueStringPointer(),
+			ClusterId: data.ClusterID.ValueStringPointer(),
+		}
+		listRes, err := client.RouteService.ListRoutes(ctx, listReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading routes", err.Error())
+			return
+		}
+
+		routes := make([]RouteModel, 0, len(listRes.Routes))
+		for _, route := range listRes.Routes {
+			var routeModel RouteModel
+			diags := ConvertRouteFromPB(&routeModel, route)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			routes = append(routes, routeModel)
+		}
+
+		data.Routes = routes
+		data.TotalCount = types.Int64Value(listRes.GetTotalCount())
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	routes := make([]RouteModel, 0, len(routesResp.Routes))
-	for _, route := range routesResp.Routes {
-		var routeModel RouteModel
-		diags := ConvertRouteFromPB(&routeModel, route)
-		if diags.HasError() {
-			resp.Diagnostics.Append(diags...)
-			return
-		}
-		routes = append(routes, routeModel)
-	}
-
-	data.Routes = routes
-	data.TotalCount = types.Int64Value(routesResp.GetTotalCount())
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

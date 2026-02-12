@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -21,7 +20,7 @@ type ClusterResourceModel = ClusterModel
 
 // A ClusterResource manages clusters.
 type ClusterResource struct {
-	client *client.Client
+	client *Client
 }
 
 // NewClusterResource creates a new clusters resource.
@@ -93,20 +92,7 @@ func (r *ClusterResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 }
 
 func (r *ClusterResource) Configure(_ context.Context, req resource.ConfigureRequest, resp *resource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-
-	c, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Provider Data Type",
-			fmt.Sprintf("Expected *client.Client, got: %T.", req.ProviderData),
-		)
-		return
-	}
-
-	r.client = c
+	r.client = ConfigureClient(req, resp)
 }
 
 func (r *ClusterResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -117,24 +103,30 @@ func (r *ClusterResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	pbCluster, diags := ConvertClusterToPB(&plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		pbCluster, diags := ConvertClusterToPB(&plan)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		addReq := &pb.AddClusterRequest{
+			ParentNamespaceId: plan.ParentNamespaceID.ValueString(),
+			Cluster:           pbCluster,
+		}
+		addRes, err := client.ClustersService.AddCluster(ctx, addReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error creating cluster", err.Error())
+			return
+		}
+
+		plan.NamespaceID = types.StringValue(addRes.Namespace.Id)
+		plan.ParentNamespaceID = types.StringValue(addRes.Namespace.ParentId)
+		plan.ID = types.StringValue(addRes.Cluster.Id)
+	})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	respCluster, err := r.client.ClustersService.AddCluster(ctx, &pb.AddClusterRequest{
-		ParentNamespaceId: plan.ParentNamespaceID.ValueString(),
-		Cluster:           pbCluster,
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error creating cluster", err.Error())
-		return
-	}
-
-	plan.NamespaceID = types.StringValue(respCluster.Namespace.Id)
-	plan.ParentNamespaceID = types.StringValue(respCluster.Namespace.ParentId)
-	plan.ID = types.StringValue(respCluster.Cluster.Id)
 
 	tflog.Trace(ctx, "Created a cluster", map[string]any{
 		"id":   plan.ID.ValueString(),
@@ -152,20 +144,23 @@ func (r *ClusterResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	respCluster, err := r.client.ClustersService.GetCluster(ctx, &pb.GetClusterRequest{
-		Id: state.ID.ValueString(),
-	})
-	if err != nil {
-		if status.Code(err) == codes.NotFound {
-			resp.State.RemoveResource(ctx)
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		getReq := &pb.GetClusterRequest{
+			Id: state.ID.ValueString(),
+		}
+		getRes, err := client.ClustersService.GetCluster(ctx, getReq)
+		if err != nil {
+			if status.Code(err) == codes.NotFound {
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			resp.Diagnostics.AddError("Error reading cluster", err.Error())
 			return
 		}
-		resp.Diagnostics.AddError("Error reading cluster", err.Error())
-		return
-	}
 
-	diags := ConvertClusterFromPB(&state, respCluster.Cluster, respCluster.Namespace)
-	resp.Diagnostics.Append(diags...)
+		diags := ConvertClusterFromPB(&state, getRes.Cluster, getRes.Namespace)
+		resp.Diagnostics.Append(diags...)
+	})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -181,22 +176,25 @@ func (r *ClusterResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	pbCluster, diags := ConvertClusterToPB(&plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		pbCluster, diags := ConvertClusterToPB(&plan)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
-	respCluster, err := r.client.ClustersService.UpdateCluster(ctx, &pb.UpdateClusterRequest{
-		Cluster: pbCluster,
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error updating cluster", err.Error())
-		return
-	}
+		updateReq := &pb.UpdateClusterRequest{
+			Cluster: pbCluster,
+		}
+		updateRes, err := client.ClustersService.UpdateCluster(ctx, updateReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error updating cluster", err.Error())
+			return
+		}
 
-	diags = ConvertClusterFromPB(&plan, respCluster.Cluster, respCluster.Namespace)
-	resp.Diagnostics.Append(diags...)
+		diags = ConvertClusterFromPB(&plan, updateRes.Cluster, updateRes.Namespace)
+		resp.Diagnostics.Append(diags...)
+	})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -212,11 +210,17 @@ func (r *ClusterResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	_, err := r.client.ClustersService.DeleteCluster(ctx, &pb.DeleteClusterRequest{
-		Id: state.ID.ValueString(),
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error deleting cluster", err.Error())
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		deleteReq := &pb.DeleteClusterRequest{
+			Id: state.ID.ValueString(),
+		}
+		_, err := client.ClustersService.DeleteCluster(ctx, deleteReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error deleting cluster", err.Error())
+			return
+		}
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 

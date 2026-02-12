@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -395,7 +394,7 @@ func NewRouteDataSource() datasource.DataSource {
 }
 
 type RouteDataSource struct {
-	client *client.Client
+	client *Client
 }
 
 func (d *RouteDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {
@@ -410,20 +409,7 @@ func (d *RouteDataSource) Schema(_ context.Context, _ datasource.SchemaRequest, 
 }
 
 func (d *RouteDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-
-	client, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T.", req.ProviderData),
-		)
-		return
-	}
-
-	d.client = client
+	d.client = ConfigureClient(req, resp)
 }
 
 func (d *RouteDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -434,16 +420,19 @@ func (d *RouteDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	routeResp, err := d.client.RouteService.GetRoute(ctx, &pb.GetRouteRequest{
-		Id: data.ID.ValueString(),
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error reading route", err.Error())
-		return
-	}
+	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		getReq := &pb.GetRouteRequest{
+			Id: data.ID.ValueString(),
+		}
+		getRes, err := client.RouteService.GetRoute(ctx, getReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading route", err.Error())
+			return
+		}
 
-	diags := ConvertRouteFromPB(&data, routeResp.Route)
-	resp.Diagnostics.Append(diags...)
+		diags := ConvertRouteFromPB(&data, getRes.Route)
+		resp.Diagnostics.Append(diags...)
+	})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

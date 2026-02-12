@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -19,7 +18,7 @@ func NewServiceAccountsDataSource() datasource.DataSource {
 }
 
 type ServiceAccountsDataSource struct {
-	client *client.Client
+	client *Client
 }
 
 type ServiceAccountsDataSourceModel struct {
@@ -75,20 +74,7 @@ func (d *ServiceAccountsDataSource) Schema(_ context.Context, _ datasource.Schem
 }
 
 func (d *ServiceAccountsDataSource) Configure(_ context.Context, req datasource.ConfigureRequest, resp *datasource.ConfigureResponse) {
-	if req.ProviderData == nil {
-		return
-	}
-
-	client, ok := req.ProviderData.(*client.Client)
-	if !ok {
-		resp.Diagnostics.AddError(
-			"Unexpected Data Source Configure Type",
-			fmt.Sprintf("Expected *client.Client, got: %T.", req.ProviderData),
-		)
-		return
-	}
-
-	d.client = client
+	d.client = ConfigureClient(req, resp)
 }
 
 func (d *ServiceAccountsDataSource) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
@@ -99,26 +85,32 @@ func (d *ServiceAccountsDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	listReq := &pb.ListPomeriumServiceAccountsRequest{
-		Namespace: data.NamespaceID.ValueString(),
-	}
-	serviceAccountsResp, err := d.client.PomeriumServiceAccountService.ListPomeriumServiceAccounts(ctx, listReq)
-	if err != nil {
-		resp.Diagnostics.AddError("Error reading service accounts", err.Error())
+	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		listReq := &pb.ListPomeriumServiceAccountsRequest{
+			Namespace: data.NamespaceID.ValueString(),
+		}
+		listRes, err := client.PomeriumServiceAccountService.ListPomeriumServiceAccounts(ctx, listReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading service accounts", err.Error())
+			return
+		}
+
+		serviceAccounts := make([]ServiceAccountModel, 0, len(listRes.ServiceAccounts))
+		for _, sa := range listRes.ServiceAccounts {
+			var saModel ServiceAccountModel
+			diags := ConvertServiceAccountFromPB(&saModel, sa)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			serviceAccounts = append(serviceAccounts, saModel)
+		}
+
+		data.ServiceAccounts = serviceAccounts
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	serviceAccounts := make([]ServiceAccountModel, 0, len(serviceAccountsResp.ServiceAccounts))
-	for _, sa := range serviceAccountsResp.ServiceAccounts {
-		var saModel ServiceAccountModel
-		diags := ConvertServiceAccountFromPB(&saModel, sa)
-		if diags.HasError() {
-			resp.Diagnostics.Append(diags...)
-			return
-		}
-		serviceAccounts = append(serviceAccounts, saModel)
-	}
-
-	data.ServiceAccounts = serviceAccounts
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
