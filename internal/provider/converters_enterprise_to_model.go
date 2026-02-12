@@ -3,13 +3,11 @@ package provider
 import (
 	"encoding/base64"
 	"strings"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
 	enterprise "github.com/pomerium/enterprise-client-go/pb"
 )
@@ -26,19 +24,12 @@ func NewEnterpriseToModelConverter(diagnostics *diag.Diagnostics) *EnterpriseToM
 	}
 }
 
-func (c *EnterpriseToModelConverter) Base64String(src []byte) types.String {
-	if len(src) == 0 {
-		return types.StringNull()
-	}
-	return types.StringValue(base64.StdEncoding.EncodeToString(src))
-}
-
 func (c *EnterpriseToModelConverter) CircuitBreakerThresholds(src *enterprise.CircuitBreakerThresholds) types.Object {
 	if src == nil {
-		return types.ObjectNull(CircuitBreakerThresholdsAttributes)
+		return types.ObjectNull(CircuitBreakerThresholdsObjectType().AttrTypes)
 	}
 
-	dst, diagnostics := types.ObjectValue(CircuitBreakerThresholdsAttributes, map[string]attr.Value{
+	dst, diagnostics := types.ObjectValue(CircuitBreakerThresholdsObjectType().AttrTypes, map[string]attr.Value{
 		"max_connections":      Int64PointerValue(src.MaxConnections),
 		"max_pending_requests": Int64PointerValue(src.MaxPendingRequests),
 		"max_requests":         Int64PointerValue(src.MaxRequests),
@@ -100,17 +91,13 @@ func (c *EnterpriseToModelConverter) HealthCheck(src *enterprise.HealthCheck) ty
 	if httpHc := src.GetHttpHealthCheck(); httpHc != nil {
 		expectedStatusesElem := []attr.Value{}
 		for _, status := range httpHc.ExpectedStatuses {
-			statusObj, diagsStatus := int64RangeFromPB(status)
-			c.diagnostics.Append(diagsStatus...)
-			expectedStatusesElem = append(expectedStatusesElem, statusObj)
+			expectedStatusesElem = append(expectedStatusesElem, c.Int64Range(status))
 		}
 		expectedStatuses, _ := types.SetValue(Int64RangeObjectType(), expectedStatusesElem)
 
 		retriableStatusesElem := []attr.Value{}
 		for _, status := range httpHc.RetriableStatuses {
-			statusObj, diagsStatus := int64RangeFromPB(status)
-			c.diagnostics.Append(diagsStatus...)
-			retriableStatusesElem = append(retriableStatusesElem, statusObj)
+			retriableStatusesElem = append(retriableStatusesElem, c.Int64Range(status))
 		}
 		retriableStatuses, _ := types.SetValue(Int64RangeObjectType(), retriableStatusesElem)
 
@@ -125,13 +112,11 @@ func (c *EnterpriseToModelConverter) HealthCheck(src *enterprise.HealthCheck) ty
 		httpHealthCheck, _ := types.ObjectValue(HTTPHealthCheckObjectType().AttrTypes, httpAttrs)
 		attrs["http_health_check"] = httpHealthCheck
 	} else if tcpHc := src.GetTcpHealthCheck(); tcpHc != nil {
-		sendPayload, diagsSend := payloadFromPB(tcpHc.Send)
-		c.diagnostics.Append(diagsSend...)
+		sendPayload := c.HealthCheckPayload(tcpHc.Send)
 
 		receiveElements := []attr.Value{}
 		for _, payload := range tcpHc.Receive {
-			payloadObj, diagsPayload := payloadFromPB(payload)
-			c.diagnostics.Append(diagsPayload...)
+			payloadObj := c.HealthCheckPayload(payload)
 			receiveElements = append(receiveElements, payloadObj)
 		}
 		receiveSet, _ := types.SetValue(HealthCheckPayloadObjectType(), receiveElements)
@@ -158,6 +143,26 @@ func (c *EnterpriseToModelConverter) HealthCheck(src *enterprise.HealthCheck) ty
 	dst, diagnostics := types.ObjectValue(HealthCheckObjectType().AttrTypes, attrs)
 	c.diagnostics.Append(diagnostics...)
 	return dst
+}
+
+func (c *EnterpriseToModelConverter) HealthCheckPayload(src *enterprise.HealthCheck_Payload) types.Object {
+	if src == nil {
+		return types.ObjectNull(HealthCheckPayloadObjectType().AttrTypes)
+	}
+
+	attrs := map[string]attr.Value{
+		"text":       types.StringNull(),
+		"binary_b64": types.StringNull(),
+	}
+
+	switch p := src.GetPayload().(type) {
+	case *enterprise.HealthCheck_Payload_Text:
+		attrs["text"] = types.StringValue(p.Text)
+	case *enterprise.HealthCheck_Payload_Binary:
+		attrs["binary_b64"] = types.StringValue(base64.StdEncoding.EncodeToString(p.Binary))
+	}
+
+	return types.ObjectValueMust(HealthCheckPayloadObjectType().AttrTypes, attrs)
 }
 
 func (c *EnterpriseToModelConverter) IdentityProviderAuth0(src *enterprise.Settings) types.Object {
@@ -280,9 +285,19 @@ func (c *EnterpriseToModelConverter) IdentityProviderPing(src *enterprise.Settin
 	return idpOptionsFromStruct[PingOptions](c.diagnostics, src.IdentityProviderOptions)
 }
 
+func (c *EnterpriseToModelConverter) Int64Range(src *enterprise.Int64Range) types.Object {
+	if src == nil {
+		return types.ObjectNull(Int64RangeObjectType().AttrTypes)
+	}
+	return types.ObjectValueMust(Int64RangeObjectType().AttrTypes, map[string]attr.Value{
+		"start": types.Int64Value(src.Start),
+		"end":   types.Int64Value(src.End),
+	})
+}
+
 func (c *EnterpriseToModelConverter) JWTGroupsFilter(src *enterprise.JwtGroupsFilter) types.Object {
 	if src == nil {
-		return types.ObjectNull(JWTGroupsFilterSchemaAttributes)
+		return types.ObjectNull(JWTGroupsFilterObjectType().AttrTypes)
 	}
 
 	attrs := make(map[string]attr.Value)
@@ -298,7 +313,7 @@ func (c *EnterpriseToModelConverter) JWTGroupsFilter(src *enterprise.JwtGroupsFi
 
 	attrs["infer_from_ppl"] = types.BoolPointerValue(src.InferFromPpl)
 
-	return types.ObjectValueMust(JWTGroupsFilterSchemaAttributes, attrs)
+	return types.ObjectValueMust(JWTGroupsFilterObjectType().AttrTypes, attrs)
 }
 
 func (c *EnterpriseToModelConverter) Namespace(src *enterprise.Namespace) NamespaceModel {
@@ -379,7 +394,7 @@ func (c *EnterpriseToModelConverter) Route(src *enterprise.Route) RouteModel {
 		RegexRewritePattern:               types.StringPointerValue(src.RegexRewritePattern),
 		RegexRewriteSubstitution:          types.StringPointerValue(src.RegexRewriteSubstitution),
 		RemoveRequestHeaders:              FromStringSliceToSet(src.RemoveRequestHeaders),
-		RewriteResponseHeaders:            rewriteHeadersFromPB(src.RewriteResponseHeaders),
+		RewriteResponseHeaders:            toSetOfObjects(src.RewriteResponseHeaders, RewriteHeaderObjectType(), c.RouteRewriteHeader),
 		SetRequestHeaders:                 FromStringMap(src.SetRequestHeaders),
 		SetResponseHeaders:                FromStringMap(src.SetResponseHeaders),
 		ShowErrorDetails:                  types.BoolValue(src.ShowErrorDetails),
@@ -393,6 +408,18 @@ func (c *EnterpriseToModelConverter) Route(src *enterprise.Route) RouteModel {
 		TLSUpstreamServerName:             types.StringPointerValue(src.TlsUpstreamServerName),
 		To:                                FromStringSliceToSet(src.To),
 	}
+}
+
+func (c *EnterpriseToModelConverter) RouteRewriteHeader(src *enterprise.RouteRewriteHeader) types.Object {
+	if src == nil {
+		return types.ObjectNull(RewriteHeaderObjectType().AttrTypes)
+	}
+
+	return types.ObjectValueMust(RewriteHeaderObjectType().AttrTypes, map[string]attr.Value{
+		"header": types.StringValue(src.GetHeader()),
+		"value":  types.StringValue(src.GetValue()),
+		"prefix": types.StringPointerValue(zeroToNil(src.GetPrefix())),
+	})
 }
 
 func (c *EnterpriseToModelConverter) ServiceAccount(src *enterprise.PomeriumServiceAccount) ServiceAccountModel {
@@ -513,12 +540,4 @@ func (c *EnterpriseToModelConverter) Settings(src *enterprise.Settings) Settings
 		TimeoutRead:                     c.Duration(src.TimeoutRead),
 		TimeoutWrite:                    c.Duration(src.TimeoutWrite),
 	}
-}
-
-func (c *EnterpriseToModelConverter) Timestamp(src *timestamppb.Timestamp) types.String {
-	if src == nil || src.AsTime().IsZero() {
-		return types.StringNull()
-	}
-
-	return types.StringValue(src.AsTime().Format(time.RFC3339))
 }

@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"encoding/base64"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -154,18 +155,14 @@ func (c *ModelToEnterpriseConverter) HealthCheck(src types.Object) *enterprise.H
 		if !expectedStatuses.IsNull() {
 			for _, elem := range expectedStatuses.Elements() {
 				obj := elem.(types.Object)
-				statusRange, diagsRange := int64RangeToPB(obj)
-				c.diagnostics.Append(diagsRange...)
-				httpHealthCheck.ExpectedStatuses = append(httpHealthCheck.ExpectedStatuses, statusRange)
+				httpHealthCheck.ExpectedStatuses = append(httpHealthCheck.ExpectedStatuses, c.Int64Range(obj))
 			}
 		}
 
 		if !retriableStatuses.IsNull() {
 			for _, elem := range retriableStatuses.Elements() {
 				obj := elem.(types.Object)
-				statusRange, diagsRange := int64RangeToPB(obj)
-				c.diagnostics.Append(diagsRange...)
-				httpHealthCheck.RetriableStatuses = append(httpHealthCheck.RetriableStatuses, statusRange)
+				httpHealthCheck.RetriableStatuses = append(httpHealthCheck.RetriableStatuses, c.Int64Range(obj))
 			}
 		}
 
@@ -180,17 +177,13 @@ func (c *ModelToEnterpriseConverter) HealthCheck(src types.Object) *enterprise.H
 		receive := tcpAttrs["receive"].(types.Set)
 
 		if !send.IsNull() {
-			sendPayload, diagsSend := payloadToPB(send)
-			c.diagnostics.Append(diagsSend...)
-			tcpHealthCheck.Send = sendPayload
+			tcpHealthCheck.Send = c.HealthCheckPayload(send)
 		}
 
 		if !receive.IsNull() {
 			for _, elem := range receive.Elements() {
 				obj := elem.(types.Object)
-				payload, diagsPayload := payloadToPB(obj)
-				c.diagnostics.Append(diagsPayload...)
-				tcpHealthCheck.Receive = append(tcpHealthCheck.Receive, payload)
+				tcpHealthCheck.Receive = append(tcpHealthCheck.Receive, c.HealthCheckPayload(obj))
 			}
 		}
 
@@ -219,6 +212,35 @@ func (c *ModelToEnterpriseConverter) HealthCheck(src types.Object) *enterprise.H
 	}
 
 	return dst
+}
+
+func (c *ModelToEnterpriseConverter) HealthCheckPayload(src types.Object) *enterprise.HealthCheck_Payload {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	attrs := src.Attributes()
+	payload := new(enterprise.HealthCheck_Payload)
+
+	text := attrs["text"].(types.String)
+	binaryB64 := attrs["binary_b64"].(types.String)
+
+	if !text.IsNull() {
+		payload.Payload = &enterprise.HealthCheck_Payload_Text{
+			Text: text.ValueString(),
+		}
+	} else if !binaryB64.IsNull() {
+		binaryData, err := base64.StdEncoding.DecodeString(binaryB64.ValueString())
+		if err != nil {
+			c.diagnostics.AddError("Invalid base64 data", "Could not decode base64 binary payload: "+err.Error())
+			return nil
+		}
+		payload.Payload = &enterprise.HealthCheck_Payload_Binary{
+			Binary: binaryData,
+		}
+	}
+
+	return payload
 }
 
 func (c *ModelToEnterpriseConverter) IdentityProvider(src SettingsModel) *string {
@@ -287,6 +309,18 @@ func (c *ModelToEnterpriseConverter) IdentityProviderOptions(src SettingsModel) 
 		return idpOptionsToStruct[PingOptions](c.diagnostics, src.IdentityProviderPing)
 	}
 	return nil
+}
+
+func (c *ModelToEnterpriseConverter) Int64Range(src types.Object) *enterprise.Int64Range {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	attrs := src.Attributes()
+	return &enterprise.Int64Range{
+		Start: attrs["start"].(types.Int64).ValueInt64(),
+		End:   attrs["end"].(types.Int64).ValueInt64(),
+	}
 }
 
 func (c *ModelToEnterpriseConverter) JWTGroupsFilter(src types.Object) *enterprise.JwtGroupsFilter {
@@ -400,7 +434,7 @@ func (c *ModelToEnterpriseConverter) Route(src RouteModel) *enterprise.Route {
 		RegexRewritePattern:               src.RegexRewritePattern.ValueStringPointer(),
 		RegexRewriteSubstitution:          src.RegexRewriteSubstitution.ValueStringPointer(),
 		RemoveRequestHeaders:              c.StringSliceFromSet(path.Root("remove_request_headers"), src.RemoveRequestHeaders),
-		RewriteResponseHeaders:            rewriteHeadersToPB(src.RewriteResponseHeaders),
+		RewriteResponseHeaders:            fromSetOfObjects(src.RewriteResponseHeaders, RewriteHeaderObjectType(), c.RouteRewriteHeader),
 		SetRequestHeaders:                 c.StringMap(path.Root("set_request_headers"), src.SetRequestHeaders),
 		SetResponseHeaders:                c.StringMap(path.Root("set_response_headers"), src.SetResponseHeaders),
 		ShowErrorDetails:                  src.ShowErrorDetails.ValueBool(),
@@ -414,6 +448,22 @@ func (c *ModelToEnterpriseConverter) Route(src RouteModel) *enterprise.Route {
 		TlsUpstreamServerName:             src.TLSUpstreamServerName.ValueStringPointer(),
 		To:                                c.StringSliceFromSet(path.Root("to"), src.To),
 	}
+}
+
+func (c *ModelToEnterpriseConverter) RouteRewriteHeader(src types.Object) *enterprise.RouteRewriteHeader {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	prefixAttr := src.Attributes()["prefix"].(types.String)
+	dst := &enterprise.RouteRewriteHeader{
+		Header: src.Attributes()["header"].(types.String).ValueString(),
+		Value:  src.Attributes()["value"].(types.String).ValueString(),
+	}
+	if !prefixAttr.IsNull() && prefixAttr.ValueString() != "" {
+		dst.Matcher = &enterprise.RouteRewriteHeader_Prefix{Prefix: prefixAttr.ValueString()}
+	}
+	return dst
 }
 
 func (c *ModelToEnterpriseConverter) RouteStringList(p path.Path, src types.Set) *enterprise.Route_StringList {

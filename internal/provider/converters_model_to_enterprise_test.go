@@ -29,8 +29,8 @@ func TestModelToEnterpriseConverter(t *testing.T) {
 			src    types.Object
 			expect *pb.CircuitBreakerThresholds
 		}{
-			{types.ObjectNull(provider.CircuitBreakerThresholdsAttributes), nil},
-			{types.ObjectValueMust(provider.CircuitBreakerThresholdsAttributes, map[string]attr.Value{
+			{types.ObjectNull(provider.CircuitBreakerThresholdsObjectType().AttrTypes), nil},
+			{types.ObjectValueMust(provider.CircuitBreakerThresholdsObjectType().AttrTypes, map[string]attr.Value{
 				"max_connections":      types.Int64Value(1),
 				"max_pending_requests": types.Int64Null(),
 				"max_requests":         types.Int64Null(),
@@ -39,7 +39,7 @@ func TestModelToEnterpriseConverter(t *testing.T) {
 			}), &pb.CircuitBreakerThresholds{
 				MaxConnections: proto.Uint32(1),
 			}},
-			{types.ObjectValueMust(provider.CircuitBreakerThresholdsAttributes, map[string]attr.Value{
+			{types.ObjectValueMust(provider.CircuitBreakerThresholdsObjectType().AttrTypes, map[string]attr.Value{
 				"max_connections":      types.Int64Null(),
 				"max_pending_requests": types.Int64Value(2),
 				"max_requests":         types.Int64Value(3),

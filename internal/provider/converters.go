@@ -437,11 +437,26 @@ type baseProtoConverter struct {
 	diagnostics *diag.Diagnostics
 }
 
+func (c *baseProtoConverter) Base64String(src []byte) types.String {
+	if len(src) == 0 {
+		return types.StringNull()
+	}
+	return types.StringValue(base64.StdEncoding.EncodeToString(src))
+}
+
 func (c *baseProtoConverter) Duration(src *durationpb.Duration) timetypes.GoDuration {
 	if src == nil {
 		return timetypes.NewGoDurationNull()
 	}
 	return timetypes.NewGoDurationValue(src.AsDuration())
+}
+
+func (c *baseProtoConverter) Timestamp(src *timestamppb.Timestamp) types.String {
+	if src == nil || src.AsTime().IsZero() {
+		return types.StringNull()
+	}
+
+	return types.StringValue(src.AsTime().Format(time.RFC3339))
 }
 
 func appendAttributeDiagnostics(dst *diag.Diagnostics, p path.Path, d ...diag.Diagnostic) {

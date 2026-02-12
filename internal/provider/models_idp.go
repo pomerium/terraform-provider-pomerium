@@ -8,8 +8,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"google.golang.org/protobuf/types/known/structpb"
-
-	"github.com/pomerium/enterprise-client-go/pb"
 )
 
 type (
@@ -78,40 +76,6 @@ type (
 		EnvironmentID types.String `tfsdk:"environment_id"`
 	}
 )
-
-func IdentityProviderSettingsFromPB(
-	dst *SettingsModel,
-	src *pb.Settings,
-	diags *diag.Diagnostics,
-) {
-	if src.IdentityProvider == nil {
-		return
-	}
-	switch *src.IdentityProvider {
-	case "auth0":
-		PBStructToTF[Auth0Options](&dst.IdentityProviderAuth0, src.IdentityProviderOptions, diags)
-	case "azure":
-		PBStructToTF[AzureOptions](&dst.IdentityProviderAzure, src.IdentityProviderOptions, diags)
-	case "blob":
-		PBStructToTF[BlobOptions](&dst.IdentityProviderBlob, src.IdentityProviderOptions, diags)
-	case "cognito":
-		PBStructToTF[CognitoOptions](&dst.IdentityProviderCognito, src.IdentityProviderOptions, diags)
-	case "github":
-		PBStructToTF[GitHubOptions](&dst.IdentityProviderGitHub, src.IdentityProviderOptions, diags)
-	case "gitlab":
-		PBStructToTF[GitLabOptions](&dst.IdentityProviderGitLab, src.IdentityProviderOptions, diags)
-	case "google":
-		PBStructToTF[GoogleOptions](&dst.IdentityProviderGoogle, src.IdentityProviderOptions, diags)
-	case "okta":
-		PBStructToTF[OktaOptions](&dst.IdentityProviderOkta, src.IdentityProviderOptions, diags)
-	case "onelogin":
-		PBStructToTF[OneLoginOptions](&dst.IdentityProviderOneLogin, src.IdentityProviderOptions, diags)
-	case "ping":
-		PBStructToTF[PingOptions](&dst.IdentityProviderPing, src.IdentityProviderOptions, diags)
-	default:
-		diags.AddError("invalid identity provider", fmt.Sprintf("unknown identity provider %q", *src.IdentityProvider))
-	}
-}
 
 func idpOptionsFromStruct[T any](
 	diagnostics *diag.Diagnostics,
