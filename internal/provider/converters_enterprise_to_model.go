@@ -7,6 +7,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
@@ -76,6 +77,87 @@ func (c *EnterpriseToModelConverter) ExternalDataSource(src *enterprise.External
 	}
 }
 
+func (c *EnterpriseToModelConverter) HealthCheck(src *enterprise.HealthCheck) types.Object {
+	if src == nil {
+		return types.ObjectNull(HealthCheckObjectType().AttrTypes)
+	}
+
+	attrs := map[string]attr.Value{
+		"timeout":                 FromDuration(src.Timeout),
+		"interval":                FromDuration(src.Interval),
+		"initial_jitter":          FromDuration(src.InitialJitter),
+		"interval_jitter":         FromDuration(src.IntervalJitter),
+		"interval_jitter_percent": UInt32ToInt64OrNull(src.IntervalJitterPercent),
+		"unhealthy_threshold":     UInt32ToInt64OrNull(src.UnhealthyThreshold),
+		"healthy_threshold":       UInt32ToInt64OrNull(src.HealthyThreshold),
+		"http_health_check":       types.ObjectNull(HTTPHealthCheckObjectType().AttrTypes),
+		"tcp_health_check":        types.ObjectNull(TCPHealthCheckObjectType().AttrTypes),
+		"grpc_health_check":       types.ObjectNull(GrpcHealthCheckObjectType().AttrTypes),
+	}
+
+	if httpHc := src.GetHttpHealthCheck(); httpHc != nil {
+		expectedStatusesElem := []attr.Value{}
+		for _, status := range httpHc.ExpectedStatuses {
+			statusObj, diagsStatus := int64RangeFromPB(status)
+			c.diagnostics.Append(diagsStatus...)
+			expectedStatusesElem = append(expectedStatusesElem, statusObj)
+		}
+		expectedStatuses, _ := types.SetValue(Int64RangeObjectType(), expectedStatusesElem)
+
+		retriableStatusesElem := []attr.Value{}
+		for _, status := range httpHc.RetriableStatuses {
+			statusObj, diagsStatus := int64RangeFromPB(status)
+			c.diagnostics.Append(diagsStatus...)
+			retriableStatusesElem = append(retriableStatusesElem, statusObj)
+		}
+		retriableStatuses, _ := types.SetValue(Int64RangeObjectType(), retriableStatusesElem)
+
+		httpAttrs := map[string]attr.Value{
+			"host":               types.StringValue(httpHc.Host),
+			"path":               types.StringValue(httpHc.Path),
+			"expected_statuses":  expectedStatuses,
+			"retriable_statuses": retriableStatuses,
+			"codec_client_type":  types.StringValue(httpHc.CodecClientType.String()),
+		}
+
+		httpHealthCheck, _ := types.ObjectValue(HTTPHealthCheckObjectType().AttrTypes, httpAttrs)
+		attrs["http_health_check"] = httpHealthCheck
+	} else if tcpHc := src.GetTcpHealthCheck(); tcpHc != nil {
+		sendPayload, diagsSend := payloadFromPB(tcpHc.Send)
+		c.diagnostics.Append(diagsSend...)
+
+		receiveElements := []attr.Value{}
+		for _, payload := range tcpHc.Receive {
+			payloadObj, diagsPayload := payloadFromPB(payload)
+			c.diagnostics.Append(diagsPayload...)
+			receiveElements = append(receiveElements, payloadObj)
+		}
+		receiveSet, _ := types.SetValue(HealthCheckPayloadObjectType(), receiveElements)
+
+		tcpAttrs := map[string]attr.Value{
+			"send":    sendPayload,
+			"receive": receiveSet,
+		}
+
+		tcpHealthCheck, _ := types.ObjectValue(TCPHealthCheckObjectType().AttrTypes, tcpAttrs)
+		attrs["tcp_health_check"] = tcpHealthCheck
+	} else if grpcHc := src.GetGrpcHealthCheck(); grpcHc != nil {
+		grpcAttrs := map[string]attr.Value{
+			"service_name": types.StringValue(grpcHc.ServiceName),
+			"authority":    types.StringValue(grpcHc.Authority),
+		}
+
+		grpcHealthCheck, _ := types.ObjectValue(GrpcHealthCheckObjectType().AttrTypes, grpcAttrs)
+		attrs["grpc_health_check"] = grpcHealthCheck
+	} else {
+		c.diagnostics.AddAttributeError(path.Root("health_checks"), "health check not specified", "must specify one of http_health_check, tcp_health_check, or grpc_health_check")
+	}
+
+	dst, diagnostics := types.ObjectValue(HealthCheckObjectType().AttrTypes, attrs)
+	c.diagnostics.Append(diagnostics...)
+	return dst
+}
+
 func (c *EnterpriseToModelConverter) JWTGroupsFilter(src *enterprise.JwtGroupsFilter) types.Object {
 	if src == nil {
 		return types.ObjectNull(JWTGroupsFilterSchemaAttributes)
@@ -136,64 +218,59 @@ func (c *EnterpriseToModelConverter) Policy(src *enterprise.Policy) PolicyModel 
 }
 
 func (c *EnterpriseToModelConverter) Route(src *enterprise.Route) RouteModel {
-	dst := RouteModel{}
-
-	dst.ID = types.StringValue(src.Id)
-	dst.Name = types.StringValue(src.Name)
-	dst.From = types.StringValue(src.From)
-	dst.NamespaceID = types.StringValue(src.NamespaceId)
-	dst.To = FromStringSliceToSet(src.To)
-	dst.Policies = FromStringSliceToSet(StringSliceExclude(src.PolicyIds, src.EnforcedPolicyIds))
-	dst.StatName = types.StringValue(src.StatName)
-	dst.Prefix = types.StringPointerValue(src.Prefix)
-	dst.Path = types.StringPointerValue(src.Path)
-	dst.Regex = types.StringPointerValue(src.Regex)
-	dst.PrefixRewrite = types.StringPointerValue(src.PrefixRewrite)
-	dst.RegexRewritePattern = types.StringPointerValue(src.RegexRewritePattern)
-	dst.RegexRewriteSubstitution = types.StringPointerValue(src.RegexRewriteSubstitution)
-	dst.HostRewrite = types.StringPointerValue(src.HostRewrite)
-	dst.HostRewriteHeader = types.StringPointerValue(src.HostRewriteHeader)
-	dst.HostPathRegexRewritePattern = types.StringPointerValue(src.HostPathRegexRewritePattern)
-	dst.HostPathRegexRewriteSubstitution = types.StringPointerValue(src.HostPathRegexRewriteSubstitution)
-	dst.RegexPriorityOrder = types.Int64PointerValue(src.RegexPriorityOrder)
-	dst.Timeout = FromDuration(src.Timeout)
-	dst.IdleTimeout = FromDuration(src.IdleTimeout)
-	dst.AllowWebsockets = types.BoolPointerValue(src.AllowWebsockets)
-	dst.AllowSPDY = types.BoolPointerValue(src.AllowSpdy)
-	dst.TLSSkipVerify = types.BoolPointerValue(src.TlsSkipVerify)
-	dst.TLSUpstreamServerName = types.StringPointerValue(src.TlsUpstreamServerName)
-	dst.TLSDownstreamServerName = types.StringPointerValue(src.TlsDownstreamServerName)
-	dst.TLSUpstreamAllowRenegotiation = types.BoolPointerValue(src.TlsUpstreamAllowRenegotiation)
-	dst.SetRequestHeaders = FromStringMap(src.SetRequestHeaders)
-	dst.RemoveRequestHeaders = FromStringSliceToSet(src.RemoveRequestHeaders)
-	dst.SetResponseHeaders = FromStringMap(src.SetResponseHeaders)
-	dst.PreserveHostHeader = types.BoolPointerValue(src.PreserveHostHeader)
-	dst.PassIdentityHeaders = types.BoolPointerValue(src.PassIdentityHeaders)
-	dst.KubernetesServiceAccountToken = types.StringPointerValue(src.KubernetesServiceAccountToken)
-	dst.IDPClientID = types.StringPointerValue(src.IdpClientId)
-	dst.IDPClientSecret = types.StringPointerValue(src.IdpClientSecret)
-	dst.ShowErrorDetails = types.BoolValue(src.ShowErrorDetails)
-	dst.JWTGroupsFilter = c.JWTGroupsFilter(src.JwtGroupsFilter)
-	dst.TLSClientKeyPairID = types.StringPointerValue(src.TlsClientKeyPairId)
-	dst.TLSCustomCAKeyPairID = types.StringPointerValue(src.TlsCustomCaKeyPairId)
-	dst.Description = types.StringPointerValue(src.Description)
-	dst.LogoURL = types.StringPointerValue(src.LogoUrl)
-	dst.EnableGoogleCloudServerlessAuthentication = types.BoolNull()
-	if src.EnableGoogleCloudServerlessAuthentication {
-		dst.EnableGoogleCloudServerlessAuthentication = types.BoolValue(true)
+	return RouteModel{
+		AllowSPDY:                types.BoolPointerValue(src.AllowSpdy),
+		AllowWebsockets:          types.BoolPointerValue(src.AllowWebsockets),
+		BearerTokenFormat:        FromBearerTokenFormat(src.BearerTokenFormat),
+		CircuitBreakerThresholds: c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
+		DependsOnHosts:           FromStringSliceToSet(src.DependsOn),
+		Description:              types.StringPointerValue(src.Description),
+		EnableGoogleCloudServerlessAuthentication: types.BoolPointerValue(zeroToNil(src.EnableGoogleCloudServerlessAuthentication)),
+		From:                              types.StringValue(src.From),
+		HealthChecks:                      toSetOfObjects(src.HealthChecks, HealthCheckObjectType(), c.HealthCheck),
+		HealthyPanicThreshold:             types.Int32PointerValue(src.HealthyPanicThreshold),
+		HostPathRegexRewritePattern:       types.StringPointerValue(src.HostPathRegexRewritePattern),
+		HostPathRegexRewriteSubstitution:  types.StringPointerValue(src.HostPathRegexRewriteSubstitution),
+		HostRewrite:                       types.StringPointerValue(src.HostRewrite),
+		HostRewriteHeader:                 types.StringPointerValue(src.HostRewriteHeader),
+		ID:                                types.StringValue(src.Id),
+		IdleTimeout:                       FromDuration(src.IdleTimeout),
+		IDPAccessTokenAllowedAudiences:    FromStringList(src.IdpAccessTokenAllowedAudiences),
+		IDPClientID:                       types.StringPointerValue(src.IdpClientId),
+		IDPClientSecret:                   types.StringPointerValue(src.IdpClientSecret),
+		JWTGroupsFilter:                   c.JWTGroupsFilter(src.JwtGroupsFilter),
+		JWTIssuerFormat:                   FromIssuerFormat(src.JwtIssuerFormat),
+		KubernetesServiceAccountToken:     types.StringPointerValue(src.KubernetesServiceAccountToken),
+		KubernetesServiceAccountTokenFile: types.StringPointerValue(src.KubernetesServiceAccountTokenFile),
+		LoadBalancingPolicy:               OptionalEnumValueFromPB(src.LoadBalancingPolicy, "LOAD_BALANCING_POLICY"),
+		LogoURL:                           types.StringPointerValue(src.LogoUrl),
+		Name:                              types.StringValue(src.Name),
+		NamespaceID:                       types.StringValue(src.NamespaceId),
+		PassIdentityHeaders:               types.BoolPointerValue(src.PassIdentityHeaders),
+		Path:                              types.StringPointerValue(src.Path),
+		Policies:                          FromStringSliceToSet(StringSliceExclude(src.PolicyIds, src.EnforcedPolicyIds)),
+		Prefix:                            types.StringPointerValue(src.Prefix),
+		PrefixRewrite:                     types.StringPointerValue(src.PrefixRewrite),
+		PreserveHostHeader:                types.BoolPointerValue(src.PreserveHostHeader),
+		Regex:                             types.StringPointerValue(src.Regex),
+		RegexPriorityOrder:                types.Int64PointerValue(src.RegexPriorityOrder),
+		RegexRewritePattern:               types.StringPointerValue(src.RegexRewritePattern),
+		RegexRewriteSubstitution:          types.StringPointerValue(src.RegexRewriteSubstitution),
+		RemoveRequestHeaders:              FromStringSliceToSet(src.RemoveRequestHeaders),
+		RewriteResponseHeaders:            rewriteHeadersFromPB(src.RewriteResponseHeaders),
+		SetRequestHeaders:                 FromStringMap(src.SetRequestHeaders),
+		SetResponseHeaders:                FromStringMap(src.SetResponseHeaders),
+		ShowErrorDetails:                  types.BoolValue(src.ShowErrorDetails),
+		StatName:                          types.StringValue(src.StatName),
+		Timeout:                           FromDuration(src.Timeout),
+		TLSClientKeyPairID:                types.StringPointerValue(src.TlsClientKeyPairId),
+		TLSCustomCAKeyPairID:              types.StringPointerValue(src.TlsCustomCaKeyPairId),
+		TLSDownstreamServerName:           types.StringPointerValue(src.TlsDownstreamServerName),
+		TLSSkipVerify:                     types.BoolPointerValue(src.TlsSkipVerify),
+		TLSUpstreamAllowRenegotiation:     types.BoolPointerValue(src.TlsUpstreamAllowRenegotiation),
+		TLSUpstreamServerName:             types.StringPointerValue(src.TlsUpstreamServerName),
+		To:                                FromStringSliceToSet(src.To),
 	}
-	dst.KubernetesServiceAccountTokenFile = types.StringPointerValue(src.KubernetesServiceAccountTokenFile)
-	dst.JWTIssuerFormat = FromIssuerFormat(src.JwtIssuerFormat)
-	dst.RewriteResponseHeaders = rewriteHeadersFromPB(src.RewriteResponseHeaders)
-	dst.BearerTokenFormat = FromBearerTokenFormat(src.BearerTokenFormat)
-	dst.IDPAccessTokenAllowedAudiences = FromStringList(src.IdpAccessTokenAllowedAudiences)
-	dst.LoadBalancingPolicy = OptionalEnumValueFromPB(src.LoadBalancingPolicy, "LOAD_BALANCING_POLICY")
-	healthChecksFromPB(&dst.HealthChecks, src.HealthChecks, c.diagnostics)
-	dst.DependsOnHosts = FromStringSliceToSet(src.DependsOn)
-	dst.CircuitBreakerThresholds = c.CircuitBreakerThresholds(src.CircuitBreakerThresholds)
-	dst.HealthyPanicThreshold = types.Int32PointerValue(src.HealthyPanicThreshold)
-
-	return dst
 }
 
 func (c *EnterpriseToModelConverter) ServiceAccount(src *enterprise.PomeriumServiceAccount) ServiceAccountModel {

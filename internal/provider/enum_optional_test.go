@@ -7,10 +7,11 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/pomerium/enterprise-client-go/pb"
-	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
 )
 
 func TestGetValidEnumValuesCanonical(t *testing.T) {
@@ -69,10 +70,9 @@ func TestOptionalEnumValueToPB(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var got *pb.LoadBalancingPolicy
 			var diagnostics diag.Diagnostics
 
-			provider.OptionalEnumValueToPB(&got, tt.input, tt.prefix, &diagnostics)
+			got := provider.OptionalEnumValueToPB[pb.LoadBalancingPolicy](tt.input, tt.prefix, &diagnostics)
 
 			if tt.expectError {
 				assert.True(t, diagnostics.HasError())

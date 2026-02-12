@@ -117,6 +117,135 @@ func (c *ModelToEnterpriseConverter) ExternalDataSource(src ExternalDataSourceMo
 	}
 }
 
+func (c *ModelToEnterpriseConverter) HealthCheck(src types.Object) *enterprise.HealthCheck {
+	if src.IsNull() {
+		return nil
+	}
+
+	attrs := src.Attributes()
+
+	// Convert basic fields
+	timeout := attrs["timeout"].(timetypes.GoDuration)
+	interval := attrs["interval"].(timetypes.GoDuration)
+	initialJitter := attrs["initial_jitter"].(timetypes.GoDuration)
+	intervalJitter := attrs["interval_jitter"].(timetypes.GoDuration)
+	intervalJitterPercent := attrs["interval_jitter_percent"].(types.Int64)
+	unhealthyThreshold := attrs["unhealthy_threshold"].(types.Int64)
+	healthyThreshold := attrs["healthy_threshold"].(types.Int64)
+
+	dst := &enterprise.HealthCheck{
+		Timeout:               c.Duration(path.Root("timeout"), timeout),
+		Interval:              c.Duration(path.Root("interval"), interval),
+		InitialJitter:         c.Duration(path.Root("initial_jitter"), initialJitter),
+		IntervalJitter:        c.Duration(path.Root("interval_jitter"), intervalJitter),
+		IntervalJitterPercent: uint32(intervalJitterPercent.ValueInt64()),
+		UnhealthyThreshold:    uint32(unhealthyThreshold.ValueInt64()),
+		HealthyThreshold:      uint32(healthyThreshold.ValueInt64()),
+	}
+
+	httpHc := attrs["http_health_check"].(types.Object)
+	tcpHc := attrs["tcp_health_check"].(types.Object)
+	grpcHc := attrs["grpc_health_check"].(types.Object)
+
+	if !httpHc.IsNull() {
+		httpAttrs := httpHc.Attributes()
+		httpHealthCheck := &enterprise.HealthCheck_HttpHealthCheck{}
+
+		host := httpAttrs["host"].(types.String)
+		path := httpAttrs["path"].(types.String)
+		codecType := httpAttrs["codec_client_type"].(types.String)
+		expectedStatuses := httpAttrs["expected_statuses"].(types.Set)
+		retriableStatuses := httpAttrs["retriable_statuses"].(types.Set)
+
+		if !host.IsNull() {
+			httpHealthCheck.Host = host.ValueString()
+		}
+		if !path.IsNull() {
+			httpHealthCheck.Path = path.ValueString()
+		}
+		if !codecType.IsNull() {
+			// Handle codec client type enum properly
+			switch codecType.ValueString() {
+			case "HTTP1":
+				httpHealthCheck.CodecClientType = enterprise.CodecClientType_HTTP1
+			case "HTTP2":
+				httpHealthCheck.CodecClientType = enterprise.CodecClientType_HTTP2
+			default:
+				// Default to HTTP1 if not specified or invalid
+				httpHealthCheck.CodecClientType = enterprise.CodecClientType_HTTP1
+			}
+		}
+
+		if !expectedStatuses.IsNull() {
+			for _, elem := range expectedStatuses.Elements() {
+				obj := elem.(types.Object)
+				statusRange, diagsRange := int64RangeToPB(obj)
+				c.diagnostics.Append(diagsRange...)
+				httpHealthCheck.ExpectedStatuses = append(httpHealthCheck.ExpectedStatuses, statusRange)
+			}
+		}
+
+		if !retriableStatuses.IsNull() {
+			for _, elem := range retriableStatuses.Elements() {
+				obj := elem.(types.Object)
+				statusRange, diagsRange := int64RangeToPB(obj)
+				c.diagnostics.Append(diagsRange...)
+				httpHealthCheck.RetriableStatuses = append(httpHealthCheck.RetriableStatuses, statusRange)
+			}
+		}
+
+		dst.HealthChecker = &enterprise.HealthCheck_HttpHealthCheck_{
+			HttpHealthCheck: httpHealthCheck,
+		}
+	} else if !tcpHc.IsNull() {
+		tcpAttrs := tcpHc.Attributes()
+		tcpHealthCheck := &enterprise.HealthCheck_TcpHealthCheck{}
+
+		send := tcpAttrs["send"].(types.Object)
+		receive := tcpAttrs["receive"].(types.Set)
+
+		if !send.IsNull() {
+			sendPayload, diagsSend := payloadToPB(send)
+			c.diagnostics.Append(diagsSend...)
+			tcpHealthCheck.Send = sendPayload
+		}
+
+		if !receive.IsNull() {
+			for _, elem := range receive.Elements() {
+				obj := elem.(types.Object)
+				payload, diagsPayload := payloadToPB(obj)
+				c.diagnostics.Append(diagsPayload...)
+				tcpHealthCheck.Receive = append(tcpHealthCheck.Receive, payload)
+			}
+		}
+
+		dst.HealthChecker = &enterprise.HealthCheck_TcpHealthCheck_{
+			TcpHealthCheck: tcpHealthCheck,
+		}
+	} else if !grpcHc.IsNull() {
+		grpcAttrs := grpcHc.Attributes()
+		grpcHealthCheck := &enterprise.HealthCheck_GrpcHealthCheck{}
+
+		serviceName := grpcAttrs["service_name"].(types.String)
+		authority := grpcAttrs["authority"].(types.String)
+
+		if !serviceName.IsNull() {
+			grpcHealthCheck.ServiceName = serviceName.ValueString()
+		}
+		if !authority.IsNull() {
+			grpcHealthCheck.Authority = authority.ValueString()
+		}
+
+		dst.HealthChecker = &enterprise.HealthCheck_GrpcHealthCheck_{
+			GrpcHealthCheck: grpcHealthCheck,
+		}
+	} else {
+		c.diagnostics.AddAttributeError(path.Root("health_checks"), "health check not specified", "must specify one of http_health_check, tcp_health_check, or grpc_health_check")
+	}
+
+	return dst
+}
+
 func (c *ModelToEnterpriseConverter) JWTGroupsFilter(src types.Object) *enterprise.JwtGroupsFilter {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
@@ -209,64 +338,60 @@ func (c *ModelToEnterpriseConverter) Policy(src PolicyModel) *enterprise.Policy 
 }
 
 func (c *ModelToEnterpriseConverter) Route(src RouteModel) *enterprise.Route {
-	dst := new(enterprise.Route)
-
-	dst.Id = src.ID.ValueString()
-	dst.Name = src.Name.ValueString()
-	dst.From = src.From.ValueString()
-	dst.NamespaceId = src.NamespaceID.ValueString()
-	dst.StatName = src.StatName.ValueString()
-	dst.Prefix = src.Prefix.ValueStringPointer()
-	dst.Path = src.Path.ValueStringPointer()
-	dst.Regex = src.Regex.ValueStringPointer()
-	dst.PrefixRewrite = src.PrefixRewrite.ValueStringPointer()
-	dst.RegexRewritePattern = src.RegexRewritePattern.ValueStringPointer()
-	dst.RegexRewriteSubstitution = src.RegexRewriteSubstitution.ValueStringPointer()
-	dst.HostRewrite = src.HostRewrite.ValueStringPointer()
-	dst.HostRewriteHeader = src.HostRewriteHeader.ValueStringPointer()
-	dst.HostPathRegexRewritePattern = src.HostPathRegexRewritePattern.ValueStringPointer()
-	dst.HostPathRegexRewriteSubstitution = src.HostPathRegexRewriteSubstitution.ValueStringPointer()
-	dst.RegexPriorityOrder = src.RegexPriorityOrder.ValueInt64Pointer()
-	dst.Timeout = c.Duration(path.Root("timeout"), src.Timeout)
-	dst.IdleTimeout = c.Duration(path.Root("idle_timeout"), src.IdleTimeout)
-	dst.AllowWebsockets = src.AllowWebsockets.ValueBoolPointer()
-	dst.AllowSpdy = src.AllowSPDY.ValueBoolPointer()
-	dst.TlsSkipVerify = src.TLSSkipVerify.ValueBoolPointer()
-	dst.TlsUpstreamServerName = src.TLSUpstreamServerName.ValueStringPointer()
-	dst.TlsDownstreamServerName = src.TLSDownstreamServerName.ValueStringPointer()
-	dst.TlsUpstreamAllowRenegotiation = src.TLSUpstreamAllowRenegotiation.ValueBoolPointer()
-	dst.SetRequestHeaders = c.StringMap(path.Root("set_request_headers"), src.SetRequestHeaders)
-	dst.RemoveRequestHeaders = c.StringSliceFromSet(path.Root("remove_request_headers"), src.RemoveRequestHeaders)
-	dst.SetResponseHeaders = c.StringMap(path.Root("set_response_headers"), src.SetResponseHeaders)
-	dst.PreserveHostHeader = src.PreserveHostHeader.ValueBoolPointer()
-	dst.PassIdentityHeaders = src.PassIdentityHeaders.ValueBoolPointer()
-	dst.KubernetesServiceAccountToken = src.KubernetesServiceAccountToken.ValueStringPointer()
-	dst.IdpClientId = src.IDPClientID.ValueStringPointer()
-	dst.IdpClientSecret = src.IDPClientSecret.ValueStringPointer()
-	dst.ShowErrorDetails = src.ShowErrorDetails.ValueBool()
-	dst.JwtGroupsFilter = c.JWTGroupsFilter(src.JWTGroupsFilter)
-	dst.To = c.StringSliceFromSet(path.Root("to"), src.To)
-	dst.PolicyIds = c.StringSliceFromSet(path.Root("policies"), src.Policies)
-	dst.TlsClientKeyPairId = src.TLSClientKeyPairID.ValueStringPointer()
-	dst.TlsCustomCaKeyPairId = src.TLSCustomCAKeyPairID.ValueStringPointer()
-	dst.Description = src.Description.ValueStringPointer()
-	dst.LogoUrl = src.LogoURL.ValueStringPointer()
-	if !src.EnableGoogleCloudServerlessAuthentication.IsNull() {
-		dst.EnableGoogleCloudServerlessAuthentication = src.EnableGoogleCloudServerlessAuthentication.ValueBool()
+	return &enterprise.Route{
+		AllowSpdy:                src.AllowSPDY.ValueBoolPointer(),
+		AllowWebsockets:          src.AllowWebsockets.ValueBoolPointer(),
+		BearerTokenFormat:        ToBearerTokenFormat(src.BearerTokenFormat),
+		CircuitBreakerThresholds: c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
+		DependsOn:                c.StringSliceFromSet(path.Root("depends_on"), src.DependsOnHosts),
+		Description:              src.Description.ValueStringPointer(),
+		EnableGoogleCloudServerlessAuthentication: *c.NullableBool(src.EnableGoogleCloudServerlessAuthentication),
+		From:                              src.From.ValueString(),
+		HealthChecks:                      fromSetOfObjects(src.HealthChecks, HealthCheckObjectType(), c.HealthCheck),
+		HealthyPanicThreshold:             src.HealthyPanicThreshold.ValueInt32Pointer(),
+		HostPathRegexRewritePattern:       src.HostPathRegexRewritePattern.ValueStringPointer(),
+		HostPathRegexRewriteSubstitution:  src.HostPathRegexRewriteSubstitution.ValueStringPointer(),
+		HostRewrite:                       src.HostRewrite.ValueStringPointer(),
+		HostRewriteHeader:                 src.HostRewriteHeader.ValueStringPointer(),
+		Id:                                src.ID.ValueString(),
+		IdleTimeout:                       c.Duration(path.Root("idle_timeout"), src.IdleTimeout),
+		IdpAccessTokenAllowedAudiences:    c.RouteStringList(path.Root("idp_access_token_allowed_audiences"), src.IDPAccessTokenAllowedAudiences),
+		IdpClientId:                       src.IDPClientID.ValueStringPointer(),
+		IdpClientSecret:                   src.IDPClientSecret.ValueStringPointer(),
+		JwtGroupsFilter:                   c.JWTGroupsFilter(src.JWTGroupsFilter),
+		JwtIssuerFormat:                   ToIssuerFormat(src.JWTIssuerFormat, c.diagnostics),
+		KubernetesServiceAccountToken:     src.KubernetesServiceAccountToken.ValueStringPointer(),
+		KubernetesServiceAccountTokenFile: src.KubernetesServiceAccountTokenFile.ValueStringPointer(),
+		LoadBalancingPolicy:               OptionalEnumValueToPB[enterprise.LoadBalancingPolicy](src.LoadBalancingPolicy, "LOAD_BALANCING_POLICY", c.diagnostics),
+		LogoUrl:                           src.LogoURL.ValueStringPointer(),
+		Name:                              src.Name.ValueString(),
+		NamespaceId:                       src.NamespaceID.ValueString(),
+		OriginatorId:                      OriginatorID,
+		PassIdentityHeaders:               src.PassIdentityHeaders.ValueBoolPointer(),
+		Path:                              src.Path.ValueStringPointer(),
+		PolicyIds:                         c.StringSliceFromSet(path.Root("policies"), src.Policies),
+		Prefix:                            src.Prefix.ValueStringPointer(),
+		PrefixRewrite:                     src.PrefixRewrite.ValueStringPointer(),
+		PreserveHostHeader:                src.PreserveHostHeader.ValueBoolPointer(),
+		Regex:                             src.Regex.ValueStringPointer(),
+		RegexPriorityOrder:                src.RegexPriorityOrder.ValueInt64Pointer(),
+		RegexRewritePattern:               src.RegexRewritePattern.ValueStringPointer(),
+		RegexRewriteSubstitution:          src.RegexRewriteSubstitution.ValueStringPointer(),
+		RemoveRequestHeaders:              c.StringSliceFromSet(path.Root("remove_request_headers"), src.RemoveRequestHeaders),
+		RewriteResponseHeaders:            rewriteHeadersToPB(src.RewriteResponseHeaders),
+		SetRequestHeaders:                 c.StringMap(path.Root("set_request_headers"), src.SetRequestHeaders),
+		SetResponseHeaders:                c.StringMap(path.Root("set_response_headers"), src.SetResponseHeaders),
+		ShowErrorDetails:                  src.ShowErrorDetails.ValueBool(),
+		StatName:                          src.StatName.ValueString(),
+		Timeout:                           c.Duration(path.Root("timeout"), src.Timeout),
+		TlsClientKeyPairId:                src.TLSClientKeyPairID.ValueStringPointer(),
+		TlsCustomCaKeyPairId:              src.TLSCustomCAKeyPairID.ValueStringPointer(),
+		TlsDownstreamServerName:           src.TLSDownstreamServerName.ValueStringPointer(),
+		TlsSkipVerify:                     src.TLSSkipVerify.ValueBoolPointer(),
+		TlsUpstreamAllowRenegotiation:     src.TLSUpstreamAllowRenegotiation.ValueBoolPointer(),
+		TlsUpstreamServerName:             src.TLSUpstreamServerName.ValueStringPointer(),
+		To:                                c.StringSliceFromSet(path.Root("to"), src.To),
 	}
-	dst.KubernetesServiceAccountTokenFile = src.KubernetesServiceAccountTokenFile.ValueStringPointer()
-	dst.JwtIssuerFormat = ToIssuerFormat(src.JWTIssuerFormat, c.diagnostics)
-	dst.RewriteResponseHeaders = rewriteHeadersToPB(src.RewriteResponseHeaders)
-	dst.BearerTokenFormat = ToBearerTokenFormat(src.BearerTokenFormat)
-	dst.IdpAccessTokenAllowedAudiences = c.RouteStringList(path.Root("idp_access_token_allowed_audiences"), src.IDPAccessTokenAllowedAudiences)
-	dst.OriginatorId = OriginatorID
-	OptionalEnumValueToPB(&dst.LoadBalancingPolicy, src.LoadBalancingPolicy, "LOAD_BALANCING_POLICY", c.diagnostics)
-	healthChecksToPB(&dst.HealthChecks, src.HealthChecks, c.diagnostics)
-	dst.DependsOn = c.StringSliceFromSet(path.Root("depends_on"), src.DependsOnHosts)
-	dst.CircuitBreakerThresholds = c.CircuitBreakerThresholds(src.CircuitBreakerThresholds)
-	dst.HealthyPanicThreshold = src.HealthyPanicThreshold.ValueInt32Pointer()
-
-	return dst
 }
 
 func (c *ModelToEnterpriseConverter) RouteStringList(p path.Path, src types.Set) *enterprise.Route_StringList {

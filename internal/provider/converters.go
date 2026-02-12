@@ -462,6 +462,30 @@ func appendAttributeDiagnostics(dst *diag.Diagnostics, p path.Path, d ...diag.Di
 	}
 }
 
+func fromSetOfObjects[T any](srcs types.Set, elementType types.ObjectType, fn func(src types.Object) T) []T {
+	if srcs.IsNull() || srcs.IsUnknown() || !srcs.ElementType(context.Background()).Equal(elementType) {
+		return nil
+	}
+	dst := make([]T, len(srcs.Elements()))
+	for i, src := range srcs.Elements() {
+		dst[i] = fn(src.(types.Object))
+	}
+	return dst
+}
+
+func toSetOfObjects[T any](srcs []T, elementType types.ObjectType, fn func(src T) types.Object) types.Set {
+	if len(srcs) == 0 {
+		return types.SetNull(HealthCheckObjectType())
+	}
+
+	elements := make([]attr.Value, len(srcs))
+	for i, src := range srcs {
+		elements[i] = fn(src)
+	}
+
+	return types.SetValueMust(elementType, elements)
+}
+
 func zeroToNil[T comparable](v T) *T {
 	var def T
 	if def == v {
