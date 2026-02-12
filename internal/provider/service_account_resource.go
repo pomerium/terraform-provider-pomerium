@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -101,29 +102,35 @@ func (r *ServiceAccountResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	pbServiceAccount, diags := ConvertServiceAccountToPB(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		pbServiceAccount, diags := ConvertServiceAccountToPB(ctx, &plan)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		addReq := &pb.AddPomeriumServiceAccountRequest{
+			ServiceAccount: pbServiceAccount,
+		}
+		addRes, err := client.PomeriumServiceAccountService.AddPomeriumServiceAccount(ctx, addReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error creating service account", err.Error())
+			return
+		}
+
+		diags = ConvertServiceAccountFromPB(&plan.ServiceAccountModel, addRes.ServiceAccount)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		plan.JWT = types.StringValue(addRes.JWT)
+	})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	respServiceAccount, err := r.client.PomeriumServiceAccountService.AddPomeriumServiceAccount(ctx, &pb.AddPomeriumServiceAccountRequest{
-		ServiceAccount: pbServiceAccount,
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error creating service account", err.Error())
-		return
-	}
-
-	diags = ConvertServiceAccountFromPB(&plan.ServiceAccountModel, respServiceAccount.ServiceAccount)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	plan.JWT = types.StringValue(respServiceAccount.JWT)
-
-	tflog.Trace(ctx, "Created a service account", map[string]interface{}{
+	tflog.Trace(ctx, "Created a service account", map[string]any{
 		"id":   plan.ID.ValueString(),
 		"name": plan.Name.ValueString(),
 	})
@@ -139,20 +146,23 @@ func (r *ServiceAccountResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	respServiceAccount, err := r.client.PomeriumServiceAccountService.GetPomeriumServiceAccount(ctx, &pb.GetPomeriumServiceAccountRequest{
-		Id: state.ID.ValueString(),
-	})
-	if err != nil {
-		if status.Code(err) == codes.NotFound {
-			resp.State.RemoveResource(ctx)
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		getReq := &pb.GetPomeriumServiceAccountRequest{
+			Id: state.ID.ValueString(),
+		}
+		getRes, err := client.PomeriumServiceAccountService.GetPomeriumServiceAccount(ctx, getReq)
+		if err != nil {
+			if status.Code(err) == codes.NotFound {
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			resp.Diagnostics.AddError("Error reading service account", err.Error())
 			return
 		}
-		resp.Diagnostics.AddError("Error reading service account", err.Error())
-		return
-	}
 
-	diags := ConvertServiceAccountFromPB(&state.ServiceAccountModel, respServiceAccount.ServiceAccount)
-	resp.Diagnostics.Append(diags...)
+		diags := ConvertServiceAccountFromPB(&state.ServiceAccountModel, getRes.ServiceAccount)
+		resp.Diagnostics.Append(diags...)
+	})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -168,17 +178,23 @@ func (r *ServiceAccountResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	pbServiceAccount, diags := ConvertServiceAccountToPB(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		pbServiceAccount, diags := ConvertServiceAccountToPB(ctx, &plan)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
-	_, err := r.client.PomeriumServiceAccountService.SetPomeriumServiceAccount(ctx, &pb.SetPomeriumServiceAccountRequest{
-		ServiceAccount: pbServiceAccount,
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error updating service account", err.Error())
+		setReq := &pb.SetPomeriumServiceAccountRequest{
+			ServiceAccount: pbServiceAccount,
+		}
+		_, err := client.PomeriumServiceAccountService.SetPomeriumServiceAccount(ctx, setReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error updating service account", err.Error())
+			return
+		}
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -193,11 +209,17 @@ func (r *ServiceAccountResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	_, err := r.client.PomeriumServiceAccountService.DeletePomeriumServiceAccount(ctx, &pb.DeletePomeriumServiceAccountRequest{
-		Id: state.ID.ValueString(),
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error deleting service account", err.Error())
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		deleteReq := &pb.DeletePomeriumServiceAccountRequest{
+			Id: state.ID.ValueString(),
+		}
+		_, err := client.PomeriumServiceAccountService.DeletePomeriumServiceAccount(ctx, deleteReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error deleting service account", err.Error())
+			return
+		}
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 

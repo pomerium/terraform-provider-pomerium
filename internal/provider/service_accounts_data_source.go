@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -84,26 +85,32 @@ func (d *ServiceAccountsDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	listReq := &pb.ListPomeriumServiceAccountsRequest{
-		Namespace: data.NamespaceID.ValueString(),
-	}
-	serviceAccountsResp, err := d.client.PomeriumServiceAccountService.ListPomeriumServiceAccounts(ctx, listReq)
-	if err != nil {
-		resp.Diagnostics.AddError("Error reading service accounts", err.Error())
+	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		listReq := &pb.ListPomeriumServiceAccountsRequest{
+			Namespace: data.NamespaceID.ValueString(),
+		}
+		listRes, err := client.PomeriumServiceAccountService.ListPomeriumServiceAccounts(ctx, listReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading service accounts", err.Error())
+			return
+		}
+
+		serviceAccounts := make([]ServiceAccountModel, 0, len(listRes.ServiceAccounts))
+		for _, sa := range listRes.ServiceAccounts {
+			var saModel ServiceAccountModel
+			diags := ConvertServiceAccountFromPB(&saModel, sa)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			serviceAccounts = append(serviceAccounts, saModel)
+		}
+
+		data.ServiceAccounts = serviceAccounts
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	serviceAccounts := make([]ServiceAccountModel, 0, len(serviceAccountsResp.ServiceAccounts))
-	for _, sa := range serviceAccountsResp.ServiceAccounts {
-		var saModel ServiceAccountModel
-		diags := ConvertServiceAccountFromPB(&saModel, sa)
-		if diags.HasError() {
-			resp.Diagnostics.Append(diags...)
-			return
-		}
-		serviceAccounts = append(serviceAccounts, saModel)
-	}
-
-	data.ServiceAccounts = serviceAccounts
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

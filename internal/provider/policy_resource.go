@@ -15,6 +15,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -111,23 +112,29 @@ func (r *PolicyResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	pbPolicy, diags := ConvertPolicyToPB(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		pbPolicy, diags := ConvertPolicyToPB(ctx, &plan)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		setReq := &pb.SetPolicyRequest{
+			Policy: pbPolicy,
+		}
+		setRes, err := client.PolicyService.SetPolicy(ctx, setReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error creating policy", err.Error())
+			return
+		}
+
+		plan.ID = types.StringValue(setRes.Policy.Id)
+	})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	respPolicy, err := r.client.PolicyService.SetPolicy(ctx, &pb.SetPolicyRequest{
-		Policy: pbPolicy,
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error creating policy", err.Error())
-		return
-	}
-
-	plan.ID = types.StringValue(respPolicy.Policy.Id)
-
-	tflog.Trace(ctx, "Created a policy", map[string]interface{}{
+	tflog.Trace(ctx, "Created a policy", map[string]any{
 		"id":   plan.ID.ValueString(),
 		"name": plan.Name.ValueString(),
 	})
@@ -143,20 +150,23 @@ func (r *PolicyResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	respPolicy, err := r.client.PolicyService.GetPolicy(ctx, &pb.GetPolicyRequest{
-		Id: state.ID.ValueString(),
-	})
-	if err != nil {
-		if status.Code(err) == codes.NotFound {
-			resp.State.RemoveResource(ctx)
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		getReq := &pb.GetPolicyRequest{
+			Id: state.ID.ValueString(),
+		}
+		getRes, err := client.PolicyService.GetPolicy(ctx, getReq)
+		if err != nil {
+			if status.Code(err) == codes.NotFound {
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			resp.Diagnostics.AddError("Error reading policy", err.Error())
 			return
 		}
-		resp.Diagnostics.AddError("Error reading policy", err.Error())
-		return
-	}
 
-	diags := ConvertPolicyFromPB(&state, respPolicy.Policy)
-	resp.Diagnostics.Append(diags...)
+		diags := ConvertPolicyFromPB(&state, getRes.Policy)
+		resp.Diagnostics.Append(diags...)
+	})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -172,17 +182,23 @@ func (r *PolicyResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	pbPolicy, diags := ConvertPolicyToPB(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		pbPolicy, diags := ConvertPolicyToPB(ctx, &plan)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
-	_, err := r.client.PolicyService.SetPolicy(ctx, &pb.SetPolicyRequest{
-		Policy: pbPolicy,
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error updating policy", err.Error())
+		setReq := &pb.SetPolicyRequest{
+			Policy: pbPolicy,
+		}
+		_, err := client.PolicyService.SetPolicy(ctx, setReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error updating policy", err.Error())
+			return
+		}
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -197,11 +213,17 @@ func (r *PolicyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	_, err := r.client.PolicyService.DeletePolicy(ctx, &pb.DeletePolicyRequest{
-		Id: state.ID.ValueString(),
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error deleting policy", err.Error())
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		deleteReq := &pb.DeletePolicyRequest{
+			Id: state.ID.ValueString(),
+		}
+		_, err := client.PolicyService.DeletePolicy(ctx, deleteReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error deleting policy", err.Error())
+			return
+		}
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 

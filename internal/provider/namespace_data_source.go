@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 
+	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -60,16 +61,19 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	namespaceResp, err := d.client.NamespaceService.GetNamespace(ctx, &pb.GetNamespaceRequest{
-		Id: data.ID.ValueString(),
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error reading namespace", err.Error())
-		return
-	}
+	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		getReq := &pb.GetNamespaceRequest{
+			Id: data.ID.ValueString(),
+		}
+		getRes, err := client.NamespaceService.GetNamespace(ctx, getReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading namespace", err.Error())
+			return
+		}
 
-	diags := ConvertNamespaceFromPB(&data, namespaceResp.Namespace)
-	resp.Diagnostics.Append(diags...)
+		diags := ConvertNamespaceFromPB(&data, getRes.Namespace)
+		resp.Diagnostics.Append(diags...)
+	})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -77,22 +78,28 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	pbNamespace, diags := ConvertNamespaceToPB(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		pbNamespace, diags := ConvertNamespaceToPB(ctx, &plan)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		setReq := &pb.SetNamespaceRequest{
+			Namespace: pbNamespace,
+		}
+		setRes, err := client.NamespaceService.SetNamespace(ctx, setReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error creating namespace", err.Error())
+			return
+		}
+
+		plan.ID = types.StringValue(setRes.Namespace.Id)
+		plan.ClusterID = types.StringPointerValue(setRes.Namespace.ClusterId)
+	})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	respNamespace, err := r.client.NamespaceService.SetNamespace(ctx, &pb.SetNamespaceRequest{
-		Namespace: pbNamespace,
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error creating namespace", err.Error())
-		return
-	}
-
-	plan.ID = types.StringValue(respNamespace.Namespace.Id)
-	plan.ClusterID = types.StringPointerValue(respNamespace.Namespace.ClusterId)
 
 	tflog.Trace(ctx, "Created a namespace", map[string]any{
 		"id":   plan.ID.ValueString(),
@@ -110,20 +117,23 @@ func (r *NamespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	respNamespace, err := r.client.NamespaceService.GetNamespace(ctx, &pb.GetNamespaceRequest{
-		Id: state.ID.ValueString(),
-	})
-	if err != nil {
-		if status.Code(err) == codes.NotFound {
-			resp.State.RemoveResource(ctx)
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		getReq := &pb.GetNamespaceRequest{
+			Id: state.ID.ValueString(),
+		}
+		getRes, err := client.NamespaceService.GetNamespace(ctx, getReq)
+		if err != nil {
+			if status.Code(err) == codes.NotFound {
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			resp.Diagnostics.AddError("Error reading namespace", err.Error())
 			return
 		}
-		resp.Diagnostics.AddError("Error reading namespace", err.Error())
-		return
-	}
 
-	diags := ConvertNamespaceFromPB(&state, respNamespace.Namespace)
-	resp.Diagnostics.Append(diags...)
+		diags := ConvertNamespaceFromPB(&state, getRes.Namespace)
+		resp.Diagnostics.Append(diags...)
+	})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -139,17 +149,23 @@ func (r *NamespaceResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	pbNamespace, diags := ConvertNamespaceToPB(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		pbNamespace, diags := ConvertNamespaceToPB(ctx, &plan)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
-	_, err := r.client.NamespaceService.SetNamespace(ctx, &pb.SetNamespaceRequest{
-		Namespace: pbNamespace,
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error updating namespace", err.Error())
+		setReq := &pb.SetNamespaceRequest{
+			Namespace: pbNamespace,
+		}
+		_, err := client.NamespaceService.SetNamespace(ctx, setReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error updating namespace", err.Error())
+			return
+		}
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -164,11 +180,17 @@ func (r *NamespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	_, err := r.client.NamespaceService.DeleteNamespace(ctx, &pb.DeleteNamespaceRequest{
-		Id: state.ID.ValueString(),
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error deleting namespace", err.Error())
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		deleteReq := &pb.DeleteNamespaceRequest{
+			Id: state.ID.ValueString(),
+		}
+		_, err := client.NamespaceService.DeleteNamespace(ctx, deleteReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error deleting namespace", err.Error())
+			return
+		}
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 

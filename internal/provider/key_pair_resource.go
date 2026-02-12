@@ -13,6 +13,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -79,17 +80,23 @@ func (r *KeyPairResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	createReq := ConvertKeyPairToCreatePB(&plan)
-	respKeyPair, err := r.client.KeyChainService.CreateKeyPair(ctx, createReq)
-	if err != nil {
-		resp.Diagnostics.AddError("Error creating key pair", err.Error())
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		createReq := ConvertKeyPairToCreatePB(&plan)
+		createRes, err := client.KeyChainService.CreateKeyPair(ctx, createReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error creating key pair", err.Error())
+			return
+		}
+
+		plan.ID = types.StringValue(createRes.KeyPair.Id)
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	plan.ID = types.StringValue(respKeyPair.KeyPair.Id)
-
-	tflog.Trace(ctx, "Created a key pair", map[string]interface{}{
-		"id": plan.ID.ValueString(),
+	tflog.Trace(ctx, "Created a key pair", map[string]any{
+		"id":   plan.ID.ValueString(),
+		"name": plan.Name.ValueString(),
 	})
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -103,22 +110,28 @@ func (r *KeyPairResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	respKeyPair, err := r.client.KeyChainService.GetKeyPair(ctx, &pb.GetKeyPairRequest{
-		Id: state.ID.ValueString(),
-	})
-	if err != nil {
-		if status.Code(err) == codes.NotFound {
-			resp.State.RemoveResource(ctx)
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		getReq := &pb.GetKeyPairRequest{
+			Id: state.ID.ValueString(),
+		}
+		getRes, err := client.KeyChainService.GetKeyPair(ctx, getReq)
+		if err != nil {
+			if status.Code(err) == codes.NotFound {
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			resp.Diagnostics.AddError("Error reading key pair", err.Error())
 			return
 		}
-		resp.Diagnostics.AddError("Error reading key pair", err.Error())
+
+		state.ID = types.StringValue(getRes.KeyPair.Id)
+		state.NamespaceID = types.StringValue(getRes.KeyPair.NamespaceId)
+		state.Name = types.StringValue(getRes.KeyPair.Name)
+		state.Certificate = types.StringValue(string(getRes.KeyPair.Certificate))
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	state.ID = types.StringValue(respKeyPair.KeyPair.Id)
-	state.NamespaceID = types.StringValue(respKeyPair.KeyPair.NamespaceId)
-	state.Name = types.StringValue(respKeyPair.KeyPair.Name)
-	state.Certificate = types.StringValue(string(respKeyPair.KeyPair.Certificate))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -131,10 +144,15 @@ func (r *KeyPairResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	updateReq := ConvertKeyPairToUpdatePB(&plan)
-	_, err := r.client.KeyChainService.UpdateKeyPair(ctx, updateReq)
-	if err != nil {
-		resp.Diagnostics.AddError("Error updating key pair", err.Error())
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		updateReq := ConvertKeyPairToUpdatePB(&plan)
+		_, err := client.KeyChainService.UpdateKeyPair(ctx, updateReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error updating key pair", err.Error())
+			return
+		}
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -149,11 +167,17 @@ func (r *KeyPairResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	_, err := r.client.KeyChainService.DeleteKeyPair(ctx, &pb.DeleteKeyPairRequest{
-		Id: state.ID.ValueString(),
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error deleting key pair", err.Error())
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		deleteReq := &pb.DeleteKeyPairRequest{
+			Id: state.ID.ValueString(),
+		}
+		_, err := client.KeyChainService.DeleteKeyPair(ctx, deleteReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error deleting key pair", err.Error())
+			return
+		}
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 

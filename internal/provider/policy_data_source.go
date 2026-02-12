@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -82,21 +83,22 @@ func (d *PolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	policyResp, err := d.client.PolicyService.GetPolicy(ctx, &pb.GetPolicyRequest{
-		Id: data.ID.ValueString(),
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error reading policy", err.Error())
-		return
-	}
+	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		getReq := &pb.GetPolicyRequest{
+			Id: data.ID.ValueString(),
+		}
+		getRes, err := client.PolicyService.GetPolicy(ctx, getReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading policy", err.Error())
+			return
+		}
 
-	var out PolicyModel
-
-	diags := ConvertPolicyFromPB(&out, policyResp.Policy)
-	resp.Diagnostics.Append(diags...)
+		diags := ConvertPolicyFromPB(&data, getRes.Policy)
+		resp.Diagnostics.Append(diags...)
+	})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &out)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -105,27 +106,30 @@ func (r *ExternalDataSourceResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	pbExternalDataSource, diags := ConvertExternalDataSourceToPB(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		pbExternalDataSource, diags := ConvertExternalDataSourceToPB(ctx, &plan)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		createReq := &pb.SetExternalDataSourceRequest{
+			ExternalDataSource: pbExternalDataSource,
+		}
+		createRes, err := client.ExternalDataSourceService.SetExternalDataSource(ctx, createReq)
+		if err != nil {
+			resp.Diagnostics.AddError("set external data source", err.Error())
+			return
+		}
+
+		diags = ConvertExternalDataSourceFromPB(&plan, createRes.ExternalDataSource)
+		resp.Diagnostics.Append(diags...)
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	respExternalDataSource, err := r.client.ExternalDataSourceService.SetExternalDataSource(ctx, &pb.SetExternalDataSourceRequest{
-		ExternalDataSource: pbExternalDataSource,
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("set external data source", err.Error())
-		return
-	}
-
-	diags = ConvertExternalDataSourceFromPB(&plan, respExternalDataSource.ExternalDataSource)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
-		return
-	}
-
-	tflog.Trace(ctx, "Created an external data source", map[string]interface{}{
+	tflog.Trace(ctx, "Created an external data source", map[string]any{
 		"id": plan.ID.ValueString(),
 	})
 
@@ -140,21 +144,24 @@ func (r *ExternalDataSourceResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	respExternalDataSource, err := r.client.ExternalDataSourceService.GetExternalDataSource(ctx, &pb.GetExternalDataSourceRequest{
-		Id: state.ID.ValueString(),
-	})
-	if err != nil {
-		if status.Code(err) == codes.NotFound {
-			resp.State.RemoveResource(ctx)
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		getReq := &pb.GetExternalDataSourceRequest{
+			Id: state.ID.ValueString(),
+		}
+		getRes, err := client.ExternalDataSourceService.GetExternalDataSource(ctx, getReq)
+		if err != nil {
+			if status.Code(err) == codes.NotFound {
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			resp.Diagnostics.AddError("get external data source", err.Error())
 			return
 		}
-		resp.Diagnostics.AddError("get external data source", err.Error())
-		return
-	}
 
-	diags := ConvertExternalDataSourceFromPB(&state, respExternalDataSource.ExternalDataSource)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+		diags := ConvertExternalDataSourceFromPB(&state, getRes.ExternalDataSource)
+		resp.Diagnostics.Append(diags...)
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -169,23 +176,26 @@ func (r *ExternalDataSourceResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	pbExternalDataSource, diags := ConvertExternalDataSourceToPB(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
-		return
-	}
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		pbExternalDataSource, diags := ConvertExternalDataSourceToPB(ctx, &plan)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
-	respExternalDataSource, err := r.client.ExternalDataSourceService.SetExternalDataSource(ctx, &pb.SetExternalDataSourceRequest{
-		ExternalDataSource: pbExternalDataSource,
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("set external data source", err.Error())
-		return
-	}
+		setReq := &pb.SetExternalDataSourceRequest{
+			ExternalDataSource: pbExternalDataSource,
+		}
+		setRes, err := client.ExternalDataSourceService.SetExternalDataSource(ctx, setReq)
+		if err != nil {
+			resp.Diagnostics.AddError("set external data source", err.Error())
+			return
+		}
 
-	diags = ConvertExternalDataSourceFromPB(&plan, respExternalDataSource.ExternalDataSource)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+		diags = ConvertExternalDataSourceFromPB(&plan, setRes.ExternalDataSource)
+		resp.Diagnostics.Append(diags...)
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -200,11 +210,17 @@ func (r *ExternalDataSourceResource) Delete(ctx context.Context, req resource.De
 		return
 	}
 
-	_, err := r.client.ExternalDataSourceService.DeleteExternalDataSource(ctx, &pb.DeleteExternalDataSourceRequest{
-		Id: data.ID.ValueString(),
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("delete external data source", err.Error())
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		deleteReq := &pb.DeleteExternalDataSourceRequest{
+			Id: data.ID.ValueString(),
+		}
+		_, err := client.ExternalDataSourceService.DeleteExternalDataSource(ctx, deleteReq)
+		if err != nil {
+			resp.Diagnostics.AddError("delete external data source", err.Error())
+			return
+		}
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 

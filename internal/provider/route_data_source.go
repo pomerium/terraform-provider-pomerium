@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -419,16 +420,19 @@ func (d *RouteDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	routeResp, err := d.client.RouteService.GetRoute(ctx, &pb.GetRouteRequest{
-		Id: data.ID.ValueString(),
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error reading route", err.Error())
-		return
-	}
+	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		getReq := &pb.GetRouteRequest{
+			Id: data.ID.ValueString(),
+		}
+		getRes, err := client.RouteService.GetRoute(ctx, getReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading route", err.Error())
+			return
+		}
 
-	diags := ConvertRouteFromPB(&data, routeResp.Route)
-	resp.Diagnostics.Append(diags...)
+		diags := ConvertRouteFromPB(&data, getRes.Route)
+		resp.Diagnostics.Append(diags...)
+	})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

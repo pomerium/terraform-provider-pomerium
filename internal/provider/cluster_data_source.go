@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 
+	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -91,16 +92,19 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	clusterResp, err := d.client.ClustersService.GetCluster(ctx, &pb.GetClusterRequest{
-		Id: data.ID.ValueString(),
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error reading cluster", err.Error())
-		return
-	}
+	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		getReq := &pb.GetClusterRequest{
+			Id: data.ID.ValueString(),
+		}
+		getRes, err := client.ClustersService.GetCluster(ctx, getReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading cluster", err.Error())
+			return
+		}
 
-	diags := ConvertClusterFromPB(&data, clusterResp.Cluster, clusterResp.Namespace)
-	resp.Diagnostics.Append(diags...)
+		diags := ConvertClusterFromPB(&data, getRes.Cluster, getRes.Namespace)
+		resp.Diagnostics.Append(diags...)
+	})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -134,33 +135,38 @@ func (d *PoliciesDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	listReq := &pb.ListPoliciesRequest{
-		Namespace: data.NamespaceID.ValueString(),
-		Query:     data.Query.ValueStringPointer(),
-		Offset:    data.Offset.ValueInt64Pointer(),
-		Limit:     data.Limit.ValueInt64Pointer(),
-		OrderBy:   data.OrderBy.ValueStringPointer(),
-		ClusterId: data.ClusterID.ValueStringPointer(),
-	}
+	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		listReq := &pb.ListPoliciesRequest{
+			Namespace: data.NamespaceID.ValueString(),
+			Query:     data.Query.ValueStringPointer(),
+			Offset:    data.Offset.ValueInt64Pointer(),
+			Limit:     data.Limit.ValueInt64Pointer(),
+			OrderBy:   data.OrderBy.ValueStringPointer(),
+			ClusterId: data.ClusterID.ValueStringPointer(),
+		}
+		listRes, err := client.PolicyService.ListPolicies(ctx, listReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading policies", err.Error())
+			return
+		}
 
-	policiesResp, err := d.client.PolicyService.ListPolicies(ctx, listReq)
-	if err != nil {
-		resp.Diagnostics.AddError("Error reading policies", err.Error())
+		policies := make([]PolicyModel, 0, len(listRes.Policies))
+		for _, policy := range listRes.Policies {
+			var policyModel PolicyModel
+			diags := ConvertPolicyFromPB(&policyModel, policy)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			policies = append(policies, policyModel)
+		}
+
+		data.Policies = policies
+		data.TotalCount = types.Int64Value(listRes.GetTotalCount())
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	policies := make([]PolicyModel, 0, len(policiesResp.Policies))
-	for _, policy := range policiesResp.Policies {
-		var policyModel PolicyModel
-		diags := ConvertPolicyFromPB(&policyModel, policy)
-		if diags.HasError() {
-			resp.Diagnostics.Append(diags...)
-			return
-		}
-		policies = append(policies, policyModel)
-	}
-
-	data.Policies = policies
-	data.TotalCount = types.Int64Value(policiesResp.GetTotalCount())
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

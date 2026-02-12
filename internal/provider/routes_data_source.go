@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -94,32 +95,38 @@ func (d *RoutesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	listReq := &pb.ListRoutesRequest{
-		Namespace: data.NamespaceID.ValueString(),
-		Query:     data.Query.ValueStringPointer(),
-		Offset:    data.Offset.ValueInt64Pointer(),
-		Limit:     data.Limit.ValueInt64Pointer(),
-		OrderBy:   data.OrderBy.ValueStringPointer(),
-		ClusterId: data.ClusterID.ValueStringPointer(),
-	}
-	routesResp, err := d.client.RouteService.ListRoutes(ctx, listReq)
-	if err != nil {
-		resp.Diagnostics.AddError("Error reading routes", err.Error())
+	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		listReq := &pb.ListRoutesRequest{
+			Namespace: data.NamespaceID.ValueString(),
+			Query:     data.Query.ValueStringPointer(),
+			Offset:    data.Offset.ValueInt64Pointer(),
+			Limit:     data.Limit.ValueInt64Pointer(),
+			OrderBy:   data.OrderBy.ValueStringPointer(),
+			ClusterId: data.ClusterID.ValueStringPointer(),
+		}
+		listRes, err := client.RouteService.ListRoutes(ctx, listReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading routes", err.Error())
+			return
+		}
+
+		routes := make([]RouteModel, 0, len(listRes.Routes))
+		for _, route := range listRes.Routes {
+			var routeModel RouteModel
+			diags := ConvertRouteFromPB(&routeModel, route)
+			resp.Diagnostics.Append(diags...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			routes = append(routes, routeModel)
+		}
+
+		data.Routes = routes
+		data.TotalCount = types.Int64Value(listRes.GetTotalCount())
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	routes := make([]RouteModel, 0, len(routesResp.Routes))
-	for _, route := range routesResp.Routes {
-		var routeModel RouteModel
-		diags := ConvertRouteFromPB(&routeModel, route)
-		if diags.HasError() {
-			resp.Diagnostics.Append(diags...)
-			return
-		}
-		routes = append(routes, routeModel)
-	}
-
-	data.Routes = routes
-	data.TotalCount = types.Int64Value(routesResp.GetTotalCount())
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }

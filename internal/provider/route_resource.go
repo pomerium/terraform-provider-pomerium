@@ -16,6 +16,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
+	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -436,32 +437,34 @@ func (r *RouteResource) Create(ctx context.Context, req resource.CreateRequest, 
 	var plan RouteResourceModel
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	pbRoute, diags := ConvertRouteToPB(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		pbRoute, diags := ConvertRouteToPB(ctx, &plan)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		setReq := &pb.SetRouteRequest{
+			Route: pbRoute,
+		}
+		setRes, err := client.RouteService.SetRoute(ctx, setReq)
+		if err != nil {
+			resp.Diagnostics.AddError("set route", err.Error())
+			return
+		}
+
+		diags = ConvertRouteFromPB(&plan, setRes.Route)
+		resp.Diagnostics.Append(diags...)
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	respRoute, err := r.client.RouteService.SetRoute(ctx, &pb.SetRouteRequest{
-		Route: pbRoute,
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("set route", err.Error())
-		return
-	}
-
-	diags = ConvertRouteFromPB(&plan, respRoute.Route)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
-		return
-	}
-
-	tflog.Trace(ctx, "Created a route", map[string]interface{}{
+	tflog.Trace(ctx, "Created a route", map[string]any{
 		"id":   plan.ID.ValueString(),
 		"name": plan.Name.ValueString(),
 	})
@@ -477,21 +480,24 @@ func (r *RouteResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	respRoute, err := r.client.RouteService.GetRoute(ctx, &pb.GetRouteRequest{
-		Id: state.ID.ValueString(),
-	})
-	if err != nil {
-		if status.Code(err) == codes.NotFound {
-			resp.State.RemoveResource(ctx)
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		getReq := &pb.GetRouteRequest{
+			Id: state.ID.ValueString(),
+		}
+		getRes, err := client.RouteService.GetRoute(ctx, getReq)
+		if err != nil {
+			if status.Code(err) == codes.NotFound {
+				resp.State.RemoveResource(ctx)
+				return
+			}
+			resp.Diagnostics.AddError("get route", err.Error())
 			return
 		}
-		resp.Diagnostics.AddError("get route", err.Error())
-		return
-	}
 
-	diags := ConvertRouteFromPB(&state, respRoute.Route)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+		diags := ConvertRouteFromPB(&state, getRes.Route)
+		resp.Diagnostics.Append(diags...)
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -506,23 +512,26 @@ func (r *RouteResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	pbRoute, diags := ConvertRouteToPB(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
-		return
-	}
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		pbRoute, diags := ConvertRouteToPB(ctx, &plan)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
-	respRoute, err := r.client.RouteService.SetRoute(ctx, &pb.SetRouteRequest{
-		Route: pbRoute,
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("set route", err.Error())
-		return
-	}
+		setReq := &pb.SetRouteRequest{
+			Route: pbRoute,
+		}
+		setRes, err := client.RouteService.SetRoute(ctx, setReq)
+		if err != nil {
+			resp.Diagnostics.AddError("set route", err.Error())
+			return
+		}
 
-	diags = ConvertRouteFromPB(&plan, respRoute.Route)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+		diags = ConvertRouteFromPB(&plan, setRes.Route)
+		resp.Diagnostics.Append(diags...)
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -537,11 +546,17 @@ func (r *RouteResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	_, err := r.client.RouteService.DeleteRoute(ctx, &pb.DeleteRouteRequest{
-		Id: data.ID.ValueString(),
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("delete route", err.Error())
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		deleteReq := &pb.DeleteRouteRequest{
+			Id: data.ID.ValueString(),
+		}
+		_, err := client.RouteService.DeleteRoute(ctx, deleteReq)
+		if err != nil {
+			resp.Diagnostics.AddError("delete route", err.Error())
+			return
+		}
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 

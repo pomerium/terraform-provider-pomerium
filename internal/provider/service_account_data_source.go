@@ -6,6 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 
+	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -67,16 +68,19 @@ func (d *ServiceAccountDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	serviceAccountResp, err := d.client.PomeriumServiceAccountService.GetPomeriumServiceAccount(ctx, &pb.GetPomeriumServiceAccountRequest{
-		Id: data.ID.ValueString(),
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("Error reading service account", err.Error())
-		return
-	}
+	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		getReq := &pb.GetPomeriumServiceAccountRequest{
+			Id: data.ID.ValueString(),
+		}
+		getRes, err := client.PomeriumServiceAccountService.GetPomeriumServiceAccount(ctx, getReq)
+		if err != nil {
+			resp.Diagnostics.AddError("Error reading service account", err.Error())
+			return
+		}
 
-	diags := ConvertServiceAccountFromPB(&data, serviceAccountResp.ServiceAccount)
-	resp.Diagnostics.Append(diags...)
+		diags := ConvertServiceAccountFromPB(&data, getRes.ServiceAccount)
+		resp.Diagnostics.Append(diags...)
+	})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

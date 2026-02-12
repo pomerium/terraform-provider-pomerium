@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
+	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -43,23 +44,26 @@ func (r *SettingsResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	planSettings, diags := ConvertSettingsToPB(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
-		return
-	}
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		planSettings, diags := ConvertSettingsToPB(ctx, &plan)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
-	respSettings, err := r.client.SettingsService.SetSettings(ctx, &pb.SetSettingsRequest{
-		Settings: planSettings,
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("set settings", err.Error())
-		return
-	}
+		setReq := &pb.SetSettingsRequest{
+			Settings: planSettings,
+		}
+		setRes, err := client.SettingsService.SetSettings(ctx, setReq)
+		if err != nil {
+			resp.Diagnostics.AddError("set settings", err.Error())
+			return
+		}
 
-	diags = ConvertSettingsFromPB(&plan, respSettings.Settings)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+		diags = ConvertSettingsFromPB(&plan, setRes.Settings)
+		resp.Diagnostics.Append(diags...)
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -74,17 +78,20 @@ func (r *SettingsResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	respSettings, err := r.client.SettingsService.GetSettings(ctx, &pb.GetSettingsRequest{
-		ClusterId: state.ClusterID.ValueStringPointer(),
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("get settings", err.Error())
-		return
-	}
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		getReq := &pb.GetSettingsRequest{
+			ClusterId: state.ClusterID.ValueStringPointer(),
+		}
+		getRes, err := client.SettingsService.GetSettings(ctx, getReq)
+		if err != nil {
+			resp.Diagnostics.AddError("get settings", err.Error())
+			return
+		}
 
-	diags := ConvertSettingsFromPB(&state, respSettings.Settings)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+		diags := ConvertSettingsFromPB(&state, getRes.Settings)
+		resp.Diagnostics.Append(diags...)
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
@@ -99,21 +106,28 @@ func (r *SettingsResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	planSettings, diags := ConvertSettingsToPB(ctx, &plan)
-	resp.Diagnostics.Append(diags...)
-	if diags.HasError() {
+	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
+		planSettings, diags := ConvertSettingsToPB(ctx, &plan)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		setReq := &pb.SetSettingsRequest{
+			Settings: planSettings,
+		}
+		setRes, err := client.SettingsService.SetSettings(ctx, setReq)
+		if err != nil {
+			resp.Diagnostics.AddError("set settings", err.Error())
+			return
+		}
+
+		plan.ID = types.StringValue(setRes.GetSettings().GetId())
+	})...)
+	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	respSettings, err := r.client.SettingsService.SetSettings(ctx, &pb.SetSettingsRequest{
-		Settings: planSettings,
-	})
-	if err != nil {
-		resp.Diagnostics.AddError("set settings", err.Error())
-		return
-	}
-
-	plan.ID = types.StringValue(respSettings.GetSettings().GetId())
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
