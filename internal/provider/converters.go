@@ -453,6 +453,15 @@ func ToSettingsStringList(ctx context.Context, dst **pb.Settings_StringList, src
 	}
 }
 
+func appendAttributeDiagnostics(dst *diag.Diagnostics, p path.Path, d ...diag.Diagnostic) {
+	for _, d := range diag.Diagnostics(d).Errors() {
+		dst.AddAttributeError(p, d.Summary(), d.Detail())
+	}
+	for _, d := range diag.Diagnostics(d).Warnings() {
+		dst.AddAttributeWarning(p, d.Summary(), d.Detail())
+	}
+}
+
 func zeroToNil[T comparable](v T) *T {
 	var def T
 	if def == v {

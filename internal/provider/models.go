@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
@@ -18,7 +19,18 @@ type ClusterModel struct {
 	CertificateAuthorityB64  types.String `tfsdk:"certificate_authority_b64"`
 	CertificateAuthorityFile types.String `tfsdk:"certificate_authority_file"`
 }
-
+type ExternalDataSourceModel struct {
+	ID               types.String         `tfsdk:"id"`
+	URL              types.String         `tfsdk:"url"`
+	RecordType       types.String         `tfsdk:"record_type"`
+	ForeignKey       types.String         `tfsdk:"foreign_key"`
+	Headers          types.Map            `tfsdk:"headers"`
+	AllowInsecureTLS types.Bool           `tfsdk:"allow_insecure_tls"`
+	ClientTLSKeyID   types.String         `tfsdk:"client_tls_key_id"`
+	ClusterID        types.String         `tfsdk:"cluster_id"`
+	PollingMinDelay  timetypes.GoDuration `tfsdk:"polling_min_delay"`
+	PollingMaxDelay  timetypes.GoDuration `tfsdk:"polling_max_delay"`
+}
 type KeyPairModel struct {
 	Certificate types.String `tfsdk:"certificate"`
 	ID          types.String `tfsdk:"id"`

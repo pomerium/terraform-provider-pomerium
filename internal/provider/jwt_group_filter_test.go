@@ -24,7 +24,7 @@ func TestJWTGroupsFilterFromPB(t *testing.T) {
 		{
 			name:     "nil input",
 			input:    nil,
-			expected: types.ObjectNull(provider.JWTGroupsFilterSchemaAttr),
+			expected: types.ObjectNull(provider.JWTGroupsFilterSchemaAttributes),
 		},
 		{
 			name: "empty groups",
@@ -32,7 +32,7 @@ func TestJWTGroupsFilterFromPB(t *testing.T) {
 				Groups:       []string{},
 				InferFromPpl: proto.Bool(false),
 			},
-			expected: types.ObjectValueMust(provider.JWTGroupsFilterSchemaAttr, map[string]attr.Value{
+			expected: types.ObjectValueMust(provider.JWTGroupsFilterSchemaAttributes, map[string]attr.Value{
 				"groups":         types.SetValueMust(types.StringType, []attr.Value{}),
 				"infer_from_ppl": types.BoolValue(false),
 			}),
@@ -43,7 +43,7 @@ func TestJWTGroupsFilterFromPB(t *testing.T) {
 				Groups:       []string{"group1", "group2"},
 				InferFromPpl: proto.Bool(true),
 			},
-			expected: types.ObjectValueMust(provider.JWTGroupsFilterSchemaAttr, map[string]attr.Value{
+			expected: types.ObjectValueMust(provider.JWTGroupsFilterSchemaAttributes, map[string]attr.Value{
 				"groups": types.SetValueMust(types.StringType, []attr.Value{
 					types.StringValue("group1"),
 					types.StringValue("group2"),
@@ -72,12 +72,12 @@ func TestJWTGroupsFilterToPB(t *testing.T) {
 	}{
 		{
 			name:     "null input",
-			input:    types.ObjectNull(provider.JWTGroupsFilterSchemaAttr),
+			input:    types.ObjectNull(provider.JWTGroupsFilterSchemaAttributes),
 			expected: nil,
 		},
 		{
 			name: "empty groups",
-			input: types.ObjectValueMust(provider.JWTGroupsFilterSchemaAttr, map[string]attr.Value{
+			input: types.ObjectValueMust(provider.JWTGroupsFilterSchemaAttributes, map[string]attr.Value{
 				"groups":         types.SetValueMust(types.StringType, []attr.Value{}),
 				"infer_from_ppl": types.BoolValue(false),
 			}),
@@ -88,7 +88,7 @@ func TestJWTGroupsFilterToPB(t *testing.T) {
 		},
 		{
 			name: "with groups",
-			input: types.ObjectValueMust(provider.JWTGroupsFilterSchemaAttr, map[string]attr.Value{
+			input: types.ObjectValueMust(provider.JWTGroupsFilterSchemaAttributes, map[string]attr.Value{
 				"groups": types.SetValueMust(types.StringType, []attr.Value{
 					types.StringValue("group1"),
 					types.StringValue("group2"),

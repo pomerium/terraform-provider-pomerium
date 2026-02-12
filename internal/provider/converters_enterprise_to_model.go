@@ -61,6 +61,21 @@ func (c *EnterpriseToModelConverter) Cluster(src *enterprise.Cluster, namespace 
 	}
 }
 
+func (c *EnterpriseToModelConverter) ExternalDataSource(src *enterprise.ExternalDataSource) ExternalDataSourceModel {
+	return ExternalDataSourceModel{
+		AllowInsecureTLS: types.BoolPointerValue(src.AllowInsecureTls),
+		ClientTLSKeyID:   types.StringPointerValue(src.ClientTlsKeyId),
+		ClusterID:        types.StringPointerValue(src.ClusterId),
+		ForeignKey:       types.StringValue(src.ForeignKey),
+		Headers:          FromStringMap(src.Headers),
+		ID:               types.StringValue(src.Id),
+		PollingMaxDelay:  FromDuration(src.PollingMaxDelay),
+		PollingMinDelay:  FromDuration(src.PollingMinDelay),
+		RecordType:       types.StringValue(src.RecordType),
+		URL:              types.StringValue(src.Url),
+	}
+}
+
 func (c *EnterpriseToModelConverter) Namespace(src *enterprise.Namespace) NamespaceModel {
 	return NamespaceModel{
 		ClusterID: types.StringPointerValue(src.ClusterId),

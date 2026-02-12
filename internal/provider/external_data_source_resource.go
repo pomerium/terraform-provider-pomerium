@@ -107,8 +107,7 @@ func (r *ExternalDataSourceResource) Create(ctx context.Context, req resource.Cr
 	}
 
 	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbExternalDataSource, diags := ConvertExternalDataSourceToPB(ctx, &plan)
-		resp.Diagnostics.Append(diags...)
+		pbExternalDataSource := NewModelToEnterpriseConverter(&resp.Diagnostics).ExternalDataSource(plan)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -122,8 +121,7 @@ func (r *ExternalDataSourceResource) Create(ctx context.Context, req resource.Cr
 			return
 		}
 
-		diags = ConvertExternalDataSourceFromPB(&plan, createRes.ExternalDataSource)
-		resp.Diagnostics.Append(diags...)
+		plan = NewEnterpriseToModelConverter(&resp.Diagnostics).ExternalDataSource(createRes.GetExternalDataSource())
 	})...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -158,8 +156,7 @@ func (r *ExternalDataSourceResource) Read(ctx context.Context, req resource.Read
 			return
 		}
 
-		diags := ConvertExternalDataSourceFromPB(&state, getRes.ExternalDataSource)
-		resp.Diagnostics.Append(diags...)
+		state = NewEnterpriseToModelConverter(&resp.Diagnostics).ExternalDataSource(getRes.GetExternalDataSource())
 	})...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -177,8 +174,7 @@ func (r *ExternalDataSourceResource) Update(ctx context.Context, req resource.Up
 	}
 
 	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbExternalDataSource, diags := ConvertExternalDataSourceToPB(ctx, &plan)
-		resp.Diagnostics.Append(diags...)
+		pbExternalDataSource := NewModelToEnterpriseConverter(&resp.Diagnostics).ExternalDataSource(plan)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -192,8 +188,7 @@ func (r *ExternalDataSourceResource) Update(ctx context.Context, req resource.Up
 			return
 		}
 
-		diags = ConvertExternalDataSourceFromPB(&plan, setRes.ExternalDataSource)
-		resp.Diagnostics.Append(diags...)
+		plan = NewEnterpriseToModelConverter(&resp.Diagnostics).ExternalDataSource(setRes.GetExternalDataSource())
 	})...)
 	if resp.Diagnostics.HasError() {
 		return

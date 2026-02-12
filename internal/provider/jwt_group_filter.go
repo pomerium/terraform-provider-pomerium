@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+
 	"github.com/pomerium/enterprise-client-go/pb"
 )
 
@@ -28,12 +29,7 @@ var (
 			},
 		},
 	}
-	JWTGroupsFilterSchemaAttr = map[string]attr.Type{
-		"groups": types.SetType{
-			ElemType: types.StringType,
-		},
-		"infer_from_ppl": types.BoolType,
-	}
+	JWTGroupsFilterSchemaAttributes = JWTGroupsFilterSchema.GetType().(types.ObjectType).AttrTypes
 )
 
 func JWTGroupsFilterFromPB(
@@ -41,7 +37,7 @@ func JWTGroupsFilterFromPB(
 	src *pb.JwtGroupsFilter,
 ) {
 	if src == nil {
-		*dst = types.ObjectNull(JWTGroupsFilterSchemaAttr)
+		*dst = types.ObjectNull(JWTGroupsFilterSchemaAttributes)
 		return
 	}
 
@@ -58,7 +54,7 @@ func JWTGroupsFilterFromPB(
 
 	attrs["infer_from_ppl"] = types.BoolPointerValue(src.InferFromPpl)
 
-	*dst = types.ObjectValueMust(JWTGroupsFilterSchemaAttr, attrs)
+	*dst = types.ObjectValueMust(JWTGroupsFilterSchemaAttributes, attrs)
 }
 
 func JWTGroupsFilterToPB(
