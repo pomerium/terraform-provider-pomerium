@@ -152,9 +152,7 @@ func (d *PoliciesDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 		policies := make([]PolicyModel, 0, len(listRes.Policies))
 		for _, policy := range listRes.Policies {
-			var policyModel PolicyModel
-			diags := ConvertPolicyFromPB(&policyModel, policy)
-			resp.Diagnostics.Append(diags...)
+			policyModel := NewEnterpriseToModelConverter(&resp.Diagnostics).Policy(policy)
 			if resp.Diagnostics.HasError() {
 				return
 			}

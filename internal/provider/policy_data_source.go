@@ -93,8 +93,7 @@ func (d *PolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 			return
 		}
 
-		diags := ConvertPolicyFromPB(&data, getRes.Policy)
-		resp.Diagnostics.Append(diags...)
+		data = NewEnterpriseToModelConverter(&resp.Diagnostics).Policy(getRes.GetPolicy())
 	})...)
 	if resp.Diagnostics.HasError() {
 		return

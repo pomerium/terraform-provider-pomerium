@@ -114,3 +114,16 @@ func ConvertNamespaceFromPB(dst *NamespaceResourceModel, src *pb.Namespace) diag
 
 	return diagnostics
 }
+
+// PolicyModel represents the shared model for policy resources and data sources
+type PolicyModel struct {
+	Description types.String   `tfsdk:"description"`
+	Enforced    types.Bool     `tfsdk:"enforced"`
+	Explanation types.String   `tfsdk:"explanation"`
+	ID          types.String   `tfsdk:"id"`
+	Name        types.String   `tfsdk:"name"`
+	NamespaceID types.String   `tfsdk:"namespace_id"`
+	PPL         PolicyLanguage `tfsdk:"ppl"`
+	Rego        types.List     `tfsdk:"rego"`
+	Remediation types.String   `tfsdk:"remediation"`
+}
