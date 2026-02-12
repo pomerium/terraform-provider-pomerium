@@ -2,8 +2,6 @@ package provider
 
 import (
 	"context"
-	"encoding/base64"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -11,34 +9,21 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/durationpb"
-	"google.golang.org/protobuf/types/known/timestamppb"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	enterprise "github.com/pomerium/enterprise-client-go/pb"
 )
 
 type ModelToEnterpriseConverter struct {
+	baseModelConverter
 	diagnostics *diag.Diagnostics
 }
 
 func NewModelToEnterpriseConverter(diagnostics *diag.Diagnostics) *ModelToEnterpriseConverter {
 	return &ModelToEnterpriseConverter{
-		diagnostics: diagnostics,
+		baseModelConverter: baseModelConverter{diagnostics: diagnostics},
+		diagnostics:        diagnostics,
 	}
-}
-
-func (c *ModelToEnterpriseConverter) BytesFromBase64(p path.Path, src types.String) []byte {
-	if src.IsNull() || src.IsUnknown() || src.ValueString() == "" {
-		return nil
-	}
-
-	dst, err := base64.StdEncoding.DecodeString(src.ValueString())
-	if err != nil {
-		appendAttributeDiagnostics(c.diagnostics, p, diag.NewErrorDiagnostic("invalid base64 string", err.Error()))
-		return nil
-	}
-
-	return dst
 }
 
 func (c *ModelToEnterpriseConverter) CircuitBreakerThresholds(src types.Object) *enterprise.CircuitBreakerThresholds {
@@ -89,16 +74,6 @@ func (c *ModelToEnterpriseConverter) CreateKeyPairRequest(src KeyPairModel) *ent
 		NamespaceId:  src.NamespaceID.ValueString(),
 		OriginatorId: OriginatorID,
 	}
-}
-
-func (c *ModelToEnterpriseConverter) Duration(p path.Path, src timetypes.GoDuration) *durationpb.Duration {
-	if src.IsNull() || src.IsUnknown() {
-		return nil
-	}
-
-	dur, diagnostics := src.ValueGoDuration()
-	appendAttributeDiagnostics(c.diagnostics, p, diagnostics...)
-	return durationpb.New(dur)
 }
 
 func (c *ModelToEnterpriseConverter) ExternalDataSource(src ExternalDataSourceModel) *enterprise.ExternalDataSource {
@@ -246,6 +221,74 @@ func (c *ModelToEnterpriseConverter) HealthCheck(src types.Object) *enterprise.H
 	return dst
 }
 
+func (c *ModelToEnterpriseConverter) IdentityProvider(src SettingsModel) *string {
+	if !src.IdentityProviderAuth0.IsNull() && !src.IdentityProviderAuth0.IsUnknown() {
+		return proto.String("auth0")
+	}
+	if !src.IdentityProviderAzure.IsNull() && !src.IdentityProviderAzure.IsUnknown() {
+		return proto.String("azure")
+	}
+	if !src.IdentityProviderBlob.IsNull() && !src.IdentityProviderBlob.IsUnknown() {
+		return proto.String("blob")
+	}
+	if !src.IdentityProviderCognito.IsNull() && !src.IdentityProviderCognito.IsUnknown() {
+		return proto.String("cognito")
+	}
+	if !src.IdentityProviderGitHub.IsNull() && !src.IdentityProviderGitHub.IsUnknown() {
+		return proto.String("github")
+	}
+	if !src.IdentityProviderGitLab.IsNull() && !src.IdentityProviderGitLab.IsUnknown() {
+		return proto.String("gitlab")
+	}
+	if !src.IdentityProviderGoogle.IsNull() && !src.IdentityProviderGoogle.IsUnknown() {
+		return proto.String("google")
+	}
+	if !src.IdentityProviderOkta.IsNull() && !src.IdentityProviderOkta.IsUnknown() {
+		return proto.String("okta")
+	}
+	if !src.IdentityProviderOneLogin.IsNull() && !src.IdentityProviderOneLogin.IsUnknown() {
+		return proto.String("onelogin")
+	}
+	if !src.IdentityProviderPing.IsNull() && !src.IdentityProviderPing.IsUnknown() {
+		return proto.String("ping")
+	}
+	return nil
+}
+
+func (c *ModelToEnterpriseConverter) IdentityProviderOptions(src SettingsModel) *structpb.Struct {
+	if !src.IdentityProviderAuth0.IsNull() && !src.IdentityProviderAuth0.IsUnknown() {
+		return getIdpSettings[Auth0Options](c.diagnostics, src.IdentityProviderAuth0)
+	}
+	if !src.IdentityProviderAzure.IsNull() && !src.IdentityProviderAzure.IsUnknown() {
+		return getIdpSettings[AzureOptions](c.diagnostics, src.IdentityProviderAzure)
+	}
+	if !src.IdentityProviderBlob.IsNull() && !src.IdentityProviderBlob.IsUnknown() {
+		return getIdpSettings[BlobOptions](c.diagnostics, src.IdentityProviderBlob)
+	}
+	if !src.IdentityProviderCognito.IsNull() && !src.IdentityProviderCognito.IsUnknown() {
+		return getIdpSettings[CognitoOptions](c.diagnostics, src.IdentityProviderCognito)
+	}
+	if !src.IdentityProviderGitHub.IsNull() && !src.IdentityProviderGitHub.IsUnknown() {
+		return getIdpSettings[GitHubOptions](c.diagnostics, src.IdentityProviderGitHub)
+	}
+	if !src.IdentityProviderGitLab.IsNull() && !src.IdentityProviderGitLab.IsUnknown() {
+		return getIdpSettings[GitLabOptions](c.diagnostics, src.IdentityProviderGitLab)
+	}
+	if !src.IdentityProviderGoogle.IsNull() && !src.IdentityProviderGoogle.IsUnknown() {
+		return getIdpSettings[GoogleOptions](c.diagnostics, src.IdentityProviderGoogle)
+	}
+	if !src.IdentityProviderOkta.IsNull() && !src.IdentityProviderOkta.IsUnknown() {
+		return getIdpSettings[OktaOptions](c.diagnostics, src.IdentityProviderOkta)
+	}
+	if !src.IdentityProviderOneLogin.IsNull() && !src.IdentityProviderOneLogin.IsUnknown() {
+		return getIdpSettings[OneLoginOptions](c.diagnostics, src.IdentityProviderOneLogin)
+	}
+	if !src.IdentityProviderPing.IsNull() && !src.IdentityProviderPing.IsUnknown() {
+		return getIdpSettings[PingOptions](c.diagnostics, src.IdentityProviderPing)
+	}
+	return nil
+}
+
 func (c *ModelToEnterpriseConverter) JWTGroupsFilter(src types.Object) *enterprise.JwtGroupsFilter {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
@@ -291,27 +334,6 @@ func (c *ModelToEnterpriseConverter) NamespacePermission(src NamespacePermission
 		SubjectId:     src.SubjectID.ValueString(),
 		SubjectType:   src.SubjectType.ValueString(),
 	}
-}
-
-func (c *ModelToEnterpriseConverter) NullableBool(src types.Bool) *bool {
-	if src.IsNull() || src.IsUnknown() {
-		return nil
-	}
-	return src.ValueBoolPointer()
-}
-
-func (c *ModelToEnterpriseConverter) NullableString(src types.String) *string {
-	if src.IsNull() || src.IsUnknown() {
-		return nil
-	}
-	return src.ValueStringPointer()
-}
-
-func (c *ModelToEnterpriseConverter) NullableUint32(src types.Int64) *uint32 {
-	if src.IsNull() || src.IsUnknown() {
-		return nil
-	}
-	return proto.Uint32(uint32(src.ValueInt64()))
 }
 
 func (c *ModelToEnterpriseConverter) Policy(src PolicyModel) *enterprise.Policy {
@@ -417,143 +439,114 @@ func (c *ModelToEnterpriseConverter) ServiceAccount(src ServiceAccountModel) *en
 }
 
 func (c *ModelToEnterpriseConverter) Settings(src SettingsModel) *enterprise.Settings {
-	dst := &enterprise.Settings{}
-
-	ToStringListFromSet(context.Background(), &dst.AccessLogFields, src.AccessLogFields, c.diagnostics)
-	dst.Address = src.Address.ValueStringPointer()
-	dst.AuthenticateServiceUrl = src.AuthenticateServiceURL.ValueStringPointer()
-	ToStringListFromSet(context.Background(), &dst.AuthorizeLogFields, src.AuthorizeLogFields, c.diagnostics)
-	dst.AuthorizeServiceUrl = src.AuthorizeServiceURL.ValueStringPointer()
-	dst.Autocert = src.Autocert.ValueBoolPointer()
-	dst.AutocertDir = src.AutocertDir.ValueStringPointer()
-	dst.AutocertMustStaple = src.AutocertMustStaple.ValueBoolPointer()
-	dst.AutocertUseStaging = src.AutocertUseStaging.ValueBoolPointer()
-	dst.BearerTokenFormat = ToBearerTokenFormat(src.BearerTokenFormat)
-	dst.CacheServiceUrl = src.CacheServiceURL.ValueStringPointer()
-	dst.CertificateAuthority = src.CertificateAuthority.ValueStringPointer()
-	dst.CertificateAuthorityFile = src.CertificateAuthorityFile.ValueStringPointer()
-	dst.CertificateAuthorityKeyPairId = src.CertificateAuthorityKeyPairID.ValueStringPointer()
-	dst.CircuitBreakerThresholds = NewModelToEnterpriseConverter(c.diagnostics).CircuitBreakerThresholds(src.CircuitBreakerThresholds)
-	dst.ClientCa = src.ClientCA.ValueStringPointer()
-	dst.ClientCaFile = src.ClientCAFile.ValueStringPointer()
-	dst.ClientCaKeyPairId = src.ClientCAKeyPairID.ValueStringPointer()
-	dst.ClusterId = src.ClusterID.ValueStringPointer()
-	dst.CodecType = ToCodecType(src.CodecType)
-	dst.CookieDomain = src.CookieDomain.ValueStringPointer()
-	ToDuration(&dst.CookieExpire, src.CookieExpire, c.diagnostics)
-	dst.CookieHttpOnly = src.CookieHTTPOnly.ValueBoolPointer()
-	dst.CookieName = src.CookieName.ValueStringPointer()
-	dst.CookieSameSite = src.CookieSameSite.ValueStringPointer()
-	dst.CookieSecret = src.CookieSecret.ValueStringPointer()
-	dst.CookieSecure = src.CookieSecure.ValueBoolPointer()
-	dst.DarkmodePrimaryColor = src.DarkmodePrimaryColor.ValueStringPointer()
-	dst.DarkmodeSecondaryColor = src.DarkmodeSecondaryColor.ValueStringPointer()
-	dst.DatabrokerServiceUrl = src.DatabrokerServiceURL.ValueStringPointer()
-	ToDuration(&dst.DefaultUpstreamTimeout, src.DefaultUpstreamTimeout, c.diagnostics)
-	ToDuration(&dst.DnsFailureRefreshRate, src.DNSFailureRefreshRate, c.diagnostics)
-	dst.DnsLookupFamily = src.DNSLookupFamily.ValueStringPointer()
-	ToDuration(&dst.DnsQueryTimeout, src.DNSQueryTimeout, c.diagnostics)
-	dst.DnsQueryTries = FromInt64Pointer[uint32](src.DNSQueryTries)
-	ToDuration(&dst.DnsRefreshRate, src.DNSRefreshRate, c.diagnostics)
-	dst.DnsUdpMaxQueries = FromInt64Pointer[uint32](src.DNSUDPMaxQueries)
-	dst.DnsUseTcp = src.DNSUseTCP.ValueBoolPointer()
-	dst.ErrorMessageFirstParagraph = src.ErrorMessageFirstParagraph.ValueStringPointer()
-	dst.FaviconUrl = src.FaviconURL.ValueStringPointer()
-	dst.GoogleCloudServerlessAuthenticationServiceAccount = src.GoogleCloudServerlessAuthenticationServiceAccount.ValueStringPointer()
-	dst.GrpcAddress = src.GRPCAddress.ValueStringPointer()
-	dst.GrpcInsecure = src.GRPCInsecure.ValueBoolPointer()
-	dst.HttpRedirectAddr = src.HTTPRedirectAddr.ValueStringPointer()
-	dst.Id = src.ID.ValueString()
-	IdentityProviderSettingsToPB(context.Background(), dst, &src, c.diagnostics)
-	ToDuration(&dst.IdentityProviderRefreshInterval, src.IdentityProviderRefreshInterval, c.diagnostics)
-	ToDuration(&dst.IdentityProviderRefreshTimeout, src.IdentityProviderRefreshTimeout, c.diagnostics)
-	ToSettingsStringList(context.Background(), &dst.IdpAccessTokenAllowedAudiences, src.IDPAccessTokenAllowedAudiences, c.diagnostics)
-	dst.IdpClientId = src.IdpClientID.ValueStringPointer()
-	dst.IdpClientSecret = src.IdpClientSecret.ValueStringPointer()
-	dst.IdpProvider = src.IdpProvider.ValueStringPointer()
-	dst.IdpProviderUrl = src.IdpProviderURL.ValueStringPointer()
-	ToDuration(&dst.IdpRefreshDirectoryInterval, src.IdpRefreshDirectoryInterval, c.diagnostics)
-	ToDuration(&dst.IdpRefreshDirectoryTimeout, src.IdpRefreshDirectoryTimeout, c.diagnostics)
-	dst.IdpServiceAccount = src.IdpServiceAccount.ValueStringPointer()
-	dst.InsecureServer = src.InsecureServer.ValueBoolPointer()
-	dst.InstallationId = src.InstallationID.ValueStringPointer()
-	ToStringMap(context.Background(), &dst.JwtClaimsHeaders, src.JWTClaimsHeaders, c.diagnostics)
-	dst.JwtIssuerFormat = ToIssuerFormat(src.JWTIssuerFormat, c.diagnostics)
-	dst.LogLevel = src.LogLevel.ValueStringPointer()
-	dst.LogoUrl = src.LogoURL.ValueStringPointer()
-	dst.MetricsAddress = src.MetricsAddress.ValueStringPointer()
-	dst.OriginatorId = OriginatorID
-	dst.PassIdentityHeaders = src.PassIdentityHeaders.ValueBoolPointer()
-	dst.PrimaryColor = src.PrimaryColor.ValueStringPointer()
-	dst.ProxyLogLevel = src.ProxyLogLevel.ValueStringPointer()
-	ToStringMap(context.Background(), &dst.RequestParams, src.RequestParams, c.diagnostics)
-	ToStringSliceFromSet(context.Background(), &dst.Scopes, src.Scopes, c.diagnostics)
-	dst.SecondaryColor = src.SecondaryColor.ValueStringPointer()
-	ToStringMap(context.Background(), &dst.SetResponseHeaders, src.SetResponseHeaders, c.diagnostics)
-	dst.SkipXffAppend = src.SkipXFFAppend.ValueBoolPointer()
-	dst.SshAddress = src.SSHAddress.ValueStringPointer()
-	ToSettingsStringList(context.Background(), &dst.SshHostKeyFiles, src.SSHHostKeyFiles, c.diagnostics)
-	ToSettingsStringList(context.Background(), &dst.SshHostKeys, src.SSHHostKeys, c.diagnostics)
-	dst.SshUserCaKey = src.SSHUserCAKey.ValueStringPointer()
-	dst.SshUserCaKeyFile = src.SSHUserCAKeyFile.ValueStringPointer()
-	ToDuration(&dst.TimeoutIdle, src.TimeoutIdle, c.diagnostics)
-	ToDuration(&dst.TimeoutRead, src.TimeoutRead, c.diagnostics)
-	ToDuration(&dst.TimeoutWrite, src.TimeoutWrite, c.diagnostics)
-	dst.JwtGroupsFilter = NewModelToEnterpriseConverter(c.diagnostics).JWTGroupsFilter(src.JWTGroupsFilter)
-
-	dst.OtelTracesExporter = src.OtelTracesExporter.ValueStringPointer()
-	dst.OtelTracesSamplerArg = src.OtelTracesSamplerArg.ValueFloat64Pointer()
-	ToStringSliceFromSet(context.Background(), &dst.OtelResourceAttributes, src.OtelResourceAttributes, c.diagnostics)
-	dst.OtelLogLevel = src.OtelLogLevel.ValueStringPointer()
-	dst.OtelAttributeValueLengthLimit = FromInt64Pointer[int32](src.OtelAttributeValueLengthLimit)
-	dst.OtelExporterOtlpEndpoint = src.OtelExporterOtlpEndpoint.ValueStringPointer()
-	dst.OtelExporterOtlpTracesEndpoint = src.OtelExporterOtlpTracesEndpoint.ValueStringPointer()
-	dst.OtelExporterOtlpProtocol = src.OtelExporterOtlpProtocol.ValueStringPointer()
-	dst.OtelExporterOtlpTracesProtocol = src.OtelExporterOtlpTracesProtocol.ValueStringPointer()
-	ToStringSliceFromSet(context.Background(), &dst.OtelExporterOtlpHeaders, src.OtelExporterOtlpHeaders, c.diagnostics)
-	ToStringSliceFromSet(context.Background(), &dst.OtelExporterOtlpTracesHeaders, src.OtelExporterOtlpTracesHeaders, c.diagnostics)
-	ToDuration(&dst.OtelExporterOtlpTimeout, src.OtelExporterOtlpTimeout, c.diagnostics)
-	ToDuration(&dst.OtelExporterOtlpTracesTimeout, src.OtelExporterOtlpTracesTimeout, c.diagnostics)
-	ToDuration(&dst.OtelBspScheduleDelay, src.OtelBspScheduleDelay, c.diagnostics)
-	dst.OtelBspMaxExportBatchSize = FromInt64Pointer[int32](src.OtelBspMaxExportBatchSize)
-
-	return dst
+	return &enterprise.Settings{
+		AccessLogFields:               c.SettingsStringList(path.Root("access_log_fields"), src.AccessLogFields),
+		Address:                       src.Address.ValueStringPointer(),
+		AuthenticateServiceUrl:        src.AuthenticateServiceURL.ValueStringPointer(),
+		AuthorizeLogFields:            c.SettingsStringList(path.Root("authorize_log_fields"), src.AuthorizeLogFields),
+		AuthorizeServiceUrl:           src.AuthorizeServiceURL.ValueStringPointer(),
+		Autocert:                      src.Autocert.ValueBoolPointer(),
+		AutocertDir:                   src.AutocertDir.ValueStringPointer(),
+		AutocertMustStaple:            src.AutocertMustStaple.ValueBoolPointer(),
+		AutocertUseStaging:            src.AutocertUseStaging.ValueBoolPointer(),
+		BearerTokenFormat:             ToBearerTokenFormat(src.BearerTokenFormat),
+		CacheServiceUrl:               src.CacheServiceURL.ValueStringPointer(),
+		CertificateAuthority:          src.CertificateAuthority.ValueStringPointer(),
+		CertificateAuthorityFile:      src.CertificateAuthorityFile.ValueStringPointer(),
+		CertificateAuthorityKeyPairId: src.CertificateAuthorityKeyPairID.ValueStringPointer(),
+		CircuitBreakerThresholds:      c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
+		ClientCa:                      src.ClientCA.ValueStringPointer(),
+		ClientCaFile:                  src.ClientCAFile.ValueStringPointer(),
+		ClientCaKeyPairId:             src.ClientCAKeyPairID.ValueStringPointer(),
+		ClusterId:                     src.ClusterID.ValueStringPointer(),
+		CodecType:                     ToCodecType(src.CodecType),
+		CookieDomain:                  src.CookieDomain.ValueStringPointer(),
+		CookieExpire:                  c.Duration(path.Root("cookie_expire"), src.CookieExpire),
+		CookieHttpOnly:                src.CookieHTTPOnly.ValueBoolPointer(),
+		CookieName:                    src.CookieName.ValueStringPointer(),
+		CookieSameSite:                src.CookieSameSite.ValueStringPointer(),
+		CookieSecret:                  src.CookieSecret.ValueStringPointer(),
+		CookieSecure:                  src.CookieSecure.ValueBoolPointer(),
+		DarkmodePrimaryColor:          src.DarkmodePrimaryColor.ValueStringPointer(),
+		DarkmodeSecondaryColor:        src.DarkmodeSecondaryColor.ValueStringPointer(),
+		DatabrokerServiceUrl:          src.DatabrokerServiceURL.ValueStringPointer(),
+		DefaultUpstreamTimeout:        c.Duration(path.Root("default_upstream_timeout"), src.DefaultUpstreamTimeout),
+		DnsFailureRefreshRate:         c.Duration(path.Root("dns_failure_refresh_rate"), src.DNSFailureRefreshRate),
+		DnsLookupFamily:               src.DNSLookupFamily.ValueStringPointer(),
+		DnsQueryTimeout:               c.Duration(path.Root("dns_query_timeout"), src.DNSQueryTimeout),
+		DnsQueryTries:                 c.NullableUint32(src.DNSQueryTries),
+		DnsRefreshRate:                c.Duration(path.Root("dns_refresh_rate"), src.DNSRefreshRate),
+		DnsUdpMaxQueries:              c.NullableUint32(src.DNSUDPMaxQueries),
+		DnsUseTcp:                     src.DNSUseTCP.ValueBoolPointer(),
+		ErrorMessageFirstParagraph:    src.ErrorMessageFirstParagraph.ValueStringPointer(),
+		FaviconUrl:                    src.FaviconURL.ValueStringPointer(),
+		GoogleCloudServerlessAuthenticationServiceAccount: src.GoogleCloudServerlessAuthenticationServiceAccount.ValueStringPointer(),
+		GrpcAddress:                     src.GRPCAddress.ValueStringPointer(),
+		GrpcInsecure:                    src.GRPCInsecure.ValueBoolPointer(),
+		HttpRedirectAddr:                src.HTTPRedirectAddr.ValueStringPointer(),
+		Id:                              src.ID.ValueString(),
+		IdentityProvider:                c.IdentityProvider(src),
+		IdentityProviderOptions:         c.IdentityProviderOptions(src),
+		IdentityProviderRefreshInterval: c.Duration(path.Root("identity_provider_refresh_interval"), src.IdentityProviderRefreshInterval),
+		IdentityProviderRefreshTimeout:  c.Duration(path.Root("identity_provider_refresh_timeout"), src.IdentityProviderRefreshTimeout),
+		IdpAccessTokenAllowedAudiences:  c.SettingsStringList(path.Root("idp_access_token_allowed_audiences"), src.IDPAccessTokenAllowedAudiences),
+		IdpClientId:                     src.IdpClientID.ValueStringPointer(),
+		IdpClientSecret:                 src.IdpClientSecret.ValueStringPointer(),
+		IdpProvider:                     src.IdpProvider.ValueStringPointer(),
+		IdpProviderUrl:                  src.IdpProviderURL.ValueStringPointer(),
+		IdpRefreshDirectoryInterval:     c.Duration(path.Root("idp_refresh_directory_interval"), src.IdpRefreshDirectoryInterval),
+		IdpRefreshDirectoryTimeout:      c.Duration(path.Root("idp_refresh_directory_timeout"), src.IdpRefreshDirectoryTimeout),
+		IdpServiceAccount:               src.IdpServiceAccount.ValueStringPointer(),
+		InsecureServer:                  src.InsecureServer.ValueBoolPointer(),
+		InstallationId:                  src.InstallationID.ValueStringPointer(),
+		JwtClaimsHeaders:                c.StringMap(path.Root("jwt_claims_headers"), src.JWTClaimsHeaders),
+		JwtGroupsFilter:                 c.JWTGroupsFilter(src.JWTGroupsFilter),
+		JwtIssuerFormat:                 ToIssuerFormat(src.JWTIssuerFormat, c.diagnostics),
+		LogLevel:                        src.LogLevel.ValueStringPointer(),
+		LogoUrl:                         src.LogoURL.ValueStringPointer(),
+		MetricsAddress:                  src.MetricsAddress.ValueStringPointer(),
+		OriginatorId:                    OriginatorID,
+		OtelAttributeValueLengthLimit:   c.NullableInt32(src.OtelAttributeValueLengthLimit),
+		OtelBspMaxExportBatchSize:       c.NullableInt32(src.OtelBspMaxExportBatchSize),
+		OtelBspScheduleDelay:            c.Duration(path.Root("otel_bsp_schedule_delay"), src.OtelBspScheduleDelay),
+		OtelExporterOtlpEndpoint:        src.OtelExporterOtlpEndpoint.ValueStringPointer(),
+		OtelExporterOtlpHeaders:         c.StringSliceFromSet(path.Root("otel_exporter_otlp_headers"), src.OtelExporterOtlpHeaders),
+		OtelExporterOtlpProtocol:        src.OtelExporterOtlpProtocol.ValueStringPointer(),
+		OtelExporterOtlpTimeout:         c.Duration(path.Root("otel_exporter_otlp_timeout"), src.OtelExporterOtlpTimeout),
+		OtelExporterOtlpTracesEndpoint:  src.OtelExporterOtlpTracesEndpoint.ValueStringPointer(),
+		OtelExporterOtlpTracesHeaders:   c.StringSliceFromSet(path.Root("otel_exporter_otlp_traces_headers"), src.OtelExporterOtlpHeaders),
+		OtelExporterOtlpTracesProtocol:  src.OtelExporterOtlpTracesProtocol.ValueStringPointer(),
+		OtelExporterOtlpTracesTimeout:   c.Duration(path.Root("otel_exporter_otlp_traces_timeout"), src.OtelExporterOtlpTracesTimeout),
+		OtelLogLevel:                    src.OtelLogLevel.ValueStringPointer(),
+		OtelResourceAttributes:          c.StringSliceFromSet(path.Root("otel_resource_attributes"), src.OtelResourceAttributes),
+		OtelTracesExporter:              src.OtelTracesExporter.ValueStringPointer(),
+		OtelTracesSamplerArg:            src.OtelTracesSamplerArg.ValueFloat64Pointer(),
+		PassIdentityHeaders:             src.PassIdentityHeaders.ValueBoolPointer(),
+		PrimaryColor:                    src.PrimaryColor.ValueStringPointer(),
+		ProxyLogLevel:                   src.ProxyLogLevel.ValueStringPointer(),
+		RequestParams:                   c.StringMap(path.Root("request_params"), src.RequestParams),
+		Scopes:                          c.StringSliceFromSet(path.Root("scopes"), src.Scopes),
+		SecondaryColor:                  src.SecondaryColor.ValueStringPointer(),
+		SetResponseHeaders:              c.StringMap(path.Root("set_response_headers"), src.SetResponseHeaders),
+		SkipXffAppend:                   src.SkipXFFAppend.ValueBoolPointer(),
+		SshAddress:                      src.SSHAddress.ValueStringPointer(),
+		SshHostKeyFiles:                 c.SettingsStringList(path.Root("ssh_host_key_files"), src.SSHHostKeyFiles),
+		SshHostKeys:                     c.SettingsStringList(path.Root("ssh_host_keys"), src.SSHHostKeys),
+		SshUserCaKey:                    src.SSHUserCAKey.ValueStringPointer(),
+		SshUserCaKeyFile:                src.SSHUserCAKeyFile.ValueStringPointer(),
+		TimeoutIdle:                     c.Duration(path.Root("timeout_idle"), src.TimeoutIdle),
+		TimeoutRead:                     c.Duration(path.Root("timeout_read"), src.TimeoutRead),
+		TimeoutWrite:                    c.Duration(path.Root("timeout_write"), src.TimeoutWrite),
+	}
 }
 
-func (c *ModelToEnterpriseConverter) StringMap(p path.Path, src types.Map) map[string]string {
+func (c *ModelToEnterpriseConverter) SettingsStringList(p path.Path, src types.Set) *enterprise.Settings_StringList {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
-
-	dst := make(map[string]string)
-	appendAttributeDiagnostics(c.diagnostics, p, src.ElementsAs(context.Background(), &dst, false)...)
-	return dst
-}
-
-func (c *ModelToEnterpriseConverter) StringSliceFromList(p path.Path, src types.List) []string {
-	var dst []string
-	appendAttributeDiagnostics(c.diagnostics, p, src.ElementsAs(context.Background(), &dst, false)...)
-	return dst
-}
-
-func (c *ModelToEnterpriseConverter) StringSliceFromSet(p path.Path, src types.Set) []string {
-	var dst []string
-	appendAttributeDiagnostics(c.diagnostics, p, src.ElementsAs(context.Background(), &dst, false)...)
-	return dst
-}
-
-func (c *ModelToEnterpriseConverter) Timestamp(p path.Path, src types.String) *timestamppb.Timestamp {
-	if src.IsNull() || src.IsUnknown() || src.ValueString() == "" {
-		return nil
-	}
-
-	tm, err := time.Parse(time.RFC1123, src.ValueString())
-	if err != nil {
-		appendAttributeDiagnostics(c.diagnostics, p, diag.NewErrorDiagnostic("error parsing timestamp", err.Error()))
-		return nil
-	}
-
-	return timestamppb.New(tm)
+	var values []string
+	appendAttributeDiagnostics(c.diagnostics, p, src.ElementsAs(context.Background(), &values, false)...)
+	return &enterprise.Settings_StringList{Values: values}
 }
 
 func (c *ModelToEnterpriseConverter) UpdateKeyPairRequest(src KeyPairModel) *enterprise.UpdateKeyPairRequest {

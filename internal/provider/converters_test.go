@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/stretchr/testify/assert"
@@ -16,10 +17,195 @@ import (
 	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/structpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/pomerium/enterprise-client-go/pb"
 	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
 )
+
+func TestBaseModelConverter(t *testing.T) {
+	t.Parallel()
+
+	t.Run("StringMap", func(t *testing.T) {
+		t.Parallel()
+
+		tests := []struct {
+			name     string
+			input    types.Map
+			expected map[string]string
+		}{
+			{
+				name:     "null map",
+				input:    types.MapNull(types.StringType),
+				expected: nil,
+			},
+			{
+				name:     "unknown map",
+				input:    types.MapUnknown(types.StringType),
+				expected: nil,
+			},
+			{
+				name:     "empty map",
+				input:    types.MapValueMust(types.StringType, map[string]attr.Value{}),
+				expected: map[string]string{},
+			},
+			{
+				name: "populated map",
+				input: types.MapValueMust(types.StringType, map[string]attr.Value{
+					"key1": types.StringValue("value1"),
+					"key2": types.StringValue("value2"),
+				}),
+				expected: map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+				},
+			},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				t.Parallel()
+
+				var diagnostics diag.Diagnostics
+				result := provider.NewModelToEnterpriseConverter(&diagnostics).StringMap(path.Empty(), tt.input)
+				assert.Empty(t, diagnostics)
+				assert.Equal(t, tt.expected, result)
+			})
+		}
+	})
+
+	t.Run("StringSliceFromList", func(t *testing.T) {
+		t.Parallel()
+
+		tests := []struct {
+			name     string
+			input    types.List
+			expected []string
+		}{
+			{
+				name:     "null list",
+				input:    types.ListNull(types.StringType),
+				expected: nil,
+			},
+			{
+				name:     "unknown list",
+				input:    types.ListUnknown(types.StringType),
+				expected: nil,
+			},
+			{
+				name:     "empty list",
+				input:    types.ListValueMust(types.StringType, []attr.Value{}),
+				expected: []string{},
+			},
+			{
+				name: "populated list",
+				input: types.ListValueMust(types.StringType, []attr.Value{
+					types.StringValue("a"),
+					types.StringValue("b"),
+				}),
+				expected: []string{"a", "b"},
+			},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				t.Parallel()
+
+				var diagnostics diag.Diagnostics
+				result := provider.NewModelToEnterpriseConverter(&diagnostics).StringSliceFromList(path.Empty(), tt.input)
+				assert.Empty(t, diagnostics)
+				assert.Equal(t, tt.expected, result)
+			})
+		}
+	})
+
+	t.Run("StringSliceFromSet", func(t *testing.T) {
+		t.Parallel()
+
+		tests := []struct {
+			name     string
+			input    types.Set
+			expected []string
+		}{
+			{
+				name:     "null set",
+				input:    types.SetNull(types.StringType),
+				expected: nil,
+			},
+			{
+				name:     "unknown set",
+				input:    types.SetUnknown(types.StringType),
+				expected: nil,
+			},
+			{
+				name:     "empty set",
+				input:    types.SetValueMust(types.StringType, nil),
+				expected: []string{},
+			},
+			{
+				name: "populated set",
+				input: types.SetValueMust(types.StringType, []attr.Value{
+					types.StringValue("a"),
+					types.StringValue("b"),
+				}),
+				expected: []string{"a", "b"},
+			},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				t.Parallel()
+
+				var diagnostics diag.Diagnostics
+				result := provider.NewModelToEnterpriseConverter(&diagnostics).StringSliceFromSet(path.Empty(), tt.input)
+				assert.Empty(t, diagnostics)
+				assert.Equal(t, tt.expected, result)
+			})
+		}
+	})
+
+	t.Run("Timestamp", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("null", func(t *testing.T) {
+			t.Parallel()
+
+			var diagnostics diag.Diagnostics
+			assert.Nil(t, provider.NewModelToEnterpriseConverter(&diagnostics).Timestamp(path.Empty(), types.StringNull()))
+			assert.Empty(t, diagnostics)
+		})
+
+		t.Run("unknown", func(t *testing.T) {
+			t.Parallel()
+
+			var diagnostics diag.Diagnostics
+			assert.Nil(t, provider.NewModelToEnterpriseConverter(&diagnostics).Timestamp(path.Empty(), types.StringUnknown()))
+			assert.Empty(t, diagnostics)
+		})
+
+		t.Run("invalid", func(t *testing.T) {
+			t.Parallel()
+
+			var diagnostics diag.Diagnostics
+			assert.Nil(t, provider.NewModelToEnterpriseConverter(&diagnostics).Timestamp(path.Empty(), types.StringValue("<NOT A TIMESTAMP>")))
+			assert.NotEmpty(t, diagnostics)
+		})
+
+		t.Run("valid", func(t *testing.T) {
+			t.Parallel()
+
+			tm := time.Date(2026, time.February, 12, 15, 22, 0, 0, time.UTC)
+
+			var diagnostics diag.Diagnostics
+			assert.Empty(t, cmp.Diff(
+				timestamppb.New(tm),
+				provider.NewModelToEnterpriseConverter(&diagnostics).Timestamp(path.Empty(), types.StringValue(tm.Format(time.RFC1123))),
+				protocmp.Transform(),
+			))
+			assert.Empty(t, diagnostics)
+		})
+	})
+}
 
 func TestFromStringSlice(t *testing.T) {
 	tests := []struct {
@@ -132,68 +318,6 @@ func TestToDuration(t *testing.T) {
 				assert.Nil(t, result)
 			} else {
 				assert.Equal(t, tt.expected.AsDuration(), result.AsDuration())
-			}
-		})
-	}
-}
-
-func TestToStringListFromSet(t *testing.T) {
-	ctx := t.Context()
-	tests := []struct {
-		name        string
-		input       types.Set
-		expectError bool
-		validate    func(*testing.T, *pb.Settings_StringList)
-	}{
-		{
-			name:  "null list",
-			input: types.SetNull(types.StringType),
-			validate: func(t *testing.T, s *pb.Settings_StringList) {
-				assert.Nil(t, s)
-			},
-		},
-		{
-			name:  "unknown set",
-			input: types.SetUnknown(types.StringType),
-			validate: func(t *testing.T, s *pb.Settings_StringList) {
-				assert.Nil(t, s)
-			},
-		},
-		{
-			name:  "empty list",
-			input: types.SetValueMust(types.StringType, []attr.Value{}),
-			validate: func(t *testing.T, s *pb.Settings_StringList) {
-				require.NotNil(t, s)
-				assert.Empty(t, s.Values)
-			},
-		},
-		{
-			name: "valid list",
-			input: types.SetValueMust(types.StringType, []attr.Value{
-				types.StringValue("value1"),
-				types.StringValue("value2"),
-			}),
-			validate: func(t *testing.T, s *pb.Settings_StringList) {
-				require.NotNil(t, s)
-				assert.Equal(t, []string{"value1", "value2"}, s.Values)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var result *pb.Settings_StringList
-			diagnostics := diag.Diagnostics{}
-			provider.ToStringListFromSet(ctx, &result, tt.input, &diagnostics)
-
-			if tt.expectError {
-				assert.True(t, diagnostics.HasError())
-				return
-			}
-
-			assert.False(t, diagnostics.HasError())
-			if tt.validate != nil {
-				tt.validate(t, result)
 			}
 		})
 	}
@@ -488,80 +612,6 @@ func TestFromStringMap(t *testing.T) {
 	}
 }
 
-func TestToStringSliceFromSet(t *testing.T) {
-	ctx := t.Context()
-	tests := []struct {
-		name     string
-		input    types.Set
-		expected []string
-	}{
-		{
-			name:     "null set",
-			input:    types.SetNull(types.StringType),
-			expected: nil,
-		},
-		{
-			name:     "unknown set",
-			input:    types.SetUnknown(types.StringType),
-			expected: nil,
-		},
-		{
-			name:     "empty set",
-			input:    types.SetValueMust(types.StringType, nil),
-			expected: []string{},
-		},
-		{
-			name: "populated set",
-			input: types.SetValueMust(types.StringType, []attr.Value{
-				types.StringValue("a"),
-				types.StringValue("b"),
-			}),
-			expected: []string{"a", "b"},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var result []string
-			diagnostics := diag.Diagnostics{}
-			provider.ToStringSliceFromSet(ctx, &result, tt.input, &diagnostics)
-			assert.False(t, diagnostics.HasError())
-			assert.ElementsMatch(t, tt.expected, result)
-		})
-	}
-}
-
-func TestToByteSlice(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    types.String
-		expected []byte
-	}{
-		{
-			name:     "null string",
-			input:    types.StringNull(),
-			expected: nil,
-		},
-		{
-			name:     "empty string",
-			input:    types.StringValue(""),
-			expected: nil,
-		},
-		{
-			name:     "non-empty string",
-			input:    types.StringValue("hello"),
-			expected: []byte("hello"),
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := provider.ToByteSlice(tt.input)
-			assert.Equal(t, tt.expected, result)
-		})
-	}
-}
-
 func TestStringSliceExclude(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -593,95 +643,6 @@ func TestStringSliceExclude(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			result := provider.StringSliceExclude(tt.input, tt.exclude)
 			assert.ElementsMatch(t, tt.expected, result)
-		})
-	}
-}
-
-func TestToStringSliceFromList(t *testing.T) {
-	ctx := t.Context()
-	tests := []struct {
-		name     string
-		input    types.List
-		expected []string
-	}{
-		{
-			name:     "null list",
-			input:    types.ListNull(types.StringType),
-			expected: nil,
-		},
-		{
-			name:     "unknown list",
-			input:    types.ListUnknown(types.StringType),
-			expected: nil,
-		},
-		{
-			name:     "empty list",
-			input:    types.ListValueMust(types.StringType, []attr.Value{}),
-			expected: []string{},
-		},
-		{
-			name: "populated list",
-			input: types.ListValueMust(types.StringType, []attr.Value{
-				types.StringValue("a"),
-				types.StringValue("b"),
-			}),
-			expected: []string{"a", "b"},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var result []string
-			diagnostics := diag.Diagnostics{}
-			provider.ToStringSliceFromList(ctx, &result, tt.input, &diagnostics)
-			assert.False(t, diagnostics.HasError())
-			assert.ElementsMatch(t, tt.expected, result)
-		})
-	}
-}
-
-func TestToStringMap(t *testing.T) {
-	ctx := t.Context()
-	tests := []struct {
-		name     string
-		input    types.Map
-		expected map[string]string
-	}{
-		{
-			name:     "null map",
-			input:    types.MapNull(types.StringType),
-			expected: nil,
-		},
-		{
-			name:     "unknown map",
-			input:    types.MapUnknown(types.StringType),
-			expected: nil,
-		},
-		{
-			name:     "empty map",
-			input:    types.MapValueMust(types.StringType, map[string]attr.Value{}),
-			expected: map[string]string{},
-		},
-		{
-			name: "populated map",
-			input: types.MapValueMust(types.StringType, map[string]attr.Value{
-				"key1": types.StringValue("value1"),
-				"key2": types.StringValue("value2"),
-			}),
-			expected: map[string]string{
-				"key1": "value1",
-				"key2": "value2",
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			var result map[string]string
-			diagnostics := diag.Diagnostics{}
-			provider.ToStringMap(ctx, &result, tt.input, &diagnostics)
-			assert.False(t, diagnostics.HasError())
-			assert.Equal(t, tt.expected, result)
 		})
 	}
 }

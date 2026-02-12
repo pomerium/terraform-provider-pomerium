@@ -2,8 +2,10 @@ package provider
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -12,8 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/iancoleman/strcase"
 	"golang.org/x/exp/constraints"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/structpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/pomerium/enterprise-client-go/pb"
 )
@@ -75,20 +79,6 @@ func FromStringMap(m map[string]string) types.Map {
 	return types.MapValueMust(types.StringType, elements)
 }
 
-// ToStringList converts a types.List to Settings_StringList and handles diagnostics internally
-func ToStringListFromSet(ctx context.Context, dst **pb.Settings_StringList, set types.Set, diagnostics *diag.Diagnostics) {
-	if set.IsNull() || set.IsUnknown() {
-		*dst = nil
-		return
-	}
-
-	var values []string
-	diagnostics.Append(set.ElementsAs(ctx, &values, false)...)
-	if !diagnostics.HasError() {
-		*dst = &pb.Settings_StringList{Values: values}
-	}
-}
-
 // ToStringMap converts a types.Map to map[string]string and handles diagnostics internally
 func ToStringMap(ctx context.Context, dst *map[string]string, m types.Map, diagnostics *diag.Diagnostics) {
 	if m.IsNull() || m.IsUnknown() {
@@ -100,32 +90,6 @@ func ToStringMap(ctx context.Context, dst *map[string]string, m types.Map, diagn
 	diagnostics.Append(m.ElementsAs(ctx, &result, false)...)
 	if !diagnostics.HasError() {
 		*dst = result
-	}
-}
-
-func ToStringSliceFromSet(ctx context.Context, dst *[]string, set types.Set, diagnostics *diag.Diagnostics) {
-	if set.IsNull() || set.IsUnknown() {
-		*dst = nil
-		return
-	}
-	var values []string
-	diagnostics.Append(set.ElementsAs(ctx, &values, false)...)
-	if !diagnostics.HasError() {
-		*dst = values
-	}
-}
-
-// ToStringSliceFromList converts a types.List to string slice and handles diagnostics internally
-func ToStringSliceFromList(ctx context.Context, dst *[]string, list types.List, diagnostics *diag.Diagnostics) {
-	if list.IsNull() || list.IsUnknown() {
-		*dst = nil
-		return
-	}
-
-	var values []string
-	diagnostics.Append(list.ElementsAs(ctx, &values, false)...)
-	if !diagnostics.HasError() {
-		*dst = values
 	}
 }
 
@@ -261,17 +225,6 @@ func GetTFObjectTypes[T any]() (map[string]attr.Type, error) {
 		tm[tfsdkTag] = types.StringType
 	}
 	return tm, nil
-}
-
-func ToByteSlice(src types.String) []byte {
-	if src.IsNull() {
-		return nil
-	}
-	val := src.ValueString()
-	if val == "" {
-		return nil
-	}
-	return []byte(val)
 }
 
 // StringSliceExclude returns a new slice with elements from s1 that are not in s2
@@ -451,6 +404,103 @@ func ToSettingsStringList(ctx context.Context, dst **pb.Settings_StringList, src
 	if !diagnostics.HasError() {
 		*dst = &pb.Settings_StringList{Values: values}
 	}
+}
+
+type baseModelConverter struct {
+	diagnostics *diag.Diagnostics
+}
+
+func (c *baseModelConverter) BytesFromBase64(p path.Path, src types.String) []byte {
+	if src.IsNull() || src.IsUnknown() || src.ValueString() == "" {
+		return nil
+	}
+
+	dst, err := base64.StdEncoding.DecodeString(src.ValueString())
+	if err != nil {
+		appendAttributeDiagnostics(c.diagnostics, p, diag.NewErrorDiagnostic("invalid base64 string", err.Error()))
+		return nil
+	}
+
+	return dst
+}
+
+func (c *baseModelConverter) Duration(p path.Path, src timetypes.GoDuration) *durationpb.Duration {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	dur, diagnostics := src.ValueGoDuration()
+	appendAttributeDiagnostics(c.diagnostics, p, diagnostics...)
+	return durationpb.New(dur)
+}
+
+func (c *baseModelConverter) NullableBool(src types.Bool) *bool {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	return src.ValueBoolPointer()
+}
+
+func (c *baseModelConverter) NullableString(src types.String) *string {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	return src.ValueStringPointer()
+}
+
+func (c *baseModelConverter) NullableInt32(src types.Int64) *int32 {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	return proto.Int32(int32(src.ValueInt64()))
+}
+
+func (c *baseModelConverter) NullableUint32(src types.Int64) *uint32 {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	return proto.Uint32(uint32(src.ValueInt64()))
+}
+
+func (c *baseModelConverter) StringMap(p path.Path, src types.Map) map[string]string {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	dst := make(map[string]string)
+	appendAttributeDiagnostics(c.diagnostics, p, src.ElementsAs(context.Background(), &dst, false)...)
+	return dst
+}
+
+func (c *baseModelConverter) StringSliceFromList(p path.Path, src types.List) []string {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	var dst []string
+	appendAttributeDiagnostics(c.diagnostics, p, src.ElementsAs(context.Background(), &dst, false)...)
+	return dst
+}
+
+func (c *baseModelConverter) StringSliceFromSet(p path.Path, src types.Set) []string {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	var dst []string
+	appendAttributeDiagnostics(c.diagnostics, p, src.ElementsAs(context.Background(), &dst, false)...)
+	return dst
+}
+
+func (c *baseModelConverter) Timestamp(p path.Path, src types.String) *timestamppb.Timestamp {
+	if src.IsNull() || src.IsUnknown() || src.ValueString() == "" {
+		return nil
+	}
+
+	tm, err := time.Parse(time.RFC1123, src.ValueString())
+	if err != nil {
+		appendAttributeDiagnostics(c.diagnostics, p, diag.NewErrorDiagnostic("error parsing timestamp", err.Error()))
+		return nil
+	}
+
+	return timestamppb.New(tm)
 }
 
 func appendAttributeDiagnostics(dst *diag.Diagnostics, p path.Path, d ...diag.Diagnostic) {

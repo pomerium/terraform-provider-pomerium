@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/pomerium/enterprise-client-go/pb"
 )
@@ -173,4 +174,23 @@ func setIdpSettings[T any](
 		return
 	}
 	dst.IdentityProviderOptions = s
+}
+
+func getIdpSettings[T any](
+	diagnostics *diag.Diagnostics,
+	src types.Object,
+) *structpb.Struct {
+	var v T
+	diagnostics.Append(src.As(context.Background(), &v, basetypes.ObjectAsOptions{
+		UnhandledNullAsEmpty:    false,
+		UnhandledUnknownAsEmpty: false,
+	})...)
+	if diagnostics.HasError() {
+		return nil
+	}
+	s, err := GoStructToPB(v)
+	if err != nil {
+		diagnostics.AddError("failed to convert idp settings", fmt.Sprintf("type %T: %s", v, err))
+	}
+	return s
 }
