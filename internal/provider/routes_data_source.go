@@ -112,9 +112,7 @@ func (d *RoutesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 
 		routes := make([]RouteModel, 0, len(listRes.Routes))
 		for _, route := range listRes.Routes {
-			var routeModel RouteModel
-			diags := ConvertRouteFromPB(&routeModel, route)
-			resp.Diagnostics.Append(diags...)
+			routeModel := NewEnterpriseToModelConverter(&resp.Diagnostics).Route(route)
 			if resp.Diagnostics.HasError() {
 				return
 			}

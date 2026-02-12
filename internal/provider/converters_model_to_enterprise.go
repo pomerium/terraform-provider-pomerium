@@ -208,6 +208,76 @@ func (c *ModelToEnterpriseConverter) Policy(src PolicyModel) *enterprise.Policy 
 	}
 }
 
+func (c *ModelToEnterpriseConverter) Route(src RouteModel) *enterprise.Route {
+	dst := new(enterprise.Route)
+
+	dst.Id = src.ID.ValueString()
+	dst.Name = src.Name.ValueString()
+	dst.From = src.From.ValueString()
+	dst.NamespaceId = src.NamespaceID.ValueString()
+	dst.StatName = src.StatName.ValueString()
+	dst.Prefix = src.Prefix.ValueStringPointer()
+	dst.Path = src.Path.ValueStringPointer()
+	dst.Regex = src.Regex.ValueStringPointer()
+	dst.PrefixRewrite = src.PrefixRewrite.ValueStringPointer()
+	dst.RegexRewritePattern = src.RegexRewritePattern.ValueStringPointer()
+	dst.RegexRewriteSubstitution = src.RegexRewriteSubstitution.ValueStringPointer()
+	dst.HostRewrite = src.HostRewrite.ValueStringPointer()
+	dst.HostRewriteHeader = src.HostRewriteHeader.ValueStringPointer()
+	dst.HostPathRegexRewritePattern = src.HostPathRegexRewritePattern.ValueStringPointer()
+	dst.HostPathRegexRewriteSubstitution = src.HostPathRegexRewriteSubstitution.ValueStringPointer()
+	dst.RegexPriorityOrder = src.RegexPriorityOrder.ValueInt64Pointer()
+	dst.Timeout = c.Duration(path.Root("timeout"), src.Timeout)
+	dst.IdleTimeout = c.Duration(path.Root("idle_timeout"), src.IdleTimeout)
+	dst.AllowWebsockets = src.AllowWebsockets.ValueBoolPointer()
+	dst.AllowSpdy = src.AllowSPDY.ValueBoolPointer()
+	dst.TlsSkipVerify = src.TLSSkipVerify.ValueBoolPointer()
+	dst.TlsUpstreamServerName = src.TLSUpstreamServerName.ValueStringPointer()
+	dst.TlsDownstreamServerName = src.TLSDownstreamServerName.ValueStringPointer()
+	dst.TlsUpstreamAllowRenegotiation = src.TLSUpstreamAllowRenegotiation.ValueBoolPointer()
+	dst.SetRequestHeaders = c.StringMap(path.Root("set_request_headers"), src.SetRequestHeaders)
+	dst.RemoveRequestHeaders = c.StringSliceFromSet(path.Root("remove_request_headers"), src.RemoveRequestHeaders)
+	dst.SetResponseHeaders = c.StringMap(path.Root("set_response_headers"), src.SetResponseHeaders)
+	dst.PreserveHostHeader = src.PreserveHostHeader.ValueBoolPointer()
+	dst.PassIdentityHeaders = src.PassIdentityHeaders.ValueBoolPointer()
+	dst.KubernetesServiceAccountToken = src.KubernetesServiceAccountToken.ValueStringPointer()
+	dst.IdpClientId = src.IDPClientID.ValueStringPointer()
+	dst.IdpClientSecret = src.IDPClientSecret.ValueStringPointer()
+	dst.ShowErrorDetails = src.ShowErrorDetails.ValueBool()
+	dst.JwtGroupsFilter = c.JWTGroupsFilter(src.JWTGroupsFilter)
+	dst.To = c.StringSliceFromSet(path.Root("to"), src.To)
+	dst.PolicyIds = c.StringSliceFromSet(path.Root("policies"), src.Policies)
+	dst.TlsClientKeyPairId = src.TLSClientKeyPairID.ValueStringPointer()
+	dst.TlsCustomCaKeyPairId = src.TLSCustomCAKeyPairID.ValueStringPointer()
+	dst.Description = src.Description.ValueStringPointer()
+	dst.LogoUrl = src.LogoURL.ValueStringPointer()
+	if !src.EnableGoogleCloudServerlessAuthentication.IsNull() {
+		dst.EnableGoogleCloudServerlessAuthentication = src.EnableGoogleCloudServerlessAuthentication.ValueBool()
+	}
+	dst.KubernetesServiceAccountTokenFile = src.KubernetesServiceAccountTokenFile.ValueStringPointer()
+	dst.JwtIssuerFormat = ToIssuerFormat(src.JWTIssuerFormat, c.diagnostics)
+	dst.RewriteResponseHeaders = rewriteHeadersToPB(src.RewriteResponseHeaders)
+	dst.BearerTokenFormat = ToBearerTokenFormat(src.BearerTokenFormat)
+	dst.IdpAccessTokenAllowedAudiences = c.RouteStringList(path.Root("idp_access_token_allowed_audiences"), src.IDPAccessTokenAllowedAudiences)
+	dst.OriginatorId = OriginatorID
+	OptionalEnumValueToPB(&dst.LoadBalancingPolicy, src.LoadBalancingPolicy, "LOAD_BALANCING_POLICY", c.diagnostics)
+	healthChecksToPB(&dst.HealthChecks, src.HealthChecks, c.diagnostics)
+	dst.DependsOn = c.StringSliceFromSet(path.Root("depends_on"), src.DependsOnHosts)
+	dst.CircuitBreakerThresholds = c.CircuitBreakerThresholds(src.CircuitBreakerThresholds)
+	dst.HealthyPanicThreshold = src.HealthyPanicThreshold.ValueInt32Pointer()
+
+	return dst
+}
+
+func (c *ModelToEnterpriseConverter) RouteStringList(p path.Path, src types.Set) *enterprise.Route_StringList {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	var values []string
+	appendAttributeDiagnostics(c.diagnostics, p, src.ElementsAs(context.Background(), &values, false)...)
+	return &enterprise.Route_StringList{Values: values}
+}
+
 func (c *ModelToEnterpriseConverter) ServiceAccount(src ServiceAccountModel) *enterprise.PomeriumServiceAccount {
 	return &enterprise.PomeriumServiceAccount{
 		AccessedAt:   nil, // not supported
@@ -232,6 +302,12 @@ func (c *ModelToEnterpriseConverter) StringMap(p path.Path, src types.Map) map[s
 }
 
 func (c *ModelToEnterpriseConverter) StringSliceFromList(p path.Path, src types.List) []string {
+	var dst []string
+	appendAttributeDiagnostics(c.diagnostics, p, src.ElementsAs(context.Background(), &dst, false)...)
+	return dst
+}
+
+func (c *ModelToEnterpriseConverter) StringSliceFromSet(p path.Path, src types.Set) []string {
 	var dst []string
 	appendAttributeDiagnostics(c.diagnostics, p, src.ElementsAs(context.Background(), &dst, false)...)
 	return dst

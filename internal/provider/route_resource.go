@@ -442,8 +442,7 @@ func (r *RouteResource) Create(ctx context.Context, req resource.CreateRequest, 
 	}
 
 	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbRoute, diags := ConvertRouteToPB(ctx, &plan)
-		resp.Diagnostics.Append(diags...)
+		pbRoute := NewModelToEnterpriseConverter(&resp.Diagnostics).Route(plan)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -457,8 +456,7 @@ func (r *RouteResource) Create(ctx context.Context, req resource.CreateRequest, 
 			return
 		}
 
-		diags = ConvertRouteFromPB(&plan, setRes.Route)
-		resp.Diagnostics.Append(diags...)
+		plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Route(setRes.GetRoute())
 	})...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -494,8 +492,7 @@ func (r *RouteResource) Read(ctx context.Context, req resource.ReadRequest, resp
 			return
 		}
 
-		diags := ConvertRouteFromPB(&state, getRes.Route)
-		resp.Diagnostics.Append(diags...)
+		state = NewEnterpriseToModelConverter(&resp.Diagnostics).Route(getRes.GetRoute())
 	})...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -513,8 +510,7 @@ func (r *RouteResource) Update(ctx context.Context, req resource.UpdateRequest, 
 	}
 
 	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbRoute, diags := ConvertRouteToPB(ctx, &plan)
-		resp.Diagnostics.Append(diags...)
+		pbRoute := NewModelToEnterpriseConverter(&resp.Diagnostics).Route(plan)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -528,8 +524,7 @@ func (r *RouteResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			return
 		}
 
-		diags = ConvertRouteFromPB(&plan, setRes.Route)
-		resp.Diagnostics.Append(diags...)
+		plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Route(setRes.GetRoute())
 	})...)
 	if resp.Diagnostics.HasError() {
 		return

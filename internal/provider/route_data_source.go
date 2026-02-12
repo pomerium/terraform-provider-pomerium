@@ -430,8 +430,7 @@ func (d *RouteDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 			return
 		}
 
-		diags := ConvertRouteFromPB(&data, getRes.Route)
-		resp.Diagnostics.Append(diags...)
+		data = NewEnterpriseToModelConverter(&resp.Diagnostics).Route(getRes.GetRoute())
 	})...)
 	if resp.Diagnostics.HasError() {
 		return

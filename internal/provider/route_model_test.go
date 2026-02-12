@@ -7,6 +7,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/testing/protocmp"
@@ -330,19 +331,17 @@ func TestConvertRoute(t *testing.T) {
 	}
 
 	t.Run("pb to tf", func(t *testing.T) {
-		var got provider.RouteModel
-		diags := provider.ConvertRouteFromPB(&got, pbRoute)
-		require.False(t, diags.HasError(), "ConvertRouteFromPB returned diagnostics errors")
-
+		var diagnostics diag.Diagnostics
+		got := provider.NewEnterpriseToModelConverter(&diagnostics).Route(pbRoute)
+		require.False(t, diagnostics.HasError(), "ConvertRouteFromPB returned diagnostics errors")
 		if diff := cmp.Diff(tfRoute, got); diff != "" {
 			t.Errorf("ConvertRouteFromPB() mismatch (-want +got):\n%s", diff)
 		}
 	})
 	t.Run("tf to pb", func(t *testing.T) {
-		ctx := t.Context()
-
-		got, diags := provider.ConvertRouteToPB(ctx, &tfRoute)
-		require.False(t, diags.HasError(), "ConvertRouteToPB returned diagnostics errors")
+		var diagnostics diag.Diagnostics
+		got := provider.NewModelToEnterpriseConverter(&diagnostics).Route(tfRoute)
+		require.False(t, diagnostics.HasError(), "ConvertRouteToPB returned diagnostics errors")
 
 		if diff := cmp.Diff(pbRoute, got, protocmp.Transform()); diff != "" {
 			t.Errorf("ConvertRouteToPB() mismatch (-want +got):\n%s", diff)

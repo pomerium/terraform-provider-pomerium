@@ -135,6 +135,67 @@ func (c *EnterpriseToModelConverter) Policy(src *enterprise.Policy) PolicyModel 
 	}
 }
 
+func (c *EnterpriseToModelConverter) Route(src *enterprise.Route) RouteModel {
+	dst := RouteModel{}
+
+	dst.ID = types.StringValue(src.Id)
+	dst.Name = types.StringValue(src.Name)
+	dst.From = types.StringValue(src.From)
+	dst.NamespaceID = types.StringValue(src.NamespaceId)
+	dst.To = FromStringSliceToSet(src.To)
+	dst.Policies = FromStringSliceToSet(StringSliceExclude(src.PolicyIds, src.EnforcedPolicyIds))
+	dst.StatName = types.StringValue(src.StatName)
+	dst.Prefix = types.StringPointerValue(src.Prefix)
+	dst.Path = types.StringPointerValue(src.Path)
+	dst.Regex = types.StringPointerValue(src.Regex)
+	dst.PrefixRewrite = types.StringPointerValue(src.PrefixRewrite)
+	dst.RegexRewritePattern = types.StringPointerValue(src.RegexRewritePattern)
+	dst.RegexRewriteSubstitution = types.StringPointerValue(src.RegexRewriteSubstitution)
+	dst.HostRewrite = types.StringPointerValue(src.HostRewrite)
+	dst.HostRewriteHeader = types.StringPointerValue(src.HostRewriteHeader)
+	dst.HostPathRegexRewritePattern = types.StringPointerValue(src.HostPathRegexRewritePattern)
+	dst.HostPathRegexRewriteSubstitution = types.StringPointerValue(src.HostPathRegexRewriteSubstitution)
+	dst.RegexPriorityOrder = types.Int64PointerValue(src.RegexPriorityOrder)
+	dst.Timeout = FromDuration(src.Timeout)
+	dst.IdleTimeout = FromDuration(src.IdleTimeout)
+	dst.AllowWebsockets = types.BoolPointerValue(src.AllowWebsockets)
+	dst.AllowSPDY = types.BoolPointerValue(src.AllowSpdy)
+	dst.TLSSkipVerify = types.BoolPointerValue(src.TlsSkipVerify)
+	dst.TLSUpstreamServerName = types.StringPointerValue(src.TlsUpstreamServerName)
+	dst.TLSDownstreamServerName = types.StringPointerValue(src.TlsDownstreamServerName)
+	dst.TLSUpstreamAllowRenegotiation = types.BoolPointerValue(src.TlsUpstreamAllowRenegotiation)
+	dst.SetRequestHeaders = FromStringMap(src.SetRequestHeaders)
+	dst.RemoveRequestHeaders = FromStringSliceToSet(src.RemoveRequestHeaders)
+	dst.SetResponseHeaders = FromStringMap(src.SetResponseHeaders)
+	dst.PreserveHostHeader = types.BoolPointerValue(src.PreserveHostHeader)
+	dst.PassIdentityHeaders = types.BoolPointerValue(src.PassIdentityHeaders)
+	dst.KubernetesServiceAccountToken = types.StringPointerValue(src.KubernetesServiceAccountToken)
+	dst.IDPClientID = types.StringPointerValue(src.IdpClientId)
+	dst.IDPClientSecret = types.StringPointerValue(src.IdpClientSecret)
+	dst.ShowErrorDetails = types.BoolValue(src.ShowErrorDetails)
+	dst.JWTGroupsFilter = c.JWTGroupsFilter(src.JwtGroupsFilter)
+	dst.TLSClientKeyPairID = types.StringPointerValue(src.TlsClientKeyPairId)
+	dst.TLSCustomCAKeyPairID = types.StringPointerValue(src.TlsCustomCaKeyPairId)
+	dst.Description = types.StringPointerValue(src.Description)
+	dst.LogoURL = types.StringPointerValue(src.LogoUrl)
+	dst.EnableGoogleCloudServerlessAuthentication = types.BoolNull()
+	if src.EnableGoogleCloudServerlessAuthentication {
+		dst.EnableGoogleCloudServerlessAuthentication = types.BoolValue(true)
+	}
+	dst.KubernetesServiceAccountTokenFile = types.StringPointerValue(src.KubernetesServiceAccountTokenFile)
+	dst.JWTIssuerFormat = FromIssuerFormat(src.JwtIssuerFormat)
+	dst.RewriteResponseHeaders = rewriteHeadersFromPB(src.RewriteResponseHeaders)
+	dst.BearerTokenFormat = FromBearerTokenFormat(src.BearerTokenFormat)
+	dst.IDPAccessTokenAllowedAudiences = FromStringList(src.IdpAccessTokenAllowedAudiences)
+	dst.LoadBalancingPolicy = OptionalEnumValueFromPB(src.LoadBalancingPolicy, "LOAD_BALANCING_POLICY")
+	healthChecksFromPB(&dst.HealthChecks, src.HealthChecks, c.diagnostics)
+	dst.DependsOnHosts = FromStringSliceToSet(src.DependsOn)
+	dst.CircuitBreakerThresholds = c.CircuitBreakerThresholds(src.CircuitBreakerThresholds)
+	dst.HealthyPanicThreshold = types.Int32PointerValue(src.HealthyPanicThreshold)
+
+	return dst
+}
+
 func (c *EnterpriseToModelConverter) ServiceAccount(src *enterprise.PomeriumServiceAccount) ServiceAccountModel {
 	return ServiceAccountModel{
 		Description: types.StringPointerValue(src.Description),
