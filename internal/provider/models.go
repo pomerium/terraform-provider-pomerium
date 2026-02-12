@@ -14,6 +14,14 @@ import (
 
 const OriginatorID = "terraform"
 
+type KeyPairModel struct {
+	Certificate types.String `tfsdk:"certificate"`
+	ID          types.String `tfsdk:"id"`
+	Key         types.String `tfsdk:"key"`
+	Name        types.String `tfsdk:"name"`
+	NamespaceID types.String `tfsdk:"namespace_id"`
+}
+
 // ServiceAccountModel represents the shared model for service account resources and data sources
 type ServiceAccountModel struct {
 	ID          types.String `tfsdk:"id"`

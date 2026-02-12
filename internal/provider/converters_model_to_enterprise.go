@@ -19,6 +19,25 @@ func NewModelToEnterpriseConverter(diagnostics *diag.Diagnostics) *ModelToEnterp
 	}
 }
 
+func (c *ModelToEnterpriseConverter) CreateKeyPairRequest(src KeyPairModel) *enterprise.CreateKeyPairRequest {
+	return &enterprise.CreateKeyPairRequest{
+		Certificate:  []byte(src.Certificate.ValueString()),
+		Format:       enterprise.Format_PEM,
+		Id:           nil, // generated
+		Key:          []byte(src.Key.ValueString()),
+		Name:         src.Name.ValueString(),
+		NamespaceId:  src.NamespaceID.ValueString(),
+		OriginatorId: OriginatorID,
+	}
+}
+
+func (c *ModelToEnterpriseConverter) NullableString(src types.String) *string {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	return src.ValueStringPointer()
+}
+
 func (c *ModelToEnterpriseConverter) Policy(src PolicyModel) *enterprise.Policy {
 	return &enterprise.Policy{
 		AllowedDomains:   nil, // not supported
@@ -46,4 +65,15 @@ func (c *ModelToEnterpriseConverter) StringSliceFromList(src types.List) []strin
 	var dst []string
 	c.diagnostics.Append(src.ElementsAs(context.Background(), &dst, false)...)
 	return dst
+}
+
+func (c *ModelToEnterpriseConverter) UpdateKeyPairRequest(src KeyPairModel) *enterprise.UpdateKeyPairRequest {
+	return &enterprise.UpdateKeyPairRequest{
+		Certificate:  []byte(src.Certificate.ValueString()),
+		Format:       enterprise.Format_PEM.Enum(),
+		Id:           src.ID.ValueString(),
+		Key:          []byte(src.Key.ValueString()),
+		Name:         c.NullableString(src.Name),
+		OriginatorId: OriginatorID,
+	}
 }

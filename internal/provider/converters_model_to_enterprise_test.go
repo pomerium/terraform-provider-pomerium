@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
 
 	"github.com/pomerium/enterprise-client-go/pb"
@@ -16,6 +17,65 @@ import (
 
 func TestModelToEnterpriseConverter(t *testing.T) {
 	t.Parallel()
+
+	t.Run("key pair", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("create", func(t *testing.T) {
+			t.Parallel()
+
+			expected := &pb.CreateKeyPairRequest{
+				Certificate:  []byte("CERTIFICATE"),
+				Format:       pb.Format_PEM,
+				Key:          []byte("KEY"),
+				Name:         "NAME",
+				NamespaceId:  "NAMESPACE_ID",
+				OriginatorId: "terraform",
+			}
+			var diagnostics diag.Diagnostics
+			actual := provider.NewModelToEnterpriseConverter(&diagnostics).CreateKeyPairRequest(provider.KeyPairModel{
+				ID:          types.StringValue("ID"),
+				Name:        types.StringValue("NAME"),
+				NamespaceID: types.StringValue("NAMESPACE_ID"),
+				Certificate: types.StringValue("CERTIFICATE"),
+				Key:         types.StringValue("KEY"),
+			})
+			if !assert.Equal(t, 0, diagnostics.ErrorsCount()) {
+				t.Log(diagnostics.Errors())
+			}
+			if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
+				t.Errorf("unexpected difference: %s", diff)
+			}
+		})
+
+		t.Run("update", func(t *testing.T) {
+			t.Parallel()
+
+			fmt := pb.Format_PEM
+			expected := &pb.UpdateKeyPairRequest{
+				Certificate:  []byte("CERTIFICATE"),
+				Format:       &fmt,
+				Id:           "ID",
+				Key:          []byte("KEY"),
+				Name:         proto.String("NAME"),
+				OriginatorId: "terraform",
+			}
+			var diagnostics diag.Diagnostics
+			actual := provider.NewModelToEnterpriseConverter(&diagnostics).UpdateKeyPairRequest(provider.KeyPairModel{
+				ID:          types.StringValue("ID"),
+				Name:        types.StringValue("NAME"),
+				NamespaceID: types.StringValue("NAMESPACE_ID"),
+				Certificate: types.StringValue("CERTIFICATE"),
+				Key:         types.StringValue("KEY"),
+			})
+			if !assert.Equal(t, 0, diagnostics.ErrorsCount()) {
+				t.Log(diagnostics.Errors())
+			}
+			if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
+				t.Errorf("unexpected difference: %s", diff)
+			}
+		})
+	})
 
 	t.Run("policy", func(t *testing.T) {
 		t.Parallel()

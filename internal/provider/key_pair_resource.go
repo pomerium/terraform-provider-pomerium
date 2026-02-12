@@ -81,7 +81,11 @@ func (r *KeyPairResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		createReq := ConvertKeyPairToCreatePB(&plan)
+		createReq := NewModelToEnterpriseConverter(&resp.Diagnostics).CreateKeyPairRequest(plan)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
 		createRes, err := client.KeyChainService.CreateKeyPair(ctx, createReq)
 		if err != nil {
 			resp.Diagnostics.AddError("Error creating key pair", err.Error())
@@ -145,7 +149,11 @@ func (r *KeyPairResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		updateReq := ConvertKeyPairToUpdatePB(&plan)
+		updateReq := NewModelToEnterpriseConverter(&resp.Diagnostics).UpdateKeyPairRequest(plan)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
 		_, err := client.KeyChainService.UpdateKeyPair(ctx, updateReq)
 		if err != nil {
 			resp.Diagnostics.AddError("Error updating key pair", err.Error())
