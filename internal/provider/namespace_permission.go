@@ -84,8 +84,7 @@ func (r *NamespacePermissionResource) Create(ctx context.Context, req resource.C
 	}
 
 	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbNamespacePermission, diags := ConvertNamespacePermissionToPB(&plan)
-		resp.Diagnostics.Append(diags...)
+		pbNamespacePermission := NewModelToEnterpriseConverter(&resp.Diagnostics).NamespacePermission(plan)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -138,8 +137,7 @@ func (r *NamespacePermissionResource) Read(ctx context.Context, req resource.Rea
 			return
 		}
 
-		diags := ConvertNamespacePermissionFromPB(&state, getRes.NamespacePermission)
-		resp.Diagnostics.Append(diags...)
+		state = NewEnterpriseToModelConverter(&resp.Diagnostics).NamespacePermission(getRes.GetNamespacePermission())
 	})...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -157,8 +155,7 @@ func (r *NamespacePermissionResource) Update(ctx context.Context, req resource.U
 	}
 
 	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbNamespacePermission, diags := ConvertNamespacePermissionToPB(&plan)
-		resp.Diagnostics.Append(diags...)
+		pbNamespacePermission := NewModelToEnterpriseConverter(&resp.Diagnostics).NamespacePermission(plan)
 		if resp.Diagnostics.HasError() {
 			return
 		}

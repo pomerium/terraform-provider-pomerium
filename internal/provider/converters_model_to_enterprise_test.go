@@ -77,6 +77,33 @@ func TestModelToEnterpriseConverter(t *testing.T) {
 		})
 	})
 
+	t.Run("namespace permission", func(t *testing.T) {
+		t.Parallel()
+
+		expected := &pb.NamespacePermission{
+			Id:           "NAMESPACE_PERMISSION_ID",
+			NamespaceId:  "NAMESPACE_ID",
+			SubjectType:  "SUBJECT_TYPE",
+			SubjectId:    "SUBJECT_ID",
+			Role:         "ROLE",
+			OriginatorId: "terraform",
+		}
+		var diagnostics diag.Diagnostics
+		actual := provider.NewModelToEnterpriseConverter(&diagnostics).NamespacePermission(provider.NamespacePermissionModel{
+			ID:          types.StringValue("NAMESPACE_PERMISSION_ID"),
+			NamespaceID: types.StringValue("NAMESPACE_ID"),
+			Role:        types.StringValue("ROLE"),
+			SubjectID:   types.StringValue("SUBJECT_ID"),
+			SubjectType: types.StringValue("SUBJECT_TYPE"),
+		})
+		if !assert.Equal(t, 0, diagnostics.ErrorsCount()) {
+			t.Log(diagnostics.Errors())
+		}
+		if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
+			t.Errorf("unexpected difference: %s", diff)
+		}
+	})
+
 	t.Run("policy", func(t *testing.T) {
 		t.Parallel()
 

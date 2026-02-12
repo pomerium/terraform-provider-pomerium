@@ -81,6 +81,20 @@ func (c *ModelToEnterpriseConverter) Namespace(src NamespaceModel) *enterprise.N
 	}
 }
 
+func (c *ModelToEnterpriseConverter) NamespacePermission(src NamespacePermissionModel) *enterprise.NamespacePermission {
+	return &enterprise.NamespacePermission{
+		CreatedAt:     nil, // not supported
+		Id:            src.ID.ValueString(),
+		ModifiedAt:    nil, // not supported
+		NamespaceId:   src.NamespaceID.ValueString(),
+		NamespaceName: "", // not supported
+		OriginatorId:  OriginatorID,
+		Role:          src.Role.ValueString(),
+		SubjectId:     src.SubjectID.ValueString(),
+		SubjectType:   src.SubjectType.ValueString(),
+	}
+}
+
 func (c *ModelToEnterpriseConverter) NullableBool(src types.Bool) *bool {
 	if src.IsNull() || src.IsUnknown() {
 		return nil

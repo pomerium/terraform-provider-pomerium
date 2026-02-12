@@ -34,6 +34,14 @@ type NamespaceModel struct {
 	ClusterID types.String `tfsdk:"cluster_id"`
 }
 
+type NamespacePermissionModel struct {
+	ID          types.String `tfsdk:"id"`
+	NamespaceID types.String `tfsdk:"namespace_id"`
+	Role        types.String `tfsdk:"role"`
+	SubjectID   types.String `tfsdk:"subject_id"`
+	SubjectType types.String `tfsdk:"subject_type"`
+}
+
 type PolicyModel struct {
 	Description types.String   `tfsdk:"description"`
 	Enforced    types.Bool     `tfsdk:"enforced"`

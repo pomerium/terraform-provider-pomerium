@@ -53,6 +53,16 @@ func (c *EnterpriseToModelConverter) Namespace(src *enterprise.Namespace) Namesp
 	}
 }
 
+func (c *EnterpriseToModelConverter) NamespacePermission(src *enterprise.NamespacePermission) NamespacePermissionModel {
+	return NamespacePermissionModel{
+		ID:          types.StringValue(src.Id),
+		NamespaceID: types.StringValue(src.NamespaceId),
+		Role:        types.StringValue(src.Role),
+		SubjectID:   types.StringValue(src.SubjectId),
+		SubjectType: types.StringValue(src.SubjectType),
+	}
+}
+
 func (c *EnterpriseToModelConverter) Policy(src *enterprise.Policy) PolicyModel {
 	ppl, err := PolicyLanguageType{}.Parse(types.StringValue(src.Ppl))
 	if err != nil {
