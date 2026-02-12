@@ -503,6 +503,17 @@ func (c *baseModelConverter) Timestamp(p path.Path, src types.String) *timestamp
 	return timestamppb.New(tm)
 }
 
+type baseProtoConverter struct {
+	diagnostics *diag.Diagnostics
+}
+
+func (c *baseProtoConverter) Duration(src *durationpb.Duration) timetypes.GoDuration {
+	if src == nil {
+		return timetypes.NewGoDurationNull()
+	}
+	return timetypes.NewGoDurationValue(src.AsDuration())
+}
+
 func appendAttributeDiagnostics(dst *diag.Diagnostics, p path.Path, d ...diag.Diagnostic) {
 	for _, d := range diag.Diagnostics(d).Errors() {
 		dst.AddAttributeError(p, d.Summary(), d.Detail())

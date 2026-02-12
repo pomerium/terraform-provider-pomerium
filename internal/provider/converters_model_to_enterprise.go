@@ -257,34 +257,34 @@ func (c *ModelToEnterpriseConverter) IdentityProvider(src SettingsModel) *string
 
 func (c *ModelToEnterpriseConverter) IdentityProviderOptions(src SettingsModel) *structpb.Struct {
 	if !src.IdentityProviderAuth0.IsNull() && !src.IdentityProviderAuth0.IsUnknown() {
-		return getIdpSettings[Auth0Options](c.diagnostics, src.IdentityProviderAuth0)
+		return idpOptionsToStruct[Auth0Options](c.diagnostics, src.IdentityProviderAuth0)
 	}
 	if !src.IdentityProviderAzure.IsNull() && !src.IdentityProviderAzure.IsUnknown() {
-		return getIdpSettings[AzureOptions](c.diagnostics, src.IdentityProviderAzure)
+		return idpOptionsToStruct[AzureOptions](c.diagnostics, src.IdentityProviderAzure)
 	}
 	if !src.IdentityProviderBlob.IsNull() && !src.IdentityProviderBlob.IsUnknown() {
-		return getIdpSettings[BlobOptions](c.diagnostics, src.IdentityProviderBlob)
+		return idpOptionsToStruct[BlobOptions](c.diagnostics, src.IdentityProviderBlob)
 	}
 	if !src.IdentityProviderCognito.IsNull() && !src.IdentityProviderCognito.IsUnknown() {
-		return getIdpSettings[CognitoOptions](c.diagnostics, src.IdentityProviderCognito)
+		return idpOptionsToStruct[CognitoOptions](c.diagnostics, src.IdentityProviderCognito)
 	}
 	if !src.IdentityProviderGitHub.IsNull() && !src.IdentityProviderGitHub.IsUnknown() {
-		return getIdpSettings[GitHubOptions](c.diagnostics, src.IdentityProviderGitHub)
+		return idpOptionsToStruct[GitHubOptions](c.diagnostics, src.IdentityProviderGitHub)
 	}
 	if !src.IdentityProviderGitLab.IsNull() && !src.IdentityProviderGitLab.IsUnknown() {
-		return getIdpSettings[GitLabOptions](c.diagnostics, src.IdentityProviderGitLab)
+		return idpOptionsToStruct[GitLabOptions](c.diagnostics, src.IdentityProviderGitLab)
 	}
 	if !src.IdentityProviderGoogle.IsNull() && !src.IdentityProviderGoogle.IsUnknown() {
-		return getIdpSettings[GoogleOptions](c.diagnostics, src.IdentityProviderGoogle)
+		return idpOptionsToStruct[GoogleOptions](c.diagnostics, src.IdentityProviderGoogle)
 	}
 	if !src.IdentityProviderOkta.IsNull() && !src.IdentityProviderOkta.IsUnknown() {
-		return getIdpSettings[OktaOptions](c.diagnostics, src.IdentityProviderOkta)
+		return idpOptionsToStruct[OktaOptions](c.diagnostics, src.IdentityProviderOkta)
 	}
 	if !src.IdentityProviderOneLogin.IsNull() && !src.IdentityProviderOneLogin.IsUnknown() {
-		return getIdpSettings[OneLoginOptions](c.diagnostics, src.IdentityProviderOneLogin)
+		return idpOptionsToStruct[OneLoginOptions](c.diagnostics, src.IdentityProviderOneLogin)
 	}
 	if !src.IdentityProviderPing.IsNull() && !src.IdentityProviderPing.IsUnknown() {
-		return getIdpSettings[PingOptions](c.diagnostics, src.IdentityProviderPing)
+		return idpOptionsToStruct[PingOptions](c.diagnostics, src.IdentityProviderPing)
 	}
 	return nil
 }

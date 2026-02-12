@@ -113,70 +113,16 @@ func IdentityProviderSettingsFromPB(
 	}
 }
 
-func IdentityProviderSettingsToPB(
-	ctx context.Context,
-	dst *pb.Settings,
-	src *SettingsModel,
-	diags *diag.Diagnostics,
-) {
-	if !src.IdentityProviderAuth0.IsNull() {
-		setIdpSettings[Auth0Options](ctx, "auth0", dst, src.IdentityProviderAuth0, diags)
-	}
-	if !src.IdentityProviderAzure.IsNull() {
-		setIdpSettings[AzureOptions](ctx, "azure", dst, src.IdentityProviderAzure, diags)
-	}
-	if !src.IdentityProviderBlob.IsNull() {
-		setIdpSettings[BlobOptions](ctx, "blob", dst, src.IdentityProviderBlob, diags)
-	}
-	if !src.IdentityProviderCognito.IsNull() {
-		setIdpSettings[CognitoOptions](ctx, "cognito", dst, src.IdentityProviderCognito, diags)
-	}
-	if !src.IdentityProviderGitHub.IsNull() {
-		setIdpSettings[GitHubOptions](ctx, "github", dst, src.IdentityProviderGitHub, diags)
-	}
-	if !src.IdentityProviderGitLab.IsNull() {
-		setIdpSettings[GitLabOptions](ctx, "gitlab", dst, src.IdentityProviderGitLab, diags)
-	}
-	if !src.IdentityProviderGoogle.IsNull() {
-		setIdpSettings[GoogleOptions](ctx, "google", dst, src.IdentityProviderGoogle, diags)
-	}
-	if !src.IdentityProviderOkta.IsNull() {
-		setIdpSettings[OktaOptions](ctx, "okta", dst, src.IdentityProviderOkta, diags)
-	}
-	if !src.IdentityProviderOneLogin.IsNull() {
-		setIdpSettings[OneLoginOptions](ctx, "onelogin", dst, src.IdentityProviderOneLogin, diags)
-	}
-	if !src.IdentityProviderPing.IsNull() {
-		setIdpSettings[PingOptions](ctx, "ping", dst, src.IdentityProviderPing, diags)
-	}
+func idpOptionsFromStruct[T any](
+	diagnostics *diag.Diagnostics,
+	src *structpb.Struct,
+) types.Object {
+	var obj types.Object
+	PBStructToTF[T](&obj, src, diagnostics)
+	return obj
 }
 
-func setIdpSettings[T any](
-	ctx context.Context,
-	name string,
-	dst *pb.Settings,
-	src types.Object,
-	diags *diag.Diagnostics,
-) {
-	var v T
-	d := src.As(ctx, &v, basetypes.ObjectAsOptions{
-		UnhandledNullAsEmpty:    false,
-		UnhandledUnknownAsEmpty: false,
-	})
-	diags.Append(d...)
-	if d.HasError() {
-		return
-	}
-	dst.IdentityProvider = &name
-	s, err := GoStructToPB(v)
-	if err != nil {
-		diags.AddError("failed to convert idp settings", fmt.Sprintf("type %T: %s", v, err))
-		return
-	}
-	dst.IdentityProviderOptions = s
-}
-
-func getIdpSettings[T any](
+func idpOptionsToStruct[T any](
 	diagnostics *diag.Diagnostics,
 	src types.Object,
 ) *structpb.Struct {
