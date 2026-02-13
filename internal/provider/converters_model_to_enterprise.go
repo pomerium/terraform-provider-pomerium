@@ -94,7 +94,7 @@ func (c *ModelToEnterpriseConverter) ExternalDataSource(src ExternalDataSourceMo
 }
 
 func (c *ModelToEnterpriseConverter) HealthCheck(src types.Object) *enterprise.HealthCheck {
-	if src.IsNull() {
+	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 

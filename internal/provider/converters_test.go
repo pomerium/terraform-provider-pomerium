@@ -1271,3 +1271,16 @@ func TestTimestampRoundTrip(t *testing.T) {
 	assert.Empty(t, cmp.Diff(src, result, protocmp.Transform()),
 		"round-tripping a timestamp through both converters should produce the original value")
 }
+
+func TestHealthCheckWithUnknownObject(t *testing.T) {
+	t.Parallel()
+
+	// An unknown types.Object should be handled the same as null (return nil).
+	// This test verifies the HealthCheck method handles unknown objects.
+	unknownObj := types.ObjectUnknown(provider.HealthCheckObjectType().AttrTypes)
+
+	var diagnostics diag.Diagnostics
+	result := provider.NewModelToEnterpriseConverter(&diagnostics).HealthCheck(unknownObj)
+	assert.Nil(t, result, "HealthCheck should return nil for unknown objects")
+	assert.Empty(t, diagnostics, "HealthCheck with unknown object should not produce diagnostics")
+}
