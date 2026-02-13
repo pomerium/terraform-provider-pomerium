@@ -19,6 +19,9 @@ docs:
 
 .PHONY: generate
 generate: docs
+	@echo "@==> $@"
+	go run ./internal/generate
+
 
 .PHONY: test
 test:
