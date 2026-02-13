@@ -104,8 +104,7 @@ func (r *ClusterResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbCluster, diags := ConvertClusterToPB(&plan)
-		resp.Diagnostics.Append(diags...)
+		pbCluster := NewModelToEnterpriseConverter(&resp.Diagnostics).Cluster(plan)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -158,8 +157,7 @@ func (r *ClusterResource) Read(ctx context.Context, req resource.ReadRequest, re
 			return
 		}
 
-		diags := ConvertClusterFromPB(&state, getRes.Cluster, getRes.Namespace)
-		resp.Diagnostics.Append(diags...)
+		state = NewEnterpriseToModelConverter(&resp.Diagnostics).Cluster(getRes.GetCluster(), getRes.GetNamespace())
 	})...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -177,8 +175,7 @@ func (r *ClusterResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbCluster, diags := ConvertClusterToPB(&plan)
-		resp.Diagnostics.Append(diags...)
+		pbCluster := NewModelToEnterpriseConverter(&resp.Diagnostics).Cluster(plan)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -192,8 +189,7 @@ func (r *ClusterResource) Update(ctx context.Context, req resource.UpdateRequest
 			return
 		}
 
-		diags = ConvertClusterFromPB(&plan, updateRes.Cluster, updateRes.Namespace)
-		resp.Diagnostics.Append(diags...)
+		plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Cluster(updateRes.GetCluster(), updateRes.GetNamespace())
 	})...)
 	if resp.Diagnostics.HasError() {
 		return

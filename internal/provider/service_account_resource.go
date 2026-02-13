@@ -103,8 +103,7 @@ func (r *ServiceAccountResource) Create(ctx context.Context, req resource.Create
 	}
 
 	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbServiceAccount, diags := ConvertServiceAccountToPB(ctx, &plan)
-		resp.Diagnostics.Append(diags...)
+		pbServiceAccount := NewModelToEnterpriseConverter(&resp.Diagnostics).ServiceAccount(plan.ServiceAccountModel)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -118,8 +117,7 @@ func (r *ServiceAccountResource) Create(ctx context.Context, req resource.Create
 			return
 		}
 
-		diags = ConvertServiceAccountFromPB(&plan.ServiceAccountModel, addRes.ServiceAccount)
-		resp.Diagnostics.Append(diags...)
+		plan.ServiceAccountModel = NewEnterpriseToModelConverter(&resp.Diagnostics).ServiceAccount(addRes.GetServiceAccount())
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -160,8 +158,7 @@ func (r *ServiceAccountResource) Read(ctx context.Context, req resource.ReadRequ
 			return
 		}
 
-		diags := ConvertServiceAccountFromPB(&state.ServiceAccountModel, getRes.ServiceAccount)
-		resp.Diagnostics.Append(diags...)
+		state.ServiceAccountModel = NewEnterpriseToModelConverter(&resp.Diagnostics).ServiceAccount(getRes.GetServiceAccount())
 	})...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -179,8 +176,7 @@ func (r *ServiceAccountResource) Update(ctx context.Context, req resource.Update
 	}
 
 	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbServiceAccount, diags := ConvertServiceAccountToPB(ctx, &plan)
-		resp.Diagnostics.Append(diags...)
+		pbServiceAccount := NewModelToEnterpriseConverter(&resp.Diagnostics).ServiceAccount(plan.ServiceAccountModel)
 		if resp.Diagnostics.HasError() {
 			return
 		}

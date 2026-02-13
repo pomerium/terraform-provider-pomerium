@@ -2,8 +2,10 @@ package provider
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"reflect"
+	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -12,8 +14,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/iancoleman/strcase"
 	"golang.org/x/exp/constraints"
+	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/structpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/pomerium/enterprise-client-go/pb"
 )
@@ -73,83 +77,6 @@ func FromStringMap(m map[string]string) types.Map {
 		elements[k] = types.StringValue(v)
 	}
 	return types.MapValueMust(types.StringType, elements)
-}
-
-// ToStringList converts a types.List to Settings_StringList and handles diagnostics internally
-func ToStringListFromSet(ctx context.Context, dst **pb.Settings_StringList, set types.Set, diagnostics *diag.Diagnostics) {
-	if set.IsNull() || set.IsUnknown() {
-		*dst = nil
-		return
-	}
-
-	var values []string
-	diagnostics.Append(set.ElementsAs(ctx, &values, false)...)
-	if !diagnostics.HasError() {
-		*dst = &pb.Settings_StringList{Values: values}
-	}
-}
-
-// ToStringMap converts a types.Map to map[string]string and handles diagnostics internally
-func ToStringMap(ctx context.Context, dst *map[string]string, m types.Map, diagnostics *diag.Diagnostics) {
-	if m.IsNull() || m.IsUnknown() {
-		*dst = nil
-		return
-	}
-
-	result := make(map[string]string)
-	diagnostics.Append(m.ElementsAs(ctx, &result, false)...)
-	if !diagnostics.HasError() {
-		*dst = result
-	}
-}
-
-func ToStringSliceFromSet(ctx context.Context, dst *[]string, set types.Set, diagnostics *diag.Diagnostics) {
-	if set.IsNull() || set.IsUnknown() {
-		*dst = nil
-		return
-	}
-	var values []string
-	diagnostics.Append(set.ElementsAs(ctx, &values, false)...)
-	if !diagnostics.HasError() {
-		*dst = values
-	}
-}
-
-// ToStringSliceFromList converts a types.List to string slice and handles diagnostics internally
-func ToStringSliceFromList(ctx context.Context, dst *[]string, list types.List, diagnostics *diag.Diagnostics) {
-	if list.IsNull() || list.IsUnknown() {
-		*dst = nil
-		return
-	}
-
-	var values []string
-	diagnostics.Append(list.ElementsAs(ctx, &values, false)...)
-	if !diagnostics.HasError() {
-		*dst = values
-	}
-}
-
-// ToDuration converts a timetypes.Duration to durationpb.Duration
-func ToDuration(dst **durationpb.Duration, src timetypes.GoDuration, diagnostics *diag.Diagnostics) {
-	if src.IsNull() || src.IsUnknown() {
-		*dst = nil
-		return
-	}
-
-	d, diags := src.ValueGoDuration()
-	diagnostics.Append(diags...)
-	if diagnostics.HasError() {
-		return
-	}
-	*dst = durationpb.New(d)
-}
-
-// FromDuration converts a durationpb.Duration to a timetypes.GoDuration
-func FromDuration(d *durationpb.Duration) timetypes.GoDuration {
-	if d == nil {
-		return timetypes.NewGoDurationNull()
-	}
-	return timetypes.NewGoDurationValue(d.AsDuration())
 }
 
 // GoStructToPB converts a Go struct to a protobuf Struct.
@@ -263,17 +190,6 @@ func GetTFObjectTypes[T any]() (map[string]attr.Type, error) {
 	return tm, nil
 }
 
-func ToByteSlice(src types.String) []byte {
-	if src.IsNull() {
-		return nil
-	}
-	val := src.ValueString()
-	if val == "" {
-		return nil
-	}
-	return []byte(val)
-}
-
 // StringSliceExclude returns a new slice with elements from s1 that are not in s2
 func StringSliceExclude(s1, s2 []string) []string {
 	if len(s1) == 0 || len(s2) == 0 {
@@ -312,27 +228,6 @@ func FromBearerTokenFormat(src *pb.BearerTokenFormat) types.String {
 	}
 }
 
-// ToBearerTokenFormat converts a bearer token format string into a protobuf enum.
-func ToBearerTokenFormat(src types.String) *pb.BearerTokenFormat {
-	if src.IsNull() || src.IsUnknown() {
-		return nil
-	}
-
-	switch src.ValueString() {
-	default:
-		fallthrough
-
-	case "":
-		return pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_UNKNOWN.Enum()
-	case "default":
-		return pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_DEFAULT.Enum()
-	case "idp_access_token":
-		return pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_ACCESS_TOKEN.Enum()
-	case "idp_identity_token":
-		return pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_IDENTITY_TOKEN.Enum()
-	}
-}
-
 // FromCodecType converts a protobuf codec type into a string.
 func FromCodecType(src *pb.CodecType) types.String {
 	if src == nil {
@@ -352,28 +247,6 @@ func FromCodecType(src *pb.CodecType) types.String {
 		return types.StringValue("http2")
 	case pb.CodecType_CODEC_TYPE_HTTP3:
 		return types.StringValue("http3")
-	}
-}
-
-// ToCodecType converts a codec type string into a protobuf enum.
-func ToCodecType(src types.String) *pb.CodecType {
-	if src.IsNull() || src.IsUnknown() {
-		return nil
-	}
-
-	switch src.ValueString() {
-	default:
-		fallthrough
-	case "":
-		return pb.CodecType_CODEC_TYPE_UNKNOWN.Enum()
-	case "auto":
-		return pb.CodecType_CODEC_TYPE_AUTO.Enum()
-	case "http1":
-		return pb.CodecType_CODEC_TYPE_HTTP1.Enum()
-	case "http2":
-		return pb.CodecType_CODEC_TYPE_HTTP2.Enum()
-	case "http3":
-		return pb.CodecType_CODEC_TYPE_HTTP3.Enum()
 	}
 }
 
@@ -420,35 +293,166 @@ func Int64PointerValue[T constraints.Integer](src *T) types.Int64 {
 	return types.Int64Value(int64(*src))
 }
 
-// FromInt64Pointer converts Int64 pointer to *T
-func FromInt64Pointer[T constraints.Integer](v types.Int64) *T {
-	if v.IsNull() {
+type baseModelConverter struct {
+	diagnostics *diag.Diagnostics
+}
+
+func (c *baseModelConverter) BytesFromBase64(p path.Path, src types.String) []byte {
+	if src.IsNull() || src.IsUnknown() || src.ValueString() == "" {
 		return nil
 	}
-	val := T(v.ValueInt64())
-	return &val
+
+	dst, err := base64.StdEncoding.DecodeString(src.ValueString())
+	if err != nil {
+		appendAttributeDiagnostics(c.diagnostics, p, diag.NewErrorDiagnostic("invalid base64 string", err.Error()))
+		return nil
+	}
+
+	return dst
 }
 
-func ToRouteStringList(ctx context.Context, dst **pb.Route_StringList, src types.Set, diagnostics *diag.Diagnostics) {
+func (c *baseModelConverter) Duration(p path.Path, src timetypes.GoDuration) *durationpb.Duration {
 	if src.IsNull() || src.IsUnknown() {
-		*dst = nil
-		return
+		return nil
 	}
-	var values []string
-	diagnostics.Append(src.ElementsAs(ctx, &values, false)...)
-	if !diagnostics.HasError() {
-		*dst = &pb.Route_StringList{Values: values}
+
+	dur, diagnostics := src.ValueGoDuration()
+	appendAttributeDiagnostics(c.diagnostics, p, diagnostics...)
+	return durationpb.New(dur)
+}
+
+func (c *baseModelConverter) NullableBool(src types.Bool) *bool {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	return src.ValueBoolPointer()
+}
+
+func (c *baseModelConverter) NullableString(src types.String) *string {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	return src.ValueStringPointer()
+}
+
+func (c *baseModelConverter) NullableInt32(src types.Int64) *int32 {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	return proto.Int32(int32(src.ValueInt64()))
+}
+
+func (c *baseModelConverter) NullableUint32(src types.Int64) *uint32 {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	return proto.Uint32(uint32(src.ValueInt64()))
+}
+
+func (c *baseModelConverter) StringMap(p path.Path, src types.Map) map[string]string {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	dst := make(map[string]string)
+	appendAttributeDiagnostics(c.diagnostics, p, src.ElementsAs(context.Background(), &dst, false)...)
+	return dst
+}
+
+func (c *baseModelConverter) StringSliceFromList(p path.Path, src types.List) []string {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	var dst []string
+	appendAttributeDiagnostics(c.diagnostics, p, src.ElementsAs(context.Background(), &dst, false)...)
+	return dst
+}
+
+func (c *baseModelConverter) StringSliceFromSet(p path.Path, src types.Set) []string {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	var dst []string
+	appendAttributeDiagnostics(c.diagnostics, p, src.ElementsAs(context.Background(), &dst, false)...)
+	return dst
+}
+
+func (c *baseModelConverter) Timestamp(p path.Path, src types.String) *timestamppb.Timestamp {
+	if src.IsNull() || src.IsUnknown() || src.ValueString() == "" {
+		return nil
+	}
+
+	tm, err := time.Parse(time.RFC3339, src.ValueString())
+	if err != nil {
+		appendAttributeDiagnostics(c.diagnostics, p, diag.NewErrorDiagnostic("error parsing timestamp", err.Error()))
+		return nil
+	}
+
+	return timestamppb.New(tm)
+}
+
+type baseProtoConverter struct {
+	diagnostics *diag.Diagnostics
+}
+
+func (c *baseProtoConverter) Base64String(src []byte) types.String {
+	if len(src) == 0 {
+		return types.StringNull()
+	}
+	return types.StringValue(base64.StdEncoding.EncodeToString(src))
+}
+
+func (c *baseProtoConverter) Duration(src *durationpb.Duration) timetypes.GoDuration {
+	if src == nil {
+		return timetypes.NewGoDurationNull()
+	}
+	return timetypes.NewGoDurationValue(src.AsDuration())
+}
+
+func (c *baseProtoConverter) Timestamp(src *timestamppb.Timestamp) types.String {
+	if src == nil || src.AsTime().IsZero() {
+		return types.StringNull()
+	}
+
+	return types.StringValue(src.AsTime().Format(time.RFC3339))
+}
+
+func appendAttributeDiagnostics(dst *diag.Diagnostics, p path.Path, d ...diag.Diagnostic) {
+	for _, d := range diag.Diagnostics(d).Errors() {
+		dst.AddAttributeError(p, d.Summary(), d.Detail())
+	}
+	for _, d := range diag.Diagnostics(d).Warnings() {
+		dst.AddAttributeWarning(p, d.Summary(), d.Detail())
 	}
 }
 
-func ToSettingsStringList(ctx context.Context, dst **pb.Settings_StringList, src types.Set, diagnostics *diag.Diagnostics) {
-	if src.IsNull() || src.IsUnknown() {
-		*dst = nil
-		return
+func fromSetOfObjects[T any](srcs types.Set, elementType types.ObjectType, fn func(src types.Object) T) []T {
+	if srcs.IsNull() || srcs.IsUnknown() || !srcs.ElementType(context.Background()).Equal(elementType) {
+		return nil
 	}
-	var values []string
-	diagnostics.Append(src.ElementsAs(ctx, &values, false)...)
-	if !diagnostics.HasError() {
-		*dst = &pb.Settings_StringList{Values: values}
+	dst := make([]T, len(srcs.Elements()))
+	for i, src := range srcs.Elements() {
+		dst[i] = fn(src.(types.Object))
 	}
+	return dst
+}
+
+func toSetOfObjects[T any](srcs []T, elementType types.ObjectType, fn func(src T) types.Object) types.Set {
+	if len(srcs) == 0 {
+		return types.SetNull(elementType)
+	}
+
+	elements := make([]attr.Value, len(srcs))
+	for i, src := range srcs {
+		elements[i] = fn(src)
+	}
+
+	return types.SetValueMust(elementType, elements)
+}
+
+func zeroToNil[T comparable](v T) *T {
+	var def T
+	if def == v {
+		return nil
+	}
+	return &v
 }

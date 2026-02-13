@@ -113,8 +113,7 @@ func (r *PolicyResource) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbPolicy, diags := ConvertPolicyToPB(ctx, &plan)
-		resp.Diagnostics.Append(diags...)
+		pbPolicy := NewModelToEnterpriseConverter(&resp.Diagnostics).Policy(plan)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -164,8 +163,7 @@ func (r *PolicyResource) Read(ctx context.Context, req resource.ReadRequest, res
 			return
 		}
 
-		diags := ConvertPolicyFromPB(&state, getRes.Policy)
-		resp.Diagnostics.Append(diags...)
+		state = NewEnterpriseToModelConverter(&resp.Diagnostics).Policy(getRes.GetPolicy())
 	})...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -183,8 +181,7 @@ func (r *PolicyResource) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbPolicy, diags := ConvertPolicyToPB(ctx, &plan)
-		resp.Diagnostics.Append(diags...)
+		pbPolicy := NewModelToEnterpriseConverter(&resp.Diagnostics).Policy(plan)
 		if resp.Diagnostics.HasError() {
 			return
 		}

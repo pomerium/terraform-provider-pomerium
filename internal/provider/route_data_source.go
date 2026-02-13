@@ -381,7 +381,7 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 			Computed:    true,
 			ElementType: types.StringType,
 		},
-		"circuit_breaker_thresholds": circuitBreakerThresholdsAttribute,
+		"circuit_breaker_thresholds": CircuitBreakerThresholdsSchema,
 		"healthy_panic_threshold": schema.Int32Attribute{
 			Description: "If the number of healthy hosts falls below this percentage, traffic will be balanced among all hosts regardless of health, allowing some requests to fail. 0% disables this behavior.",
 			Optional:    true,
@@ -430,8 +430,7 @@ func (d *RouteDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 			return
 		}
 
-		diags := ConvertRouteFromPB(&data, getRes.Route)
-		resp.Diagnostics.Append(diags...)
+		data = NewEnterpriseToModelConverter(&resp.Diagnostics).Route(getRes.GetRoute())
 	})...)
 	if resp.Diagnostics.HasError() {
 		return

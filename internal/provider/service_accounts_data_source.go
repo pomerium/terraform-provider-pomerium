@@ -97,9 +97,7 @@ func (d *ServiceAccountsDataSource) Read(ctx context.Context, req datasource.Rea
 
 		serviceAccounts := make([]ServiceAccountModel, 0, len(listRes.ServiceAccounts))
 		for _, sa := range listRes.ServiceAccounts {
-			var saModel ServiceAccountModel
-			diags := ConvertServiceAccountFromPB(&saModel, sa)
-			resp.Diagnostics.Append(diags...)
+			saModel := NewEnterpriseToModelConverter(&resp.Diagnostics).ServiceAccount(sa)
 			if resp.Diagnostics.HasError() {
 				return
 			}

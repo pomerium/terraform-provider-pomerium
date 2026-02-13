@@ -113,8 +113,7 @@ func (d *ExternalDataSourceDataSource) Read(ctx context.Context, req datasource.
 			return
 		}
 
-		diags := ConvertExternalDataSourceFromPB(&state, getRes.ExternalDataSource)
-		resp.Diagnostics.Append(diags...)
+		state = NewEnterpriseToModelConverter(&resp.Diagnostics).ExternalDataSource(getRes.GetExternalDataSource())
 	})...)
 	if resp.Diagnostics.HasError() {
 		return

@@ -50,14 +50,12 @@ func OptionalEnumValueToPB[T interface {
 	~int32
 	protoreflect.Enum
 }](
-	dst **T,
 	src types.String,
 	prefix string,
 	diagnostics *diag.Diagnostics,
-) {
+) *T {
 	if src.IsNull() {
-		*dst = nil
-		return
+		return nil
 	}
 
 	key := strings.ToUpper(prefix + "_" + src.ValueString())
@@ -68,11 +66,11 @@ func OptionalEnumValueToPB[T interface {
 			"InvalidEnumValue",
 			fmt.Sprintf("The provided %s enum value %q, representing %q is not valid.", v.Descriptor().FullName(), src.ValueString(), key),
 		)
-		return
+		return nil
 	}
 
 	v = T(enumValue.Number())
-	*dst = &v
+	return &v
 }
 
 func OptionalEnumValueFromPB[T interface {

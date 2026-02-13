@@ -64,9 +64,7 @@ func (d *ClustersDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 		clusters := make([]ClusterModel, 0, len(listRes.Clusters))
 		for _, cluster := range listRes.Clusters {
-			var clusterModel ClusterModel
-			diags := ConvertClusterFromPB(&clusterModel, cluster, nil)
-			resp.Diagnostics.Append(diags...)
+			clusterModel := NewEnterpriseToModelConverter(&resp.Diagnostics).Cluster(cluster, nil)
 			if resp.Diagnostics.HasError() {
 				return
 			}
