@@ -252,7 +252,7 @@ func TestBaseModelConverter(t *testing.T) {
 			var diagnostics diag.Diagnostics
 			assert.Empty(t, cmp.Diff(
 				timestamppb.New(tm),
-				provider.NewModelToEnterpriseConverter(&diagnostics).Timestamp(path.Empty(), types.StringValue(tm.Format(time.RFC1123))),
+				provider.NewModelToEnterpriseConverter(&diagnostics).Timestamp(path.Empty(), types.StringValue(tm.Format(time.RFC3339))),
 				protocmp.Transform(),
 			))
 			assert.Empty(t, diagnostics)
@@ -296,6 +296,25 @@ func TestBaseProtoConverter(t *testing.T) {
 				assert.Empty(t, cmp.Diff(tt.expected, result, protocmp.Transform()))
 			})
 		}
+	})
+
+	t.Run("Timestamp", func(t *testing.T) {
+		t.Run("nil", func(t *testing.T) {
+			t.Parallel()
+
+			var diagnostics diag.Diagnostics
+			assert.Equal(t, types.StringNull(), provider.NewEnterpriseToModelConverter(&diagnostics).Timestamp(nil))
+			assert.Empty(t, diagnostics)
+		})
+		t.Run("valid", func(t *testing.T) {
+			t.Parallel()
+
+			tm := time.Date(2026, time.February, 12, 15, 22, 0, 0, time.UTC)
+
+			var diagnostics diag.Diagnostics
+			assert.Equal(t, types.StringValue("2026-02-12T15:22:00Z"), provider.NewEnterpriseToModelConverter(&diagnostics).Timestamp(timestamppb.New(tm)))
+			assert.Empty(t, diagnostics)
+		})
 	})
 }
 

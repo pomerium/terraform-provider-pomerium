@@ -424,7 +424,7 @@ func (c *baseModelConverter) Timestamp(p path.Path, src types.String) *timestamp
 		return nil
 	}
 
-	tm, err := time.Parse(time.RFC1123, src.ValueString())
+	tm, err := time.Parse(time.RFC3339, src.ValueString())
 	if err != nil {
 		appendAttributeDiagnostics(c.diagnostics, p, diag.NewErrorDiagnostic("error parsing timestamp", err.Error()))
 		return nil
