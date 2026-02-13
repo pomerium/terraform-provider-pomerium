@@ -772,8 +772,10 @@ func TestToBearerTokenFormat(t *testing.T) {
 		{"idp_access_token", types.StringValue("idp_access_token"), pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_ACCESS_TOKEN.Enum()},
 		{"idp_identity_token", types.StringValue("idp_identity_token"), pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_IDENTITY_TOKEN.Enum()},
 	} {
-		assert.Equal(t, tc.expect, provider.ToBearerTokenFormat(tc.in),
+		var diagnostics diag.Diagnostics
+		assert.Equal(t, tc.expect, provider.NewModelToEnterpriseConverter(&diagnostics).BearerTokenFormat(path.Empty(), tc.in),
 			"%s: should convert %v to %v", tc.name, tc.in, tc.expect)
+		assert.Empty(t, diagnostics)
 	}
 }
 
@@ -1283,4 +1285,16 @@ func TestHealthCheckWithUnknownObject(t *testing.T) {
 	result := provider.NewModelToEnterpriseConverter(&diagnostics).HealthCheck(unknownObj)
 	assert.Nil(t, result, "HealthCheck should return nil for unknown objects")
 	assert.Empty(t, diagnostics, "HealthCheck with unknown object should not produce diagnostics")
+}
+
+func TestToBearerTokenFormatInvalidValue(t *testing.T) {
+	t.Parallel()
+
+	// An invalid/typo string should not silently succeed.
+	// Compare with ToIssuerFormat which properly reports diagnostics for unknown values.
+	var diagnostics diag.Diagnostics
+	result := provider.NewModelToEnterpriseConverter(&diagnostics).BearerTokenFormat(path.Empty(), types.StringValue("idp_acces_token")) // typo
+	assert.Nil(t, result,
+		"a typo in bearer_token_format should not silently map to UNKNOWN")
+	assert.NotEmpty(t, diagnostics)
 }

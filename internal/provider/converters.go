@@ -228,27 +228,6 @@ func FromBearerTokenFormat(src *pb.BearerTokenFormat) types.String {
 	}
 }
 
-// ToBearerTokenFormat converts a bearer token format string into a protobuf enum.
-func ToBearerTokenFormat(src types.String) *pb.BearerTokenFormat {
-	if src.IsNull() || src.IsUnknown() {
-		return nil
-	}
-
-	switch src.ValueString() {
-	default:
-		fallthrough
-
-	case "":
-		return pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_UNKNOWN.Enum()
-	case "default":
-		return pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_DEFAULT.Enum()
-	case "idp_access_token":
-		return pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_ACCESS_TOKEN.Enum()
-	case "idp_identity_token":
-		return pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_IDENTITY_TOKEN.Enum()
-	}
-}
-
 // FromCodecType converts a protobuf codec type into a string.
 func FromCodecType(src *pb.CodecType) types.String {
 	if src == nil {

@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -24,6 +25,26 @@ func NewModelToEnterpriseConverter(diagnostics *diag.Diagnostics) *ModelToEnterp
 	return &ModelToEnterpriseConverter{
 		baseModelConverter: baseModelConverter{diagnostics: diagnostics},
 		diagnostics:        diagnostics,
+	}
+}
+
+func (c *ModelToEnterpriseConverter) BearerTokenFormat(p path.Path, src types.String) *enterprise.BearerTokenFormat {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	switch src.ValueString() {
+	case "default":
+		return enterprise.BearerTokenFormat_BEARER_TOKEN_FORMAT_DEFAULT.Enum()
+	case "idp_access_token":
+		return enterprise.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_ACCESS_TOKEN.Enum()
+	case "idp_identity_token":
+		return enterprise.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_IDENTITY_TOKEN.Enum()
+	case "":
+		fallthrough
+	default:
+		c.diagnostics.AddAttributeError(p, "unknown bearer token format", fmt.Sprintf("unknown bearer token format: %s", src.ValueString()))
+		return nil
 	}
 }
 
@@ -397,7 +418,7 @@ func (c *ModelToEnterpriseConverter) Route(src RouteModel) *enterprise.Route {
 	return &enterprise.Route{
 		AllowSpdy:                src.AllowSPDY.ValueBoolPointer(),
 		AllowWebsockets:          src.AllowWebsockets.ValueBoolPointer(),
-		BearerTokenFormat:        ToBearerTokenFormat(src.BearerTokenFormat),
+		BearerTokenFormat:        c.BearerTokenFormat(path.Root("bearer_token_format"), src.BearerTokenFormat),
 		CircuitBreakerThresholds: c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
 		DependsOn:                c.StringSliceFromSet(path.Root("depends_on"), src.DependsOnHosts),
 		Description:              src.Description.ValueStringPointer(),
@@ -499,7 +520,7 @@ func (c *ModelToEnterpriseConverter) Settings(src SettingsModel) *enterprise.Set
 		AutocertDir:                   src.AutocertDir.ValueStringPointer(),
 		AutocertMustStaple:            src.AutocertMustStaple.ValueBoolPointer(),
 		AutocertUseStaging:            src.AutocertUseStaging.ValueBoolPointer(),
-		BearerTokenFormat:             ToBearerTokenFormat(src.BearerTokenFormat),
+		BearerTokenFormat:             c.BearerTokenFormat(path.Root("bearer_token_format"), src.BearerTokenFormat),
 		CacheServiceUrl:               src.CacheServiceURL.ValueStringPointer(),
 		CertificateAuthority:          src.CertificateAuthority.ValueStringPointer(),
 		CertificateAuthorityFile:      src.CertificateAuthorityFile.ValueStringPointer(),
