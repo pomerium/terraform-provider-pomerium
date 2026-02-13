@@ -171,7 +171,7 @@ func (c *ModelToEnterpriseConverter) HealthCheck(src types.Object) *enterprise.H
 		httpHealthCheck := &enterprise.HealthCheck_HttpHealthCheck{}
 
 		host := httpAttrs["host"].(types.String)
-		path := httpAttrs["path"].(types.String)
+		httpPath := httpAttrs["path"].(types.String)
 		codecType := httpAttrs["codec_client_type"].(types.String)
 		expectedStatuses := httpAttrs["expected_statuses"].(types.Set)
 		retriableStatuses := httpAttrs["retriable_statuses"].(types.Set)
@@ -179,8 +179,8 @@ func (c *ModelToEnterpriseConverter) HealthCheck(src types.Object) *enterprise.H
 		if !host.IsNull() {
 			httpHealthCheck.Host = host.ValueString()
 		}
-		if !path.IsNull() {
-			httpHealthCheck.Path = path.ValueString()
+		if !httpPath.IsNull() {
+			httpHealthCheck.Path = httpPath.ValueString()
 		}
 		if !codecType.IsNull() {
 			// Handle codec client type enum properly
@@ -192,6 +192,7 @@ func (c *ModelToEnterpriseConverter) HealthCheck(src types.Object) *enterprise.H
 			default:
 				// Default to HTTP1 if not specified or invalid
 				httpHealthCheck.CodecClientType = enterprise.CodecClientType_HTTP1
+				c.diagnostics.AddAttributeError(path.Root("codec_client_type"), "unknown codec client type", fmt.Sprintf("unknown codec client type: %s", codecType.ValueString()))
 			}
 		}
 

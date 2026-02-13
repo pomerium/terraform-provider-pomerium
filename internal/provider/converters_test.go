@@ -1308,3 +1308,42 @@ func TestToCodecTypeInvalidValue(t *testing.T) {
 		"an invalid codec_type should not silently map to UNKNOWN")
 	assert.NotEmpty(t, diagnostics)
 }
+
+func TestCodecClientTypeSilentDefault(t *testing.T) {
+	t.Parallel()
+
+	// An unrecognized codec_client_type should produce a diagnostic error,
+	// not silently default to HTTP1.
+	httpHcObj := types.ObjectValueMust(
+		provider.HTTPHealthCheckObjectType().AttrTypes,
+		map[string]attr.Value{
+			"host":               types.StringNull(),
+			"path":               types.StringNull(),
+			"codec_client_type":  types.StringValue("HTTP3"), // not a valid value
+			"expected_statuses":  types.SetNull(provider.Int64RangeObjectType()),
+			"retriable_statuses": types.SetNull(provider.Int64RangeObjectType()),
+		},
+	)
+
+	healthCheckObj := types.ObjectValueMust(
+		provider.HealthCheckObjectType().AttrTypes,
+		map[string]attr.Value{
+			"timeout":                 timetypes.NewGoDurationNull(),
+			"interval":                timetypes.NewGoDurationNull(),
+			"initial_jitter":          timetypes.NewGoDurationNull(),
+			"interval_jitter":         timetypes.NewGoDurationNull(),
+			"interval_jitter_percent": types.Int64Value(0),
+			"unhealthy_threshold":     types.Int64Value(0),
+			"healthy_threshold":       types.Int64Value(0),
+			"http_health_check":       httpHcObj,
+			"tcp_health_check":        types.ObjectNull(provider.TCPHealthCheckObjectType().AttrTypes),
+			"grpc_health_check":       types.ObjectNull(provider.GrpcHealthCheckObjectType().AttrTypes),
+		},
+	)
+
+	var diagnostics diag.Diagnostics
+	provider.NewModelToEnterpriseConverter(&diagnostics).HealthCheck(healthCheckObj)
+
+	assert.NotEmpty(t, diagnostics,
+		"unrecognized codec_client_type 'HTTP3' should produce a diagnostic error")
+}
