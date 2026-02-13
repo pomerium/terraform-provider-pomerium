@@ -767,7 +767,6 @@ func TestToBearerTokenFormat(t *testing.T) {
 		expect *pb.BearerTokenFormat
 	}{
 		{"null", types.StringNull(), nil},
-		{"unknown", types.StringValue(""), pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_UNKNOWN.Enum()},
 		{"default", types.StringValue("default"), pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_DEFAULT.Enum()},
 		{"idp_access_token", types.StringValue("idp_access_token"), pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_ACCESS_TOKEN.Enum()},
 		{"idp_identity_token", types.StringValue("idp_identity_token"), pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_IDENTITY_TOKEN.Enum()},
@@ -1296,5 +1295,16 @@ func TestToBearerTokenFormatInvalidValue(t *testing.T) {
 	result := provider.NewModelToEnterpriseConverter(&diagnostics).BearerTokenFormat(path.Empty(), types.StringValue("idp_acces_token")) // typo
 	assert.Nil(t, result,
 		"a typo in bearer_token_format should not silently map to UNKNOWN")
+	assert.NotEmpty(t, diagnostics)
+}
+
+func TestToCodecTypeInvalidValue(t *testing.T) {
+	t.Parallel()
+
+	// An invalid codec type string should not silently succeed.
+	var diagnostics diag.Diagnostics
+	result := provider.NewModelToEnterpriseConverter(&diagnostics).CodecType(path.Empty(), types.StringValue("invalid_codec"))
+	assert.Nil(t, result,
+		"an invalid codec_type should not silently map to UNKNOWN")
 	assert.NotEmpty(t, diagnostics)
 }

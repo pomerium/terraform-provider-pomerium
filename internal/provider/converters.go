@@ -250,28 +250,6 @@ func FromCodecType(src *pb.CodecType) types.String {
 	}
 }
 
-// ToCodecType converts a codec type string into a protobuf enum.
-func ToCodecType(src types.String) *pb.CodecType {
-	if src.IsNull() || src.IsUnknown() {
-		return nil
-	}
-
-	switch src.ValueString() {
-	default:
-		fallthrough
-	case "":
-		return pb.CodecType_CODEC_TYPE_UNKNOWN.Enum()
-	case "auto":
-		return pb.CodecType_CODEC_TYPE_AUTO.Enum()
-	case "http1":
-		return pb.CodecType_CODEC_TYPE_HTTP1.Enum()
-	case "http2":
-		return pb.CodecType_CODEC_TYPE_HTTP2.Enum()
-	case "http3":
-		return pb.CodecType_CODEC_TYPE_HTTP3.Enum()
-	}
-}
-
 // FromIssuerFormat converts a protobuf JWT issuer format into a string.
 func FromIssuerFormat(src *pb.IssuerFormat) types.String {
 	if src == nil {

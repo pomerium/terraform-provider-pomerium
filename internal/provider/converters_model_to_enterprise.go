@@ -86,6 +86,28 @@ func (c *ModelToEnterpriseConverter) Cluster(src ClusterModel) *enterprise.Clust
 	}
 }
 
+func (c *ModelToEnterpriseConverter) CodecType(p path.Path, src types.String) *enterprise.CodecType {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	switch src.ValueString() {
+	case "auto":
+		return enterprise.CodecType_CODEC_TYPE_AUTO.Enum()
+	case "http1":
+		return enterprise.CodecType_CODEC_TYPE_HTTP1.Enum()
+	case "http2":
+		return enterprise.CodecType_CODEC_TYPE_HTTP2.Enum()
+	case "http3":
+		return enterprise.CodecType_CODEC_TYPE_HTTP3.Enum()
+	default:
+		fallthrough
+	case "":
+		c.diagnostics.AddAttributeError(p, "unknown codec type", fmt.Sprintf("unknown codec type: %s", src.ValueString()))
+		return nil
+	}
+}
+
 func (c *ModelToEnterpriseConverter) CreateKeyPairRequest(src KeyPairModel) *enterprise.CreateKeyPairRequest {
 	return &enterprise.CreateKeyPairRequest{
 		Certificate:  []byte(src.Certificate.ValueString()),
@@ -530,7 +552,7 @@ func (c *ModelToEnterpriseConverter) Settings(src SettingsModel) *enterprise.Set
 		ClientCaFile:                  src.ClientCAFile.ValueStringPointer(),
 		ClientCaKeyPairId:             src.ClientCAKeyPairID.ValueStringPointer(),
 		ClusterId:                     src.ClusterID.ValueStringPointer(),
-		CodecType:                     ToCodecType(src.CodecType),
+		CodecType:                     c.CodecType(path.Root("codec_type"), src.CodecType),
 		CookieDomain:                  src.CookieDomain.ValueStringPointer(),
 		CookieExpire:                  c.Duration(path.Root("cookie_expire"), src.CookieExpire),
 		CookieHttpOnly:                src.CookieHTTPOnly.ValueBoolPointer(),
