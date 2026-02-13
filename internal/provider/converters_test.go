@@ -1248,3 +1248,26 @@ func TestJWTGroupsFilterToPB(t *testing.T) {
 		})
 	}
 }
+
+func TestTimestampRoundTrip(t *testing.T) {
+	t.Parallel()
+
+	// A timestamp formatted by baseProtoConverter.Timestamp (RFC3339)
+	// should be parseable by baseModelConverter.Timestamp (currently RFC1123).
+	// This test verifies whether the two formats are consistent.
+	tm := time.Date(2026, time.March, 15, 10, 0, 0, 0, time.UTC)
+	src := timestamppb.New(tm)
+
+	// Enterprise -> Model: formats as RFC3339
+	var d1 diag.Diagnostics
+	formatted := provider.NewEnterpriseToModelConverter(&d1).Timestamp(src)
+	require.Empty(t, d1)
+	assert.Equal(t, "2026-03-15T10:00:00Z", formatted.ValueString())
+
+	// Model -> Enterprise: should parse the RFC3339 string back
+	var d2 diag.Diagnostics
+	result := provider.NewModelToEnterpriseConverter(&d2).Timestamp(path.Empty(), formatted)
+	assert.Empty(t, d2, "parsing the output of baseProtoConverter.Timestamp should not produce diagnostics")
+	assert.Empty(t, cmp.Diff(src, result, protocmp.Transform()),
+		"round-tripping a timestamp through both converters should produce the original value")
+}
