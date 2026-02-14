@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 
+	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -17,6 +18,8 @@ import (
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go"
+	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 // Ensure provider-defined types fully satisfy framework interfaces.
@@ -112,23 +115,41 @@ func (r *PolicyResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbPolicy := NewModelToEnterpriseConverter(&resp.Diagnostics).Policy(plan)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+		func(client sdk.Client) {
+			apiPolicy := NewModelToAPIConverter(&resp.Diagnostics).Policy(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 
-		setReq := &pb.SetPolicyRequest{
-			Policy: pbPolicy,
-		}
-		setRes, err := client.PolicyService.SetPolicy(ctx, setReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error creating policy", err.Error())
-			return
-		}
+			createReq := connect.NewRequest(&pomerium.CreatePolicyRequest{
+				Policy: apiPolicy,
+			})
+			createRes, err := client.CreatePolicy(ctx, createReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error creating policy", err.Error())
+				return
+			}
 
-		plan.ID = types.StringValue(setRes.Policy.Id)
-	})...)
+			plan = NewAPIToModelConverter(&resp.Diagnostics).Policy(createRes.Msg.Policy)
+		},
+		func(client *client.Client) {
+			pbPolicy := NewModelToEnterpriseConverter(&resp.Diagnostics).Policy(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			setReq := &pb.SetPolicyRequest{
+				Policy: pbPolicy,
+			}
+			setRes, err := client.PolicyService.SetPolicy(ctx, setReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error creating policy", err.Error())
+				return
+			}
+
+			plan.ID = types.StringValue(setRes.Policy.Id)
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

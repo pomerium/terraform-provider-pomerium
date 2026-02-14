@@ -7,11 +7,14 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"strings"
 
+	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/sdk-go"
+	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 type serverType string
@@ -30,8 +33,8 @@ const (
 )
 
 type Client struct {
-	shared     sdk.Client
-	enterprise *client.Client
+	consolidated sdk.Client
+	enterprise   *client.Client
 }
 
 func NewClient(apiURL, apiToken string, tlsConfig *tls.Config) (*Client, error) {
@@ -53,7 +56,7 @@ func NewClient(apiURL, apiToken string, tlsConfig *tls.Config) (*Client, error) 
 		Transport: httpTransport,
 	}
 
-	sharedClient := sdk.NewClient(
+	consolidatedClient := sdk.NewClient(
 		sdk.WithAPIToken(apiToken),
 		sdk.WithHTTPClient(httpClient),
 		sdk.WithURL(apiURL),
@@ -65,9 +68,37 @@ func NewClient(apiURL, apiToken string, tlsConfig *tls.Config) (*Client, error) 
 	}
 
 	return &Client{
-		shared:     sharedClient,
-		enterprise: enterpriseClient,
+		consolidated: consolidatedClient,
+		enterprise:   enterpriseClient,
 	}, nil
+}
+
+// ConsolidatedOrLegacy invokes onConsolidated if the server is of type core,
+// zero, or enterprise. If its a legacy enterprise server, onLegacy is invoked.
+func (c *Client) ConsolidatedOrLegacy(
+	ctx context.Context,
+	onConsolidated func(client sdk.Client),
+	onLegacy func(client *client.Client),
+) diag.Diagnostics {
+	var diagnostics diag.Diagnostics
+
+	serverType, err := c.getServerType(ctx)
+	if err != nil {
+		diagnostics.Append(diag.NewErrorDiagnostic("error determining server type", err.Error()))
+		return diagnostics
+	}
+
+	switch serverType {
+	case serverTypeCore, serverTypeEnterprise, serverTypeZero:
+		onConsolidated(c.consolidated)
+	case serverTypeLegacy:
+		onLegacy(c.enterprise)
+	default:
+		diagnostics.Append(diag.NewErrorDiagnostic("unsupported server type",
+			fmt.Sprintf("unsupported server type: %s", serverType)))
+	}
+
+	return diagnostics
 }
 
 // EnterpriseOnly invokes onEnterprise if the server is not of type zero or
@@ -97,7 +128,23 @@ func (c *Client) EnterpriseOnly(
 	return diagnostics
 }
 
-func (c *Client) getServerType(_ context.Context) (serverType, error) {
-	// for now we just always return legacy
-	return serverTypeLegacy, nil
+func (c *Client) getServerType(ctx context.Context) (serverType, error) {
+	res, err := c.consolidated.GetServerInfo(ctx, connect.NewRequest(&pomerium.GetServerInfoRequest{}))
+	if err != nil {
+		if strings.Contains(err.Error(), "415 Unsupported Media Type") {
+			return serverTypeLegacy, nil
+		}
+		return serverTypeLegacy, err
+	}
+
+	switch res.Msg.GetServerType() {
+	case pomerium.ServerType_SERVER_TYPE_CORE:
+		return serverTypeCore, nil
+	case pomerium.ServerType_SERVER_TYPE_ENTERPRISE:
+		return serverTypeEnterprise, nil
+	case pomerium.ServerType_SERVER_TYPE_ZERO:
+		return serverTypeZero, nil
+	default:
+		return serverTypeLegacy, nil
+	}
 }
