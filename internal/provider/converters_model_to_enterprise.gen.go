@@ -145,9 +145,9 @@ func (c *ModelToEnterpriseConverter) OAuth2AuthStyle(p path.Path, src types.Stri
 	}
 
 	switch strings.ToLower(src.ValueString()) {
-	case "oauth2_auth_style_in_params":
+	case "in_params":
 		return pb.OAuth2AuthStyle(1).Enum()
-	case "oauth2_auth_style_in_header":
+	case "in_header":
 		return pb.OAuth2AuthStyle(2).Enum()
 	default:
 		c.diagnostics.AddAttributeError(p, "unknown OAuth2AuthStyle", fmt.Sprintf("unknown OAuth2AuthStyle: %s", src.ValueString()))

@@ -12,8 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
-	"github.com/pomerium/enterprise-client-go/pb"
 )
 
 //go:embed help/settings.md
@@ -240,7 +238,7 @@ var SettingsResourceSchema = schema.Schema{
 			Optional:    true,
 			Description: "Format for JWT issuer strings. Use 'IssuerHostOnly' for hostname without scheme or trailing slash, or 'IssuerURI' for complete URI including scheme and trailing slash.",
 			Validators: []validator.String{
-				stringvalidator.OneOf(GetValidEnumValues[pb.IssuerFormat]()...),
+				stringvalidator.OneOf(IssuerFormatValues...),
 			},
 		},
 		"default_upstream_timeout": schema.StringAttribute{

@@ -205,15 +205,15 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Optional:    true,
 				Description: "Format for JWT issuer strings. Use 'IssuerHostOnly' for hostname without scheme or trailing slash, or 'IssuerURI' for complete URI including scheme and trailing slash.",
 				Validators: []validator.String{
-					stringvalidator.OneOf(GetValidEnumValues[pb.IssuerFormat]()...),
+					stringvalidator.OneOf(IssuerFormatValues...),
 				},
 			},
 			"load_balancing_policy": schema.StringAttribute{
 				Description:         "Load balancing policy.",
-				MarkdownDescription: GetValidEnumValuesCanonicalMarkdown[pb.LoadBalancingPolicy]("Load Balancing Policy", "LOAD_BALANCING_POLICY"),
+				MarkdownDescription: GetValidEnumValuesCanonicalMarkdown("Load Balancing Policy", LoadBalancingPolicyValues),
 				Optional:            true,
 				Validators: []validator.String{
-					stringvalidator.OneOf(GetValidEnumValuesCanonical[pb.LoadBalancingPolicy]("LOAD_BALANCING_POLICY")...),
+					stringvalidator.OneOf(LoadBalancingPolicyValues...),
 				},
 			},
 			"rewrite_response_headers": schema.SetNestedAttribute{
@@ -264,7 +264,7 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Description: "Bearer token format.",
 				Optional:    true,
 				Validators: []validator.String{
-					stringvalidator.OneOf("default", "idp_access_token", "idp_identity_token"),
+					stringvalidator.OneOf(BearerTokenFormatValues...),
 				},
 			},
 			"idp_access_token_allowed_audiences": schema.SetAttribute{
@@ -357,7 +357,7 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 									Description: "Use specified application protocol for health checks.",
 									Optional:    true,
 									Validators: []validator.String{
-										stringvalidator.OneOf("HTTP1", "HTTP2"),
+										stringvalidator.OneOf(CodecClientTypeValues...),
 									},
 								},
 							},

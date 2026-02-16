@@ -136,9 +136,9 @@ func (c *EnterpriseToModelConverter) OAuth2AuthStyle(src *pb.OAuth2AuthStyle) ty
 
 	switch src.Number() {
 	case 1:
-		return types.StringValue("oauth2_auth_style_in_params")
+		return types.StringValue("in_params")
 	case 2:
-		return types.StringValue("oauth2_auth_style_in_header")
+		return types.StringValue("in_header")
 	default:
 		return types.StringNull()
 	}
