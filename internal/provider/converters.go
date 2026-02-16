@@ -228,6 +228,13 @@ type baseModelConverter struct {
 	diagnostics *diag.Diagnostics
 }
 
+func (c *baseModelConverter) Bytes(src types.String) []byte {
+	if src.IsNull() || src.IsUnknown() || src.ValueString() == "" {
+		return nil
+	}
+	return []byte(src.ValueString())
+}
+
 func (c *baseModelConverter) BytesFromBase64(p path.Path, src types.String) []byte {
 	if src.IsNull() || src.IsUnknown() || src.ValueString() == "" {
 		return nil
@@ -344,6 +351,13 @@ func (c *baseProtoConverter) Duration(src *durationpb.Duration) timetypes.GoDura
 		return timetypes.NewGoDurationNull()
 	}
 	return timetypes.NewGoDurationValue(src.AsDuration())
+}
+
+func (c *baseProtoConverter) StringFromBytes(src []byte) types.String {
+	if len(src) == 0 {
+		return types.StringNull()
+	}
+	return types.StringValue(string(src))
 }
 
 func (c *baseProtoConverter) Timestamp(src *timestamppb.Timestamp) types.String {

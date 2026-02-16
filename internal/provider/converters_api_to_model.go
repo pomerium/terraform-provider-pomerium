@@ -21,6 +21,16 @@ func NewAPIToModelConverter(diagnostics *diag.Diagnostics) *APIToModelConverter 
 	}
 }
 
+func (c *APIToModelConverter) KeyPair(src *pomerium.KeyPair) KeyPairModel {
+	return KeyPairModel{
+		Certificate: c.StringFromBytes(src.Certificate),
+		ID:          types.StringPointerValue(src.Id),
+		Key:         c.StringFromBytes(src.Key),
+		Name:        types.StringPointerValue(src.Name),
+		NamespaceID: types.StringPointerValue(src.NamespaceId),
+	}
+}
+
 func (c *APIToModelConverter) Policy(src *pomerium.Policy) PolicyModel {
 	ppl, err := PolicyLanguageType{}.Parse(types.StringPointerValue(src.SourcePpl))
 	if err != nil {

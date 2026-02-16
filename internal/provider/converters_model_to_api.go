@@ -24,6 +24,20 @@ func NewModelToAPIConverter(diagnostics *diag.Diagnostics) *ModelToAPIConverter 
 	}
 }
 
+func (c *ModelToAPIConverter) Filter(src map[string]types.String) *structpb.Struct {
+	var dst *structpb.Struct
+	for field, value := range src {
+		if value.IsNull() || value.IsUnknown() {
+			continue
+		}
+		if dst == nil {
+			dst = &structpb.Struct{Fields: map[string]*structpb.Value{}}
+		}
+		dst.Fields[field] = structpb.NewStringValue(value.ValueString())
+	}
+	return dst
+}
+
 func (c *ModelToAPIConverter) ListPoliciesRequest(src PoliciesDataSourceModel) *pomerium.ListPoliciesRequest {
 	filter := c.Filter(map[string]types.String{
 		"cluster_id":   src.ClusterID,
@@ -38,18 +52,20 @@ func (c *ModelToAPIConverter) ListPoliciesRequest(src PoliciesDataSourceModel) *
 	}
 }
 
-func (c *ModelToAPIConverter) Filter(src map[string]types.String) *structpb.Struct {
-	var dst *structpb.Struct
-	for field, value := range src {
-		if value.IsNull() || value.IsUnknown() {
-			continue
-		}
-		if dst == nil {
-			dst = &structpb.Struct{Fields: map[string]*structpb.Value{}}
-		}
-		dst.Fields[field] = structpb.NewStringValue(value.ValueString())
+func (c *ModelToAPIConverter) KeyPair(src KeyPairModel) *pomerium.KeyPair {
+	return &pomerium.KeyPair{
+		Certificate:     c.Bytes(src.Certificate),
+		CertificateInfo: nil, // not supported
+		CreatedAt:       nil, // not supported
+		Id:              c.NullableString(src.ID),
+		Key:             c.Bytes(src.Key),
+		ModifiedAt:      nil, // not supported
+		Name:            c.NullableString(src.Name),
+		NamespaceId:     c.NullableString(src.NamespaceID),
+		Origin:          pomerium.KeyPairOrigin_KEY_PAIR_ORIGIN_USER,
+		OriginatorId:    proto.String(OriginatorID),
+		Status:          pomerium.KeyPairStatus_KEY_PAIR_STATUS_READY,
 	}
-	return dst
 }
 
 func (c *ModelToAPIConverter) Policy(src PolicyModel) *pomerium.Policy {
