@@ -3,12 +3,15 @@ package provider
 import (
 	"context"
 
+	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go"
+	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 var (
@@ -44,23 +47,41 @@ func (r *SettingsResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		planSettings := NewModelToEnterpriseConverter(&resp.Diagnostics).Settings(plan)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+		func(client sdk.Client) {
+			apiSettings := NewModelToAPIConverter(&resp.Diagnostics).Settings(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 
-		setReq := &pb.SetSettingsRequest{
-			Settings: planSettings,
-		}
-		setRes, err := client.SettingsService.SetSettings(ctx, setReq)
-		if err != nil {
-			resp.Diagnostics.AddError("set settings", err.Error())
-			return
-		}
+			updateReq := connect.NewRequest(&pomerium.UpdateSettingsRequest{
+				Settings: apiSettings,
+			})
+			updateRes, err := client.UpdateSettings(ctx, updateReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error updating service account", err.Error())
+				return
+			}
 
-		plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Settings(setRes.GetSettings())
-	})...)
+			plan = NewAPIToModelConverter(&resp.Diagnostics).Settings(updateRes.Msg.Settings)
+		},
+		func(client *client.Client) {
+			planSettings := NewModelToEnterpriseConverter(&resp.Diagnostics).Settings(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			setReq := &pb.SetSettingsRequest{
+				Settings: planSettings,
+			}
+			setRes, err := client.SettingsService.SetSettings(ctx, setReq)
+			if err != nil {
+				resp.Diagnostics.AddError("set settings", err.Error())
+				return
+			}
+
+			plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Settings(setRes.GetSettings())
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -76,18 +97,31 @@ func (r *SettingsResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		getReq := &pb.GetSettingsRequest{
-			ClusterId: state.ClusterID.ValueStringPointer(),
-		}
-		getRes, err := client.SettingsService.GetSettings(ctx, getReq)
-		if err != nil {
-			resp.Diagnostics.AddError("get settings", err.Error())
-			return
-		}
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+		func(client sdk.Client) {
+			getReq := connect.NewRequest(&pomerium.GetSettingsRequest{
+				Id: state.ID.ValueString(),
+			})
+			getRes, err := client.GetSettings(ctx, getReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error getting settings", err.Error())
+				return
+			}
 
-		state = NewEnterpriseToModelConverter(&resp.Diagnostics).Settings(getRes.GetSettings())
-	})...)
+			state = NewAPIToModelConverter(&resp.Diagnostics).Settings(getRes.Msg.Settings)
+		},
+		func(client *client.Client) {
+			getReq := &pb.GetSettingsRequest{
+				ClusterId: state.ClusterID.ValueStringPointer(),
+			}
+			getRes, err := client.SettingsService.GetSettings(ctx, getReq)
+			if err != nil {
+				resp.Diagnostics.AddError("get settings", err.Error())
+				return
+			}
+
+			state = NewEnterpriseToModelConverter(&resp.Diagnostics).Settings(getRes.GetSettings())
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -103,23 +137,41 @@ func (r *SettingsResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		planSettings := NewModelToEnterpriseConverter(&resp.Diagnostics).Settings(plan)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+		func(client sdk.Client) {
+			apiSettings := NewModelToAPIConverter(&resp.Diagnostics).Settings(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 
-		setReq := &pb.SetSettingsRequest{
-			Settings: planSettings,
-		}
-		setRes, err := client.SettingsService.SetSettings(ctx, setReq)
-		if err != nil {
-			resp.Diagnostics.AddError("set settings", err.Error())
-			return
-		}
+			updateReq := connect.NewRequest(&pomerium.UpdateSettingsRequest{
+				Settings: apiSettings,
+			})
+			updateRes, err := client.UpdateSettings(ctx, updateReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error updating service account", err.Error())
+				return
+			}
 
-		plan.ID = types.StringValue(setRes.GetSettings().GetId())
-	})...)
+			plan = NewAPIToModelConverter(&resp.Diagnostics).Settings(updateRes.Msg.Settings)
+		},
+		func(client *client.Client) {
+			planSettings := NewModelToEnterpriseConverter(&resp.Diagnostics).Settings(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			setReq := &pb.SetSettingsRequest{
+				Settings: planSettings,
+			}
+			setRes, err := client.SettingsService.SetSettings(ctx, setReq)
+			if err != nil {
+				resp.Diagnostics.AddError("set settings", err.Error())
+				return
+			}
+
+			plan.ID = types.StringValue(setRes.GetSettings().GetId())
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

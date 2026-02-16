@@ -165,126 +165,6 @@ func (c *EnterpriseToModelConverter) HealthCheckPayload(src *enterprise.HealthCh
 	return types.ObjectValueMust(HealthCheckPayloadObjectType().AttrTypes, attrs)
 }
 
-func (c *EnterpriseToModelConverter) IdentityProviderAuth0(src *enterprise.Settings) types.Object {
-	attrs, err := GetTFObjectTypes[Auth0Options]()
-	if err != nil {
-		c.diagnostics.AddAttributeError(path.Root("identity_provider_auth0"), err.Error(), err.Error())
-		return types.ObjectNull(map[string]attr.Type{})
-	}
-	if src.GetIdentityProvider() != "auth0" {
-		return types.ObjectNull(attrs)
-	}
-	return idpOptionsFromStruct[Auth0Options](c.diagnostics, src.IdentityProviderOptions)
-}
-
-func (c *EnterpriseToModelConverter) IdentityProviderAzure(src *enterprise.Settings) types.Object {
-	attrs, err := GetTFObjectTypes[AzureOptions]()
-	if err != nil {
-		c.diagnostics.AddAttributeError(path.Root("identity_provider_azure"), err.Error(), err.Error())
-		return types.ObjectNull(map[string]attr.Type{})
-	}
-	if src.GetIdentityProvider() != "azure" {
-		return types.ObjectNull(attrs)
-	}
-	return idpOptionsFromStruct[AzureOptions](c.diagnostics, src.IdentityProviderOptions)
-}
-
-func (c *EnterpriseToModelConverter) IdentityProviderBlob(src *enterprise.Settings) types.Object {
-	attrs, err := GetTFObjectTypes[BlobOptions]()
-	if err != nil {
-		c.diagnostics.AddAttributeError(path.Root("identity_provider_blob"), err.Error(), err.Error())
-		return types.ObjectNull(map[string]attr.Type{})
-	}
-	if src.GetIdentityProvider() != "blob" {
-		return types.ObjectNull(attrs)
-	}
-	return idpOptionsFromStruct[BlobOptions](c.diagnostics, src.IdentityProviderOptions)
-}
-
-func (c *EnterpriseToModelConverter) IdentityProviderCognito(src *enterprise.Settings) types.Object {
-	attrs, err := GetTFObjectTypes[CognitoOptions]()
-	if err != nil {
-		c.diagnostics.AddAttributeError(path.Root("identity_provider_cognito"), err.Error(), err.Error())
-		return types.ObjectNull(map[string]attr.Type{})
-	}
-	if src.GetIdentityProvider() != "cognito" {
-		return types.ObjectNull(attrs)
-	}
-	return idpOptionsFromStruct[CognitoOptions](c.diagnostics, src.IdentityProviderOptions)
-}
-
-func (c *EnterpriseToModelConverter) IdentityProviderGitHub(src *enterprise.Settings) types.Object {
-	attrs, err := GetTFObjectTypes[GitHubOptions]()
-	if err != nil {
-		c.diagnostics.AddAttributeError(path.Root("identity_provider_github"), err.Error(), err.Error())
-		return types.ObjectNull(map[string]attr.Type{})
-	}
-	if src.GetIdentityProvider() != "github" {
-		return types.ObjectNull(attrs)
-	}
-	return idpOptionsFromStruct[GitHubOptions](c.diagnostics, src.IdentityProviderOptions)
-}
-
-func (c *EnterpriseToModelConverter) IdentityProviderGitLab(src *enterprise.Settings) types.Object {
-	attrs, err := GetTFObjectTypes[GitLabOptions]()
-	if err != nil {
-		c.diagnostics.AddAttributeError(path.Root("identity_provider_gitlab"), err.Error(), err.Error())
-		return types.ObjectNull(map[string]attr.Type{})
-	}
-	if src.GetIdentityProvider() != "gitlab" {
-		return types.ObjectNull(attrs)
-	}
-	return idpOptionsFromStruct[GitLabOptions](c.diagnostics, src.IdentityProviderOptions)
-}
-
-func (c *EnterpriseToModelConverter) IdentityProviderGoogle(src *enterprise.Settings) types.Object {
-	attrs, err := GetTFObjectTypes[GoogleOptions]()
-	if err != nil {
-		c.diagnostics.AddAttributeError(path.Root("identity_provider_google"), err.Error(), err.Error())
-		return types.ObjectNull(map[string]attr.Type{})
-	}
-	if src.GetIdentityProvider() != "google" {
-		return types.ObjectNull(attrs)
-	}
-	return idpOptionsFromStruct[GoogleOptions](c.diagnostics, src.IdentityProviderOptions)
-}
-
-func (c *EnterpriseToModelConverter) IdentityProviderOkta(src *enterprise.Settings) types.Object {
-	attrs, err := GetTFObjectTypes[OktaOptions]()
-	if err != nil {
-		c.diagnostics.AddAttributeError(path.Root("identity_provider_okta"), err.Error(), err.Error())
-		return types.ObjectNull(map[string]attr.Type{})
-	}
-	if src.GetIdentityProvider() != "okta" {
-		return types.ObjectNull(attrs)
-	}
-	return idpOptionsFromStruct[OktaOptions](c.diagnostics, src.IdentityProviderOptions)
-}
-
-func (c *EnterpriseToModelConverter) IdentityProviderOneLogin(src *enterprise.Settings) types.Object {
-	attrs, err := GetTFObjectTypes[OneLoginOptions]()
-	if err != nil {
-		c.diagnostics.AddAttributeError(path.Root("identity_provider_onelogin"), err.Error(), err.Error())
-		return types.ObjectNull(map[string]attr.Type{})
-	}
-	if src.GetIdentityProvider() != "onelogin" {
-		return types.ObjectNull(attrs)
-	}
-	return idpOptionsFromStruct[OneLoginOptions](c.diagnostics, src.IdentityProviderOptions)
-}
-
-func (c *EnterpriseToModelConverter) IdentityProviderPing(src *enterprise.Settings) types.Object {
-	attrs, err := GetTFObjectTypes[PingOptions]()
-	if err != nil {
-		c.diagnostics.AddAttributeError(path.Root("identity_provider_ping"), err.Error(), err.Error())
-		return types.ObjectNull(map[string]attr.Type{})
-	}
-	if src.GetIdentityProvider() != "ping" {
-		return types.ObjectNull(attrs)
-	}
-	return idpOptionsFromStruct[PingOptions](c.diagnostics, src.IdentityProviderOptions)
-}
-
 func (c *EnterpriseToModelConverter) Int64Range(src *enterprise.Int64Range) types.Object {
 	if src == nil {
 		return types.ObjectNull(Int64RangeObjectType().AttrTypes)
@@ -480,16 +360,16 @@ func (c *EnterpriseToModelConverter) Settings(src *enterprise.Settings) Settings
 		GRPCInsecure:                    types.BoolPointerValue(src.GrpcInsecure),
 		HTTPRedirectAddr:                types.StringPointerValue(src.HttpRedirectAddr),
 		ID:                              types.StringValue(src.Id),
-		IdentityProviderAuth0:           c.IdentityProviderAuth0(src),
-		IdentityProviderAzure:           c.IdentityProviderAzure(src),
-		IdentityProviderBlob:            c.IdentityProviderBlob(src),
-		IdentityProviderCognito:         c.IdentityProviderCognito(src),
-		IdentityProviderGitHub:          c.IdentityProviderGitHub(src),
-		IdentityProviderGitLab:          c.IdentityProviderGitLab(src),
-		IdentityProviderGoogle:          c.IdentityProviderGoogle(src),
-		IdentityProviderOkta:            c.IdentityProviderOkta(src),
-		IdentityProviderOneLogin:        c.IdentityProviderOneLogin(src),
-		IdentityProviderPing:            c.IdentityProviderPing(src),
+		IdentityProviderAuth0:           c.IdentityProviderAuth0(src.GetIdentityProvider(), src.GetIdentityProviderOptions()),
+		IdentityProviderAzure:           c.IdentityProviderAzure(src.GetIdentityProvider(), src.GetIdentityProviderOptions()),
+		IdentityProviderBlob:            c.IdentityProviderBlob(src.GetIdentityProvider(), src.GetIdentityProviderOptions()),
+		IdentityProviderCognito:         c.IdentityProviderCognito(src.GetIdentityProvider(), src.GetIdentityProviderOptions()),
+		IdentityProviderGitHub:          c.IdentityProviderGitHub(src.GetIdentityProvider(), src.GetIdentityProviderOptions()),
+		IdentityProviderGitLab:          c.IdentityProviderGitLab(src.GetIdentityProvider(), src.GetIdentityProviderOptions()),
+		IdentityProviderGoogle:          c.IdentityProviderGoogle(src.GetIdentityProvider(), src.GetIdentityProviderOptions()),
+		IdentityProviderOkta:            c.IdentityProviderOkta(src.GetIdentityProvider(), src.GetIdentityProviderOptions()),
+		IdentityProviderOneLogin:        c.IdentityProviderOneLogin(src.GetIdentityProvider(), src.GetIdentityProviderOptions()),
+		IdentityProviderPing:            c.IdentityProviderPing(src.GetIdentityProvider(), src.GetIdentityProviderOptions()),
 		IdentityProviderRefreshInterval: c.Duration(src.IdentityProviderRefreshInterval),
 		IdentityProviderRefreshTimeout:  c.Duration(src.IdentityProviderRefreshTimeout),
 		IDPAccessTokenAllowedAudiences:  FromStringList(src.IdpAccessTokenAllowedAudiences),

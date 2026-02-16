@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"google.golang.org/protobuf/proto"
-	"google.golang.org/protobuf/types/known/structpb"
 
 	enterprise "github.com/pomerium/enterprise-client-go/pb"
 )
@@ -245,74 +244,6 @@ func (c *ModelToEnterpriseConverter) HealthCheckPayload(src types.Object) *enter
 	return payload
 }
 
-func (c *ModelToEnterpriseConverter) IdentityProvider(src SettingsModel) *string {
-	if !src.IdentityProviderAuth0.IsNull() && !src.IdentityProviderAuth0.IsUnknown() {
-		return proto.String("auth0")
-	}
-	if !src.IdentityProviderAzure.IsNull() && !src.IdentityProviderAzure.IsUnknown() {
-		return proto.String("azure")
-	}
-	if !src.IdentityProviderBlob.IsNull() && !src.IdentityProviderBlob.IsUnknown() {
-		return proto.String("blob")
-	}
-	if !src.IdentityProviderCognito.IsNull() && !src.IdentityProviderCognito.IsUnknown() {
-		return proto.String("cognito")
-	}
-	if !src.IdentityProviderGitHub.IsNull() && !src.IdentityProviderGitHub.IsUnknown() {
-		return proto.String("github")
-	}
-	if !src.IdentityProviderGitLab.IsNull() && !src.IdentityProviderGitLab.IsUnknown() {
-		return proto.String("gitlab")
-	}
-	if !src.IdentityProviderGoogle.IsNull() && !src.IdentityProviderGoogle.IsUnknown() {
-		return proto.String("google")
-	}
-	if !src.IdentityProviderOkta.IsNull() && !src.IdentityProviderOkta.IsUnknown() {
-		return proto.String("okta")
-	}
-	if !src.IdentityProviderOneLogin.IsNull() && !src.IdentityProviderOneLogin.IsUnknown() {
-		return proto.String("onelogin")
-	}
-	if !src.IdentityProviderPing.IsNull() && !src.IdentityProviderPing.IsUnknown() {
-		return proto.String("ping")
-	}
-	return nil
-}
-
-func (c *ModelToEnterpriseConverter) IdentityProviderOptions(src SettingsModel) *structpb.Struct {
-	if !src.IdentityProviderAuth0.IsNull() && !src.IdentityProviderAuth0.IsUnknown() {
-		return idpOptionsToStruct[Auth0Options](c.diagnostics, src.IdentityProviderAuth0)
-	}
-	if !src.IdentityProviderAzure.IsNull() && !src.IdentityProviderAzure.IsUnknown() {
-		return idpOptionsToStruct[AzureOptions](c.diagnostics, src.IdentityProviderAzure)
-	}
-	if !src.IdentityProviderBlob.IsNull() && !src.IdentityProviderBlob.IsUnknown() {
-		return idpOptionsToStruct[BlobOptions](c.diagnostics, src.IdentityProviderBlob)
-	}
-	if !src.IdentityProviderCognito.IsNull() && !src.IdentityProviderCognito.IsUnknown() {
-		return idpOptionsToStruct[CognitoOptions](c.diagnostics, src.IdentityProviderCognito)
-	}
-	if !src.IdentityProviderGitHub.IsNull() && !src.IdentityProviderGitHub.IsUnknown() {
-		return idpOptionsToStruct[GitHubOptions](c.diagnostics, src.IdentityProviderGitHub)
-	}
-	if !src.IdentityProviderGitLab.IsNull() && !src.IdentityProviderGitLab.IsUnknown() {
-		return idpOptionsToStruct[GitLabOptions](c.diagnostics, src.IdentityProviderGitLab)
-	}
-	if !src.IdentityProviderGoogle.IsNull() && !src.IdentityProviderGoogle.IsUnknown() {
-		return idpOptionsToStruct[GoogleOptions](c.diagnostics, src.IdentityProviderGoogle)
-	}
-	if !src.IdentityProviderOkta.IsNull() && !src.IdentityProviderOkta.IsUnknown() {
-		return idpOptionsToStruct[OktaOptions](c.diagnostics, src.IdentityProviderOkta)
-	}
-	if !src.IdentityProviderOneLogin.IsNull() && !src.IdentityProviderOneLogin.IsUnknown() {
-		return idpOptionsToStruct[OneLoginOptions](c.diagnostics, src.IdentityProviderOneLogin)
-	}
-	if !src.IdentityProviderPing.IsNull() && !src.IdentityProviderPing.IsUnknown() {
-		return idpOptionsToStruct[PingOptions](c.diagnostics, src.IdentityProviderPing)
-	}
-	return nil
-}
-
 func (c *ModelToEnterpriseConverter) Int64Range(src types.Object) *enterprise.Int64Range {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
@@ -537,8 +468,8 @@ func (c *ModelToEnterpriseConverter) Settings(src SettingsModel) *enterprise.Set
 		GrpcInsecure:                    src.GRPCInsecure.ValueBoolPointer(),
 		HttpRedirectAddr:                src.HTTPRedirectAddr.ValueStringPointer(),
 		Id:                              src.ID.ValueString(),
-		IdentityProvider:                c.IdentityProvider(src),
-		IdentityProviderOptions:         c.IdentityProviderOptions(src),
+		IdentityProvider:                c.DirectoryProvider(src),
+		IdentityProviderOptions:         c.DirectoryProviderOptions(src),
 		IdentityProviderRefreshInterval: c.Duration(path.Root("identity_provider_refresh_interval"), src.IdentityProviderRefreshInterval),
 		IdentityProviderRefreshTimeout:  c.Duration(path.Root("identity_provider_refresh_timeout"), src.IdentityProviderRefreshTimeout),
 		IdpAccessTokenAllowedAudiences:  c.SettingsStringList(path.Root("idp_access_token_allowed_audiences"), src.IDPAccessTokenAllowedAudiences),
