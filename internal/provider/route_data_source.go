@@ -172,7 +172,7 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 			Computed:    true,
 			Description: "Format for JWT issuer strings. Use 'IssuerHostOnly' for hostname without scheme or trailing slash, or 'IssuerURI' for complete URI including scheme and trailing slash.",
 			Validators: []validator.String{
-				stringvalidator.OneOf(GetValidEnumValues[pb.IssuerFormat]()...),
+				stringvalidator.OneOf(IssuerFormatValues...),
 			},
 		},
 		"load_balancing_policy": schema.StringAttribute{
@@ -180,7 +180,7 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 			Computed:    true,
 			Description: "Load balancing policy.",
 			Validators: []validator.String{
-				stringvalidator.OneOf(GetValidEnumValuesCanonical[pb.LoadBalancingPolicy]("LOAD_BALANCING_POLICY")...),
+				stringvalidator.OneOf(LoadBalancingPolicyValues...),
 			},
 		},
 		"rewrite_response_headers": schema.SetNestedAttribute{

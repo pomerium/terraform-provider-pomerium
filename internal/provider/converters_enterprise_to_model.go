@@ -259,7 +259,7 @@ func (c *EnterpriseToModelConverter) Route(src *enterprise.Route) RouteModel {
 		JWTIssuerFormat:                   c.IssuerFormat(src.JwtIssuerFormat),
 		KubernetesServiceAccountToken:     types.StringPointerValue(src.KubernetesServiceAccountToken),
 		KubernetesServiceAccountTokenFile: types.StringPointerValue(src.KubernetesServiceAccountTokenFile),
-		LoadBalancingPolicy:               OptionalEnumValueFromPB(src.LoadBalancingPolicy, "LOAD_BALANCING_POLICY"),
+		LoadBalancingPolicy:               c.LoadBalancingPolicy(src.LoadBalancingPolicy),
 		LogoURL:                           types.StringPointerValue(src.LogoUrl),
 		Name:                              types.StringValue(src.Name),
 		NamespaceID:                       types.StringValue(src.NamespaceId),

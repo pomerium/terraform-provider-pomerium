@@ -222,7 +222,7 @@ func (c *APIToModelConverter) Route(src *pomerium.Route) RouteModel {
 		JWTIssuerFormat:                   c.IssuerFormat(src.JwtIssuerFormat),
 		KubernetesServiceAccountToken:     types.StringValue(src.KubernetesServiceAccountToken),
 		KubernetesServiceAccountTokenFile: types.StringValue(src.KubernetesServiceAccountTokenFile),
-		LoadBalancingPolicy:               OptionalEnumValueFromPB(src.LoadBalancingPolicy, "LOAD_BALANCING_POLICY"),
+		LoadBalancingPolicy:               c.LoadBalancingPolicy(src.LoadBalancingPolicy),
 		LogoURL:                           types.StringPointerValue(src.LogoUrl),
 		Name:                              types.StringPointerValue(src.Name),
 		NamespaceID:                       types.StringPointerValue(src.NamespaceId),
