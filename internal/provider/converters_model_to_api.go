@@ -280,6 +280,20 @@ func (c *ModelToAPIConverter) ListPoliciesRequest(src PoliciesDataSourceModel) *
 	}
 }
 
+func (c *ModelToAPIConverter) ListRoutesRequest(src RoutesDataSourceModel) *pomerium.ListRoutesRequest {
+	filter := c.Filter(map[string]types.String{
+		"cluster_id":   src.ClusterID,
+		"namespace_id": src.NamespaceID,
+		"query":        src.Query,
+	})
+	return &pomerium.ListRoutesRequest{
+		Filter:  filter,
+		Limit:   c.NullableUint64(src.Limit),
+		Offset:  c.NullableUint64(src.Offset),
+		OrderBy: c.NullableString(src.OrderBy),
+	}
+}
+
 func (c *ModelToAPIConverter) ListServiceAccountsRequest(src ServiceAccountsDataSourceModel) *pomerium.ListServiceAccountsRequest {
 	filter := c.Filter(map[string]types.String{
 		"namespace_id": src.NamespaceID,

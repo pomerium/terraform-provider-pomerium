@@ -141,7 +141,10 @@ func (r *KeyPairResource) Read(ctx context.Context, req resource.ReadRequest, re
 				Id: state.ID.ValueString(),
 			})
 			getRes, err := client.GetKeyPair(ctx, getReq)
-			if err != nil {
+			if connect.CodeOf(err) == connect.CodeNotFound {
+				resp.State.RemoveResource(ctx)
+				return
+			} else if err != nil {
 				resp.Diagnostics.AddError("Error getting key pair", err.Error())
 				return
 			}

@@ -103,7 +103,10 @@ func (r *SettingsResource) Read(ctx context.Context, req resource.ReadRequest, r
 				Id: state.ID.ValueString(),
 			})
 			getRes, err := client.GetSettings(ctx, getReq)
-			if err != nil {
+			if connect.CodeOf(err) == connect.CodeNotFound {
+				resp.State.RemoveResource(ctx)
+				return
+			} else if err != nil {
 				resp.Diagnostics.AddError("Error getting settings", err.Error())
 				return
 			}

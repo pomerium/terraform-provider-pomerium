@@ -172,7 +172,10 @@ func (r *ServiceAccountResource) Read(ctx context.Context, req resource.ReadRequ
 				Id: state.ID.ValueString(),
 			})
 			getRes, err := client.GetServiceAccount(ctx, getReq)
-			if err != nil {
+			if connect.CodeOf(err) == connect.CodeNotFound {
+				resp.State.RemoveResource(ctx)
+				return
+			} else if err != nil {
 				resp.Diagnostics.AddError("Error getting service account", err.Error())
 				return
 			}

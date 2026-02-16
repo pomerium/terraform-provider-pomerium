@@ -176,7 +176,10 @@ func (r *PolicyResource) Read(ctx context.Context, req resource.ReadRequest, res
 				Id: state.ID.ValueString(),
 			})
 			getRes, err := client.GetPolicy(ctx, getReq)
-			if err != nil {
+			if connect.CodeOf(err) == connect.CodeNotFound {
+				resp.State.RemoveResource(ctx)
+				return
+			} else if err != nil {
 				resp.Diagnostics.AddError("Error getting policy", err.Error())
 				return
 			}
