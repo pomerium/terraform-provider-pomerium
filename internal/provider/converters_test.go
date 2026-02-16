@@ -1323,7 +1323,7 @@ func TestCodecClientTypeSilentDefault(t *testing.T) {
 		map[string]attr.Value{
 			"host":               types.StringNull(),
 			"path":               types.StringNull(),
-			"codec_client_type":  types.StringValue("HTTP3"), // not a valid value
+			"codec_client_type":  types.StringValue("HTTP4"), // not a valid value
 			"expected_statuses":  types.SetNull(provider.Int64RangeObjectType()),
 			"retriable_statuses": types.SetNull(provider.Int64RangeObjectType()),
 		},
