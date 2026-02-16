@@ -170,22 +170,35 @@ func (r *PolicyResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		getReq := &pb.GetPolicyRequest{
-			Id: state.ID.ValueString(),
-		}
-		getRes, err := client.PolicyService.GetPolicy(ctx, getReq)
-		if err != nil {
-			if status.Code(err) == codes.NotFound {
-				resp.State.RemoveResource(ctx)
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+		func(client sdk.Client) {
+			getReq := connect.NewRequest(&pomerium.GetPolicyRequest{
+				Id: state.ID.ValueString(),
+			})
+			createRes, err := client.GetPolicy(ctx, getReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error getting policy", err.Error())
 				return
 			}
-			resp.Diagnostics.AddError("Error reading policy", err.Error())
-			return
-		}
 
-		state = NewEnterpriseToModelConverter(&resp.Diagnostics).Policy(getRes.GetPolicy())
-	})...)
+			state = NewAPIToModelConverter(&resp.Diagnostics).Policy(createRes.Msg.Policy)
+		},
+		func(client *client.Client) {
+			getReq := &pb.GetPolicyRequest{
+				Id: state.ID.ValueString(),
+			}
+			getRes, err := client.PolicyService.GetPolicy(ctx, getReq)
+			if err != nil {
+				if status.Code(err) == codes.NotFound {
+					resp.State.RemoveResource(ctx)
+					return
+				}
+				resp.Diagnostics.AddError("Error reading policy", err.Error())
+				return
+			}
+
+			state = NewEnterpriseToModelConverter(&resp.Diagnostics).Policy(getRes.GetPolicy())
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -201,21 +214,39 @@ func (r *PolicyResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbPolicy := NewModelToEnterpriseConverter(&resp.Diagnostics).Policy(plan)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+		func(client sdk.Client) {
+			apiPolicy := NewModelToAPIConverter(&resp.Diagnostics).Policy(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 
-		setReq := &pb.SetPolicyRequest{
-			Policy: pbPolicy,
-		}
-		_, err := client.PolicyService.SetPolicy(ctx, setReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error updating policy", err.Error())
-			return
-		}
-	})...)
+			updateReq := connect.NewRequest(&pomerium.UpdatePolicyRequest{
+				Policy: apiPolicy,
+			})
+			updateRes, err := client.UpdatePolicy(ctx, updateReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error updating policy", err.Error())
+				return
+			}
+
+			plan = NewAPIToModelConverter(&resp.Diagnostics).Policy(updateRes.Msg.Policy)
+		},
+		func(client *client.Client) {
+			pbPolicy := NewModelToEnterpriseConverter(&resp.Diagnostics).Policy(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			setReq := &pb.SetPolicyRequest{
+				Policy: pbPolicy,
+			}
+			_, err := client.PolicyService.SetPolicy(ctx, setReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error updating policy", err.Error())
+				return
+			}
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -231,16 +262,27 @@ func (r *PolicyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		deleteReq := &pb.DeletePolicyRequest{
-			Id: state.ID.ValueString(),
-		}
-		_, err := client.PolicyService.DeletePolicy(ctx, deleteReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error deleting policy", err.Error())
-			return
-		}
-	})...)
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+		func(client sdk.Client) {
+			deleteReq := connect.NewRequest(&pomerium.DeletePolicyRequest{
+				Id: state.ID.ValueString(),
+			})
+			_, err := client.DeletePolicy(ctx, deleteReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error deleting policy", err.Error())
+				return
+			}
+		},
+		func(client *client.Client) {
+			deleteReq := &pb.DeletePolicyRequest{
+				Id: state.ID.ValueString(),
+			}
+			_, err := client.PolicyService.DeletePolicy(ctx, deleteReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error deleting policy", err.Error())
+				return
+			}
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

@@ -24,23 +24,23 @@ func NewModelToAPIConverter(diagnostics *diag.Diagnostics) *ModelToAPIConverter 
 
 func (c *ModelToAPIConverter) Policy(src PolicyModel) *pomerium.Policy {
 	return &pomerium.Policy{
-		AllowedDomains:   nil,
-		AllowedIdpClaims: nil,
-		AllowedUsers:     nil,
-		AssignedRoutes:   nil,
-		CreatedAt:        nil,
+		AllowedDomains:   nil, // not supported
+		AllowedIdpClaims: nil, // not supported
+		AllowedUsers:     nil, // not supported
+		AssignedRoutes:   nil, // not supported
+		CreatedAt:        nil, // not supported
 		Description:      proto.String(src.Description.ValueString()),
 		Enforced:         proto.Bool(src.Enforced.ValueBool()),
-		EnforcedRoutes:   nil,
+		EnforcedRoutes:   nil, // not supported
 		Explanation:      proto.String(src.Explanation.ValueString()),
 		Id:               c.NullableString(src.ID),
-		ModifiedAt:       nil,
-		Name:             c.NullableString(src.Name),
+		ModifiedAt:       nil, // not supported
+		Name:             proto.String(src.Name.ValueString()),
 		NamespaceId:      c.NullableString(src.NamespaceID),
-		NamespaceName:    nil,
+		NamespaceName:    nil, // not supported
 		OriginatorId:     proto.String(OriginatorID),
 		Rego:             c.StringSliceFromList(path.Root("rego"), src.Rego),
 		Remediation:      proto.String(src.Remediation.ValueString()),
-		SourcePpl:        zeroToNil(string(src.PPL.PolicyJSON)),
+		SourcePpl:        proto.String(string(src.PPL.PolicyJSON)),
 	}
 }
