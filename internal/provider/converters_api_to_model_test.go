@@ -17,6 +17,44 @@ import (
 
 func TestAPIToModel(t *testing.T) {
 	t.Parallel()
+	t.Run("KeyPair", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("empty", func(t *testing.T) {
+			t.Parallel()
+
+			var diagnostics diag.Diagnostics
+			result := provider.NewAPIToModelConverter(&diagnostics).KeyPair(&pomerium.KeyPair{})
+			assert.Equal(t, provider.KeyPairModel{
+				Certificate: types.StringNull(),
+				ID:          types.StringNull(),
+				Key:         types.StringNull(),
+				Name:        types.StringNull(),
+				NamespaceID: types.StringNull(),
+			}, result)
+			assert.Empty(t, diagnostics)
+		})
+		t.Run("properties", func(t *testing.T) {
+			t.Parallel()
+
+			var diagnostics diag.Diagnostics
+			result := provider.NewAPIToModelConverter(&diagnostics).KeyPair(&pomerium.KeyPair{
+				Certificate: []byte("CERTIFICATE"),
+				Id:          proto.String("ID"),
+				Key:         []byte("KEY"),
+				Name:        proto.String("NAME"),
+				NamespaceId: proto.String("NAMESPACE_ID"),
+			})
+			assert.Equal(t, provider.KeyPairModel{
+				Certificate: types.StringValue("CERTIFICATE"),
+				ID:          types.StringValue("ID"),
+				Key:         types.StringValue("KEY"),
+				Name:        types.StringValue("NAME"),
+				NamespaceID: types.StringValue("NAMESPACE_ID"),
+			}, result)
+			assert.Empty(t, diagnostics)
+		})
+	})
 	t.Run("Policy", func(t *testing.T) {
 		t.Parallel()
 

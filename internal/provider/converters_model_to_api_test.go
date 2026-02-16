@@ -17,6 +17,45 @@ import (
 
 func TestModelToAPI(t *testing.T) {
 	t.Parallel()
+	t.Run("KeyPair", func(t *testing.T) {
+		t.Parallel()
+
+		t.Run("empty", func(t *testing.T) {
+			t.Parallel()
+
+			var diagnostics diag.Diagnostics
+			result := provider.NewModelToAPIConverter(&diagnostics).KeyPair(provider.KeyPairModel{})
+			assert.Empty(t, cmp.Diff(&pomerium.KeyPair{
+				Origin:       pomerium.KeyPairOrigin_KEY_PAIR_ORIGIN_USER,
+				OriginatorId: proto.String(provider.OriginatorID),
+				Status:       pomerium.KeyPairStatus_KEY_PAIR_STATUS_READY,
+			}, result, protocmp.Transform()))
+			assert.Empty(t, diagnostics)
+		})
+		t.Run("properties", func(t *testing.T) {
+			t.Parallel()
+
+			var diagnostics diag.Diagnostics
+			result := provider.NewModelToAPIConverter(&diagnostics).KeyPair(provider.KeyPairModel{
+				Certificate: types.StringValue("CERTIFICATE"),
+				ID:          types.StringValue("ID"),
+				Key:         types.StringValue("KEY"),
+				Name:        types.StringValue("NAME"),
+				NamespaceID: types.StringValue("NAMESPACE_ID"),
+			})
+			assert.Empty(t, cmp.Diff(&pomerium.KeyPair{
+				Certificate:  []byte("CERTIFICATE"),
+				Id:           proto.String("ID"),
+				Key:          []byte("KEY"),
+				Name:         proto.String("NAME"),
+				NamespaceId:  proto.String("NAMESPACE_ID"),
+				Origin:       pomerium.KeyPairOrigin_KEY_PAIR_ORIGIN_USER,
+				OriginatorId: proto.String(provider.OriginatorID),
+				Status:       pomerium.KeyPairStatus_KEY_PAIR_STATUS_READY,
+			}, result, protocmp.Transform()))
+			assert.Empty(t, diagnostics)
+		})
+	})
 	t.Run("Policy", func(t *testing.T) {
 		t.Parallel()
 
