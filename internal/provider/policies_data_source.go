@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 
+	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -11,6 +12,7 @@ import (
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go"
 )
 
 var _ datasource.DataSource = &PoliciesDataSource{}
@@ -135,33 +137,58 @@ func (d *PoliciesDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		listReq := &pb.ListPoliciesRequest{
-			Namespace: data.NamespaceID.ValueString(),
-			Query:     data.Query.ValueStringPointer(),
-			Offset:    data.Offset.ValueInt64Pointer(),
-			Limit:     data.Limit.ValueInt64Pointer(),
-			OrderBy:   data.OrderBy.ValueStringPointer(),
-			ClusterId: data.ClusterID.ValueStringPointer(),
-		}
-		listRes, err := client.PolicyService.ListPolicies(ctx, listReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error reading policies", err.Error())
-			return
-		}
-
-		policies := make([]PolicyModel, 0, len(listRes.Policies))
-		for _, policy := range listRes.Policies {
-			policyModel := NewEnterpriseToModelConverter(&resp.Diagnostics).Policy(policy)
+	resp.Diagnostics.Append(d.client.ConsolidatedOrLegacy(ctx,
+		func(client sdk.Client) {
+			listReq := connect.NewRequest(NewModelToAPIConverter(&resp.Diagnostics).ListPoliciesRequest(data))
 			if resp.Diagnostics.HasError() {
 				return
 			}
-			policies = append(policies, policyModel)
-		}
 
-		data.Policies = policies
-		data.TotalCount = types.Int64Value(listRes.GetTotalCount())
-	})...)
+			listRes, err := client.ListPolicies(ctx, listReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error listing policies", err.Error())
+				return
+			}
+
+			policies := make([]PolicyModel, 0, len(listRes.Msg.Policies))
+			for _, policy := range listRes.Msg.Policies {
+				policyModel := NewAPIToModelConverter(&resp.Diagnostics).Policy(policy)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				policies = append(policies, policyModel)
+			}
+
+			data.Policies = policies
+			data.TotalCount = types.Int64Value(int64(listRes.Msg.TotalCount))
+		},
+		func(client *client.Client) {
+			listReq := &pb.ListPoliciesRequest{
+				Namespace: data.NamespaceID.ValueString(),
+				Query:     data.Query.ValueStringPointer(),
+				Offset:    data.Offset.ValueInt64Pointer(),
+				Limit:     data.Limit.ValueInt64Pointer(),
+				OrderBy:   data.OrderBy.ValueStringPointer(),
+				ClusterId: data.ClusterID.ValueStringPointer(),
+			}
+			listRes, err := client.PolicyService.ListPolicies(ctx, listReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error reading policies", err.Error())
+				return
+			}
+
+			policies := make([]PolicyModel, 0, len(listRes.Policies))
+			for _, policy := range listRes.Policies {
+				policyModel := NewEnterpriseToModelConverter(&resp.Diagnostics).Policy(policy)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				policies = append(policies, policyModel)
+			}
+
+			data.Policies = policies
+			data.TotalCount = types.Int64Value(listRes.GetTotalCount())
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

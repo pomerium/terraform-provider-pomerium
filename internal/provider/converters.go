@@ -280,6 +280,13 @@ func (c *baseModelConverter) NullableUint32(src types.Int64) *uint32 {
 	return proto.Uint32(uint32(src.ValueInt64()))
 }
 
+func (c *baseModelConverter) NullableUint64(src types.Int64) *uint64 {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	return proto.Uint64(uint64(src.ValueInt64()))
+}
+
 func (c *baseModelConverter) StringMap(p path.Path, src types.Map) map[string]string {
 	if src.IsNull() || src.IsUnknown() {
 		return nil

@@ -175,13 +175,13 @@ func (r *PolicyResource) Read(ctx context.Context, req resource.ReadRequest, res
 			getReq := connect.NewRequest(&pomerium.GetPolicyRequest{
 				Id: state.ID.ValueString(),
 			})
-			createRes, err := client.GetPolicy(ctx, getReq)
+			getRes, err := client.GetPolicy(ctx, getReq)
 			if err != nil {
 				resp.Diagnostics.AddError("Error getting policy", err.Error())
 				return
 			}
 
-			state = NewAPIToModelConverter(&resp.Diagnostics).Policy(createRes.Msg.Policy)
+			state = NewAPIToModelConverter(&resp.Diagnostics).Policy(getRes.Msg.Policy)
 		},
 		func(client *client.Client) {
 			getReq := &pb.GetPolicyRequest{

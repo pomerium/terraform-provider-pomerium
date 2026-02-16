@@ -3,7 +3,9 @@ package provider
 import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	"github.com/pomerium/sdk-go/proto/pomerium"
 )
@@ -20,6 +22,34 @@ func NewModelToAPIConverter(diagnostics *diag.Diagnostics) *ModelToAPIConverter 
 		},
 		diagnostics: diagnostics,
 	}
+}
+
+func (c *ModelToAPIConverter) ListPoliciesRequest(src PoliciesDataSourceModel) *pomerium.ListPoliciesRequest {
+	filter := c.Filter(map[string]types.String{
+		"cluster_id":   src.ClusterID,
+		"namespace_id": src.NamespaceID,
+		"query":        src.Query,
+	})
+	return &pomerium.ListPoliciesRequest{
+		Filter:  filter,
+		Limit:   c.NullableUint64(src.Limit),
+		Offset:  c.NullableUint64(src.Offset),
+		OrderBy: c.NullableString(src.OrderBy),
+	}
+}
+
+func (c *ModelToAPIConverter) Filter(src map[string]types.String) *structpb.Struct {
+	var dst *structpb.Struct
+	for field, value := range src {
+		if value.IsNull() || value.IsUnknown() {
+			continue
+		}
+		if dst == nil {
+			dst = &structpb.Struct{Fields: map[string]*structpb.Value{}}
+		}
+		dst.Fields[field] = structpb.NewStringValue(value.ValueString())
+	}
+	return dst
 }
 
 func (c *ModelToAPIConverter) Policy(src PolicyModel) *pomerium.Policy {
