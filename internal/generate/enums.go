@@ -65,7 +65,7 @@ func generateEnterpriseToModelEnums(_ context.Context) error {
 						if typeName != "IssuerFormat" {
 							name = strings.ToLower(name)
 						}
-						if name == "unknown" || name == "undefined_do_not_use" || name == "unspecified" {
+						if shouldIgnoreEnumValue(valueDesc) {
 							continue
 						}
 						g.Case(jen.Lit(int(valueDesc.Number()))).Block(
@@ -125,7 +125,7 @@ func generateModelToEnterpriseEnums(_ context.Context) error {
 					for i := range desc.Values().Len() {
 						valueDesc := desc.Values().Get(i)
 						name := strings.ToLower(strings.TrimPrefix(string(valueDesc.Name()), valuePrefix))
-						if name == "unknown" || name == "undefined_do_not_use" || name == "unspecified" {
+						if shouldIgnoreEnumValue(valueDesc) {
 							continue
 						}
 						g.Case(jen.Lit(name)).Block(
@@ -146,4 +146,10 @@ func generateModelToEnterpriseEnums(_ context.Context) error {
 	}
 
 	return f.Save("./internal/provider/converters_model_to_enterprise.gen.go")
+}
+
+func shouldIgnoreEnumValue(enumValueDesc protoreflect.EnumValueDescriptor) bool {
+	return strings.HasSuffix(strings.ToLower(string(enumValueDesc.Name())), "unknown") ||
+		strings.HasSuffix(strings.ToLower(string(enumValueDesc.Name())), "undefined_do_not_use") ||
+		strings.HasSuffix(strings.ToLower(string(enumValueDesc.Name())), "unspecified")
 }

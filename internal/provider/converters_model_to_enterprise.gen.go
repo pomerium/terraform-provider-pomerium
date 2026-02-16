@@ -145,8 +145,6 @@ func (c *ModelToEnterpriseConverter) OAuth2AuthStyle(p path.Path, src types.Stri
 	}
 
 	switch strings.ToLower(src.ValueString()) {
-	case "oauth2_auth_style_unspecified":
-		return pb.OAuth2AuthStyle(0).Enum()
 	case "oauth2_auth_style_in_params":
 		return pb.OAuth2AuthStyle(1).Enum()
 	case "oauth2_auth_style_in_header":
