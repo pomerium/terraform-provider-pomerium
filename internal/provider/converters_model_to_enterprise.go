@@ -3,7 +3,6 @@ package provider
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -139,18 +138,10 @@ func (c *ModelToEnterpriseConverter) HealthCheck(src types.Object) *enterprise.H
 		if !httpPath.IsNull() {
 			httpHealthCheck.Path = httpPath.ValueString()
 		}
-		if !codecType.IsNull() {
-			// Handle codec client type enum properly
-			switch codecType.ValueString() {
-			case "HTTP1":
-				httpHealthCheck.CodecClientType = enterprise.CodecClientType_HTTP1
-			case "HTTP2":
-				httpHealthCheck.CodecClientType = enterprise.CodecClientType_HTTP2
-			default:
-				// Default to HTTP1 if not specified or invalid
-				httpHealthCheck.CodecClientType = enterprise.CodecClientType_HTTP1
-				c.diagnostics.AddAttributeError(path.Root("codec_client_type"), "unknown codec client type", fmt.Sprintf("unknown codec client type: %s", codecType.ValueString()))
-			}
+		if codecClientType := c.CodecClientType(path.Root("codec_client_type"), codecType); codecClientType != nil {
+			httpHealthCheck.CodecClientType = *codecClientType
+		} else {
+			httpHealthCheck.CodecClientType = enterprise.CodecClientType_HTTP1
 		}
 
 		if !expectedStatuses.IsNull() {

@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"encoding/base64"
 	"fmt"
 	"strings"
 
@@ -40,6 +41,111 @@ func (c *APIToModelConverter) CircuitBreakerThresholds(src *pomerium.CircuitBrea
 	})
 	c.diagnostics.Append(diagnostics...)
 	return dst
+}
+
+func (c *APIToModelConverter) HealthCheck(src *pomerium.HealthCheck) types.Object {
+	if src == nil {
+		return types.ObjectNull(HealthCheckObjectType().AttrTypes)
+	}
+
+	attrs := map[string]attr.Value{
+		"timeout":                 c.Duration(src.Timeout),
+		"interval":                c.Duration(src.Interval),
+		"initial_jitter":          c.Duration(src.InitialJitter),
+		"interval_jitter":         c.Duration(src.IntervalJitter),
+		"interval_jitter_percent": UInt32ToInt64OrNull(src.IntervalJitterPercent),
+		"unhealthy_threshold":     UInt32ToInt64OrNull(src.GetUnhealthyThreshold().GetValue()),
+		"healthy_threshold":       UInt32ToInt64OrNull(src.GetHealthyThreshold().GetValue()),
+		"http_health_check":       types.ObjectNull(HTTPHealthCheckObjectType().AttrTypes),
+		"tcp_health_check":        types.ObjectNull(TCPHealthCheckObjectType().AttrTypes),
+		"grpc_health_check":       types.ObjectNull(GrpcHealthCheckObjectType().AttrTypes),
+	}
+
+	if httpHc := src.GetHttpHealthCheck(); httpHc != nil {
+		expectedStatusesElem := []attr.Value{}
+		for _, status := range httpHc.ExpectedStatuses {
+			expectedStatusesElem = append(expectedStatusesElem, c.HealthCheckInt64Range(status))
+		}
+		expectedStatuses, _ := types.SetValue(Int64RangeObjectType(), expectedStatusesElem)
+
+		retriableStatusesElem := []attr.Value{}
+		for _, status := range httpHc.RetriableStatuses {
+			retriableStatusesElem = append(retriableStatusesElem, c.HealthCheckInt64Range(status))
+		}
+		retriableStatuses, _ := types.SetValue(Int64RangeObjectType(), retriableStatusesElem)
+
+		httpAttrs := map[string]attr.Value{
+			"host":               types.StringValue(httpHc.Host),
+			"path":               types.StringValue(httpHc.Path),
+			"expected_statuses":  expectedStatuses,
+			"retriable_statuses": retriableStatuses,
+			"codec_client_type":  types.StringValue(httpHc.CodecClientType.String()),
+		}
+
+		httpHealthCheck, _ := types.ObjectValue(HTTPHealthCheckObjectType().AttrTypes, httpAttrs)
+		attrs["http_health_check"] = httpHealthCheck
+	} else if tcpHc := src.GetTcpHealthCheck(); tcpHc != nil {
+		sendPayload := c.HealthCheckPayload(tcpHc.Send)
+
+		receiveElements := []attr.Value{}
+		for _, payload := range tcpHc.Receive {
+			payloadObj := c.HealthCheckPayload(payload)
+			receiveElements = append(receiveElements, payloadObj)
+		}
+		receiveSet, _ := types.SetValue(HealthCheckPayloadObjectType(), receiveElements)
+
+		tcpAttrs := map[string]attr.Value{
+			"send":    sendPayload,
+			"receive": receiveSet,
+		}
+
+		tcpHealthCheck, _ := types.ObjectValue(TCPHealthCheckObjectType().AttrTypes, tcpAttrs)
+		attrs["tcp_health_check"] = tcpHealthCheck
+	} else if grpcHc := src.GetGrpcHealthCheck(); grpcHc != nil {
+		grpcAttrs := map[string]attr.Value{
+			"service_name": types.StringValue(grpcHc.ServiceName),
+			"authority":    types.StringValue(grpcHc.Authority),
+		}
+
+		grpcHealthCheck, _ := types.ObjectValue(GrpcHealthCheckObjectType().AttrTypes, grpcAttrs)
+		attrs["grpc_health_check"] = grpcHealthCheck
+	} else {
+		c.diagnostics.AddAttributeError(path.Root("health_checks"), "health check not specified", "must specify one of http_health_check, tcp_health_check, or grpc_health_check")
+	}
+
+	dst, diagnostics := types.ObjectValue(HealthCheckObjectType().AttrTypes, attrs)
+	c.diagnostics.Append(diagnostics...)
+	return dst
+}
+
+func (c *APIToModelConverter) HealthCheckPayload(src *pomerium.HealthCheck_Payload) types.Object {
+	if src == nil {
+		return types.ObjectNull(HealthCheckPayloadObjectType().AttrTypes)
+	}
+
+	attrs := map[string]attr.Value{
+		"text":       types.StringNull(),
+		"binary_b64": types.StringNull(),
+	}
+
+	switch p := src.GetPayload().(type) {
+	case *pomerium.HealthCheck_Payload_Text:
+		attrs["text"] = types.StringValue(p.Text)
+	case *pomerium.HealthCheck_Payload_Binary:
+		attrs["binary_b64"] = types.StringValue(base64.StdEncoding.EncodeToString(p.Binary))
+	}
+
+	return types.ObjectValueMust(HealthCheckPayloadObjectType().AttrTypes, attrs)
+}
+
+func (c *APIToModelConverter) HealthCheckInt64Range(src *pomerium.HealthCheck_Int64Range) types.Object {
+	if src == nil {
+		return types.ObjectNull(Int64RangeObjectType().AttrTypes)
+	}
+	return types.ObjectValueMust(Int64RangeObjectType().AttrTypes, map[string]attr.Value{
+		"start": types.Int64Value(src.Start),
+		"end":   types.Int64Value(src.End),
+	})
 }
 
 func (c *APIToModelConverter) JWTGroupsFilter(src []string, inferFromPPL *bool) types.Object {
@@ -89,6 +195,74 @@ func (c *APIToModelConverter) Policy(src *pomerium.Policy) PolicyModel {
 		Rego:        FromStringSliceToList(src.Rego),
 		Remediation: types.StringValue(src.GetRemediation()),
 	}
+}
+
+func (c *APIToModelConverter) Route(src *pomerium.Route) RouteModel {
+	return RouteModel{
+		AllowSPDY:                types.BoolValue(src.AllowSpdy),
+		AllowWebsockets:          types.BoolValue(src.AllowWebsockets),
+		BearerTokenFormat:        c.BearerTokenFormat(src.BearerTokenFormat),
+		CircuitBreakerThresholds: c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
+		DependsOnHosts:           FromStringSliceToSet(src.DependsOn),
+		Description:              types.StringPointerValue(src.Description),
+		EnableGoogleCloudServerlessAuthentication: types.BoolPointerValue(zeroToNil(src.EnableGoogleCloudServerlessAuthentication)),
+		From:                              types.StringValue(src.From),
+		HealthChecks:                      toSetOfObjects(src.HealthChecks, HealthCheckObjectType(), c.HealthCheck),
+		HealthyPanicThreshold:             types.Int32PointerValue(src.HealthyPanicThreshold),
+		HostPathRegexRewritePattern:       types.StringPointerValue(src.HostPathRegexRewritePattern),
+		HostPathRegexRewriteSubstitution:  types.StringPointerValue(src.HostPathRegexRewriteSubstitution),
+		HostRewrite:                       types.StringPointerValue(src.HostRewrite),
+		HostRewriteHeader:                 types.StringPointerValue(src.HostRewriteHeader),
+		ID:                                types.StringPointerValue(src.Id),
+		IdleTimeout:                       c.Duration(src.IdleTimeout),
+		IDPAccessTokenAllowedAudiences:    FromStringList(src.IdpAccessTokenAllowedAudiences),
+		IDPClientID:                       types.StringPointerValue(src.IdpClientId),
+		IDPClientSecret:                   types.StringPointerValue(src.IdpClientSecret),
+		JWTGroupsFilter:                   c.JWTGroupsFilter(src.JwtGroupsFilter, src.JwtGroupsFilterInferFromPpl),
+		JWTIssuerFormat:                   c.IssuerFormat(src.JwtIssuerFormat),
+		KubernetesServiceAccountToken:     types.StringValue(src.KubernetesServiceAccountToken),
+		KubernetesServiceAccountTokenFile: types.StringValue(src.KubernetesServiceAccountTokenFile),
+		LoadBalancingPolicy:               OptionalEnumValueFromPB(src.LoadBalancingPolicy, "LOAD_BALANCING_POLICY"),
+		LogoURL:                           types.StringPointerValue(src.LogoUrl),
+		Name:                              types.StringPointerValue(src.Name),
+		NamespaceID:                       types.StringPointerValue(src.NamespaceId),
+		PassIdentityHeaders:               types.BoolPointerValue(src.PassIdentityHeaders),
+		Path:                              types.StringValue(src.Path),
+		Policies:                          c.SetFromStringSlice(src.PolicyIds),
+		Prefix:                            types.StringValue(src.Prefix),
+		PrefixRewrite:                     types.StringValue(src.PrefixRewrite),
+		PreserveHostHeader:                types.BoolValue(src.PreserveHostHeader),
+		Regex:                             types.StringValue(src.Regex),
+		RegexPriorityOrder:                types.Int64PointerValue(src.RegexPriorityOrder),
+		RegexRewritePattern:               types.StringValue(src.RegexRewritePattern),
+		RegexRewriteSubstitution:          types.StringValue(src.RegexRewriteSubstitution),
+		RemoveRequestHeaders:              FromStringSliceToSet(src.RemoveRequestHeaders),
+		RewriteResponseHeaders:            toSetOfObjects(src.RewriteResponseHeaders, RewriteHeaderObjectType(), c.RouteRewriteHeader),
+		SetRequestHeaders:                 FromStringMap(src.SetRequestHeaders),
+		SetResponseHeaders:                FromStringMap(src.SetResponseHeaders),
+		ShowErrorDetails:                  types.BoolValue(src.ShowErrorDetails),
+		StatName:                          types.StringPointerValue(src.StatName),
+		Timeout:                           c.Duration(src.Timeout),
+		TLSClientKeyPairID:                types.StringPointerValue(src.TlsClientKeyPairId),
+		TLSCustomCAKeyPairID:              types.StringPointerValue(src.TlsCustomCaKeyPairId),
+		TLSDownstreamServerName:           types.StringValue(src.TlsDownstreamServerName),
+		TLSSkipVerify:                     types.BoolValue(src.TlsSkipVerify),
+		TLSUpstreamAllowRenegotiation:     types.BoolValue(src.TlsUpstreamAllowRenegotiation),
+		TLSUpstreamServerName:             types.StringValue(src.TlsUpstreamServerName),
+		To:                                FromStringSliceToSet(src.To),
+	}
+}
+
+func (c *APIToModelConverter) RouteRewriteHeader(src *pomerium.RouteRewriteHeader) types.Object {
+	if src == nil {
+		return types.ObjectNull(RewriteHeaderObjectType().AttrTypes)
+	}
+
+	return types.ObjectValueMust(RewriteHeaderObjectType().AttrTypes, map[string]attr.Value{
+		"header": types.StringValue(src.GetHeader()),
+		"value":  types.StringValue(src.GetValue()),
+		"prefix": types.StringPointerValue(zeroToNil(src.GetPrefix())),
+	})
 }
 
 func (c *APIToModelConverter) ServiceAccount(src *pomerium.ServiceAccount) ServiceAccountModel {

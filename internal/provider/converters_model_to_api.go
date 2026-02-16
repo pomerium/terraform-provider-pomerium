@@ -2,13 +2,16 @@ package provider
 
 import (
 	"context"
+	"encoding/base64"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/structpb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"github.com/pomerium/sdk-go/proto/pomerium"
 )
@@ -60,6 +63,161 @@ func (c *ModelToAPIConverter) Filter(src map[string]types.String) *structpb.Stru
 		dst.Fields[field] = structpb.NewStringValue(value.ValueString())
 	}
 	return dst
+}
+
+func (c *ModelToAPIConverter) HealthCheck(src types.Object) *pomerium.HealthCheck {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	attrs := src.Attributes()
+
+	// Convert basic fields
+	timeout := attrs["timeout"].(timetypes.GoDuration)
+	interval := attrs["interval"].(timetypes.GoDuration)
+	initialJitter := attrs["initial_jitter"].(timetypes.GoDuration)
+	intervalJitter := attrs["interval_jitter"].(timetypes.GoDuration)
+	intervalJitterPercent := attrs["interval_jitter_percent"].(types.Int64)
+	unhealthyThreshold := attrs["unhealthy_threshold"].(types.Int64)
+	healthyThreshold := attrs["healthy_threshold"].(types.Int64)
+
+	dst := &pomerium.HealthCheck{
+		Timeout:               c.Duration(path.Root("timeout"), timeout),
+		Interval:              c.Duration(path.Root("interval"), interval),
+		InitialJitter:         c.Duration(path.Root("initial_jitter"), initialJitter),
+		IntervalJitter:        c.Duration(path.Root("interval_jitter"), intervalJitter),
+		IntervalJitterPercent: uint32(intervalJitterPercent.ValueInt64()),
+		UnhealthyThreshold:    wrapperspb.UInt32(uint32(unhealthyThreshold.ValueInt64())),
+		HealthyThreshold:      wrapperspb.UInt32(uint32(healthyThreshold.ValueInt64())),
+	}
+
+	httpHc := attrs["http_health_check"].(types.Object)
+	tcpHc := attrs["tcp_health_check"].(types.Object)
+	grpcHc := attrs["grpc_health_check"].(types.Object)
+
+	if !httpHc.IsNull() {
+		httpAttrs := httpHc.Attributes()
+		httpHealthCheck := &pomerium.HealthCheck_HttpHealthCheck{}
+
+		host := httpAttrs["host"].(types.String)
+		httpPath := httpAttrs["path"].(types.String)
+		codecType := httpAttrs["codec_client_type"].(types.String)
+		expectedStatuses := httpAttrs["expected_statuses"].(types.Set)
+		retriableStatuses := httpAttrs["retriable_statuses"].(types.Set)
+
+		if !host.IsNull() {
+			httpHealthCheck.Host = host.ValueString()
+		}
+		if !httpPath.IsNull() {
+			httpHealthCheck.Path = httpPath.ValueString()
+		}
+		if codecClientType := c.HealthCheckCodecClientType(path.Root("codec_client_type"), codecType); codecClientType != nil {
+			httpHealthCheck.CodecClientType = *codecClientType
+		} else {
+			httpHealthCheck.CodecClientType = pomerium.HealthCheck_HTTP1
+		}
+
+		if !expectedStatuses.IsNull() {
+			for _, elem := range expectedStatuses.Elements() {
+				obj := elem.(types.Object)
+				httpHealthCheck.ExpectedStatuses = append(httpHealthCheck.ExpectedStatuses, c.Int64Range(obj))
+			}
+		}
+
+		if !retriableStatuses.IsNull() {
+			for _, elem := range retriableStatuses.Elements() {
+				obj := elem.(types.Object)
+				httpHealthCheck.RetriableStatuses = append(httpHealthCheck.RetriableStatuses, c.Int64Range(obj))
+			}
+		}
+
+		dst.HealthChecker = &pomerium.HealthCheck_HttpHealthCheck_{
+			HttpHealthCheck: httpHealthCheck,
+		}
+	} else if !tcpHc.IsNull() {
+		tcpAttrs := tcpHc.Attributes()
+		tcpHealthCheck := &pomerium.HealthCheck_TcpHealthCheck{}
+
+		send := tcpAttrs["send"].(types.Object)
+		receive := tcpAttrs["receive"].(types.Set)
+
+		if !send.IsNull() {
+			tcpHealthCheck.Send = c.HealthCheckPayload(send)
+		}
+
+		if !receive.IsNull() {
+			for _, elem := range receive.Elements() {
+				obj := elem.(types.Object)
+				tcpHealthCheck.Receive = append(tcpHealthCheck.Receive, c.HealthCheckPayload(obj))
+			}
+		}
+
+		dst.HealthChecker = &pomerium.HealthCheck_TcpHealthCheck_{
+			TcpHealthCheck: tcpHealthCheck,
+		}
+	} else if !grpcHc.IsNull() {
+		grpcAttrs := grpcHc.Attributes()
+		grpcHealthCheck := &pomerium.HealthCheck_GrpcHealthCheck{}
+
+		serviceName := grpcAttrs["service_name"].(types.String)
+		authority := grpcAttrs["authority"].(types.String)
+
+		if !serviceName.IsNull() {
+			grpcHealthCheck.ServiceName = serviceName.ValueString()
+		}
+		if !authority.IsNull() {
+			grpcHealthCheck.Authority = authority.ValueString()
+		}
+
+		dst.HealthChecker = &pomerium.HealthCheck_GrpcHealthCheck_{
+			GrpcHealthCheck: grpcHealthCheck,
+		}
+	} else {
+		c.diagnostics.AddAttributeError(path.Root("health_checks"), "health check not specified", "must specify one of http_health_check, tcp_health_check, or grpc_health_check")
+	}
+
+	return dst
+}
+
+func (c *ModelToAPIConverter) HealthCheckPayload(src types.Object) *pomerium.HealthCheck_Payload {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	attrs := src.Attributes()
+	payload := new(pomerium.HealthCheck_Payload)
+
+	text := attrs["text"].(types.String)
+	binaryB64 := attrs["binary_b64"].(types.String)
+
+	if !text.IsNull() {
+		payload.Payload = &pomerium.HealthCheck_Payload_Text{
+			Text: text.ValueString(),
+		}
+	} else if !binaryB64.IsNull() {
+		binaryData, err := base64.StdEncoding.DecodeString(binaryB64.ValueString())
+		if err != nil {
+			c.diagnostics.AddError("Invalid base64 data", "Could not decode base64 binary payload: "+err.Error())
+			return nil
+		}
+		payload.Payload = &pomerium.HealthCheck_Payload_Binary{
+			Binary: binaryData,
+		}
+	}
+
+	return payload
+}
+
+func (c *ModelToAPIConverter) Int64Range(src types.Object) *pomerium.HealthCheck_Int64Range {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	attrs := src.Attributes()
+	return &pomerium.HealthCheck_Int64Range{
+		Start: attrs["start"].(types.Int64).ValueInt64(),
+		End:   attrs["end"].(types.Int64).ValueInt64(),
+	}
 }
 
 func (c *ModelToAPIConverter) JWTGroupsFilter(src types.Object) []string {
@@ -155,6 +313,88 @@ func (c *ModelToAPIConverter) Policy(src PolicyModel) *pomerium.Policy {
 		Remediation:      proto.String(src.Remediation.ValueString()),
 		SourcePpl:        proto.String(string(src.PPL.PolicyJSON)),
 	}
+}
+
+func (c *ModelToAPIConverter) Route(src RouteModel) *pomerium.Route {
+	return &pomerium.Route{
+		AllowSpdy:                src.AllowSPDY.ValueBool(),
+		AllowWebsockets:          src.AllowWebsockets.ValueBool(),
+		BearerTokenFormat:        c.BearerTokenFormat(path.Root("bearer_token_format"), src.BearerTokenFormat),
+		CircuitBreakerThresholds: c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
+		DependsOn:                c.StringSliceFromSet(path.Root("depends_on"), src.DependsOnHosts),
+		Description:              src.Description.ValueStringPointer(),
+		EnableGoogleCloudServerlessAuthentication: src.EnableGoogleCloudServerlessAuthentication.ValueBool(),
+		From:                              src.From.ValueString(),
+		HealthChecks:                      fromSetOfObjects(src.HealthChecks, HealthCheckObjectType(), c.HealthCheck),
+		HealthyPanicThreshold:             src.HealthyPanicThreshold.ValueInt32Pointer(),
+		HostPathRegexRewritePattern:       src.HostPathRegexRewritePattern.ValueStringPointer(),
+		HostPathRegexRewriteSubstitution:  src.HostPathRegexRewriteSubstitution.ValueStringPointer(),
+		HostRewrite:                       src.HostRewrite.ValueStringPointer(),
+		HostRewriteHeader:                 src.HostRewriteHeader.ValueStringPointer(),
+		Id:                                c.NullableString(src.ID),
+		IdleTimeout:                       c.Duration(path.Root("idle_timeout"), src.IdleTimeout),
+		IdpAccessTokenAllowedAudiences:    c.RouteStringList(path.Root("idp_access_token_allowed_audiences"), src.IDPAccessTokenAllowedAudiences),
+		IdpClientId:                       src.IDPClientID.ValueStringPointer(),
+		IdpClientSecret:                   src.IDPClientSecret.ValueStringPointer(),
+		JwtGroupsFilter:                   c.JWTGroupsFilter(src.JWTGroupsFilter),
+		JwtIssuerFormat:                   c.IssuerFormat(path.Root("jwt_issuer_format"), src.JWTIssuerFormat),
+		KubernetesServiceAccountToken:     src.KubernetesServiceAccountToken.ValueString(),
+		KubernetesServiceAccountTokenFile: src.KubernetesServiceAccountTokenFile.ValueString(),
+		LoadBalancingPolicy:               c.LoadBalancingPolicy(path.Root("load_balancing_policy"), src.LoadBalancingPolicy),
+		LogoUrl:                           src.LogoURL.ValueStringPointer(),
+		Name:                              c.NullableString(src.Name),
+		NamespaceId:                       c.NullableString(src.NamespaceID),
+		OriginatorId:                      proto.String(OriginatorID),
+		PassIdentityHeaders:               src.PassIdentityHeaders.ValueBoolPointer(),
+		Path:                              src.Path.ValueString(),
+		PolicyIds:                         c.StringSliceFromSet(path.Root("policies"), src.Policies),
+		Prefix:                            src.Prefix.ValueString(),
+		PrefixRewrite:                     src.PrefixRewrite.ValueString(),
+		PreserveHostHeader:                src.PreserveHostHeader.ValueBool(),
+		Regex:                             src.Regex.ValueString(),
+		RegexPriorityOrder:                src.RegexPriorityOrder.ValueInt64Pointer(),
+		RegexRewritePattern:               src.RegexRewritePattern.ValueString(),
+		RegexRewriteSubstitution:          src.RegexRewriteSubstitution.ValueString(),
+		RemoveRequestHeaders:              c.StringSliceFromSet(path.Root("remove_request_headers"), src.RemoveRequestHeaders),
+		RewriteResponseHeaders:            fromSetOfObjects(src.RewriteResponseHeaders, RewriteHeaderObjectType(), c.RouteRewriteHeader),
+		SetRequestHeaders:                 c.StringMap(path.Root("set_request_headers"), src.SetRequestHeaders),
+		SetResponseHeaders:                c.StringMap(path.Root("set_response_headers"), src.SetResponseHeaders),
+		ShowErrorDetails:                  src.ShowErrorDetails.ValueBool(),
+		StatName:                          c.NullableString(src.StatName),
+		Timeout:                           c.Duration(path.Root("timeout"), src.Timeout),
+		TlsClientKeyPairId:                src.TLSClientKeyPairID.ValueStringPointer(),
+		TlsCustomCaKeyPairId:              src.TLSCustomCAKeyPairID.ValueStringPointer(),
+		TlsDownstreamServerName:           src.TLSDownstreamServerName.ValueString(),
+		TlsSkipVerify:                     src.TLSSkipVerify.ValueBool(),
+		TlsUpstreamAllowRenegotiation:     src.TLSUpstreamAllowRenegotiation.ValueBool(),
+		TlsUpstreamServerName:             src.TLSUpstreamServerName.ValueString(),
+		To:                                c.StringSliceFromSet(path.Root("to"), src.To),
+	}
+}
+
+func (c *ModelToAPIConverter) RouteRewriteHeader(src types.Object) *pomerium.RouteRewriteHeader {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	prefixAttr := src.Attributes()["prefix"].(types.String)
+	dst := &pomerium.RouteRewriteHeader{
+		Header: src.Attributes()["header"].(types.String).ValueString(),
+		Value:  src.Attributes()["value"].(types.String).ValueString(),
+	}
+	if !prefixAttr.IsNull() && prefixAttr.ValueString() != "" {
+		dst.Matcher = &pomerium.RouteRewriteHeader_Prefix{Prefix: prefixAttr.ValueString()}
+	}
+	return dst
+}
+
+func (c *ModelToAPIConverter) RouteStringList(p path.Path, src types.Set) *pomerium.Route_StringList {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	var values []string
+	appendAttributeDiagnostics(c.diagnostics, p, src.ElementsAs(context.Background(), &values, false)...)
+	return &pomerium.Route_StringList{Values: values}
 }
 
 func (c *ModelToAPIConverter) ServiceAccount(src ServiceAccountModel) *pomerium.ServiceAccount {
