@@ -3,12 +3,14 @@ package provider
 import (
 	"context"
 
+	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go"
 )
 
 var _ datasource.DataSource = &ServiceAccountsDataSource{}
@@ -85,27 +87,51 @@ func (d *ServiceAccountsDataSource) Read(ctx context.Context, req datasource.Rea
 		return
 	}
 
-	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		listReq := &pb.ListPomeriumServiceAccountsRequest{
-			Namespace: data.NamespaceID.ValueString(),
-		}
-		listRes, err := client.PomeriumServiceAccountService.ListPomeriumServiceAccounts(ctx, listReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error reading service accounts", err.Error())
-			return
-		}
-
-		serviceAccounts := make([]ServiceAccountModel, 0, len(listRes.ServiceAccounts))
-		for _, sa := range listRes.ServiceAccounts {
-			saModel := NewEnterpriseToModelConverter(&resp.Diagnostics).ServiceAccount(sa)
+	resp.Diagnostics.Append(d.client.ConsolidatedOrLegacy(ctx,
+		func(client sdk.Client) {
+			listReq := connect.NewRequest(NewModelToAPIConverter(&resp.Diagnostics).ListServiceAccountsRequest(data))
 			if resp.Diagnostics.HasError() {
 				return
 			}
-			serviceAccounts = append(serviceAccounts, saModel)
-		}
 
-		data.ServiceAccounts = serviceAccounts
-	})...)
+			listRes, err := client.ListServiceAccounts(ctx, listReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error listing service accounts", err.Error())
+				return
+			}
+
+			serviceAccounts := make([]ServiceAccountModel, 0, len(listRes.Msg.ServiceAccounts))
+			for _, policy := range listRes.Msg.ServiceAccounts {
+				policyModel := NewAPIToModelConverter(&resp.Diagnostics).ServiceAccount(policy)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				serviceAccounts = append(serviceAccounts, policyModel)
+			}
+
+			data.ServiceAccounts = serviceAccounts
+		},
+		func(client *client.Client) {
+			listReq := &pb.ListPomeriumServiceAccountsRequest{
+				Namespace: data.NamespaceID.ValueString(),
+			}
+			listRes, err := client.PomeriumServiceAccountService.ListPomeriumServiceAccounts(ctx, listReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error reading service accounts", err.Error())
+				return
+			}
+
+			serviceAccounts := make([]ServiceAccountModel, 0, len(listRes.ServiceAccounts))
+			for _, sa := range listRes.ServiceAccounts {
+				saModel := NewEnterpriseToModelConverter(&resp.Diagnostics).ServiceAccount(sa)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				serviceAccounts = append(serviceAccounts, saModel)
+			}
+
+			data.ServiceAccounts = serviceAccounts
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

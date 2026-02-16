@@ -52,6 +52,18 @@ func (c *ModelToAPIConverter) ListPoliciesRequest(src PoliciesDataSourceModel) *
 	}
 }
 
+func (c *ModelToAPIConverter) ListServiceAccountsRequest(src ServiceAccountsDataSourceModel) *pomerium.ListServiceAccountsRequest {
+	filter := c.Filter(map[string]types.String{
+		"namespace_id": src.NamespaceID,
+	})
+	return &pomerium.ListServiceAccountsRequest{
+		Filter:  filter,
+		Limit:   nil, // not supported
+		Offset:  nil, // not supported
+		OrderBy: nil, // not supported
+	}
+}
+
 func (c *ModelToAPIConverter) KeyPair(src KeyPairModel) *pomerium.KeyPair {
 	return &pomerium.KeyPair{
 		Certificate:     c.Bytes(src.Certificate),
@@ -88,5 +100,19 @@ func (c *ModelToAPIConverter) Policy(src PolicyModel) *pomerium.Policy {
 		Rego:             c.StringSliceFromList(path.Root("rego"), src.Rego),
 		Remediation:      proto.String(src.Remediation.ValueString()),
 		SourcePpl:        proto.String(string(src.PPL.PolicyJSON)),
+	}
+}
+
+func (c *ModelToAPIConverter) ServiceAccount(src ServiceAccountModel) *pomerium.ServiceAccount {
+	return &pomerium.ServiceAccount{
+		AccessedAt:   nil, // not supported
+		CreatedAt:    nil, // not supported
+		Description:  c.NullableString(src.Description),
+		ExpiresAt:    c.Timestamp(path.Root("expires_at"), src.ExpiresAt),
+		Id:           c.NullableString(src.ID),
+		ModifiedAt:   nil, // not supported
+		NamespaceId:  zeroToNil(src.NamespaceID.ValueString()),
+		OriginatorId: proto.String(OriginatorID),
+		UserId:       c.NullableString(src.UserID),
 	}
 }

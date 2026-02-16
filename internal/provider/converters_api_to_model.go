@@ -1,6 +1,8 @@
 package provider
 
 import (
+	"strings"
+
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
@@ -46,5 +48,16 @@ func (c *APIToModelConverter) Policy(src *pomerium.Policy) PolicyModel {
 		PPL:         ppl,
 		Rego:        FromStringSliceToList(src.Rego),
 		Remediation: types.StringValue(src.GetRemediation()),
+	}
+}
+
+func (c *APIToModelConverter) ServiceAccount(src *pomerium.ServiceAccount) ServiceAccountModel {
+	return ServiceAccountModel{
+		Description: types.StringPointerValue(src.Description),
+		ExpiresAt:   c.Timestamp(src.ExpiresAt),
+		ID:          types.StringPointerValue(src.Id),
+		Name:        types.StringValue(strings.TrimSuffix(src.GetUserId(), "@"+src.GetNamespaceId()+".pomerium")),
+		NamespaceID: types.StringPointerValue(src.NamespaceId),
+		UserID:      types.StringPointerValue(src.UserId),
 	}
 }
