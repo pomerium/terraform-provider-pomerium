@@ -200,6 +200,6 @@ func getEnumValueName(enumValueDesc protoreflect.EnumValueDescriptor) string {
 
 func shouldIgnoreEnumValue(enumValueDesc protoreflect.EnumValueDescriptor) bool {
 	return strings.HasSuffix(strings.ToLower(string(enumValueDesc.Name())), "unknown") ||
-		strings.HasSuffix(strings.ToLower(string(enumValueDesc.Name())), "undefined_do_not_use") ||
+		strings.HasSuffix(strings.ToLower(string(enumValueDesc.Name())), "do_not_use") ||
 		strings.HasSuffix(strings.ToLower(string(enumValueDesc.Name())), "unspecified")
 }
