@@ -46,12 +46,11 @@ Route for Pomerium.
 - `kubernetes_service_account_token` (String) Kubernetes service account token.
 - `kubernetes_service_account_token_file` (String) Path to the Kubernetes service account token file.
 - `load_balancing_policy` (String) The following values are valid for the Load Balancing Policy field:
-
-- `round_robin`
-- `maglev`
-- `random`
-- `ring_hash`
-- `least_request`
+  - `round_robin`
+  - `maglev`
+  - `random`
+  - `ring_hash`
+  - `least_request`
 - `logo_url` (String) URL to the logo image.
 - `pass_identity_headers` (Boolean) If applied, passes X-Pomerium-Jwt-Assertion header and JWT Claims Headers to the upstream application.
 - `path` (String) Matches incoming requests with a path that is an exact match for the specified path.

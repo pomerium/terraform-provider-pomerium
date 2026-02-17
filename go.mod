@@ -3,6 +3,7 @@ module github.com/pomerium/enterprise-terraform-provider
 go 1.25.4
 
 require (
+	github.com/dave/jennifer v1.7.1
 	github.com/go-jose/go-jose/v3 v3.0.4
 	github.com/google/go-cmp v0.7.0
 	github.com/hashicorp/terraform-plugin-framework v1.17.0

@@ -748,13 +748,15 @@ func TestFromBearerTokenFormat(t *testing.T) {
 		expect types.String
 	}{
 		{"null", nil, types.StringNull()},
-		{"unknown", pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_UNKNOWN.Enum(), types.StringValue("")},
+		{"unknown", pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_UNKNOWN.Enum(), types.StringNull()},
 		{"default", pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_DEFAULT.Enum(), types.StringValue("default")},
 		{"idp_access_token", pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_ACCESS_TOKEN.Enum(), types.StringValue("idp_access_token")},
 		{"idp_identity_token", pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_IDENTITY_TOKEN.Enum(), types.StringValue("idp_identity_token")},
 	} {
-		assert.Equal(t, tc.expect, provider.FromBearerTokenFormat(tc.in),
+		var diagnostics diag.Diagnostics
+		assert.Equal(t, tc.expect, provider.NewEnterpriseToModelConverter(&diagnostics).BearerTokenFormat(tc.in),
 			"%s: should convert %v to %v", tc.name, tc.in, tc.expect)
+		assert.Empty(t, diagnostics)
 	}
 }
 
@@ -791,8 +793,10 @@ func TestFromIssuerFormat(t *testing.T) {
 		{"uri", pb.IssuerFormat_IssuerURI.Enum(), types.StringValue("IssuerURI")},
 		{"unknown", (*pb.IssuerFormat)(proto.Int32(123)), types.StringNull()},
 	} {
-		assert.Equal(t, tc.expect, provider.FromIssuerFormat(tc.in),
+		var diagnostics diag.Diagnostics
+		assert.Equal(t, tc.expect, provider.NewEnterpriseToModelConverter(&diagnostics).IssuerFormat(tc.in),
 			"%s: should convert %v to %v", tc.name, tc.in, tc.expect)
+		assert.Empty(t, diagnostics)
 	}
 }
 
@@ -808,10 +812,10 @@ func TestToIssuerFormat(t *testing.T) {
 		{"null", types.StringNull(), nil, ""},
 		{"host_only", types.StringValue("IssuerHostOnly"), pb.IssuerFormat_IssuerHostOnly.Enum(), ""},
 		{"uri", types.StringValue("IssuerURI"), pb.IssuerFormat_IssuerURI.Enum(), ""},
-		{"unknown", types.StringValue("foobar"), nil, `unknown issuer format "foobar"`},
+		{"unknown", types.StringValue("foobar"), nil, `unknown IssuerFormat: foobar`},
 	} {
 		diagnostics := diag.Diagnostics{}
-		assert.Equal(t, tc.expect, provider.ToIssuerFormat(tc.in, &diagnostics),
+		assert.Equal(t, tc.expect, provider.NewModelToEnterpriseConverter(&diagnostics).IssuerFormat(path.Empty(), tc.in),
 			"%s: should convert %v to %v", tc.name, tc.in, tc.expect)
 		if tc.expectedErrorDetails == "" {
 			assert.False(t, diagnostics.HasError())
@@ -1346,4 +1350,17 @@ func TestCodecClientTypeSilentDefault(t *testing.T) {
 
 	assert.NotEmpty(t, diagnostics,
 		"unrecognized codec_client_type 'HTTP3' should produce a diagnostic error")
+}
+
+func TestPublicKeyAlgorithmZeroValueShouldBeNull(t *testing.T) {
+	t.Parallel()
+
+	var diagnostics diag.Diagnostics
+	c := provider.NewEnterpriseToModelConverter(&diagnostics)
+
+	unknown := pb.PublicKeyAlgorithm_PKA_UNKNOWN_DO_NOT_USE
+	got := c.PublicKeyAlgorithm(&unknown)
+
+	assert.True(t, got.IsNull(),
+		"PublicKeyAlgorithm PKA_UNKNOWN_DO_NOT_USE should be null, got %q", got.ValueString())
 }

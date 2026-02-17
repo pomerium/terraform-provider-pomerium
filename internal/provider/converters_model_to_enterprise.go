@@ -28,26 +28,6 @@ func NewModelToEnterpriseConverter(diagnostics *diag.Diagnostics) *ModelToEnterp
 	}
 }
 
-func (c *ModelToEnterpriseConverter) BearerTokenFormat(p path.Path, src types.String) *enterprise.BearerTokenFormat {
-	if src.IsNull() || src.IsUnknown() {
-		return nil
-	}
-
-	switch src.ValueString() {
-	case "default":
-		return enterprise.BearerTokenFormat_BEARER_TOKEN_FORMAT_DEFAULT.Enum()
-	case "idp_access_token":
-		return enterprise.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_ACCESS_TOKEN.Enum()
-	case "idp_identity_token":
-		return enterprise.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_IDENTITY_TOKEN.Enum()
-	case "":
-		fallthrough
-	default:
-		c.diagnostics.AddAttributeError(p, "unknown bearer token format", fmt.Sprintf("unknown bearer token format: %s", src.ValueString()))
-		return nil
-	}
-}
-
 func (c *ModelToEnterpriseConverter) CircuitBreakerThresholds(src types.Object) *enterprise.CircuitBreakerThresholds {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
@@ -83,28 +63,6 @@ func (c *ModelToEnterpriseConverter) Cluster(src ClusterModel) *enterprise.Clust
 		OriginatorId:             OriginatorID,
 		OverrideCertificateName:  c.NullableString(src.OverrideCertificateName),
 		SharedSecret:             c.BytesFromBase64(path.Root("shared_secret_b64"), src.SharedSecretB64),
-	}
-}
-
-func (c *ModelToEnterpriseConverter) CodecType(p path.Path, src types.String) *enterprise.CodecType {
-	if src.IsNull() || src.IsUnknown() {
-		return nil
-	}
-
-	switch src.ValueString() {
-	case "auto":
-		return enterprise.CodecType_CODEC_TYPE_AUTO.Enum()
-	case "http1":
-		return enterprise.CodecType_CODEC_TYPE_HTTP1.Enum()
-	case "http2":
-		return enterprise.CodecType_CODEC_TYPE_HTTP2.Enum()
-	case "http3":
-		return enterprise.CodecType_CODEC_TYPE_HTTP3.Enum()
-	default:
-		fallthrough
-	case "":
-		c.diagnostics.AddAttributeError(p, "unknown codec type", fmt.Sprintf("unknown codec type: %s", src.ValueString()))
-		return nil
 	}
 }
 
@@ -459,10 +417,10 @@ func (c *ModelToEnterpriseConverter) Route(src RouteModel) *enterprise.Route {
 		IdpClientId:                       src.IDPClientID.ValueStringPointer(),
 		IdpClientSecret:                   src.IDPClientSecret.ValueStringPointer(),
 		JwtGroupsFilter:                   c.JWTGroupsFilter(src.JWTGroupsFilter),
-		JwtIssuerFormat:                   ToIssuerFormat(src.JWTIssuerFormat, c.diagnostics),
+		JwtIssuerFormat:                   c.IssuerFormat(path.Root("jwt_issuer_format"), src.JWTIssuerFormat),
 		KubernetesServiceAccountToken:     src.KubernetesServiceAccountToken.ValueStringPointer(),
 		KubernetesServiceAccountTokenFile: src.KubernetesServiceAccountTokenFile.ValueStringPointer(),
-		LoadBalancingPolicy:               OptionalEnumValueToPB[enterprise.LoadBalancingPolicy](src.LoadBalancingPolicy, "LOAD_BALANCING_POLICY", c.diagnostics),
+		LoadBalancingPolicy:               c.LoadBalancingPolicy(path.Root("load_balancing_policy"), src.LoadBalancingPolicy),
 		LogoUrl:                           src.LogoURL.ValueStringPointer(),
 		Name:                              src.Name.ValueString(),
 		NamespaceId:                       src.NamespaceID.ValueString(),
@@ -595,7 +553,7 @@ func (c *ModelToEnterpriseConverter) Settings(src SettingsModel) *enterprise.Set
 		InstallationId:                  src.InstallationID.ValueStringPointer(),
 		JwtClaimsHeaders:                c.StringMap(path.Root("jwt_claims_headers"), src.JWTClaimsHeaders),
 		JwtGroupsFilter:                 c.JWTGroupsFilter(src.JWTGroupsFilter),
-		JwtIssuerFormat:                 ToIssuerFormat(src.JWTIssuerFormat, c.diagnostics),
+		JwtIssuerFormat:                 c.IssuerFormat(path.Root("jwt_issuer_format"), src.JWTIssuerFormat),
 		LogLevel:                        src.LogLevel.ValueStringPointer(),
 		LogoUrl:                         src.LogoURL.ValueStringPointer(),
 		MetricsAddress:                  src.MetricsAddress.ValueStringPointer(),
