@@ -26,8 +26,7 @@ jobs:
         run: make test
 
       - name: Acceptance Tests
-        run: |
-          go test -v ./internal/provider/... -timeout 120m
+        run: make testacc
         env:
           TF_ACC: "1"
           POMERIUM_API_URL: ${{ secrets.POMERIUM_API_URL }}
