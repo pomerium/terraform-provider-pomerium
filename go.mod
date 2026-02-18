@@ -1,6 +1,6 @@
 module github.com/pomerium/enterprise-terraform-provider
 
-go 1.25.4
+go 1.26.0
 
 require (
 	github.com/dave/jennifer v1.7.1
