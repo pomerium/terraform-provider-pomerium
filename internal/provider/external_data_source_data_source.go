@@ -13,6 +13,7 @@ import (
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go"
 )
 
 var (
@@ -99,22 +100,29 @@ func (d *ExternalDataSourceDataSource) Read(ctx context.Context, req datasource.
 		return
 	}
 
-	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		getReq := &pb.GetExternalDataSourceRequest{
-			Id: state.ID.ValueString(),
-		}
-		getRes, err := client.ExternalDataSourceService.GetExternalDataSource(ctx, getReq)
-		if err != nil {
-			if status.Code(err) == codes.NotFound {
-				resp.Diagnostics.AddError("External Data Source not found", fmt.Sprintf("External Data Source with ID %s not found", state.ID.ValueString()))
+	resp.Diagnostics.Append(d.client.ByServerType(ctx,
+		func() {
+			resp.Diagnostics.AddError("external data source not found", "external data source not found")
+		},
+		func(client *client.Client) {
+			getReq := &pb.GetExternalDataSourceRequest{
+				Id: state.ID.ValueString(),
+			}
+			getRes, err := client.ExternalDataSourceService.GetExternalDataSource(ctx, getReq)
+			if err != nil {
+				if status.Code(err) == codes.NotFound {
+					resp.Diagnostics.AddError("External Data Source not found", fmt.Sprintf("External Data Source with ID %s not found", state.ID.ValueString()))
+					return
+				}
+				resp.Diagnostics.AddError("get external data source", err.Error())
 				return
 			}
-			resp.Diagnostics.AddError("get external data source", err.Error())
-			return
-		}
 
-		state = NewEnterpriseToModelConverter(&resp.Diagnostics).ExternalDataSource(getRes.GetExternalDataSource())
-	})...)
+			state = NewEnterpriseToModelConverter(&resp.Diagnostics).ExternalDataSource(getRes.GetExternalDataSource())
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

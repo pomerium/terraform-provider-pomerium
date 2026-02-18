@@ -100,7 +100,9 @@ func (r *SettingsResource) Read(ctx context.Context, req resource.ReadRequest, r
 	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
 		func(client sdk.Client) {
 			getReq := connect.NewRequest(&pomerium.GetSettingsRequest{
-				Id: state.ID.ValueString(),
+				For: &pomerium.GetSettingsRequest_Id{
+					Id: state.ID.ValueString(),
+				},
 			})
 			getRes, err := client.GetSettings(ctx, getReq)
 			if connect.CodeOf(err) == connect.CodeNotFound {
