@@ -10,7 +10,7 @@ var (
 	IssuerFormatValues                    = []string{"IssuerHostOnly", "IssuerURI"}
 	LoadBalancingPolicyValues             = []string{"round_robin", "maglev", "random", "ring_hash", "least_request"}
 	OAuth2AuthStyleValues                 = []string{"in_params", "in_header"}
-	PublicKeyAlgorithmValues              = []string{"pka_unknown_do_not_use", "rsa", "dsa", "ecdsa", "ed25519"}
+	PublicKeyAlgorithmValues              = []string{"rsa", "dsa", "ecdsa", "ed25519"}
 	RedirectResponseCodeValues            = []string{"moved_permanently", "found", "see_other", "temporary_redirect", "permanent_redirect"}
 	AttestationConveyancePreferenceValues = []string{"none", "indirect", "direct", "enterprise"}
 	AuthenticatorAttachmentValues         = []string{"platform", "cross_platform"}

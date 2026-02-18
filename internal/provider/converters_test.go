@@ -1351,3 +1351,16 @@ func TestCodecClientTypeSilentDefault(t *testing.T) {
 	assert.NotEmpty(t, diagnostics,
 		"unrecognized codec_client_type 'HTTP3' should produce a diagnostic error")
 }
+
+func TestPublicKeyAlgorithmZeroValueShouldBeNull(t *testing.T) {
+	t.Parallel()
+
+	var diagnostics diag.Diagnostics
+	c := provider.NewEnterpriseToModelConverter(&diagnostics)
+
+	unknown := pb.PublicKeyAlgorithm_PKA_UNKNOWN_DO_NOT_USE
+	got := c.PublicKeyAlgorithm(&unknown)
+
+	assert.True(t, got.IsNull(),
+		"PublicKeyAlgorithm PKA_UNKNOWN_DO_NOT_USE should be null, got %q", got.ValueString())
+}

@@ -161,8 +161,6 @@ func (c *ModelToEnterpriseConverter) PublicKeyAlgorithm(p path.Path, src types.S
 	}
 
 	switch strings.ToLower(src.ValueString()) {
-	case "pka_unknown_do_not_use":
-		return pb.PublicKeyAlgorithm(0).Enum()
 	case "rsa":
 		return pb.PublicKeyAlgorithm(1).Enum()
 	case "dsa":
