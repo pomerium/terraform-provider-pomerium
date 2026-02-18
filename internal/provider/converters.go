@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/iancoleman/strcase"
 	"golang.org/x/exp/constraints"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -82,7 +81,7 @@ func FromStringMap(m map[string]string) types.Map {
 // GoStructToPB converts a Go struct to a protobuf Struct.
 // It only supports protobuf types.String field types
 // Field names are converted to snake_case.
-func GoStructToPB(input interface{}) (*structpb.Struct, error) {
+func GoStructToPB(input any) (*structpb.Struct, error) {
 	if input == nil {
 		return nil, nil
 	}
@@ -95,7 +94,7 @@ func GoStructToPB(input interface{}) (*structpb.Struct, error) {
 	fields := make(map[string]*structpb.Value)
 	typ := val.Type()
 
-	typeString := reflect.TypeOf(types.String{})
+	typeString := reflect.TypeFor[types.String]()
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
 		fieldValue := val.Field(i)
@@ -175,9 +174,8 @@ func GetTFObjectTypes[T any]() (map[string]attr.Type, error) {
 	tm := make(map[string]attr.Type)
 	var v T
 	typ := reflect.TypeOf(v)
-	typeString := reflect.TypeOf(types.String{})
-	for i := 0; i < typ.NumField(); i++ {
-		field := typ.Field(i)
+	typeString := reflect.TypeFor[types.String]()
+	for field := range typ.Fields() {
 		if field.Type != typeString {
 			return nil, fmt.Errorf("unsupported field type %s for field %s", field.Type, field.Name)
 		}
@@ -251,34 +249,34 @@ func (c *baseModelConverter) BytesFromBase64(p path.Path, src types.String) []by
 
 func (c *baseModelConverter) DirectoryProvider(src SettingsModel) *string {
 	if !src.IdentityProviderAuth0.IsNull() && !src.IdentityProviderAuth0.IsUnknown() {
-		return proto.String("auth0")
+		return new("auth0")
 	}
 	if !src.IdentityProviderAzure.IsNull() && !src.IdentityProviderAzure.IsUnknown() {
-		return proto.String("azure")
+		return new("azure")
 	}
 	if !src.IdentityProviderBlob.IsNull() && !src.IdentityProviderBlob.IsUnknown() {
-		return proto.String("blob")
+		return new("blob")
 	}
 	if !src.IdentityProviderCognito.IsNull() && !src.IdentityProviderCognito.IsUnknown() {
-		return proto.String("cognito")
+		return new("cognito")
 	}
 	if !src.IdentityProviderGitHub.IsNull() && !src.IdentityProviderGitHub.IsUnknown() {
-		return proto.String("github")
+		return new("github")
 	}
 	if !src.IdentityProviderGitLab.IsNull() && !src.IdentityProviderGitLab.IsUnknown() {
-		return proto.String("gitlab")
+		return new("gitlab")
 	}
 	if !src.IdentityProviderGoogle.IsNull() && !src.IdentityProviderGoogle.IsUnknown() {
-		return proto.String("google")
+		return new("google")
 	}
 	if !src.IdentityProviderOkta.IsNull() && !src.IdentityProviderOkta.IsUnknown() {
-		return proto.String("okta")
+		return new("okta")
 	}
 	if !src.IdentityProviderOneLogin.IsNull() && !src.IdentityProviderOneLogin.IsUnknown() {
-		return proto.String("onelogin")
+		return new("onelogin")
 	}
 	if !src.IdentityProviderPing.IsNull() && !src.IdentityProviderPing.IsUnknown() {
-		return proto.String("ping")
+		return new("ping")
 	}
 	return nil
 }
@@ -345,21 +343,21 @@ func (c *baseModelConverter) NullableInt32(src types.Int64) *int32 {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
-	return proto.Int32(int32(src.ValueInt64()))
+	return new(int32(src.ValueInt64()))
 }
 
 func (c *baseModelConverter) NullableUint32(src types.Int64) *uint32 {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
-	return proto.Uint32(uint32(src.ValueInt64()))
+	return new(uint32(src.ValueInt64()))
 }
 
 func (c *baseModelConverter) NullableUint64(src types.Int64) *uint64 {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
-	return proto.Uint64(uint64(src.ValueInt64()))
+	return new(uint64(src.ValueInt64()))
 }
 
 func (c *baseModelConverter) StringMap(p path.Path, src types.Map) map[string]string {

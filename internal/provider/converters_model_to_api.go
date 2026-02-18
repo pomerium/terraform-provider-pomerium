@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
 
@@ -261,7 +260,7 @@ func (c *ModelToAPIConverter) KeyPair(src KeyPairModel) *pomerium.KeyPair {
 		Name:            c.NullableString(src.Name),
 		NamespaceId:     c.NullableString(src.NamespaceID),
 		Origin:          pomerium.KeyPairOrigin_KEY_PAIR_ORIGIN_USER,
-		OriginatorId:    proto.String(OriginatorID),
+		OriginatorId:    new(OriginatorID),
 		Status:          pomerium.KeyPairStatus_KEY_PAIR_STATUS_READY,
 	}
 }
@@ -313,19 +312,19 @@ func (c *ModelToAPIConverter) Policy(src PolicyModel) *pomerium.Policy {
 		AllowedUsers:     nil, // not supported
 		AssignedRoutes:   nil, // not supported
 		CreatedAt:        nil, // not supported
-		Description:      proto.String(src.Description.ValueString()),
-		Enforced:         proto.Bool(src.Enforced.ValueBool()),
+		Description:      new(src.Description.ValueString()),
+		Enforced:         new(src.Enforced.ValueBool()),
 		EnforcedRoutes:   nil, // not supported
-		Explanation:      proto.String(src.Explanation.ValueString()),
+		Explanation:      new(src.Explanation.ValueString()),
 		Id:               c.NullableString(src.ID),
 		ModifiedAt:       nil, // not supported
-		Name:             proto.String(src.Name.ValueString()),
+		Name:             new(src.Name.ValueString()),
 		NamespaceId:      c.NullableString(src.NamespaceID),
 		NamespaceName:    nil, // not supported
-		OriginatorId:     proto.String(OriginatorID),
+		OriginatorId:     new(OriginatorID),
 		Rego:             c.StringSliceFromList(path.Root("rego"), src.Rego),
-		Remediation:      proto.String(src.Remediation.ValueString()),
-		SourcePpl:        proto.String(string(src.PPL.PolicyJSON)),
+		Remediation:      new(src.Remediation.ValueString()),
+		SourcePpl:        new(string(src.PPL.PolicyJSON)),
 	}
 }
 
@@ -358,7 +357,7 @@ func (c *ModelToAPIConverter) Route(src RouteModel) *pomerium.Route {
 		LogoUrl:                           src.LogoURL.ValueStringPointer(),
 		Name:                              c.NullableString(src.Name),
 		NamespaceId:                       c.NullableString(src.NamespaceID),
-		OriginatorId:                      proto.String(OriginatorID),
+		OriginatorId:                      new(OriginatorID),
 		PassIdentityHeaders:               src.PassIdentityHeaders.ValueBoolPointer(),
 		Path:                              src.Path.ValueString(),
 		PolicyIds:                         c.StringSliceFromSet(path.Root("policies"), src.Policies),
@@ -420,7 +419,7 @@ func (c *ModelToAPIConverter) ServiceAccount(src ServiceAccountModel) *pomerium.
 		Id:           c.NullableString(src.ID),
 		ModifiedAt:   nil, // not supported
 		NamespaceId:  zeroToNil(src.NamespaceID.ValueString()),
-		OriginatorId: proto.String(OriginatorID),
+		OriginatorId: new(OriginatorID),
 		UserId:       c.NullableString(src.UserID),
 	}
 }
@@ -521,7 +520,7 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *pomerium.Settings {
 		ModifiedAt:                          nil, // not supported
 		Name:                                nil, // not supported
 		NamespaceId:                         nil, // not supported
-		OriginatorId:                        proto.String(OriginatorID),
+		OriginatorId:                        new(OriginatorID),
 		OtelAttributeValueLengthLimit:       c.NullableInt32(src.OtelAttributeValueLengthLimit),
 		OtelBspMaxExportBatchSize:           c.NullableInt32(src.OtelBspMaxExportBatchSize),
 		OtelBspScheduleDelay:                c.Duration(path.Root("otel_bsp_schedule_delay"), src.OtelBspScheduleDelay),

@@ -9,7 +9,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"google.golang.org/protobuf/proto"
 
 	enterprise "github.com/pomerium/enterprise-client-go/pb"
 )
@@ -407,7 +406,7 @@ func (c *ModelToEnterpriseConverter) ServiceAccount(src ServiceAccountModel) *en
 		Id:           src.ID.ValueString(),
 		IssuedAt:     nil, // not supported
 		NamespaceId:  zeroToNil(src.NamespaceID.ValueString()),
-		OriginatorId: proto.String(OriginatorID),
+		OriginatorId: new(OriginatorID),
 		UserId:       src.UserID.ValueString(),
 	}
 }

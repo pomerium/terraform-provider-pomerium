@@ -361,7 +361,7 @@ func TestGoStructToPB(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		input    interface{}
+		input    any
 		want     *structpb.Struct
 		wantErr  bool
 		errorMsg string
@@ -837,40 +837,40 @@ func TestConvertRoute(t *testing.T) {
 		NamespaceId:                      "namespace-123",
 		PolicyIds:                        []string{"policy-1", "policy-2"},
 		StatName:                         "test-stat",
-		Prefix:                           ptr("/prefix"),
-		Path:                             ptr("/path"),
-		Regex:                            ptr("^/regex.*$"),
-		PrefixRewrite:                    ptr("/prefix-rewrite"),
-		RegexRewritePattern:              ptr("^/old(.*)$"),
-		RegexRewriteSubstitution:         ptr("/new$1"),
-		HostRewrite:                      ptr("rewritten-host"),
-		HostRewriteHeader:                ptr("X-Host-Header"),
-		HostPathRegexRewritePattern:      ptr("^/path-pattern(.*)$"),
-		HostPathRegexRewriteSubstitution: ptr("host-sub$1"),
-		RegexPriorityOrder:               ptr(int64(10)),
+		Prefix:                           new("/prefix"),
+		Path:                             new("/path"),
+		Regex:                            new("^/regex.*$"),
+		PrefixRewrite:                    new("/prefix-rewrite"),
+		RegexRewritePattern:              new("^/old(.*)$"),
+		RegexRewriteSubstitution:         new("/new$1"),
+		HostRewrite:                      new("rewritten-host"),
+		HostRewriteHeader:                new("X-Host-Header"),
+		HostPathRegexRewritePattern:      new("^/path-pattern(.*)$"),
+		HostPathRegexRewriteSubstitution: new("host-sub$1"),
+		RegexPriorityOrder:               new(int64(10)),
 		Timeout:                          durationpb.New(30 * time.Second),
 		IdleTimeout:                      durationpb.New(5 * time.Minute),
-		AllowWebsockets:                  ptr(true),
-		AllowSpdy:                        ptr(true),
-		TlsSkipVerify:                    ptr(false),
-		TlsUpstreamServerName:            ptr("upstream.example.com"),
-		TlsDownstreamServerName:          ptr("downstream.example.com"),
-		TlsUpstreamAllowRenegotiation:    ptr(true),
+		AllowWebsockets:                  new(true),
+		AllowSpdy:                        new(true),
+		TlsSkipVerify:                    new(false),
+		TlsUpstreamServerName:            new("upstream.example.com"),
+		TlsDownstreamServerName:          new("downstream.example.com"),
+		TlsUpstreamAllowRenegotiation:    new(true),
 		SetRequestHeaders:                map[string]string{"X-Request-1": "value1", "X-Request-2": "value2"},
 		RemoveRequestHeaders:             []string{"X-Remove-1", "X-Remove-2"},
 		SetResponseHeaders:               map[string]string{"X-Response-1": "value1", "X-Response-2": "value2"},
-		PreserveHostHeader:               ptr(true),
-		PassIdentityHeaders:              ptr(true),
-		KubernetesServiceAccountToken:    ptr("k8s-token"),
-		IdpClientId:                      ptr("idp-client-id"),
-		IdpClientSecret:                  ptr("idp-client-secret"),
+		PreserveHostHeader:               new(true),
+		PassIdentityHeaders:              new(true),
+		KubernetesServiceAccountToken:    new("k8s-token"),
+		IdpClientId:                      new("idp-client-id"),
+		IdpClientSecret:                  new("idp-client-secret"),
 		ShowErrorDetails:                 true,
-		TlsClientKeyPairId:               ptr("client-key-pair-123"),
-		TlsCustomCaKeyPairId:             ptr("ca-key-pair-123"),
-		Description:                      ptr("Route description"),
-		LogoUrl:                          ptr("https://logo.example.com/logo.png"),
+		TlsClientKeyPairId:               new("client-key-pair-123"),
+		TlsCustomCaKeyPairId:             new("ca-key-pair-123"),
+		Description:                      new("Route description"),
+		LogoUrl:                          new("https://logo.example.com/logo.png"),
 		EnableGoogleCloudServerlessAuthentication: true,
-		KubernetesServiceAccountTokenFile:         ptr("/path/to/token"),
+		KubernetesServiceAccountTokenFile:         new("/path/to/token"),
 		JwtIssuerFormat:                           pb.IssuerFormat_IssuerURI.Enum(),
 		BearerTokenFormat:                         pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_ACCESS_TOKEN.Enum(),
 		IdpAccessTokenAllowedAudiences:            &pb.Route_StringList{Values: []string{"aud1", "aud2"}},
@@ -884,7 +884,7 @@ func TestConvertRoute(t *testing.T) {
 		},
 		JwtGroupsFilter: &pb.JwtGroupsFilter{
 			Groups:       []string{"group1", "group2"},
-			InferFromPpl: ptr(true),
+			InferFromPpl: new(true),
 		},
 		OriginatorId: provider.OriginatorID,
 		HealthChecks: []*pb.HealthCheck{
@@ -946,7 +946,7 @@ func TestConvertRoute(t *testing.T) {
 			},
 		},
 		DependsOn:             []string{"foo.example.com", "bar.example.com:8443"},
-		HealthyPanicThreshold: ptr(int32(33)),
+		HealthyPanicThreshold: new(int32(33)),
 	}
 
 	tfRoute := provider.RouteModel{
@@ -1173,7 +1173,7 @@ func TestJWTGroupsFilterFromPB(t *testing.T) {
 			name: "empty groups",
 			input: &pb.JwtGroupsFilter{
 				Groups:       []string{},
-				InferFromPpl: proto.Bool(false),
+				InferFromPpl: new(false),
 			},
 			expected: types.ObjectValueMust(provider.JWTGroupsFilterObjectType().AttrTypes, map[string]attr.Value{
 				"groups":         types.SetValueMust(types.StringType, []attr.Value{}),
@@ -1184,7 +1184,7 @@ func TestJWTGroupsFilterFromPB(t *testing.T) {
 			name: "with groups",
 			input: &pb.JwtGroupsFilter{
 				Groups:       []string{"group1", "group2"},
-				InferFromPpl: proto.Bool(true),
+				InferFromPpl: new(true),
 			},
 			expected: types.ObjectValueMust(provider.JWTGroupsFilterObjectType().AttrTypes, map[string]attr.Value{
 				"groups": types.SetValueMust(types.StringType, []attr.Value{
@@ -1225,7 +1225,7 @@ func TestJWTGroupsFilterToPB(t *testing.T) {
 			}),
 			expected: &pb.JwtGroupsFilter{
 				Groups:       []string{},
-				InferFromPpl: proto.Bool(false),
+				InferFromPpl: new(false),
 			},
 		},
 		{
@@ -1239,7 +1239,7 @@ func TestJWTGroupsFilterToPB(t *testing.T) {
 			}),
 			expected: &pb.JwtGroupsFilter{
 				Groups:       []string{"group1", "group2"},
-				InferFromPpl: proto.Bool(true),
+				InferFromPpl: new(true),
 			},
 		},
 	}
