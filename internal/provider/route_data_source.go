@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 
+	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -12,6 +13,8 @@ import (
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go"
+	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 var _ datasource.DataSource = &RouteDataSource{}
@@ -420,18 +423,31 @@ func (d *RouteDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		getReq := &pb.GetRouteRequest{
-			Id: data.ID.ValueString(),
-		}
-		getRes, err := client.RouteService.GetRoute(ctx, getReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error reading route", err.Error())
-			return
-		}
+	resp.Diagnostics.Append(d.client.ConsolidatedOrLegacy(ctx,
+		func(client sdk.Client) {
+			getReq := connect.NewRequest(&pomerium.GetRouteRequest{
+				Id: data.ID.ValueString(),
+			})
+			getRes, err := client.GetRoute(ctx, getReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error getting route", err.Error())
+				return
+			}
 
-		data = NewEnterpriseToModelConverter(&resp.Diagnostics).Route(getRes.GetRoute())
-	})...)
+			data = NewAPIToModelConverter(&resp.Diagnostics).Route(getRes.Msg.Route)
+		},
+		func(client *client.Client) {
+			getReq := &pb.GetRouteRequest{
+				Id: data.ID.ValueString(),
+			}
+			getRes, err := client.RouteService.GetRoute(ctx, getReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error reading route", err.Error())
+				return
+			}
+
+			data = NewEnterpriseToModelConverter(&resp.Diagnostics).Route(getRes.GetRoute())
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

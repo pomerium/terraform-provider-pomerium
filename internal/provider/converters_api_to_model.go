@@ -2,6 +2,7 @@ package provider
 
 import (
 	"encoding/base64"
+	"fmt"
 	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -9,22 +10,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	enterprise "github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
-type EnterpriseToModelConverter struct {
+type APIToModelConverter struct {
 	baseProtoConverter
 	diagnostics *diag.Diagnostics
 }
 
-func NewEnterpriseToModelConverter(diagnostics *diag.Diagnostics) *EnterpriseToModelConverter {
-	return &EnterpriseToModelConverter{
-		baseProtoConverter: baseProtoConverter{diagnostics: diagnostics},
-		diagnostics:        diagnostics,
+func NewAPIToModelConverter(diagnostics *diag.Diagnostics) *APIToModelConverter {
+	return &APIToModelConverter{
+		baseProtoConverter: baseProtoConverter{
+			diagnostics: diagnostics,
+		},
+		diagnostics: diagnostics,
 	}
 }
 
-func (c *EnterpriseToModelConverter) CircuitBreakerThresholds(src *enterprise.CircuitBreakerThresholds) types.Object {
+func (c *APIToModelConverter) CircuitBreakerThresholds(src *pomerium.CircuitBreakerThresholds) types.Object {
 	if src == nil {
 		return types.ObjectNull(CircuitBreakerThresholdsObjectType().AttrTypes)
 	}
@@ -40,37 +43,7 @@ func (c *EnterpriseToModelConverter) CircuitBreakerThresholds(src *enterprise.Ci
 	return dst
 }
 
-func (c *EnterpriseToModelConverter) Cluster(src *enterprise.Cluster, namespace *enterprise.Namespace) ClusterModel {
-	return ClusterModel{
-		CertificateAuthorityB64:  c.Base64String(src.CertificateAuthority),
-		CertificateAuthorityFile: types.StringPointerValue(src.CertificateAuthorityFile),
-		DatabrokerServiceURL:     types.StringValue(src.DatabrokerServiceUrl),
-		ID:                       types.StringValue(src.Id),
-		InsecureSkipVerify:       types.BoolPointerValue(src.InsecureSkipVerify),
-		Name:                     types.StringValue(src.Name),
-		NamespaceID:              types.StringPointerValue(zeroToNil(namespace.GetId())),
-		OverrideCertificateName:  types.StringPointerValue(src.OverrideCertificateName),
-		ParentNamespaceID:        types.StringPointerValue(zeroToNil(namespace.GetParentId())),
-		SharedSecretB64:          c.Base64String(src.SharedSecret),
-	}
-}
-
-func (c *EnterpriseToModelConverter) ExternalDataSource(src *enterprise.ExternalDataSource) ExternalDataSourceModel {
-	return ExternalDataSourceModel{
-		AllowInsecureTLS: types.BoolPointerValue(src.AllowInsecureTls),
-		ClientTLSKeyID:   types.StringPointerValue(src.ClientTlsKeyId),
-		ClusterID:        types.StringPointerValue(src.ClusterId),
-		ForeignKey:       types.StringValue(src.ForeignKey),
-		Headers:          FromStringMap(src.Headers),
-		ID:               types.StringValue(src.Id),
-		PollingMaxDelay:  c.Duration(src.PollingMaxDelay),
-		PollingMinDelay:  c.Duration(src.PollingMinDelay),
-		RecordType:       types.StringValue(src.RecordType),
-		URL:              types.StringValue(src.Url),
-	}
-}
-
-func (c *EnterpriseToModelConverter) HealthCheck(src *enterprise.HealthCheck) types.Object {
+func (c *APIToModelConverter) HealthCheck(src *pomerium.HealthCheck) types.Object {
 	if src == nil {
 		return types.ObjectNull(HealthCheckObjectType().AttrTypes)
 	}
@@ -81,8 +54,8 @@ func (c *EnterpriseToModelConverter) HealthCheck(src *enterprise.HealthCheck) ty
 		"initial_jitter":          c.Duration(src.InitialJitter),
 		"interval_jitter":         c.Duration(src.IntervalJitter),
 		"interval_jitter_percent": UInt32ToInt64OrNull(src.IntervalJitterPercent),
-		"unhealthy_threshold":     UInt32ToInt64OrNull(src.UnhealthyThreshold),
-		"healthy_threshold":       UInt32ToInt64OrNull(src.HealthyThreshold),
+		"unhealthy_threshold":     UInt32ToInt64OrNull(src.GetUnhealthyThreshold().GetValue()),
+		"healthy_threshold":       UInt32ToInt64OrNull(src.GetHealthyThreshold().GetValue()),
 		"http_health_check":       types.ObjectNull(HTTPHealthCheckObjectType().AttrTypes),
 		"tcp_health_check":        types.ObjectNull(TCPHealthCheckObjectType().AttrTypes),
 		"grpc_health_check":       types.ObjectNull(GrpcHealthCheckObjectType().AttrTypes),
@@ -91,13 +64,13 @@ func (c *EnterpriseToModelConverter) HealthCheck(src *enterprise.HealthCheck) ty
 	if httpHc := src.GetHttpHealthCheck(); httpHc != nil {
 		expectedStatusesElem := []attr.Value{}
 		for _, status := range httpHc.ExpectedStatuses {
-			expectedStatusesElem = append(expectedStatusesElem, c.Int64Range(status))
+			expectedStatusesElem = append(expectedStatusesElem, c.HealthCheckInt64Range(status))
 		}
 		expectedStatuses, _ := types.SetValue(Int64RangeObjectType(), expectedStatusesElem)
 
 		retriableStatusesElem := []attr.Value{}
 		for _, status := range httpHc.RetriableStatuses {
-			retriableStatusesElem = append(retriableStatusesElem, c.Int64Range(status))
+			retriableStatusesElem = append(retriableStatusesElem, c.HealthCheckInt64Range(status))
 		}
 		retriableStatuses, _ := types.SetValue(Int64RangeObjectType(), retriableStatusesElem)
 
@@ -145,7 +118,7 @@ func (c *EnterpriseToModelConverter) HealthCheck(src *enterprise.HealthCheck) ty
 	return dst
 }
 
-func (c *EnterpriseToModelConverter) HealthCheckPayload(src *enterprise.HealthCheck_Payload) types.Object {
+func (c *APIToModelConverter) HealthCheckPayload(src *pomerium.HealthCheck_Payload) types.Object {
 	if src == nil {
 		return types.ObjectNull(HealthCheckPayloadObjectType().AttrTypes)
 	}
@@ -156,16 +129,16 @@ func (c *EnterpriseToModelConverter) HealthCheckPayload(src *enterprise.HealthCh
 	}
 
 	switch p := src.GetPayload().(type) {
-	case *enterprise.HealthCheck_Payload_Text:
+	case *pomerium.HealthCheck_Payload_Text:
 		attrs["text"] = types.StringValue(p.Text)
-	case *enterprise.HealthCheck_Payload_Binary:
+	case *pomerium.HealthCheck_Payload_Binary:
 		attrs["binary_b64"] = types.StringValue(base64.StdEncoding.EncodeToString(p.Binary))
 	}
 
 	return types.ObjectValueMust(HealthCheckPayloadObjectType().AttrTypes, attrs)
 }
 
-func (c *EnterpriseToModelConverter) Int64Range(src *enterprise.Int64Range) types.Object {
+func (c *APIToModelConverter) HealthCheckInt64Range(src *pomerium.HealthCheck_Int64Range) types.Object {
 	if src == nil {
 		return types.ObjectNull(Int64RangeObjectType().AttrTypes)
 	}
@@ -175,69 +148,59 @@ func (c *EnterpriseToModelConverter) Int64Range(src *enterprise.Int64Range) type
 	})
 }
 
-func (c *EnterpriseToModelConverter) JWTGroupsFilter(src *enterprise.JwtGroupsFilter) types.Object {
-	if src == nil {
+func (c *APIToModelConverter) JWTGroupsFilter(src []string, inferFromPPL *bool) types.Object {
+	if src == nil && inferFromPPL == nil {
 		return types.ObjectNull(JWTGroupsFilterObjectType().AttrTypes)
 	}
 
 	attrs := make(map[string]attr.Value)
-	if src.Groups == nil {
+	if src == nil {
 		attrs["groups"] = types.SetNull(types.StringType)
 	} else {
 		var vals []attr.Value
-		for _, v := range src.Groups {
+		for _, v := range src {
 			vals = append(vals, types.StringValue(v))
 		}
 		attrs["groups"] = types.SetValueMust(types.StringType, vals)
 	}
 
-	attrs["infer_from_ppl"] = types.BoolPointerValue(src.InferFromPpl)
+	attrs["infer_from_ppl"] = types.BoolPointerValue(inferFromPPL)
 
 	return types.ObjectValueMust(JWTGroupsFilterObjectType().AttrTypes, attrs)
 }
 
-func (c *EnterpriseToModelConverter) Namespace(src *enterprise.Namespace) NamespaceModel {
-	return NamespaceModel{
-		ClusterID: types.StringPointerValue(src.ClusterId),
-		ID:        types.StringValue(src.Id),
-		Name:      types.StringValue(src.Name),
-		ParentID:  types.StringPointerValue(zeroToNil(src.ParentId)),
+func (c *APIToModelConverter) KeyPair(src *pomerium.KeyPair) KeyPairModel {
+	return KeyPairModel{
+		Certificate: c.StringFromBytes(src.Certificate),
+		ID:          types.StringPointerValue(src.Id),
+		Key:         c.StringFromBytes(src.Key),
+		Name:        types.StringPointerValue(src.Name),
+		NamespaceID: types.StringPointerValue(src.NamespaceId),
 	}
 }
 
-func (c *EnterpriseToModelConverter) NamespacePermission(src *enterprise.NamespacePermission) NamespacePermissionModel {
-	return NamespacePermissionModel{
-		ID:          types.StringValue(src.Id),
-		NamespaceID: types.StringValue(src.NamespaceId),
-		Role:        types.StringValue(src.Role),
-		SubjectID:   types.StringValue(src.SubjectId),
-		SubjectType: types.StringValue(src.SubjectType),
-	}
-}
-
-func (c *EnterpriseToModelConverter) Policy(src *enterprise.Policy) PolicyModel {
-	ppl, err := PolicyLanguageType{}.Parse(types.StringValue(src.Ppl))
+func (c *APIToModelConverter) Policy(src *pomerium.Policy) PolicyModel {
+	ppl, err := PolicyLanguageType{}.Parse(types.StringPointerValue(src.SourcePpl))
 	if err != nil {
 		c.diagnostics.AddError("error parsing ppl", err.Error())
 	}
-
 	return PolicyModel{
-		Description: types.StringValue(src.Description),
-		Enforced:    types.BoolValue(src.Enforced),
-		Explanation: types.StringValue(src.Explanation),
-		ID:          types.StringValue(src.Id),
-		Name:        types.StringValue(src.Name),
-		NamespaceID: types.StringValue(src.NamespaceId),
+		Description: types.StringValue(src.GetDescription()),
+		Enforced:    types.BoolValue(src.GetEnforced()),
+		Explanation: types.StringValue(src.GetExplanation()),
+		ID:          types.StringPointerValue(src.Id),
+		Name:        types.StringPointerValue(src.Name),
+		NamespaceID: types.StringPointerValue(src.NamespaceId),
 		PPL:         ppl,
 		Rego:        FromStringSliceToList(src.Rego),
-		Remediation: types.StringValue(src.Remediation),
+		Remediation: types.StringValue(src.GetRemediation()),
 	}
 }
 
-func (c *EnterpriseToModelConverter) Route(src *enterprise.Route) RouteModel {
+func (c *APIToModelConverter) Route(src *pomerium.Route) RouteModel {
 	return RouteModel{
-		AllowSPDY:                types.BoolPointerValue(src.AllowSpdy),
-		AllowWebsockets:          types.BoolPointerValue(src.AllowWebsockets),
+		AllowSPDY:                types.BoolValue(src.AllowSpdy),
+		AllowWebsockets:          types.BoolValue(src.AllowWebsockets),
 		BearerTokenFormat:        c.BearerTokenFormat(src.BearerTokenFormat),
 		CircuitBreakerThresholds: c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
 		DependsOnHosts:           FromStringSliceToSet(src.DependsOn),
@@ -250,47 +213,47 @@ func (c *EnterpriseToModelConverter) Route(src *enterprise.Route) RouteModel {
 		HostPathRegexRewriteSubstitution:  types.StringPointerValue(src.HostPathRegexRewriteSubstitution),
 		HostRewrite:                       types.StringPointerValue(src.HostRewrite),
 		HostRewriteHeader:                 types.StringPointerValue(src.HostRewriteHeader),
-		ID:                                types.StringValue(src.Id),
+		ID:                                types.StringPointerValue(src.Id),
 		IdleTimeout:                       c.Duration(src.IdleTimeout),
 		IDPAccessTokenAllowedAudiences:    FromStringList(src.IdpAccessTokenAllowedAudiences),
 		IDPClientID:                       types.StringPointerValue(src.IdpClientId),
 		IDPClientSecret:                   types.StringPointerValue(src.IdpClientSecret),
-		JWTGroupsFilter:                   c.JWTGroupsFilter(src.JwtGroupsFilter),
+		JWTGroupsFilter:                   c.JWTGroupsFilter(src.JwtGroupsFilter, src.JwtGroupsFilterInferFromPpl),
 		JWTIssuerFormat:                   c.IssuerFormat(src.JwtIssuerFormat),
-		KubernetesServiceAccountToken:     types.StringPointerValue(src.KubernetesServiceAccountToken),
-		KubernetesServiceAccountTokenFile: types.StringPointerValue(src.KubernetesServiceAccountTokenFile),
+		KubernetesServiceAccountToken:     types.StringValue(src.KubernetesServiceAccountToken),
+		KubernetesServiceAccountTokenFile: types.StringValue(src.KubernetesServiceAccountTokenFile),
 		LoadBalancingPolicy:               c.LoadBalancingPolicy(src.LoadBalancingPolicy),
 		LogoURL:                           types.StringPointerValue(src.LogoUrl),
-		Name:                              types.StringValue(src.Name),
-		NamespaceID:                       types.StringValue(src.NamespaceId),
+		Name:                              types.StringPointerValue(src.Name),
+		NamespaceID:                       types.StringPointerValue(src.NamespaceId),
 		PassIdentityHeaders:               types.BoolPointerValue(src.PassIdentityHeaders),
-		Path:                              types.StringPointerValue(src.Path),
-		Policies:                          FromStringSliceToSet(StringSliceExclude(src.PolicyIds, src.EnforcedPolicyIds)),
-		Prefix:                            types.StringPointerValue(src.Prefix),
-		PrefixRewrite:                     types.StringPointerValue(src.PrefixRewrite),
-		PreserveHostHeader:                types.BoolPointerValue(src.PreserveHostHeader),
-		Regex:                             types.StringPointerValue(src.Regex),
+		Path:                              types.StringValue(src.Path),
+		Policies:                          c.SetFromStringSlice(src.PolicyIds),
+		Prefix:                            types.StringValue(src.Prefix),
+		PrefixRewrite:                     types.StringValue(src.PrefixRewrite),
+		PreserveHostHeader:                types.BoolValue(src.PreserveHostHeader),
+		Regex:                             types.StringValue(src.Regex),
 		RegexPriorityOrder:                types.Int64PointerValue(src.RegexPriorityOrder),
-		RegexRewritePattern:               types.StringPointerValue(src.RegexRewritePattern),
-		RegexRewriteSubstitution:          types.StringPointerValue(src.RegexRewriteSubstitution),
+		RegexRewritePattern:               types.StringValue(src.RegexRewritePattern),
+		RegexRewriteSubstitution:          types.StringValue(src.RegexRewriteSubstitution),
 		RemoveRequestHeaders:              FromStringSliceToSet(src.RemoveRequestHeaders),
 		RewriteResponseHeaders:            toSetOfObjects(src.RewriteResponseHeaders, RewriteHeaderObjectType(), c.RouteRewriteHeader),
 		SetRequestHeaders:                 FromStringMap(src.SetRequestHeaders),
 		SetResponseHeaders:                FromStringMap(src.SetResponseHeaders),
 		ShowErrorDetails:                  types.BoolValue(src.ShowErrorDetails),
-		StatName:                          types.StringValue(src.StatName),
+		StatName:                          types.StringPointerValue(src.StatName),
 		Timeout:                           c.Duration(src.Timeout),
 		TLSClientKeyPairID:                types.StringPointerValue(src.TlsClientKeyPairId),
 		TLSCustomCAKeyPairID:              types.StringPointerValue(src.TlsCustomCaKeyPairId),
-		TLSDownstreamServerName:           types.StringPointerValue(src.TlsDownstreamServerName),
-		TLSSkipVerify:                     types.BoolPointerValue(src.TlsSkipVerify),
-		TLSUpstreamAllowRenegotiation:     types.BoolPointerValue(src.TlsUpstreamAllowRenegotiation),
-		TLSUpstreamServerName:             types.StringPointerValue(src.TlsUpstreamServerName),
+		TLSDownstreamServerName:           types.StringValue(src.TlsDownstreamServerName),
+		TLSSkipVerify:                     types.BoolValue(src.TlsSkipVerify),
+		TLSUpstreamAllowRenegotiation:     types.BoolValue(src.TlsUpstreamAllowRenegotiation),
+		TLSUpstreamServerName:             types.StringValue(src.TlsUpstreamServerName),
 		To:                                FromStringSliceToSet(src.To),
 	}
 }
 
-func (c *EnterpriseToModelConverter) RouteRewriteHeader(src *enterprise.RouteRewriteHeader) types.Object {
+func (c *APIToModelConverter) RouteRewriteHeader(src *pomerium.RouteRewriteHeader) types.Object {
 	if src == nil {
 		return types.ObjectNull(RewriteHeaderObjectType().AttrTypes)
 	}
@@ -302,37 +265,55 @@ func (c *EnterpriseToModelConverter) RouteRewriteHeader(src *enterprise.RouteRew
 	})
 }
 
-func (c *EnterpriseToModelConverter) ServiceAccount(src *enterprise.PomeriumServiceAccount) ServiceAccountModel {
+func (c *APIToModelConverter) ServiceAccount(src *pomerium.ServiceAccount) ServiceAccountModel {
 	return ServiceAccountModel{
 		Description: types.StringPointerValue(src.Description),
 		ExpiresAt:   c.Timestamp(src.ExpiresAt),
-		ID:          types.StringValue(src.Id),
+		ID:          types.StringPointerValue(src.Id),
 		Name:        types.StringValue(strings.TrimSuffix(src.GetUserId(), "@"+src.GetNamespaceId()+".pomerium")),
 		NamespaceID: types.StringPointerValue(src.NamespaceId),
-		UserID:      types.StringValue(src.UserId),
+		UserID:      types.StringPointerValue(src.UserId),
 	}
 }
 
-func (c *EnterpriseToModelConverter) Settings(src *enterprise.Settings) SettingsModel {
+func (c *APIToModelConverter) SetFromStringSlice(src []string) types.Set {
+	if src == nil {
+		return types.SetNull(types.StringType)
+	}
+	fields := make([]attr.Value, 0)
+	for _, v := range src {
+		fields = append(fields, types.StringValue(v))
+	}
+	return types.SetValueMust(types.StringType, fields)
+}
+
+func (c *APIToModelConverter) SetFromSettingsStringList(src *pomerium.Settings_StringList) types.Set {
+	if src == nil {
+		return types.SetNull(types.StringType)
+	}
+	return FromStringSliceToSet(src.Values)
+}
+
+func (c *APIToModelConverter) Settings(src *pomerium.Settings) SettingsModel {
 	return SettingsModel{
-		AccessLogFields:               FromStringListToSet(src.AccessLogFields),
+		AccessLogFields:               c.SetFromSettingsStringList(src.AccessLogFields),
 		Address:                       types.StringPointerValue(src.Address),
 		AuthenticateServiceURL:        types.StringPointerValue(src.AuthenticateServiceUrl),
-		AuthorizeLogFields:            FromStringListToSet(src.AuthorizeLogFields),
-		AuthorizeServiceURL:           types.StringPointerValue(src.AuthorizeServiceUrl),
+		AuthorizeLogFields:            c.SetFromSettingsStringList(src.AuthorizeLogFields),
+		AuthorizeServiceURL:           c.StringFromSingleElementSlice(path.Root("authorize_service_url"), src.AuthorizeServiceUrls),
 		Autocert:                      types.BoolPointerValue(src.Autocert),
 		AutocertDir:                   types.StringPointerValue(src.AutocertDir),
 		AutocertMustStaple:            types.BoolPointerValue(src.AutocertMustStaple),
 		AutocertUseStaging:            types.BoolPointerValue(src.AutocertUseStaging),
 		BearerTokenFormat:             c.BearerTokenFormat(src.BearerTokenFormat),
-		CacheServiceURL:               types.StringPointerValue(src.CacheServiceUrl),
+		CacheServiceURL:               types.StringNull(),
 		CertificateAuthority:          types.StringPointerValue(src.CertificateAuthority),
-		CertificateAuthorityFile:      types.StringPointerValue(src.CertificateAuthorityFile),
+		CertificateAuthorityFile:      types.StringNull(),
 		CertificateAuthorityKeyPairID: types.StringPointerValue(src.CertificateAuthorityKeyPairId),
 		CircuitBreakerThresholds:      c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
-		ClientCA:                      types.StringPointerValue(src.ClientCa),
-		ClientCAFile:                  types.StringPointerValue(src.ClientCaFile),
-		ClientCAKeyPairID:             types.StringPointerValue(src.ClientCaKeyPairId),
+		ClientCA:                      types.StringNull(),
+		ClientCAFile:                  types.StringNull(),
+		ClientCAKeyPairID:             types.StringNull(),
 		ClusterID:                     types.StringPointerValue(src.ClusterId),
 		CodecType:                     c.CodecType(src.CodecType),
 		CookieDomain:                  types.StringPointerValue(src.CookieDomain),
@@ -341,10 +322,10 @@ func (c *EnterpriseToModelConverter) Settings(src *enterprise.Settings) Settings
 		CookieName:                    types.StringPointerValue(src.CookieName),
 		CookieSameSite:                types.StringPointerValue(src.CookieSameSite),
 		CookieSecret:                  types.StringPointerValue(src.CookieSecret),
-		CookieSecure:                  types.BoolPointerValue(src.CookieSecure),
+		CookieSecure:                  types.BoolNull(),
 		DarkmodePrimaryColor:          types.StringPointerValue(src.DarkmodePrimaryColor),
 		DarkmodeSecondaryColor:        types.StringPointerValue(src.DarkmodeSecondaryColor),
-		DatabrokerServiceURL:          types.StringPointerValue(src.DatabrokerServiceUrl),
+		DatabrokerServiceURL:          c.StringFromSingleElementSlice(path.Root("databroker_service_url"), src.DatabrokerServiceUrls),
 		DefaultUpstreamTimeout:        c.Duration(src.DefaultUpstreamTimeout),
 		DNSFailureRefreshRate:         c.Duration(src.DnsFailureRefreshRate),
 		DNSLookupFamily:               types.StringPointerValue(src.DnsLookupFamily),
@@ -359,31 +340,31 @@ func (c *EnterpriseToModelConverter) Settings(src *enterprise.Settings) Settings
 		GRPCAddress:                     types.StringPointerValue(src.GrpcAddress),
 		GRPCInsecure:                    types.BoolPointerValue(src.GrpcInsecure),
 		HTTPRedirectAddr:                types.StringPointerValue(src.HttpRedirectAddr),
-		ID:                              types.StringValue(src.Id),
-		IdentityProviderAuth0:           c.IdentityProviderAuth0(src.GetIdentityProvider(), src.GetIdentityProviderOptions()),
-		IdentityProviderAzure:           c.IdentityProviderAzure(src.GetIdentityProvider(), src.GetIdentityProviderOptions()),
-		IdentityProviderBlob:            c.IdentityProviderBlob(src.GetIdentityProvider(), src.GetIdentityProviderOptions()),
-		IdentityProviderCognito:         c.IdentityProviderCognito(src.GetIdentityProvider(), src.GetIdentityProviderOptions()),
-		IdentityProviderGitHub:          c.IdentityProviderGitHub(src.GetIdentityProvider(), src.GetIdentityProviderOptions()),
-		IdentityProviderGitLab:          c.IdentityProviderGitLab(src.GetIdentityProvider(), src.GetIdentityProviderOptions()),
-		IdentityProviderGoogle:          c.IdentityProviderGoogle(src.GetIdentityProvider(), src.GetIdentityProviderOptions()),
-		IdentityProviderOkta:            c.IdentityProviderOkta(src.GetIdentityProvider(), src.GetIdentityProviderOptions()),
-		IdentityProviderOneLogin:        c.IdentityProviderOneLogin(src.GetIdentityProvider(), src.GetIdentityProviderOptions()),
-		IdentityProviderPing:            c.IdentityProviderPing(src.GetIdentityProvider(), src.GetIdentityProviderOptions()),
-		IdentityProviderRefreshInterval: c.Duration(src.IdentityProviderRefreshInterval),
-		IdentityProviderRefreshTimeout:  c.Duration(src.IdentityProviderRefreshTimeout),
+		ID:                              types.StringPointerValue(src.Id),
+		IdentityProviderAuth0:           c.IdentityProviderAuth0(src.GetDirectoryProvider(), src.GetDirectoryProviderOptions()),
+		IdentityProviderAzure:           c.IdentityProviderAzure(src.GetDirectoryProvider(), src.GetDirectoryProviderOptions()),
+		IdentityProviderBlob:            c.IdentityProviderBlob(src.GetDirectoryProvider(), src.GetDirectoryProviderOptions()),
+		IdentityProviderCognito:         c.IdentityProviderCognito(src.GetDirectoryProvider(), src.GetDirectoryProviderOptions()),
+		IdentityProviderGitHub:          c.IdentityProviderGitHub(src.GetDirectoryProvider(), src.GetDirectoryProviderOptions()),
+		IdentityProviderGitLab:          c.IdentityProviderGitLab(src.GetDirectoryProvider(), src.GetDirectoryProviderOptions()),
+		IdentityProviderGoogle:          c.IdentityProviderGoogle(src.GetDirectoryProvider(), src.GetDirectoryProviderOptions()),
+		IdentityProviderOkta:            c.IdentityProviderOkta(src.GetDirectoryProvider(), src.GetDirectoryProviderOptions()),
+		IdentityProviderOneLogin:        c.IdentityProviderOneLogin(src.GetDirectoryProvider(), src.GetDirectoryProviderOptions()),
+		IdentityProviderPing:            c.IdentityProviderPing(src.GetDirectoryProvider(), src.GetDirectoryProviderOptions()),
+		IdentityProviderRefreshInterval: c.Duration(src.DirectoryProviderRefreshInterval),
+		IdentityProviderRefreshTimeout:  c.Duration(src.DirectoryProviderRefreshTimeout),
 		IDPAccessTokenAllowedAudiences:  FromStringList(src.IdpAccessTokenAllowedAudiences),
 		IdpClientID:                     types.StringPointerValue(src.IdpClientId),
 		IdpClientSecret:                 types.StringPointerValue(src.IdpClientSecret),
 		IdpProvider:                     types.StringPointerValue(src.IdpProvider),
 		IdpProviderURL:                  types.StringPointerValue(src.IdpProviderUrl),
-		IdpRefreshDirectoryInterval:     c.Duration(src.IdpRefreshDirectoryInterval),
-		IdpRefreshDirectoryTimeout:      c.Duration(src.IdpRefreshDirectoryTimeout),
-		IdpServiceAccount:               types.StringPointerValue(src.IdpServiceAccount),
+		IdpRefreshDirectoryInterval:     c.Duration(src.DirectoryProviderRefreshInterval),
+		IdpRefreshDirectoryTimeout:      c.Duration(src.DirectoryProviderRefreshTimeout),
+		IdpServiceAccount:               types.StringNull(),
 		InsecureServer:                  types.BoolPointerValue(src.InsecureServer),
 		InstallationID:                  types.StringPointerValue(src.InstallationId),
 		JWTClaimsHeaders:                FromStringMap(src.JwtClaimsHeaders),
-		JWTGroupsFilter:                 c.JWTGroupsFilter(src.JwtGroupsFilter),
+		JWTGroupsFilter:                 c.JWTGroupsFilter(src.JwtGroupsFilter, src.JwtGroupsFilterInferFromPpl),
 		JWTIssuerFormat:                 c.IssuerFormat(src.JwtIssuerFormat),
 		LogLevel:                        types.StringPointerValue(src.LogLevel),
 		LogoURL:                         types.StringPointerValue(src.LogoUrl),
@@ -420,4 +401,16 @@ func (c *EnterpriseToModelConverter) Settings(src *enterprise.Settings) Settings
 		TimeoutRead:                     c.Duration(src.TimeoutRead),
 		TimeoutWrite:                    c.Duration(src.TimeoutWrite),
 	}
+}
+
+func (c *APIToModelConverter) StringFromSingleElementSlice(p path.Path, src []string) types.String {
+	if len(src) == 0 {
+		return types.StringNull()
+	}
+
+	if len(src) > 1 {
+		c.diagnostics.AddAttributeError(p, "only a single element is supported", fmt.Sprintf("only a single element is supported, got: %v", src))
+	}
+
+	return types.StringValue(src[0])
 }

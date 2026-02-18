@@ -3,11 +3,14 @@ package provider
 import (
 	"context"
 
+	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go"
+	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 var _ datasource.DataSource = &ServiceAccountDataSource{}
@@ -68,18 +71,31 @@ func (d *ServiceAccountDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		getReq := &pb.GetPomeriumServiceAccountRequest{
-			Id: data.ID.ValueString(),
-		}
-		getRes, err := client.PomeriumServiceAccountService.GetPomeriumServiceAccount(ctx, getReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error reading service account", err.Error())
-			return
-		}
+	resp.Diagnostics.Append(d.client.ConsolidatedOrLegacy(ctx,
+		func(client sdk.Client) {
+			getReq := connect.NewRequest(&pomerium.GetServiceAccountRequest{
+				Id: data.ID.ValueString(),
+			})
+			getRes, err := client.GetServiceAccount(ctx, getReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error getting service account", err.Error())
+				return
+			}
 
-		data = NewEnterpriseToModelConverter(&resp.Diagnostics).ServiceAccount(getRes.GetServiceAccount())
-	})...)
+			data = NewAPIToModelConverter(&resp.Diagnostics).ServiceAccount(getRes.Msg.ServiceAccount)
+		},
+		func(client *client.Client) {
+			getReq := &pb.GetPomeriumServiceAccountRequest{
+				Id: data.ID.ValueString(),
+			}
+			getRes, err := client.PomeriumServiceAccountService.GetPomeriumServiceAccount(ctx, getReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error reading service account", err.Error())
+				return
+			}
+
+			data = NewEnterpriseToModelConverter(&resp.Diagnostics).ServiceAccount(getRes.GetServiceAccount())
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

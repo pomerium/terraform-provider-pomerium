@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 
+	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -15,6 +16,8 @@ import (
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go"
+	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 var (
@@ -80,20 +83,38 @@ func (r *KeyPairResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		createReq := NewModelToEnterpriseConverter(&resp.Diagnostics).CreateKeyPairRequest(plan)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+		func(client sdk.Client) {
+			apiKeyPair := NewModelToAPIConverter(&resp.Diagnostics).KeyPair(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 
-		createRes, err := client.KeyChainService.CreateKeyPair(ctx, createReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error creating key pair", err.Error())
-			return
-		}
+			createReq := connect.NewRequest(&pomerium.CreateKeyPairRequest{
+				KeyPair: apiKeyPair,
+			})
+			createRes, err := client.CreateKeyPair(ctx, createReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error creating key pair", err.Error())
+				return
+			}
 
-		plan.ID = types.StringValue(createRes.KeyPair.Id)
-	})...)
+			plan = NewAPIToModelConverter(&resp.Diagnostics).KeyPair(createRes.Msg.KeyPair)
+		},
+		func(client *client.Client) {
+			createReq := NewModelToEnterpriseConverter(&resp.Diagnostics).CreateKeyPairRequest(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			createRes, err := client.KeyChainService.CreateKeyPair(ctx, createReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error creating key pair", err.Error())
+				return
+			}
+
+			plan.ID = types.StringValue(createRes.KeyPair.Id)
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -114,25 +135,41 @@ func (r *KeyPairResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		getReq := &pb.GetKeyPairRequest{
-			Id: state.ID.ValueString(),
-		}
-		getRes, err := client.KeyChainService.GetKeyPair(ctx, getReq)
-		if err != nil {
-			if status.Code(err) == codes.NotFound {
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+		func(client sdk.Client) {
+			getReq := connect.NewRequest(&pomerium.GetKeyPairRequest{
+				Id: state.ID.ValueString(),
+			})
+			getRes, err := client.GetKeyPair(ctx, getReq)
+			if connect.CodeOf(err) == connect.CodeNotFound {
 				resp.State.RemoveResource(ctx)
 				return
+			} else if err != nil {
+				resp.Diagnostics.AddError("Error getting key pair", err.Error())
+				return
 			}
-			resp.Diagnostics.AddError("Error reading key pair", err.Error())
-			return
-		}
 
-		state.ID = types.StringValue(getRes.KeyPair.Id)
-		state.NamespaceID = types.StringValue(getRes.KeyPair.NamespaceId)
-		state.Name = types.StringValue(getRes.KeyPair.Name)
-		state.Certificate = types.StringValue(string(getRes.KeyPair.Certificate))
-	})...)
+			state = NewAPIToModelConverter(&resp.Diagnostics).KeyPair(getRes.Msg.KeyPair)
+		},
+		func(client *client.Client) {
+			getReq := &pb.GetKeyPairRequest{
+				Id: state.ID.ValueString(),
+			}
+			getRes, err := client.KeyChainService.GetKeyPair(ctx, getReq)
+			if err != nil {
+				if status.Code(err) == codes.NotFound {
+					resp.State.RemoveResource(ctx)
+					return
+				}
+				resp.Diagnostics.AddError("Error reading key pair", err.Error())
+				return
+			}
+
+			state.ID = types.StringValue(getRes.KeyPair.Id)
+			state.NamespaceID = types.StringValue(getRes.KeyPair.NamespaceId)
+			state.Name = types.StringValue(getRes.KeyPair.Name)
+			state.Certificate = types.StringValue(string(getRes.KeyPair.Certificate))
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -148,18 +185,36 @@ func (r *KeyPairResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		updateReq := NewModelToEnterpriseConverter(&resp.Diagnostics).UpdateKeyPairRequest(plan)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+		func(client sdk.Client) {
+			apiKeyPair := NewModelToAPIConverter(&resp.Diagnostics).KeyPair(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 
-		_, err := client.KeyChainService.UpdateKeyPair(ctx, updateReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error updating key pair", err.Error())
-			return
-		}
-	})...)
+			updateReq := connect.NewRequest(&pomerium.UpdateKeyPairRequest{
+				KeyPair: apiKeyPair,
+			})
+			updateRes, err := client.UpdateKeyPair(ctx, updateReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error updating key pair", err.Error())
+				return
+			}
+
+			plan = NewAPIToModelConverter(&resp.Diagnostics).KeyPair(updateRes.Msg.KeyPair)
+		},
+		func(client *client.Client) {
+			updateReq := NewModelToEnterpriseConverter(&resp.Diagnostics).UpdateKeyPairRequest(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			_, err := client.KeyChainService.UpdateKeyPair(ctx, updateReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error updating key pair", err.Error())
+				return
+			}
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -175,16 +230,27 @@ func (r *KeyPairResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		deleteReq := &pb.DeleteKeyPairRequest{
-			Id: state.ID.ValueString(),
-		}
-		_, err := client.KeyChainService.DeleteKeyPair(ctx, deleteReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error deleting key pair", err.Error())
-			return
-		}
-	})...)
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+		func(client sdk.Client) {
+			deleteReq := connect.NewRequest(&pomerium.DeleteKeyPairRequest{
+				Id: state.ID.ValueString(),
+			})
+			_, err := client.DeleteKeyPair(ctx, deleteReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error deleting key pair", err.Error())
+				return
+			}
+		},
+		func(client *client.Client) {
+			deleteReq := &pb.DeleteKeyPairRequest{
+				Id: state.ID.ValueString(),
+			}
+			_, err := client.KeyChainService.DeleteKeyPair(ctx, deleteReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error deleting key pair", err.Error())
+				return
+			}
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

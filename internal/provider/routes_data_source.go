@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 
+	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -11,6 +12,7 @@ import (
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go"
 )
 
 var _ datasource.DataSource = &RoutesDataSource{}
@@ -95,33 +97,57 @@ func (d *RoutesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		listReq := &pb.ListRoutesRequest{
-			Namespace: data.NamespaceID.ValueString(),
-			Query:     data.Query.ValueStringPointer(),
-			Offset:    data.Offset.ValueInt64Pointer(),
-			Limit:     data.Limit.ValueInt64Pointer(),
-			OrderBy:   data.OrderBy.ValueStringPointer(),
-			ClusterId: data.ClusterID.ValueStringPointer(),
-		}
-		listRes, err := client.RouteService.ListRoutes(ctx, listReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error reading routes", err.Error())
-			return
-		}
-
-		routes := make([]RouteModel, 0, len(listRes.Routes))
-		for _, route := range listRes.Routes {
-			routeModel := NewEnterpriseToModelConverter(&resp.Diagnostics).Route(route)
+	resp.Diagnostics.Append(d.client.ConsolidatedOrLegacy(ctx,
+		func(client sdk.Client) {
+			listReq := connect.NewRequest(NewModelToAPIConverter(&resp.Diagnostics).ListRoutesRequest(data))
 			if resp.Diagnostics.HasError() {
 				return
 			}
-			routes = append(routes, routeModel)
-		}
 
-		data.Routes = routes
-		data.TotalCount = types.Int64Value(listRes.GetTotalCount())
-	})...)
+			listRes, err := client.ListRoutes(ctx, listReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error listing routes", err.Error())
+				return
+			}
+
+			routes := make([]RouteModel, 0, len(listRes.Msg.Routes))
+			for _, policy := range listRes.Msg.Routes {
+				policyModel := NewAPIToModelConverter(&resp.Diagnostics).Route(policy)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				routes = append(routes, policyModel)
+			}
+
+			data.Routes = routes
+		},
+		func(client *client.Client) {
+			listReq := &pb.ListRoutesRequest{
+				Namespace: data.NamespaceID.ValueString(),
+				Query:     data.Query.ValueStringPointer(),
+				Offset:    data.Offset.ValueInt64Pointer(),
+				Limit:     data.Limit.ValueInt64Pointer(),
+				OrderBy:   data.OrderBy.ValueStringPointer(),
+				ClusterId: data.ClusterID.ValueStringPointer(),
+			}
+			listRes, err := client.RouteService.ListRoutes(ctx, listReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error reading routes", err.Error())
+				return
+			}
+
+			routes := make([]RouteModel, 0, len(listRes.Routes))
+			for _, route := range listRes.Routes {
+				routeModel := NewEnterpriseToModelConverter(&resp.Diagnostics).Route(route)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				routes = append(routes, routeModel)
+			}
+
+			data.Routes = routes
+			data.TotalCount = types.Int64Value(listRes.GetTotalCount())
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

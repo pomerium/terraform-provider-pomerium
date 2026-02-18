@@ -63,6 +63,7 @@ var SettingsResourceSchema = schema.Schema{
 		},
 		"installation_id": schema.StringAttribute{
 			Optional:    true,
+			Computed:    true,
 			Description: "Installation ID",
 		},
 		"log_level": schema.StringAttribute{

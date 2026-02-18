@@ -3,12 +3,15 @@ package provider
 import (
 	"context"
 
+	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -18,6 +21,8 @@ import (
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go"
+	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -82,27 +87,39 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			},
 			"prefix": schema.StringAttribute{
 				Description: "Matches incoming requests with a path that begins with the specified prefix.",
+				Computed:    true,
 				Optional:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 			"path": schema.StringAttribute{
 				Description: "Matches incoming requests with a path that is an exact match for the specified path.",
+				Computed:    true,
 				Optional:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 			"regex": schema.StringAttribute{
 				Description: "Matches incoming requests with a path that matches the specified regular expression.",
+				Computed:    true,
 				Optional:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 			"prefix_rewrite": schema.StringAttribute{
 				Description: "While forwarding a request, Prefix Rewrite swaps the matched prefix (or path) with the specified value.",
+				Computed:    true,
 				Optional:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 			"regex_rewrite_pattern": schema.StringAttribute{
 				Description: "Rewrites the URL path according to the regex rewrite pattern.",
+				Computed:    true,
 				Optional:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 			"regex_rewrite_substitution": schema.StringAttribute{
 				Description: "Rewrites the URL path according to the regex rewrite substitution.",
+				Computed:    true,
 				Optional:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 			"host_rewrite": schema.StringAttribute{
 				Description: "Rewrites the Host header to a new literal value.",
@@ -138,27 +155,39 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			},
 			"allow_websockets": schema.BoolAttribute{
 				Description: "If applied, this setting enables Pomerium to proxy websocket connections.",
+				Computed:    true,
 				Optional:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"allow_spdy": schema.BoolAttribute{
 				Description: "If applied, this setting enables Pomerium to proxy SPDY protocol upgrades.",
+				Computed:    true,
 				Optional:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"tls_skip_verify": schema.BoolAttribute{
 				Description: "If applied, Pomerium accepts any certificate presented by the upstream server and any Hostname in that certificate. Use for testing only.",
+				Computed:    true,
 				Optional:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"tls_upstream_server_name": schema.StringAttribute{
 				Description: "This server name overrides the Hostname in the 'To:' field, and will be used to verify the certificate name.",
+				Computed:    true,
 				Optional:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 			"tls_downstream_server_name": schema.StringAttribute{
 				Description: "TLS downstream server name.",
+				Computed:    true,
 				Optional:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 			"tls_upstream_allow_renegotiation": schema.BoolAttribute{
 				Description: "TLS upstream allow renegotiation.",
+				Computed:    true,
 				Optional:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"set_request_headers": schema.MapAttribute{
 				ElementType: types.StringType,
@@ -177,7 +206,9 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			},
 			"preserve_host_header": schema.BoolAttribute{
 				Description: "Passes the host header from the incoming request to the proxied host, instead of the destination hostname.",
+				Computed:    true,
 				Optional:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"pass_identity_headers": schema.BoolAttribute{
 				Description: "If applied, passes X-Pomerium-Jwt-Assertion header and JWT Claims Headers to the upstream application.",
@@ -185,7 +216,9 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			},
 			"kubernetes_service_account_token": schema.StringAttribute{
 				Description: "Kubernetes service account token.",
+				Computed:    true,
 				Optional:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 			"idp_client_id": schema.StringAttribute{
 				Description: "IDP client ID.",
@@ -250,7 +283,9 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			},
 			"kubernetes_service_account_token_file": schema.StringAttribute{
 				Description: "Path to the Kubernetes service account token file.",
+				Computed:    true,
 				Optional:    true,
+				Default:     stringdefault.StaticString(""),
 			},
 			"logo_url": schema.StringAttribute{
 				Description: "URL to the logo image.",
@@ -441,23 +476,41 @@ func (r *RouteResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbRoute := NewModelToEnterpriseConverter(&resp.Diagnostics).Route(plan)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+		func(client sdk.Client) {
+			apiRoute := NewModelToAPIConverter(&resp.Diagnostics).Route(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 
-		setReq := &pb.SetRouteRequest{
-			Route: pbRoute,
-		}
-		setRes, err := client.RouteService.SetRoute(ctx, setReq)
-		if err != nil {
-			resp.Diagnostics.AddError("set route", err.Error())
-			return
-		}
+			createReq := connect.NewRequest(&pomerium.CreateRouteRequest{
+				Route: apiRoute,
+			})
+			createRes, err := client.CreateRoute(ctx, createReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error creating route", err.Error())
+				return
+			}
 
-		plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Route(setRes.GetRoute())
-	})...)
+			plan = NewAPIToModelConverter(&resp.Diagnostics).Route(createRes.Msg.Route)
+		},
+		func(client *client.Client) {
+			pbRoute := NewModelToEnterpriseConverter(&resp.Diagnostics).Route(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			setReq := &pb.SetRouteRequest{
+				Route: pbRoute,
+			}
+			setRes, err := client.RouteService.SetRoute(ctx, setReq)
+			if err != nil {
+				resp.Diagnostics.AddError("set route", err.Error())
+				return
+			}
+
+			plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Route(setRes.GetRoute())
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -478,22 +531,38 @@ func (r *RouteResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		getReq := &pb.GetRouteRequest{
-			Id: state.ID.ValueString(),
-		}
-		getRes, err := client.RouteService.GetRoute(ctx, getReq)
-		if err != nil {
-			if status.Code(err) == codes.NotFound {
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+		func(client sdk.Client) {
+			getReq := connect.NewRequest(&pomerium.GetRouteRequest{
+				Id: state.ID.ValueString(),
+			})
+			getRes, err := client.GetRoute(ctx, getReq)
+			if connect.CodeOf(err) == connect.CodeNotFound {
 				resp.State.RemoveResource(ctx)
 				return
+			} else if err != nil {
+				resp.Diagnostics.AddError("Error getting route", err.Error())
+				return
 			}
-			resp.Diagnostics.AddError("get route", err.Error())
-			return
-		}
 
-		state = NewEnterpriseToModelConverter(&resp.Diagnostics).Route(getRes.GetRoute())
-	})...)
+			state = NewAPIToModelConverter(&resp.Diagnostics).Route(getRes.Msg.Route)
+		},
+		func(client *client.Client) {
+			getReq := &pb.GetRouteRequest{
+				Id: state.ID.ValueString(),
+			}
+			getRes, err := client.RouteService.GetRoute(ctx, getReq)
+			if err != nil {
+				if status.Code(err) == codes.NotFound {
+					resp.State.RemoveResource(ctx)
+					return
+				}
+				resp.Diagnostics.AddError("get route", err.Error())
+				return
+			}
+
+			state = NewEnterpriseToModelConverter(&resp.Diagnostics).Route(getRes.GetRoute())
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -509,23 +578,41 @@ func (r *RouteResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbRoute := NewModelToEnterpriseConverter(&resp.Diagnostics).Route(plan)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+		func(client sdk.Client) {
+			apiRoute := NewModelToAPIConverter(&resp.Diagnostics).Route(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 
-		setReq := &pb.SetRouteRequest{
-			Route: pbRoute,
-		}
-		setRes, err := client.RouteService.SetRoute(ctx, setReq)
-		if err != nil {
-			resp.Diagnostics.AddError("set route", err.Error())
-			return
-		}
+			updateReq := connect.NewRequest(&pomerium.UpdateRouteRequest{
+				Route: apiRoute,
+			})
+			updateRes, err := client.UpdateRoute(ctx, updateReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error updating route", err.Error())
+				return
+			}
 
-		plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Route(setRes.GetRoute())
-	})...)
+			plan = NewAPIToModelConverter(&resp.Diagnostics).Route(updateRes.Msg.Route)
+		},
+		func(client *client.Client) {
+			pbRoute := NewModelToEnterpriseConverter(&resp.Diagnostics).Route(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			setReq := &pb.SetRouteRequest{
+				Route: pbRoute,
+			}
+			setRes, err := client.RouteService.SetRoute(ctx, setReq)
+			if err != nil {
+				resp.Diagnostics.AddError("set route", err.Error())
+				return
+			}
+
+			plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Route(setRes.GetRoute())
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -541,16 +628,27 @@ func (r *RouteResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		deleteReq := &pb.DeleteRouteRequest{
-			Id: data.ID.ValueString(),
-		}
-		_, err := client.RouteService.DeleteRoute(ctx, deleteReq)
-		if err != nil {
-			resp.Diagnostics.AddError("delete route", err.Error())
-			return
-		}
-	})...)
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+		func(client sdk.Client) {
+			deleteReq := connect.NewRequest(&pomerium.DeleteRouteRequest{
+				Id: data.ID.ValueString(),
+			})
+			_, err := client.DeleteRoute(ctx, deleteReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error deleting route", err.Error())
+				return
+			}
+		},
+		func(client *client.Client) {
+			deleteReq := &pb.DeleteRouteRequest{
+				Id: data.ID.ValueString(),
+			}
+			_, err := client.RouteService.DeleteRoute(ctx, deleteReq)
+			if err != nil {
+				resp.Diagnostics.AddError("delete route", err.Error())
+				return
+			}
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

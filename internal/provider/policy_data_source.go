@@ -3,12 +3,15 @@ package provider
 import (
 	"context"
 
+	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go"
+	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 var _ datasource.DataSource = &PolicyDataSource{}
@@ -83,18 +86,31 @@ func (d *PolicyDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		getReq := &pb.GetPolicyRequest{
-			Id: data.ID.ValueString(),
-		}
-		getRes, err := client.PolicyService.GetPolicy(ctx, getReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error reading policy", err.Error())
-			return
-		}
+	resp.Diagnostics.Append(d.client.ConsolidatedOrLegacy(ctx,
+		func(client sdk.Client) {
+			getReq := connect.NewRequest(&pomerium.GetPolicyRequest{
+				Id: data.ID.ValueString(),
+			})
+			getRes, err := client.GetPolicy(ctx, getReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error getting policy", err.Error())
+				return
+			}
 
-		data = NewEnterpriseToModelConverter(&resp.Diagnostics).Policy(getRes.GetPolicy())
-	})...)
+			data = NewAPIToModelConverter(&resp.Diagnostics).Policy(getRes.Msg.Policy)
+		},
+		func(client *client.Client) {
+			getReq := &pb.GetPolicyRequest{
+				Id: data.ID.ValueString(),
+			}
+			getRes, err := client.PolicyService.GetPolicy(ctx, getReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error reading policy", err.Error())
+				return
+			}
+
+			data = NewEnterpriseToModelConverter(&resp.Diagnostics).Policy(getRes.GetPolicy())
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
