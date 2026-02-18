@@ -48,10 +48,10 @@ func TestModelToAPI(t *testing.T) {
 			})
 			assert.Empty(t, cmp.Diff(&pomerium.KeyPair{
 				Certificate:  []byte("CERTIFICATE"),
-				Id:           proto.String("ID"),
+				Id:           new("ID"),
 				Key:          []byte("KEY"),
-				Name:         proto.String("NAME"),
-				NamespaceId:  proto.String("NAMESPACE_ID"),
+				Name:         new("NAME"),
+				NamespaceId:  new("NAMESPACE_ID"),
 				Origin:       pomerium.KeyPairOrigin_KEY_PAIR_ORIGIN_USER,
 				OriginatorId: proto.String(provider.OriginatorID),
 				Status:       pomerium.KeyPairStatus_KEY_PAIR_STATUS_READY,
@@ -66,13 +66,13 @@ func TestModelToAPI(t *testing.T) {
 			var diagnostics diag.Diagnostics
 			result := provider.NewModelToAPIConverter(&diagnostics).Policy(provider.PolicyModel{})
 			assert.Empty(t, cmp.Diff(&pomerium.Policy{
-				Description:  proto.String(""),
-				Enforced:     proto.Bool(false),
-				Explanation:  proto.String(""),
-				Name:         proto.String(""),
+				Description:  new(""),
+				Enforced:     new(false),
+				Explanation:  new(""),
+				Name:         new(""),
 				OriginatorId: proto.String(provider.OriginatorID),
-				Remediation:  proto.String(""),
-				SourcePpl:    proto.String(""),
+				Remediation:  new(""),
+				SourcePpl:    new(""),
 			}, result, protocmp.Transform()))
 			assert.Empty(t, diagnostics)
 		})
@@ -101,16 +101,16 @@ func TestModelToAPI(t *testing.T) {
 				Remediation: types.StringValue("REMEDIATION"),
 			})
 			assert.Empty(t, cmp.Diff(&pomerium.Policy{
-				Description:  proto.String("DESCRIPTION"),
-				Enforced:     proto.Bool(true),
-				Explanation:  proto.String("EXPLANATION"),
-				Id:           proto.String("ID"),
-				Name:         proto.String("NAME"),
-				NamespaceId:  proto.String("NAMESPACE_ID"),
+				Description:  new("DESCRIPTION"),
+				Enforced:     new(true),
+				Explanation:  new("EXPLANATION"),
+				Id:           new("ID"),
+				Name:         new("NAME"),
+				NamespaceId:  new("NAMESPACE_ID"),
 				OriginatorId: proto.String(provider.OriginatorID),
 				Rego:         []string{"REGO1", "REGO2", "REGO3"},
-				Remediation:  proto.String("REMEDIATION"),
-				SourcePpl:    proto.String(`[{"allow":{"and":[{"accept":true}]}}]`),
+				Remediation:  new("REMEDIATION"),
+				SourcePpl:    new(`[{"allow":{"and":[{"accept":true}]}}]`),
 			}, result, protocmp.Transform()))
 			assert.Empty(t, diagnostics)
 		})
@@ -165,16 +165,16 @@ func TestModelToAPI(t *testing.T) {
 				AllowSpdy:           true,
 				AllowWebsockets:     true,
 				DependsOn:           []string{"host1.example.com", "host2.example.com"},
-				Description:         proto.String("DESCRIPTION"),
+				Description:         new("DESCRIPTION"),
 				From:                "https://from.example.com",
-				HostRewrite:         proto.String("HOST_REWRITE"),
-				Id:                  proto.String("ID"),
+				HostRewrite:         new("HOST_REWRITE"),
+				Id:                  new("ID"),
 				IdleTimeout:         durationpb.New(30 * time.Second),
-				IdpClientId:         proto.String("IDP_CLIENT_ID"),
-				Name:                proto.String("NAME"),
-				NamespaceId:         proto.String("NAMESPACE_ID"),
+				IdpClientId:         new("IDP_CLIENT_ID"),
+				Name:                new("NAME"),
+				NamespaceId:         new("NAMESPACE_ID"),
 				OriginatorId:        proto.String(provider.OriginatorID),
-				PassIdentityHeaders: proto.Bool(true),
+				PassIdentityHeaders: new(true),
 				Path:                "/path",
 				PolicyIds:           []string{"POLICY1", "POLICY2"},
 				Prefix:              "/prefix",
@@ -184,9 +184,9 @@ func TestModelToAPI(t *testing.T) {
 					"X-Custom": "value",
 				},
 				ShowErrorDetails:      true,
-				StatName:              proto.String("STAT_NAME"),
+				StatName:              new("STAT_NAME"),
 				Timeout:               durationpb.New(60 * time.Second),
-				TlsClientKeyPairId:    proto.String("TLS_KEY_PAIR_ID"),
+				TlsClientKeyPairId:    new("TLS_KEY_PAIR_ID"),
 				TlsSkipVerify:         true,
 				TlsUpstreamServerName: "upstream.example.com",
 				To:                    []string{"https://to1.example.com", "https://to2.example.com"},
@@ -254,45 +254,45 @@ func TestModelToAPI(t *testing.T) {
 				TimeoutRead:                timetypes.NewGoDurationValue(30 * time.Second),
 				TimeoutWrite:               timetypes.NewGoDurationValue(30 * time.Second),
 			})
-			assert.Equal(t, proto.String(":443"), result.Address)
-			assert.Equal(t, proto.String("https://authenticate.example.com"), result.AuthenticateServiceUrl)
+			assert.Equal(t, new(":443"), result.Address)
+			assert.Equal(t, new("https://authenticate.example.com"), result.AuthenticateServiceUrl)
 			assert.Equal(t, []string{"https://authorize.example.com"}, result.AuthorizeServiceUrls)
-			assert.Equal(t, proto.Bool(true), result.Autocert)
-			assert.Equal(t, proto.String("CA_CERT"), result.CertificateAuthority)
-			assert.Equal(t, proto.String("CLUSTER_ID"), result.ClusterId)
-			assert.Equal(t, proto.String(".example.com"), result.CookieDomain)
+			assert.Equal(t, new(true), result.Autocert)
+			assert.Equal(t, new("CA_CERT"), result.CertificateAuthority)
+			assert.Equal(t, new("CLUSTER_ID"), result.ClusterId)
+			assert.Equal(t, new(".example.com"), result.CookieDomain)
 			assert.Empty(t, cmp.Diff(durationpb.New(24*time.Hour), result.CookieExpire, protocmp.Transform()))
-			assert.Equal(t, proto.Bool(true), result.CookieHttpOnly)
-			assert.Equal(t, proto.String("_pomerium"), result.CookieName)
-			assert.Equal(t, proto.String("lax"), result.CookieSameSite)
-			assert.Equal(t, proto.String("SECRET"), result.CookieSecret)
+			assert.Equal(t, new(true), result.CookieHttpOnly)
+			assert.Equal(t, new("_pomerium"), result.CookieName)
+			assert.Equal(t, new("lax"), result.CookieSameSite)
+			assert.Equal(t, new("SECRET"), result.CookieSecret)
 			assert.Empty(t, cmp.Diff(durationpb.New(30*time.Second), result.DefaultUpstreamTimeout, protocmp.Transform()))
-			assert.Equal(t, proto.String("ACCESS_DENIED"), result.ErrorMessageFirstParagraph)
-			assert.Equal(t, proto.String(":5443"), result.GrpcAddress)
-			assert.Equal(t, proto.Bool(false), result.GrpcInsecure)
-			assert.Equal(t, proto.String(":80"), result.HttpRedirectAddr)
-			assert.Equal(t, proto.String("SETTINGS_ID"), result.Id)
-			assert.Equal(t, proto.String("IDP_CLIENT_ID"), result.IdpClientId)
-			assert.Equal(t, proto.String("IDP_CLIENT_SECRET"), result.IdpClientSecret)
-			assert.Equal(t, proto.String("google"), result.IdpProvider)
-			assert.Equal(t, proto.String("https://accounts.google.com"), result.IdpProviderUrl)
-			assert.Equal(t, proto.Bool(false), result.InsecureServer)
-			assert.Equal(t, proto.String("INSTALLATION_ID"), result.InstallationId)
+			assert.Equal(t, new("ACCESS_DENIED"), result.ErrorMessageFirstParagraph)
+			assert.Equal(t, new(":5443"), result.GrpcAddress)
+			assert.Equal(t, new(false), result.GrpcInsecure)
+			assert.Equal(t, new(":80"), result.HttpRedirectAddr)
+			assert.Equal(t, new("SETTINGS_ID"), result.Id)
+			assert.Equal(t, new("IDP_CLIENT_ID"), result.IdpClientId)
+			assert.Equal(t, new("IDP_CLIENT_SECRET"), result.IdpClientSecret)
+			assert.Equal(t, new("google"), result.IdpProvider)
+			assert.Equal(t, new("https://accounts.google.com"), result.IdpProviderUrl)
+			assert.Equal(t, new(false), result.InsecureServer)
+			assert.Equal(t, new("INSTALLATION_ID"), result.InstallationId)
 			assert.Equal(t, map[string]string{"X-Email": "email"}, result.JwtClaimsHeaders)
-			assert.Equal(t, proto.String("info"), result.LogLevel)
-			assert.Equal(t, proto.String("https://example.com/logo.png"), result.LogoUrl)
-			assert.Equal(t, proto.String(":9090"), result.MetricsAddress)
+			assert.Equal(t, new("info"), result.LogLevel)
+			assert.Equal(t, new("https://example.com/logo.png"), result.LogoUrl)
+			assert.Equal(t, new(":9090"), result.MetricsAddress)
 			assert.Equal(t, proto.String(provider.OriginatorID), result.OriginatorId)
-			assert.Equal(t, proto.Bool(true), result.PassIdentityHeaders)
-			assert.Equal(t, proto.String("#000000"), result.PrimaryColor)
-			assert.Equal(t, proto.String("debug"), result.ProxyLogLevel)
+			assert.Equal(t, new(true), result.PassIdentityHeaders)
+			assert.Equal(t, new("#000000"), result.PrimaryColor)
+			assert.Equal(t, new("debug"), result.ProxyLogLevel)
 			assert.Equal(t, map[string]string{"param1": "value1"}, result.RequestParams)
 			assert.ElementsMatch(t, []string{"openid", "profile"}, result.Scopes)
-			assert.Equal(t, proto.String("#FFFFFF"), result.SecondaryColor)
+			assert.Equal(t, new("#FFFFFF"), result.SecondaryColor)
 			assert.Equal(t, map[string]string{"X-Frame-Options": "DENY"}, result.SetResponseHeaders)
-			assert.Equal(t, proto.Bool(false), result.SkipXffAppend)
-			assert.Equal(t, proto.String(":22"), result.SshAddress)
-			assert.Equal(t, proto.String("SSH_CA_KEY"), result.SshUserCaKey)
+			assert.Equal(t, new(false), result.SkipXffAppend)
+			assert.Equal(t, new(":22"), result.SshAddress)
+			assert.Equal(t, new("SSH_CA_KEY"), result.SshUserCaKey)
 			assert.Empty(t, cmp.Diff(durationpb.New(5*time.Minute), result.TimeoutIdle, protocmp.Transform()))
 			assert.Empty(t, cmp.Diff(durationpb.New(30*time.Second), result.TimeoutRead, protocmp.Transform()))
 			assert.Empty(t, cmp.Diff(durationpb.New(30*time.Second), result.TimeoutWrite, protocmp.Transform()))
