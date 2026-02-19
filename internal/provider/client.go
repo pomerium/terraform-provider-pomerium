@@ -41,6 +41,9 @@ type Client struct {
 	tlsConfig           *tls.Config
 	consolidated        sdk.Client
 
+	coreClientLock sync.RWMutex
+	coreClient     sdk.CoreClient
+
 	enterpriseClientLock sync.RWMutex
 	enterpriseClient     *client.Client
 
@@ -70,9 +73,10 @@ func NewClient(apiURL, serviceAccountToken, sharedSecretB64 string, tlsConfig *t
 	}
 }
 
+// ByServerType invokes a handler based on the server type.
 func (c *Client) ByServerType(
 	ctx context.Context,
-	onCore func(),
+	onCore func(client sdk.CoreClient),
 	onEnterprise func(client *client.Client),
 	onZero func(client sdk.ZeroClient),
 ) diag.Diagnostics {
@@ -86,7 +90,12 @@ func (c *Client) ByServerType(
 
 	switch serverType {
 	case serverTypeCore:
-		onCore()
+		coreClient, err := c.getCoreClient()
+		if err == nil {
+			onCore(coreClient)
+		} else {
+			diagnostics.Append(diag.NewErrorDiagnostic("error creating core client", err.Error()))
+		}
 	case serverTypeEnterprise, serverTypeLegacy:
 		enterpriseClient, err := c.getEnterpriseClient()
 		if err == nil {
@@ -142,36 +151,32 @@ func (c *Client) ConsolidatedOrLegacy(
 	return diagnostics
 }
 
-// EnterpriseOnly invokes onEnterprise if the server is not of type zero or
-// core.
-func (c *Client) EnterpriseOnly(
-	ctx context.Context,
-	onEnterprise func(client *client.Client),
-) diag.Diagnostics {
-	var diagnostics diag.Diagnostics
+func (c *Client) getCoreClient() (sdk.CoreClient, error) {
+	c.coreClientLock.RLock()
+	if c.coreClient != nil {
+		c.coreClientLock.RUnlock()
+		return c.coreClient, nil
+	}
+	c.coreClientLock.RUnlock()
 
-	serverType, err := c.getServerType(ctx)
-	if err != nil {
-		diagnostics.Append(diag.NewErrorDiagnostic("error determining server type", err.Error()))
-		return diagnostics
+	c.coreClientLock.Lock()
+	defer c.coreClientLock.Unlock()
+	if c.coreClient != nil {
+		return c.coreClient, nil
 	}
 
-	switch serverType {
-	case serverTypeLegacy, serverTypeEnterprise:
-		enterpriseClient, err := c.getEnterpriseClient()
-		if err == nil {
-			onEnterprise(enterpriseClient)
-		} else {
-			diagnostics.Append(diag.NewErrorDiagnostic("error creating enterprise client", err.Error()))
-		}
-	case serverTypeCore, serverTypeZero:
-		fallthrough
-	default:
-		diagnostics.Append(diag.NewErrorDiagnostic("unsupported server type",
-			fmt.Sprintf("unsupported server type: %s", serverType)))
+	httpTransport := http.DefaultTransport.(*http.Transport).Clone()
+	httpTransport.TLSClientConfig = c.tlsConfig
+	httpClient := &http.Client{
+		Transport: httpTransport,
 	}
-
-	return diagnostics
+	var err error
+	c.coreClient, err = sdk.NewCoreClient(
+		sdk.WithAPIToken(cmp.Or(c.serviceAccountToken, c.sharedSecretB64)),
+		sdk.WithHTTPClient(httpClient),
+		sdk.WithURL(c.apiURL),
+	)
+	return c.coreClient, err
 }
 
 func (c *Client) getEnterpriseClient() (*client.Client, error) {

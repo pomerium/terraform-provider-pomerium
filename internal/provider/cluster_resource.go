@@ -14,6 +14,7 @@ import (
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go"
 )
 
 type ClusterResourceModel = ClusterModel
@@ -103,26 +104,33 @@ func (r *ClusterResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbCluster := NewModelToEnterpriseConverter(&resp.Diagnostics).Cluster(plan)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	resp.Diagnostics.Append(r.client.ByServerType(ctx,
+		func(_ sdk.CoreClient) {
+			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		},
+		func(client *client.Client) {
+			pbCluster := NewModelToEnterpriseConverter(&resp.Diagnostics).Cluster(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 
-		addReq := &pb.AddClusterRequest{
-			ParentNamespaceId: plan.ParentNamespaceID.ValueString(),
-			Cluster:           pbCluster,
-		}
-		addRes, err := client.ClustersService.AddCluster(ctx, addReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error creating cluster", err.Error())
-			return
-		}
+			addReq := &pb.AddClusterRequest{
+				ParentNamespaceId: plan.ParentNamespaceID.ValueString(),
+				Cluster:           pbCluster,
+			}
+			addRes, err := client.ClustersService.AddCluster(ctx, addReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error creating cluster", err.Error())
+				return
+			}
 
-		plan.NamespaceID = types.StringValue(addRes.Namespace.Id)
-		plan.ParentNamespaceID = types.StringValue(addRes.Namespace.ParentId)
-		plan.ID = types.StringValue(addRes.Cluster.Id)
-	})...)
+			plan.NamespaceID = types.StringValue(addRes.Namespace.Id)
+			plan.ParentNamespaceID = types.StringValue(addRes.Namespace.ParentId)
+			plan.ID = types.StringValue(addRes.Cluster.Id)
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -143,22 +151,29 @@ func (r *ClusterResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		getReq := &pb.GetClusterRequest{
-			Id: state.ID.ValueString(),
-		}
-		getRes, err := client.ClustersService.GetCluster(ctx, getReq)
-		if err != nil {
-			if status.Code(err) == codes.NotFound {
-				resp.State.RemoveResource(ctx)
+	resp.Diagnostics.Append(r.client.ByServerType(ctx,
+		func(_ sdk.CoreClient) {
+			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		},
+		func(client *client.Client) {
+			getReq := &pb.GetClusterRequest{
+				Id: state.ID.ValueString(),
+			}
+			getRes, err := client.ClustersService.GetCluster(ctx, getReq)
+			if err != nil {
+				if status.Code(err) == codes.NotFound {
+					resp.State.RemoveResource(ctx)
+					return
+				}
+				resp.Diagnostics.AddError("Error reading cluster", err.Error())
 				return
 			}
-			resp.Diagnostics.AddError("Error reading cluster", err.Error())
-			return
-		}
 
-		state = NewEnterpriseToModelConverter(&resp.Diagnostics).Cluster(getRes.GetCluster(), getRes.GetNamespace())
-	})...)
+			state = NewEnterpriseToModelConverter(&resp.Diagnostics).Cluster(getRes.GetCluster(), getRes.GetNamespace())
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -174,23 +189,30 @@ func (r *ClusterResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbCluster := NewModelToEnterpriseConverter(&resp.Diagnostics).Cluster(plan)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	resp.Diagnostics.Append(r.client.ByServerType(ctx,
+		func(_ sdk.CoreClient) {
+			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		},
+		func(client *client.Client) {
+			pbCluster := NewModelToEnterpriseConverter(&resp.Diagnostics).Cluster(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 
-		updateReq := &pb.UpdateClusterRequest{
-			Cluster: pbCluster,
-		}
-		updateRes, err := client.ClustersService.UpdateCluster(ctx, updateReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error updating cluster", err.Error())
-			return
-		}
+			updateReq := &pb.UpdateClusterRequest{
+				Cluster: pbCluster,
+			}
+			updateRes, err := client.ClustersService.UpdateCluster(ctx, updateReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error updating cluster", err.Error())
+				return
+			}
 
-		plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Cluster(updateRes.GetCluster(), updateRes.GetNamespace())
-	})...)
+			plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Cluster(updateRes.GetCluster(), updateRes.GetNamespace())
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -206,16 +228,23 @@ func (r *ClusterResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		deleteReq := &pb.DeleteClusterRequest{
-			Id: state.ID.ValueString(),
-		}
-		_, err := client.ClustersService.DeleteCluster(ctx, deleteReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error deleting cluster", err.Error())
-			return
-		}
-	})...)
+	resp.Diagnostics.Append(r.client.ByServerType(ctx,
+		func(_ sdk.CoreClient) {
+			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		},
+		func(client *client.Client) {
+			deleteReq := &pb.DeleteClusterRequest{
+				Id: state.ID.ValueString(),
+			}
+			_, err := client.ClustersService.DeleteCluster(ctx, deleteReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error deleting cluster", err.Error())
+				return
+			}
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

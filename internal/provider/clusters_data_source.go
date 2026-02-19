@@ -56,8 +56,8 @@ func (d *ClustersDataSource) Read(ctx context.Context, req datasource.ReadReques
 	}
 
 	resp.Diagnostics.Append(d.client.ByServerType(ctx,
-		func() {
-			data.Clusters = make([]ClusterModel, 0)
+		func(_ sdk.CoreClient) {
+			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
 		},
 		func(client *client.Client) {
 			listReq := &pb.ListClustersRequest{}

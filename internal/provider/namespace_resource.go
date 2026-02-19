@@ -80,7 +80,7 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	resp.Diagnostics.Append(r.client.ByServerType(ctx,
-		func() {
+		func(_ sdk.CoreClient) {
 			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
 		},
 		func(client *client.Client) {
@@ -125,7 +125,7 @@ func (r *NamespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 
 	resp.Diagnostics.Append(r.client.ByServerType(ctx,
-		func() {
+		func(_ sdk.CoreClient) {
 			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
 		},
 		func(client *client.Client) {
@@ -163,7 +163,7 @@ func (r *NamespaceResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	resp.Diagnostics.Append(r.client.ByServerType(ctx,
-		func() {
+		func(_ sdk.CoreClient) {
 			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
 		},
 		func(client *client.Client) {
@@ -200,7 +200,7 @@ func (r *NamespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	resp.Diagnostics.Append(r.client.ByServerType(ctx,
-		func() {
+		func(_ sdk.CoreClient) {
 			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
 		},
 		func(client *client.Client) {

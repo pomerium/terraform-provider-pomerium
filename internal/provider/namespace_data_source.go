@@ -63,7 +63,7 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 	}
 
 	resp.Diagnostics.Append(d.client.ByServerType(ctx,
-		func() {
+		func(_ sdk.CoreClient) {
 			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
 		},
 		func(client *client.Client) {
