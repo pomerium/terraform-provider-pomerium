@@ -52,6 +52,6 @@ EOT
 	key = <<EOT
 %s
 EOT
-}	
+}
 `, apiURL, base64.StdEncoding.EncodeToString(sharedSecret), name, certificate, key)
 }

@@ -40,6 +40,6 @@ resource "pomerium_route" "test" {
 	name = "%s"
 	from = "https://from.example.com"
 	to = ["https://to.example.com"]
-}	
+}
 `, apiURL, base64.StdEncoding.EncodeToString(sharedSecret), name)
 }

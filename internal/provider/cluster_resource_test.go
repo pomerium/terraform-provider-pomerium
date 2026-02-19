@@ -39,7 +39,7 @@ resource "pomerium_cluster" "test" {
 	parent_namespace_id = "test"
 	shared_secret_b64 = "%s"
 	databroker_service_url = "test"
-}	
+}
 		`,
 		apiURL,
 		base64.StdEncoding.EncodeToString(sharedSecret),

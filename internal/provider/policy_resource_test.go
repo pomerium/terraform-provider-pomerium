@@ -45,6 +45,6 @@ resource "pomerium_policy" "test" {
       ]
     }
   })
-}	
+}
 `, apiURL, base64.StdEncoding.EncodeToString(sharedSecret), name)
 }

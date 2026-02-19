@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 )
 
-func TestAccExternalDataSource(t *testing.T) {
+func TestAccNamespacePermission(t *testing.T) {
 	t.Parallel()
 
 	apiURL, sharedSecret := startTestPomeriumCore(t)
@@ -18,14 +18,14 @@ func TestAccExternalDataSource(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccExternalDataSourceConfig(t, apiURL, sharedSecret),
-				ExpectError: regexp.MustCompile(`unsupported server type`),
+				Config:      testAccNamespacePermissionConfig(t, apiURL, sharedSecret),
+				ExpectError: regexp.MustCompile("unsupported server type"),
 			},
 		},
 	})
 }
 
-func testAccExternalDataSourceConfig(t *testing.T, apiURL string, sharedSecret []byte) string {
+func testAccNamespacePermissionConfig(t *testing.T, apiURL string, sharedSecret []byte) string {
 	t.Helper()
 
 	return fmt.Sprintf(`
@@ -34,10 +34,11 @@ provider "pomerium" {
   shared_secret_b64 = "%s"
 }
 
-resource "pomerium_external_data_source" "test" {
-	url = "http://localhost:8080"
-	foreign_key = "user.id"
-	record_type = "pomerium.io/Test"
+resource "pomerium_namespace_permission" "test" {
+	role = "manager"
+	subject_id = "USER_ID"
+	subject_type = "user"
+	namespace_id = "NAMESPACE_ID"
 }
 `, apiURL, base64.StdEncoding.EncodeToString(sharedSecret))
 }

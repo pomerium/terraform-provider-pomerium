@@ -36,6 +36,6 @@ provider "pomerium" {
 }
 
 resource "pomerium_settings" "test" {
-}	
+}
 `, apiURL, base64.StdEncoding.EncodeToString(sharedSecret))
 }
