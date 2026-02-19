@@ -55,8 +55,9 @@ func (r *KeyPairResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 				Description: "Name of the key pair",
 			},
 			"namespace_id": schema.StringAttribute{
-				Required:    true,
 				Description: "ID of the namespace this key pair belongs to",
+				Optional:    true,
+				Computed:    true,
 			},
 			"certificate": schema.StringAttribute{
 				Required:    true,

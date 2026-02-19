@@ -46,7 +46,6 @@ provider "pomerium" {
 
 resource "pomerium_key_pair" "test" {
 	name = "%s"
-	namespace_id = "test"
 	certificate = <<EOT
 %s
 EOT

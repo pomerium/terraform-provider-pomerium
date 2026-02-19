@@ -19,11 +19,11 @@ KeyPairs managed by Pomerium.
 
 - `certificate` (String) PEM encoded certificate
 - `name` (String) Name of the key pair
-- `namespace_id` (String) ID of the namespace this key pair belongs to
 
 ### Optional
 
 - `key` (String, Sensitive) PEM encoded private key
+- `namespace_id` (String) ID of the namespace this key pair belongs to
 
 ### Read-Only
 

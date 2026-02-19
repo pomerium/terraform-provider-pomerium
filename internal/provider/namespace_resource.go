@@ -14,6 +14,7 @@ import (
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go"
 )
 
 // Ensure provider-defined types fully satisfy framework interfaces.
@@ -78,24 +79,31 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbNamespace := NewModelToEnterpriseConverter(&resp.Diagnostics).Namespace(plan)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	resp.Diagnostics.Append(r.client.ByServerType(ctx,
+		func() {
+			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		},
+		func(client *client.Client) {
+			pbNamespace := NewModelToEnterpriseConverter(&resp.Diagnostics).Namespace(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 
-		setReq := &pb.SetNamespaceRequest{
-			Namespace: pbNamespace,
-		}
-		setRes, err := client.NamespaceService.SetNamespace(ctx, setReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error creating namespace", err.Error())
-			return
-		}
+			setReq := &pb.SetNamespaceRequest{
+				Namespace: pbNamespace,
+			}
+			setRes, err := client.NamespaceService.SetNamespace(ctx, setReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error creating namespace", err.Error())
+				return
+			}
 
-		plan.ID = types.StringValue(setRes.Namespace.Id)
-		plan.ClusterID = types.StringPointerValue(setRes.Namespace.ClusterId)
-	})...)
+			plan.ID = types.StringValue(setRes.Namespace.Id)
+			plan.ClusterID = types.StringPointerValue(setRes.Namespace.ClusterId)
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -116,22 +124,29 @@ func (r *NamespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		getReq := &pb.GetNamespaceRequest{
-			Id: state.ID.ValueString(),
-		}
-		getRes, err := client.NamespaceService.GetNamespace(ctx, getReq)
-		if err != nil {
-			if status.Code(err) == codes.NotFound {
-				resp.State.RemoveResource(ctx)
+	resp.Diagnostics.Append(r.client.ByServerType(ctx,
+		func() {
+			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		},
+		func(client *client.Client) {
+			getReq := &pb.GetNamespaceRequest{
+				Id: state.ID.ValueString(),
+			}
+			getRes, err := client.NamespaceService.GetNamespace(ctx, getReq)
+			if err != nil {
+				if status.Code(err) == codes.NotFound {
+					resp.State.RemoveResource(ctx)
+					return
+				}
+				resp.Diagnostics.AddError("Error reading namespace", err.Error())
 				return
 			}
-			resp.Diagnostics.AddError("Error reading namespace", err.Error())
-			return
-		}
 
-		state = NewEnterpriseToModelConverter(&resp.Diagnostics).Namespace(getRes.GetNamespace())
-	})...)
+			state = NewEnterpriseToModelConverter(&resp.Diagnostics).Namespace(getRes.GetNamespace())
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -147,21 +162,28 @@ func (r *NamespaceResource) Update(ctx context.Context, req resource.UpdateReque
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbNamespace := NewModelToEnterpriseConverter(&resp.Diagnostics).Namespace(plan)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	resp.Diagnostics.Append(r.client.ByServerType(ctx,
+		func() {
+			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		},
+		func(client *client.Client) {
+			pbNamespace := NewModelToEnterpriseConverter(&resp.Diagnostics).Namespace(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 
-		setReq := &pb.SetNamespaceRequest{
-			Namespace: pbNamespace,
-		}
-		_, err := client.NamespaceService.SetNamespace(ctx, setReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error updating namespace", err.Error())
-			return
-		}
-	})...)
+			setReq := &pb.SetNamespaceRequest{
+				Namespace: pbNamespace,
+			}
+			_, err := client.NamespaceService.SetNamespace(ctx, setReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error updating namespace", err.Error())
+				return
+			}
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -177,16 +199,23 @@ func (r *NamespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		deleteReq := &pb.DeleteNamespaceRequest{
-			Id: state.ID.ValueString(),
-		}
-		_, err := client.NamespaceService.DeleteNamespace(ctx, deleteReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error deleting namespace", err.Error())
-			return
-		}
-	})...)
+	resp.Diagnostics.Append(r.client.ByServerType(ctx,
+		func() {
+			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		},
+		func(client *client.Client) {
+			deleteReq := &pb.DeleteNamespaceRequest{
+				Id: state.ID.ValueString(),
+			}
+			_, err := client.NamespaceService.DeleteNamespace(ctx, deleteReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error deleting namespace", err.Error())
+				return
+			}
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

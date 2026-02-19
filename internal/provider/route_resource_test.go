@@ -38,7 +38,6 @@ provider "pomerium" {
 
 resource "pomerium_route" "test" {
 	name = "%s"
-	namespace_id = "test"
 	from = "https://from.example.com"
 	to = ["https://to.example.com"]
 }	

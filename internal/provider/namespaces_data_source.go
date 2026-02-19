@@ -74,20 +74,7 @@ func (d *NamespacesDataSource) Read(ctx context.Context, _ datasource.ReadReques
 
 	resp.Diagnostics.Append(d.client.ByServerType(ctx,
 		func() {
-			found := false
-			for _, n := range data.Namespaces {
-				if n.ID.ValueString() == GlobalNamespaceID {
-					found = true
-				}
-			}
-			if !found {
-				data.Namespaces = append(data.Namespaces, NamespaceModel{
-					ClusterID: types.StringNull(),
-					ID:        types.StringValue(GlobalNamespaceID),
-					Name:      types.StringNull(),
-					ParentID:  types.StringNull(),
-				})
-			}
+			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
 		},
 		func(client *client.Client) {
 			listReq := &pb.ListNamespacesRequest{}

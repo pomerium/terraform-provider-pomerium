@@ -5,7 +5,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
@@ -65,9 +64,7 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 
 	resp.Diagnostics.Append(d.client.ByServerType(ctx,
 		func() {
-			data.ClusterID = types.StringNull()
-			data.Name = types.StringNull()
-			data.ParentID = types.StringNull()
+			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
 		},
 		func(client *client.Client) {
 			getReq := &pb.GetNamespaceRequest{

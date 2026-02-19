@@ -75,6 +75,7 @@ func (r *ServiceAccountResource) Schema(_ context.Context, _ resource.SchemaRequ
 			},
 			"user_id": schema.StringAttribute{
 				Description: "User ID associated with the service account.",
+				Optional:    true,
 				Computed:    true,
 			},
 			"expires_at": schema.StringAttribute{

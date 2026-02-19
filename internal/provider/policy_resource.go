@@ -69,7 +69,8 @@ func (r *PolicyResource) Schema(_ context.Context, _ resource.SchemaRequest, res
 			},
 			"namespace_id": schema.StringAttribute{
 				Description: "ID of the namespace the policy belongs to.",
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 			},
 			"ppl": schema.StringAttribute{
 				Description: "Policy Policy Language (PPL) string.",

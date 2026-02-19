@@ -73,7 +73,8 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			},
 			"namespace_id": schema.StringAttribute{
 				Description: "ID of the namespace the route belongs to.",
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 			},
 			"policies": schema.SetAttribute{
 				ElementType: types.StringType,
