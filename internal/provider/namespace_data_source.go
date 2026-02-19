@@ -5,9 +5,11 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go"
 )
 
 var _ datasource.DataSource = &NamespaceDataSource{}
@@ -61,18 +63,27 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 		return
 	}
 
-	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		getReq := &pb.GetNamespaceRequest{
-			Id: data.ID.ValueString(),
-		}
-		getRes, err := client.NamespaceService.GetNamespace(ctx, getReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error reading namespace", err.Error())
-			return
-		}
+	resp.Diagnostics.Append(d.client.ByServerType(ctx,
+		func() {
+			data.ClusterID = types.StringNull()
+			data.Name = types.StringNull()
+			data.ParentID = types.StringNull()
+		},
+		func(client *client.Client) {
+			getReq := &pb.GetNamespaceRequest{
+				Id: data.ID.ValueString(),
+			}
+			getRes, err := client.NamespaceService.GetNamespace(ctx, getReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error reading namespace", err.Error())
+				return
+			}
 
-		data = NewEnterpriseToModelConverter(&resp.Diagnostics).Namespace(getRes.GetNamespace())
-	})...)
+			data = NewEnterpriseToModelConverter(&resp.Diagnostics).Namespace(getRes.GetNamespace())
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

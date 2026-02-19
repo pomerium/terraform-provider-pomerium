@@ -1,6 +1,7 @@
 package provider
 
 import (
+	"cmp"
 	"context"
 	"crypto/tls"
 	"fmt"
@@ -8,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 
 	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -33,23 +35,20 @@ const (
 )
 
 type Client struct {
-	consolidated sdk.Client
-	enterprise   *client.Client
+	apiURL              string
+	serviceAccountToken string
+	sharedSecretB64     string
+	tlsConfig           *tls.Config
+	consolidated        sdk.Client
+
+	enterpriseClientLock sync.RWMutex
+	enterpriseClient     *client.Client
+
+	zeroClientLock sync.RWMutex
+	zeroClient     sdk.ZeroClient
 }
 
-func NewClient(apiURL, apiToken string, tlsConfig *tls.Config) (*Client, error) {
-	u, err := url.Parse(apiURL)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing api_url: %w", err)
-	}
-	host, port := u.Hostname(), u.Port()
-	if host == "" {
-		return nil, fmt.Errorf("api_url is missing hostname")
-	}
-	if port == "" {
-		port = "443"
-	}
-
+func NewClient(apiURL, serviceAccountToken, sharedSecretB64 string, tlsConfig *tls.Config) *Client {
 	httpTransport := http.DefaultTransport.(*http.Transport).Clone()
 	httpTransport.TLSClientConfig = tlsConfig
 	httpClient := &http.Client{
@@ -57,20 +56,57 @@ func NewClient(apiURL, apiToken string, tlsConfig *tls.Config) (*Client, error) 
 	}
 
 	consolidatedClient := sdk.NewClient(
-		sdk.WithAPIToken(apiToken),
+		sdk.WithAPIToken(cmp.Or(serviceAccountToken, sharedSecretB64)),
 		sdk.WithHTTPClient(httpClient),
 		sdk.WithURL(apiURL),
 	)
 
-	enterpriseClient, err := client.NewClient(context.Background(), net.JoinHostPort(host, port), apiToken, client.WithTlsConfig(tlsConfig))
+	return &Client{
+		apiURL:              apiURL,
+		serviceAccountToken: serviceAccountToken,
+		sharedSecretB64:     sharedSecretB64,
+		tlsConfig:           tlsConfig,
+		consolidated:        consolidatedClient,
+	}
+}
+
+func (c *Client) ByServerType(
+	ctx context.Context,
+	onCore func(),
+	onEnterprise func(client *client.Client),
+	onZero func(client sdk.ZeroClient),
+) diag.Diagnostics {
+	var diagnostics diag.Diagnostics
+
+	serverType, err := c.getServerType(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("error creating client: %w", err)
+		diagnostics.Append(diag.NewErrorDiagnostic("error determining server type", err.Error()))
+		return diagnostics
 	}
 
-	return &Client{
-		consolidated: consolidatedClient,
-		enterprise:   enterpriseClient,
-	}, nil
+	switch serverType {
+	case serverTypeCore:
+		onCore()
+	case serverTypeEnterprise, serverTypeLegacy:
+		enterpriseClient, err := c.getEnterpriseClient()
+		if err == nil {
+			onEnterprise(enterpriseClient)
+		} else {
+			diagnostics.Append(diag.NewErrorDiagnostic("error creating enterprise client", err.Error()))
+		}
+	case serverTypeZero:
+		zeroClient, err := c.getZeroClient()
+		if err == nil {
+			onZero(zeroClient)
+		} else {
+			diagnostics.Append(diag.NewErrorDiagnostic("error creating zero client", err.Error()))
+		}
+	default:
+		diagnostics.Append(diag.NewErrorDiagnostic("unsupported server type",
+			fmt.Sprintf("unsupported server type: %s", serverType)))
+	}
+
+	return diagnostics
 }
 
 // ConsolidatedOrLegacy invokes onConsolidated if the server is of type core,
@@ -92,7 +128,12 @@ func (c *Client) ConsolidatedOrLegacy(
 	case serverTypeCore, serverTypeEnterprise, serverTypeZero:
 		onConsolidated(c.consolidated)
 	case serverTypeLegacy:
-		onLegacy(c.enterprise)
+		enterpriseClient, err := c.getEnterpriseClient()
+		if err == nil {
+			onLegacy(enterpriseClient)
+		} else {
+			diagnostics.Append(diag.NewErrorDiagnostic("error creating enterprise client", err.Error()))
+		}
 	default:
 		diagnostics.Append(diag.NewErrorDiagnostic("unsupported server type",
 			fmt.Sprintf("unsupported server type: %s", serverType)))
@@ -117,7 +158,12 @@ func (c *Client) EnterpriseOnly(
 
 	switch serverType {
 	case serverTypeLegacy, serverTypeEnterprise:
-		onEnterprise(c.enterprise)
+		enterpriseClient, err := c.getEnterpriseClient()
+		if err == nil {
+			onEnterprise(enterpriseClient)
+		} else {
+			diagnostics.Append(diag.NewErrorDiagnostic("error creating enterprise client", err.Error()))
+		}
 	case serverTypeCore, serverTypeZero:
 		fallthrough
 	default:
@@ -126,6 +172,44 @@ func (c *Client) EnterpriseOnly(
 	}
 
 	return diagnostics
+}
+
+func (c *Client) getEnterpriseClient() (*client.Client, error) {
+	c.enterpriseClientLock.RLock()
+	if c.enterpriseClient != nil {
+		c.enterpriseClientLock.RUnlock()
+		return c.enterpriseClient, nil
+	}
+	c.enterpriseClientLock.RUnlock()
+
+	c.enterpriseClientLock.Lock()
+	defer c.enterpriseClientLock.Unlock()
+	if c.enterpriseClient != nil {
+		return c.enterpriseClient, nil
+	}
+
+	u, err := url.Parse(c.apiURL)
+	if err != nil {
+		return nil, fmt.Errorf("error parsing api_url: %w", err)
+	}
+	host, port := u.Hostname(), u.Port()
+	if host == "" {
+		return nil, fmt.Errorf("api_url is missing hostname")
+	}
+	if port == "" {
+		port = "443"
+	}
+
+	token := c.serviceAccountToken
+	if c.sharedSecretB64 != "" {
+		token, err = GenerateBootstrapServiceAccountToken(c.sharedSecretB64)
+		if err != nil {
+			return nil, fmt.Errorf("error generating bootstrap service account for enterprise console api: %w", err)
+		}
+	}
+
+	c.enterpriseClient, err = client.NewClient(context.Background(), net.JoinHostPort(host, port), token, client.WithTlsConfig(c.tlsConfig))
+	return c.enterpriseClient, err
 }
 
 func (c *Client) getServerType(ctx context.Context) (serverType, error) {
@@ -147,4 +231,32 @@ func (c *Client) getServerType(ctx context.Context) (serverType, error) {
 	default:
 		return serverTypeLegacy, nil
 	}
+}
+
+func (c *Client) getZeroClient() (sdk.ZeroClient, error) {
+	c.zeroClientLock.RLock()
+	if c.zeroClient != nil {
+		c.zeroClientLock.RUnlock()
+		return c.zeroClient, nil
+	}
+	c.zeroClientLock.RUnlock()
+
+	c.zeroClientLock.Lock()
+	defer c.zeroClientLock.Unlock()
+	if c.zeroClient != nil {
+		return c.zeroClient, nil
+	}
+
+	httpTransport := http.DefaultTransport.(*http.Transport).Clone()
+	httpTransport.TLSClientConfig = c.tlsConfig
+	httpClient := &http.Client{
+		Transport: httpTransport,
+	}
+	var err error
+	c.zeroClient, err = sdk.NewZeroClient(
+		sdk.WithAPIToken(cmp.Or(c.serviceAccountToken, c.sharedSecretB64)),
+		sdk.WithHTTPClient(httpClient),
+		sdk.WithURL(c.apiURL),
+	)
+	return c.zeroClient, err
 }

@@ -150,6 +150,8 @@ func (c *EnterpriseToModelConverter) PublicKeyAlgorithm(src *pb.PublicKeyAlgorit
 	}
 
 	switch src.Number() {
+	case 0:
+		return types.StringValue("pka_unknown_do_not_use")
 	case 1:
 		return types.StringValue("rsa")
 	case 2:
