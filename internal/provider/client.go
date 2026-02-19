@@ -41,14 +41,10 @@ type Client struct {
 	tlsConfig           *tls.Config
 	consolidated        sdk.Client
 
-	coreClientLock sync.RWMutex
-	coreClient     sdk.CoreClient
-
-	enterpriseClientLock sync.RWMutex
-	enterpriseClient     *client.Client
-
-	zeroClientLock sync.RWMutex
-	zeroClient     sdk.ZeroClient
+	getCoreClient       func() (sdk.CoreClient, error)
+	getEnterpriseClient func() (*client.Client, error)
+	getServerType       func() (serverType, error)
+	getZeroClient       func() (sdk.ZeroClient, error)
 }
 
 func NewClient(apiURL, serviceAccountToken, sharedSecretB64 string, tlsConfig *tls.Config) *Client {
@@ -70,19 +66,78 @@ func NewClient(apiURL, serviceAccountToken, sharedSecretB64 string, tlsConfig *t
 		sharedSecretB64:     sharedSecretB64,
 		tlsConfig:           tlsConfig,
 		consolidated:        consolidatedClient,
+
+		getCoreClient: sync.OnceValues(func() (sdk.CoreClient, error) {
+			return sdk.NewCoreClient(
+				sdk.WithAPIToken(cmp.Or(serviceAccountToken, sharedSecretB64)),
+				sdk.WithHTTPClient(httpClient),
+				sdk.WithURL(apiURL),
+			)
+		}),
+		getEnterpriseClient: sync.OnceValues(func() (*client.Client, error) {
+			u, err := url.Parse(apiURL)
+			if err != nil {
+				return nil, fmt.Errorf("error parsing api_url: %w", err)
+			}
+			host, port := u.Hostname(), u.Port()
+			if host == "" {
+				return nil, fmt.Errorf("api_url is missing hostname")
+			}
+			if port == "" {
+				port = "443"
+			}
+
+			token := serviceAccountToken
+			if sharedSecretB64 != "" {
+				token, err = GenerateBootstrapServiceAccountToken(sharedSecretB64)
+				if err != nil {
+					return nil, fmt.Errorf("error generating bootstrap service account for enterprise console api: %w", err)
+				}
+			}
+
+			return client.NewClient(context.Background(), net.JoinHostPort(host, port), token, client.WithTlsConfig(tlsConfig))
+		}),
+		getServerType: sync.OnceValues(func() (serverType, error) {
+			ctx := context.Background()
+
+			res, err := consolidatedClient.GetServerInfo(ctx, connect.NewRequest(&pomerium.GetServerInfoRequest{}))
+			if err != nil {
+				if strings.Contains(err.Error(), "415 Unsupported Media Type") {
+					return serverTypeLegacy, nil
+				}
+				return serverTypeLegacy, err
+			}
+
+			switch res.Msg.GetServerType() {
+			case pomerium.ServerType_SERVER_TYPE_CORE:
+				return serverTypeCore, nil
+			case pomerium.ServerType_SERVER_TYPE_ENTERPRISE:
+				return serverTypeEnterprise, nil
+			case pomerium.ServerType_SERVER_TYPE_ZERO:
+				return serverTypeZero, nil
+			default:
+				return serverTypeLegacy, nil
+			}
+		}),
+		getZeroClient: sync.OnceValues(func() (sdk.ZeroClient, error) {
+			return sdk.NewZeroClient(
+				sdk.WithAPIToken(cmp.Or(serviceAccountToken, sharedSecretB64)),
+				sdk.WithHTTPClient(httpClient),
+				sdk.WithURL(apiURL),
+			)
+		}),
 	}
 }
 
 // ByServerType invokes a handler based on the server type.
 func (c *Client) ByServerType(
-	ctx context.Context,
 	onCore func(client sdk.CoreClient),
 	onEnterprise func(client *client.Client),
 	onZero func(client sdk.ZeroClient),
 ) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 
-	serverType, err := c.getServerType(ctx)
+	serverType, err := c.getServerType()
 	if err != nil {
 		diagnostics.Append(diag.NewErrorDiagnostic("error determining server type", err.Error()))
 		return diagnostics
@@ -121,13 +176,12 @@ func (c *Client) ByServerType(
 // ConsolidatedOrLegacy invokes onConsolidated if the server is of type core,
 // zero, or enterprise. If its a legacy enterprise server, onLegacy is invoked.
 func (c *Client) ConsolidatedOrLegacy(
-	ctx context.Context,
 	onConsolidated func(client sdk.Client),
 	onLegacy func(client *client.Client),
 ) diag.Diagnostics {
 	var diagnostics diag.Diagnostics
 
-	serverType, err := c.getServerType(ctx)
+	serverType, err := c.getServerType()
 	if err != nil {
 		diagnostics.Append(diag.NewErrorDiagnostic("error determining server type", err.Error()))
 		return diagnostics
@@ -149,119 +203,4 @@ func (c *Client) ConsolidatedOrLegacy(
 	}
 
 	return diagnostics
-}
-
-func (c *Client) getCoreClient() (sdk.CoreClient, error) {
-	c.coreClientLock.RLock()
-	if c.coreClient != nil {
-		c.coreClientLock.RUnlock()
-		return c.coreClient, nil
-	}
-	c.coreClientLock.RUnlock()
-
-	c.coreClientLock.Lock()
-	defer c.coreClientLock.Unlock()
-	if c.coreClient != nil {
-		return c.coreClient, nil
-	}
-
-	httpTransport := http.DefaultTransport.(*http.Transport).Clone()
-	httpTransport.TLSClientConfig = c.tlsConfig
-	httpClient := &http.Client{
-		Transport: httpTransport,
-	}
-	var err error
-	c.coreClient, err = sdk.NewCoreClient(
-		sdk.WithAPIToken(cmp.Or(c.serviceAccountToken, c.sharedSecretB64)),
-		sdk.WithHTTPClient(httpClient),
-		sdk.WithURL(c.apiURL),
-	)
-	return c.coreClient, err
-}
-
-func (c *Client) getEnterpriseClient() (*client.Client, error) {
-	c.enterpriseClientLock.RLock()
-	if c.enterpriseClient != nil {
-		c.enterpriseClientLock.RUnlock()
-		return c.enterpriseClient, nil
-	}
-	c.enterpriseClientLock.RUnlock()
-
-	c.enterpriseClientLock.Lock()
-	defer c.enterpriseClientLock.Unlock()
-	if c.enterpriseClient != nil {
-		return c.enterpriseClient, nil
-	}
-
-	u, err := url.Parse(c.apiURL)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing api_url: %w", err)
-	}
-	host, port := u.Hostname(), u.Port()
-	if host == "" {
-		return nil, fmt.Errorf("api_url is missing hostname")
-	}
-	if port == "" {
-		port = "443"
-	}
-
-	token := c.serviceAccountToken
-	if c.sharedSecretB64 != "" {
-		token, err = GenerateBootstrapServiceAccountToken(c.sharedSecretB64)
-		if err != nil {
-			return nil, fmt.Errorf("error generating bootstrap service account for enterprise console api: %w", err)
-		}
-	}
-
-	c.enterpriseClient, err = client.NewClient(context.Background(), net.JoinHostPort(host, port), token, client.WithTlsConfig(c.tlsConfig))
-	return c.enterpriseClient, err
-}
-
-func (c *Client) getServerType(ctx context.Context) (serverType, error) {
-	res, err := c.consolidated.GetServerInfo(ctx, connect.NewRequest(&pomerium.GetServerInfoRequest{}))
-	if err != nil {
-		if strings.Contains(err.Error(), "415 Unsupported Media Type") {
-			return serverTypeLegacy, nil
-		}
-		return serverTypeLegacy, err
-	}
-
-	switch res.Msg.GetServerType() {
-	case pomerium.ServerType_SERVER_TYPE_CORE:
-		return serverTypeCore, nil
-	case pomerium.ServerType_SERVER_TYPE_ENTERPRISE:
-		return serverTypeEnterprise, nil
-	case pomerium.ServerType_SERVER_TYPE_ZERO:
-		return serverTypeZero, nil
-	default:
-		return serverTypeLegacy, nil
-	}
-}
-
-func (c *Client) getZeroClient() (sdk.ZeroClient, error) {
-	c.zeroClientLock.RLock()
-	if c.zeroClient != nil {
-		c.zeroClientLock.RUnlock()
-		return c.zeroClient, nil
-	}
-	c.zeroClientLock.RUnlock()
-
-	c.zeroClientLock.Lock()
-	defer c.zeroClientLock.Unlock()
-	if c.zeroClient != nil {
-		return c.zeroClient, nil
-	}
-
-	httpTransport := http.DefaultTransport.(*http.Transport).Clone()
-	httpTransport.TLSClientConfig = c.tlsConfig
-	httpClient := &http.Client{
-		Transport: httpTransport,
-	}
-	var err error
-	c.zeroClient, err = sdk.NewZeroClient(
-		sdk.WithAPIToken(cmp.Or(c.serviceAccountToken, c.sharedSecretB64)),
-		sdk.WithHTTPClient(httpClient),
-		sdk.WithURL(c.apiURL),
-	)
-	return c.zeroClient, err
 }

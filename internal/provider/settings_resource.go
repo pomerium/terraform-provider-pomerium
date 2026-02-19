@@ -47,7 +47,7 @@ func (r *SettingsResource) Create(ctx context.Context, req resource.CreateReques
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			apiSettings := NewModelToAPIConverter(&resp.Diagnostics).Settings(plan)
 			if resp.Diagnostics.HasError() {
@@ -97,7 +97,7 @@ func (r *SettingsResource) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			getReq := connect.NewRequest(&pomerium.GetSettingsRequest{
 				For: &pomerium.GetSettingsRequest_Id{
@@ -142,7 +142,7 @@ func (r *SettingsResource) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			apiSettings := NewModelToAPIConverter(&resp.Diagnostics).Settings(plan)
 			if resp.Diagnostics.HasError() {

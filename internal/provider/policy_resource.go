@@ -116,7 +116,7 @@ func (r *PolicyResource) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			apiPolicy := NewModelToAPIConverter(&resp.Diagnostics).Policy(plan)
 			if resp.Diagnostics.HasError() {
@@ -171,7 +171,7 @@ func (r *PolicyResource) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			getReq := connect.NewRequest(&pomerium.GetPolicyRequest{
 				Id: state.ID.ValueString(),
@@ -218,7 +218,7 @@ func (r *PolicyResource) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			apiPolicy := NewModelToAPIConverter(&resp.Diagnostics).Policy(plan)
 			if resp.Diagnostics.HasError() {
@@ -266,7 +266,7 @@ func (r *PolicyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			deleteReq := connect.NewRequest(&pomerium.DeletePolicyRequest{
 				Id: state.ID.ValueString(),

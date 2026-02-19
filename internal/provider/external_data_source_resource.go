@@ -107,7 +107,7 @@ func (r *ExternalDataSourceResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ByServerType(ctx,
+	resp.Diagnostics.Append(r.client.ByServerType(
 		func(_ sdk.CoreClient) {
 			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
 		},
@@ -150,7 +150,7 @@ func (r *ExternalDataSourceResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ByServerType(ctx,
+	resp.Diagnostics.Append(r.client.ByServerType(
 		func(_ sdk.CoreClient) {
 			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
 		},
@@ -189,7 +189,7 @@ func (r *ExternalDataSourceResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ByServerType(ctx,
+	resp.Diagnostics.Append(r.client.ByServerType(
 		func(_ sdk.CoreClient) {
 			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
 		},
@@ -228,7 +228,7 @@ func (r *ExternalDataSourceResource) Delete(ctx context.Context, req resource.De
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ByServerType(ctx,
+	resp.Diagnostics.Append(r.client.ByServerType(
 		func(_ sdk.CoreClient) {
 			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
 		},

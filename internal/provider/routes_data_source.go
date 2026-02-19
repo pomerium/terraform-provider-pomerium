@@ -97,7 +97,7 @@ func (d *RoutesDataSource) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	resp.Diagnostics.Append(d.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(d.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			listReq := connect.NewRequest(NewModelToAPIConverter(&resp.Diagnostics).ListRoutesRequest(data))
 			if resp.Diagnostics.HasError() {

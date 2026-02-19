@@ -477,7 +477,7 @@ func (r *RouteResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			apiRoute := NewModelToAPIConverter(&resp.Diagnostics).Route(plan)
 			if resp.Diagnostics.HasError() {
@@ -532,7 +532,7 @@ func (r *RouteResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			getReq := connect.NewRequest(&pomerium.GetRouteRequest{
 				Id: state.ID.ValueString(),
@@ -579,7 +579,7 @@ func (r *RouteResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			apiRoute := NewModelToAPIConverter(&resp.Diagnostics).Route(plan)
 			if resp.Diagnostics.HasError() {
@@ -629,7 +629,7 @@ func (r *RouteResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			deleteReq := connect.NewRequest(&pomerium.DeleteRouteRequest{
 				Id: data.ID.ValueString(),

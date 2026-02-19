@@ -104,7 +104,7 @@ func (r *ClusterResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ByServerType(ctx,
+	resp.Diagnostics.Append(r.client.ByServerType(
 		func(_ sdk.CoreClient) {
 			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
 		},
@@ -151,7 +151,7 @@ func (r *ClusterResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ByServerType(ctx,
+	resp.Diagnostics.Append(r.client.ByServerType(
 		func(_ sdk.CoreClient) {
 			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
 		},
@@ -189,7 +189,7 @@ func (r *ClusterResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ByServerType(ctx,
+	resp.Diagnostics.Append(r.client.ByServerType(
 		func(_ sdk.CoreClient) {
 			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
 		},
@@ -228,7 +228,7 @@ func (r *ClusterResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ByServerType(ctx,
+	resp.Diagnostics.Append(r.client.ByServerType(
 		func(_ sdk.CoreClient) {
 			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
 		},

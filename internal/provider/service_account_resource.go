@@ -106,7 +106,7 @@ func (r *ServiceAccountResource) Create(ctx context.Context, req resource.Create
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			apiServiceAccount := NewModelToAPIConverter(&resp.Diagnostics).ServiceAccount(plan.ServiceAccountModel)
 			if resp.Diagnostics.HasError() {
@@ -167,7 +167,7 @@ func (r *ServiceAccountResource) Read(ctx context.Context, req resource.ReadRequ
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			getReq := connect.NewRequest(&pomerium.GetServiceAccountRequest{
 				Id: state.ID.ValueString(),
@@ -214,7 +214,7 @@ func (r *ServiceAccountResource) Update(ctx context.Context, req resource.Update
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			apiServiceAccount := NewModelToAPIConverter(&resp.Diagnostics).ServiceAccount(plan.ServiceAccountModel)
 			if resp.Diagnostics.HasError() {
@@ -262,7 +262,7 @@ func (r *ServiceAccountResource) Delete(ctx context.Context, req resource.Delete
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			deleteReq := connect.NewRequest(&pomerium.DeleteServiceAccountRequest{
 				Id: state.ID.ValueString(),

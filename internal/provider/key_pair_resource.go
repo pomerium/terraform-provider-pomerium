@@ -84,7 +84,7 @@ func (r *KeyPairResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			apiKeyPair := NewModelToAPIConverter(&resp.Diagnostics).KeyPair(plan)
 			if resp.Diagnostics.HasError() {
@@ -136,7 +136,7 @@ func (r *KeyPairResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			getReq := connect.NewRequest(&pomerium.GetKeyPairRequest{
 				Id: state.ID.ValueString(),
@@ -186,7 +186,7 @@ func (r *KeyPairResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			apiKeyPair := NewModelToAPIConverter(&resp.Diagnostics).KeyPair(plan)
 			if resp.Diagnostics.HasError() {
@@ -231,7 +231,7 @@ func (r *KeyPairResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			deleteReq := connect.NewRequest(&pomerium.DeleteKeyPairRequest{
 				Id: state.ID.ValueString(),
