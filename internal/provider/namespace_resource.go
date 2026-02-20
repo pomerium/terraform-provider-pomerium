@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -80,8 +81,23 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	resp.Diagnostics.Append(r.client.ByServerType(
-		func(_ sdk.CoreClient) {
-			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		func(client sdk.CoreClient) {
+			if plan.ID.IsNull() || plan.ID.IsUnknown() {
+				plan.ID = types.StringValue(uuid.NewString())
+			}
+
+			namespace := NewModelToCoreConverter(&resp.Diagnostics).Namespace(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			err := databrokerPut(ctx, client, RecordTypeNamespace, plan.ID.ValueString(), namespace)
+			if err != nil {
+				resp.Diagnostics.AddError("error creating namespace", err.Error())
+				return
+			}
+
+			plan = NewCoreToModelConverter(&resp.Diagnostics).Namespace(namespace)
 		},
 		func(client *client.Client) {
 			pbNamespace := NewModelToEnterpriseConverter(&resp.Diagnostics).Namespace(plan)
@@ -125,8 +141,17 @@ func (r *NamespaceResource) Read(ctx context.Context, req resource.ReadRequest, 
 	}
 
 	resp.Diagnostics.Append(r.client.ByServerType(
-		func(_ sdk.CoreClient) {
-			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		func(client sdk.CoreClient) {
+			data, err := databrokerGet(ctx, client, RecordTypeNamespace, state.ID.ValueString())
+			if status.Code(err) == codes.NotFound {
+				resp.State.RemoveResource(ctx)
+				return
+			} else if err != nil {
+				resp.Diagnostics.AddError("error reading namespace", err.Error())
+				return
+			}
+
+			state = NewCoreToModelConverter(&resp.Diagnostics).Namespace(data)
 		},
 		func(client *client.Client) {
 			getReq := &pb.GetNamespaceRequest{
@@ -163,8 +188,19 @@ func (r *NamespaceResource) Update(ctx context.Context, req resource.UpdateReque
 	}
 
 	resp.Diagnostics.Append(r.client.ByServerType(
-		func(_ sdk.CoreClient) {
-			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		func(client sdk.CoreClient) {
+			namespace := NewModelToCoreConverter(&resp.Diagnostics).Namespace(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			err := databrokerPut(ctx, client, RecordTypeNamespace, plan.ID.ValueString(), namespace)
+			if err != nil {
+				resp.Diagnostics.AddError("error updating namespace", err.Error())
+				return
+			}
+
+			plan = NewCoreToModelConverter(&resp.Diagnostics).Namespace(namespace)
 		},
 		func(client *client.Client) {
 			pbNamespace := NewModelToEnterpriseConverter(&resp.Diagnostics).Namespace(plan)
@@ -200,8 +236,12 @@ func (r *NamespaceResource) Delete(ctx context.Context, req resource.DeleteReque
 	}
 
 	resp.Diagnostics.Append(r.client.ByServerType(
-		func(_ sdk.CoreClient) {
-			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		func(client sdk.CoreClient) {
+			err := databrokerDelete(ctx, client, RecordTypeNamespace, state.ID.ValueString())
+			if err != nil {
+				resp.Diagnostics.AddError("error deleting namespace", err.Error())
+				return
+			}
 		},
 		func(client *client.Client) {
 			deleteReq := &pb.DeleteNamespaceRequest{

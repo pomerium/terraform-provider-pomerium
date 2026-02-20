@@ -3,7 +3,6 @@ package provider_test
 import (
 	"encoding/base64"
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -18,8 +17,10 @@ func TestAccNamespace(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccNamespaceConfig(t, apiURL, sharedSecret, "test"),
-				ExpectError: regexp.MustCompile("unsupported server type"),
+				Config: testAccNamespaceConfig(t, apiURL, sharedSecret, "test"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("pomerium_namespace.test", "name", "test"),
+				),
 			},
 		},
 	})

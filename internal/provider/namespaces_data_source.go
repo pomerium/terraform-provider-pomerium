@@ -73,8 +73,21 @@ func (d *NamespacesDataSource) Read(ctx context.Context, _ datasource.ReadReques
 	var data NamespacesDataSourceModel
 
 	resp.Diagnostics.Append(d.client.ByServerType(
-		func(_ sdk.CoreClient) {
-			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		func(client sdk.CoreClient) {
+			namespaces, err := databrokerList(ctx, client, RecordTypeNamespace)
+			if err != nil {
+				resp.Diagnostics.AddError("Error reading namespaces", err.Error())
+				return
+			}
+
+			data.Namespaces = make([]NamespaceModel, 0, len(namespaces))
+			for _, namespace := range namespaces {
+				namespaceModel := NewCoreToModelConverter(&resp.Diagnostics).Namespace(namespace)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				data.Namespaces = append(data.Namespaces, namespaceModel)
+			}
 		},
 		func(client *client.Client) {
 			listReq := &pb.ListNamespacesRequest{}

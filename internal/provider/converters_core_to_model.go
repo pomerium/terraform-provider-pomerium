@@ -46,6 +46,15 @@ func (c *CoreToModelConverter) Cluster(src *structpb.Struct) ClusterModel {
 	}
 }
 
+func (c *CoreToModelConverter) Namespace(src *structpb.Struct) NamespaceModel {
+	return NamespaceModel{
+		ClusterID: c.StringFromStructField(src, "cluster_id"),
+		ID:        c.StringFromStructField(src, "id"),
+		Name:      c.StringFromStructField(src, "name"),
+		ParentID:  c.StringFromStructField(src, "parent_id"),
+	}
+}
+
 func (c *CoreToModelConverter) StringFromStructField(src *structpb.Struct, name string) types.String {
 	if src == nil {
 		return types.StringNull()
