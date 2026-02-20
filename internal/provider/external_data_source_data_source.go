@@ -101,8 +101,14 @@ func (d *ExternalDataSourceDataSource) Read(ctx context.Context, req datasource.
 	}
 
 	resp.Diagnostics.Append(d.client.ByServerType(
-		func(_ sdk.CoreClient) {
-			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		func(client sdk.CoreClient) {
+			externalDataSource, err := databrokerGet(ctx, client, RecordTypeNamespace, state.ID.ValueString())
+			if err != nil {
+				resp.Diagnostics.AddError("error reading external data source", err.Error())
+				return
+			}
+
+			state = NewCoreToModelConverter(&resp.Diagnostics).ExternalDataSource(externalDataSource)
 		},
 		func(client *client.Client) {
 			getReq := &pb.GetExternalDataSourceRequest{

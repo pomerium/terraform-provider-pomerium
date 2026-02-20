@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -108,8 +109,23 @@ func (r *ExternalDataSourceResource) Create(ctx context.Context, req resource.Cr
 	}
 
 	resp.Diagnostics.Append(r.client.ByServerType(
-		func(_ sdk.CoreClient) {
-			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		func(client sdk.CoreClient) {
+			if plan.ID.IsNull() || plan.ID.IsUnknown() {
+				plan.ID = types.StringValue(uuid.NewString())
+			}
+
+			externalDataSource := NewModelToCoreConverter(&resp.Diagnostics).ExternalDataSource(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			err := databrokerPut(ctx, client, RecordTypeExternalDataSource, plan.ID.ValueString(), externalDataSource)
+			if err != nil {
+				resp.Diagnostics.AddError("error creating external data source", err.Error())
+				return
+			}
+
+			plan = NewCoreToModelConverter(&resp.Diagnostics).ExternalDataSource(externalDataSource)
 		},
 		func(client *client.Client) {
 			pbExternalDataSource := NewModelToEnterpriseConverter(&resp.Diagnostics).ExternalDataSource(plan)
@@ -151,8 +167,17 @@ func (r *ExternalDataSourceResource) Read(ctx context.Context, req resource.Read
 	}
 
 	resp.Diagnostics.Append(r.client.ByServerType(
-		func(_ sdk.CoreClient) {
-			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		func(client sdk.CoreClient) {
+			data, err := databrokerGet(ctx, client, RecordTypeExternalDataSource, state.ID.ValueString())
+			if status.Code(err) == codes.NotFound {
+				resp.State.RemoveResource(ctx)
+				return
+			} else if err != nil {
+				resp.Diagnostics.AddError("error reading external data source", err.Error())
+				return
+			}
+
+			state = NewCoreToModelConverter(&resp.Diagnostics).ExternalDataSource(data)
 		},
 		func(client *client.Client) {
 			getReq := &pb.GetExternalDataSourceRequest{
@@ -190,8 +215,19 @@ func (r *ExternalDataSourceResource) Update(ctx context.Context, req resource.Up
 	}
 
 	resp.Diagnostics.Append(r.client.ByServerType(
-		func(_ sdk.CoreClient) {
-			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		func(client sdk.CoreClient) {
+			externalDataSource := NewModelToCoreConverter(&resp.Diagnostics).ExternalDataSource(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			err := databrokerPut(ctx, client, RecordTypeNamespace, plan.ID.ValueString(), externalDataSource)
+			if err != nil {
+				resp.Diagnostics.AddError("error updating external data source", err.Error())
+				return
+			}
+
+			plan = NewCoreToModelConverter(&resp.Diagnostics).ExternalDataSource(externalDataSource)
 		},
 		func(client *client.Client) {
 			pbExternalDataSource := NewModelToEnterpriseConverter(&resp.Diagnostics).ExternalDataSource(plan)
@@ -229,8 +265,12 @@ func (r *ExternalDataSourceResource) Delete(ctx context.Context, req resource.De
 	}
 
 	resp.Diagnostics.Append(r.client.ByServerType(
-		func(_ sdk.CoreClient) {
-			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		func(client sdk.CoreClient) {
+			err := databrokerDelete(ctx, client, RecordTypeExternalDataSource, data.ID.ValueString())
+			if err != nil {
+				resp.Diagnostics.AddError("error deleting external data source", err.Error())
+				return
+			}
 		},
 		func(client *client.Client) {
 			deleteReq := &pb.DeleteExternalDataSourceRequest{

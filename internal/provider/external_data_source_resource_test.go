@@ -3,7 +3,6 @@ package provider_test
 import (
 	"encoding/base64"
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -18,8 +17,11 @@ func TestAccExternalDataSource(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccExternalDataSourceConfig(t, apiURL, sharedSecret),
-				ExpectError: regexp.MustCompile(`unsupported server type`),
+				Config: testAccExternalDataSourceConfig(t, apiURL, sharedSecret),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("pomerium_external_data_source.test", "id"),
+					resource.TestCheckResourceAttr("pomerium_external_data_source.test", "foreign_key", "user.id"),
+				),
 			},
 		},
 	})

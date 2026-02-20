@@ -1,7 +1,11 @@
 package provider
 
 import (
+	"context"
+
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -33,6 +37,23 @@ func (c *ModelToCoreConverter) Cluster(src ClusterModel) *structpb.Struct {
 	}
 }
 
+func (c *ModelToCoreConverter) ExternalDataSource(src ExternalDataSourceModel) *structpb.Struct {
+	return &structpb.Struct{
+		Fields: map[string]*structpb.Value{
+			"allow_insecure_tls": c.StructBool(src.AllowInsecureTLS),
+			"client_tls_key_id":  c.StructString(src.ClientTLSKeyID),
+			"cluster_id":         c.StructString(src.ClusterID),
+			"foreign_key":        c.StructString(src.ForeignKey),
+			"headers":            c.StructMap(path.Root("headers"), src.Headers),
+			"id":                 c.StructString(src.ID),
+			"polling_max_delay":  c.StructDuration(src.PollingMaxDelay),
+			"polling_min_delay":  c.StructDuration(src.PollingMinDelay),
+			"record_type":        c.StructString(src.RecordType),
+			"url":                c.StructString(src.URL),
+		},
+	}
+}
+
 func (c *ModelToCoreConverter) Namespace(src NamespaceModel) *structpb.Struct {
 	return &structpb.Struct{
 		Fields: map[string]*structpb.Value{
@@ -49,6 +70,26 @@ func (c *ModelToCoreConverter) StructBool(src types.Bool) *structpb.Value {
 		return structpb.NewNullValue()
 	}
 	return structpb.NewBoolValue(src.ValueBool())
+}
+
+func (c *ModelToCoreConverter) StructDuration(src timetypes.GoDuration) *structpb.Value {
+	if src.IsNull() || src.IsUnknown() {
+		return structpb.NewNullValue()
+	}
+	return structpb.NewStringValue(src.ValueString())
+}
+
+func (c *ModelToCoreConverter) StructMap(p path.Path, src types.Map) *structpb.Value {
+	if src.IsNull() || src.IsUnknown() {
+		return structpb.NewNullValue()
+	}
+	dst := make(map[string]string)
+	appendAttributeDiagnostics(c.diagnostics, p, src.ElementsAs(context.Background(), &dst, false)...)
+	s := &structpb.Struct{Fields: make(map[string]*structpb.Value)}
+	for k, v := range dst {
+		s.Fields[k] = structpb.NewStringValue(v)
+	}
+	return structpb.NewStructValue(s)
 }
 
 func (c *ModelToCoreConverter) StructString(src types.String) *structpb.Value {

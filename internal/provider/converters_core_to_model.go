@@ -1,6 +1,8 @@
 package provider
 
 import (
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"google.golang.org/protobuf/types/known/structpb"
@@ -46,6 +48,39 @@ func (c *CoreToModelConverter) Cluster(src *structpb.Struct) ClusterModel {
 	}
 }
 
+func (c *CoreToModelConverter) DurationFromStructField(src *structpb.Struct, name string) timetypes.GoDuration {
+	if src == nil {
+		return timetypes.NewGoDurationNull()
+	}
+	v, ok := src.Fields[name]
+	if !ok {
+		return timetypes.NewGoDurationNull()
+	}
+	sv, ok := v.GetKind().(*structpb.Value_StringValue)
+	if !ok {
+		return timetypes.NewGoDurationNull()
+	}
+
+	dst, d := timetypes.NewGoDurationValueFromString(sv.StringValue)
+	c.diagnostics.Append(d...)
+	return dst
+}
+
+func (c *CoreToModelConverter) ExternalDataSource(src *structpb.Struct) ExternalDataSourceModel {
+	return ExternalDataSourceModel{
+		AllowInsecureTLS: c.BoolFromStructField(src, "allow_insecure_tls"),
+		ClientTLSKeyID:   c.StringFromStructField(src, "client_tls_key_id"),
+		ClusterID:        c.StringFromStructField(src, "cluster_id"),
+		ForeignKey:       c.StringFromStructField(src, "foreign_key"),
+		Headers:          c.StringMapFromStructField(src, "headers"),
+		ID:               c.StringFromStructField(src, "id"),
+		PollingMaxDelay:  c.DurationFromStructField(src, "polling_max_delay"),
+		PollingMinDelay:  c.DurationFromStructField(src, "polling_min_delay"),
+		RecordType:       c.StringFromStructField(src, "record_type"),
+		URL:              c.StringFromStructField(src, "url"),
+	}
+}
+
 func (c *CoreToModelConverter) Namespace(src *structpb.Struct) NamespaceModel {
 	return NamespaceModel{
 		ClusterID: c.StringFromStructField(src, "cluster_id"),
@@ -68,4 +103,29 @@ func (c *CoreToModelConverter) StringFromStructField(src *structpb.Struct, name 
 		return types.StringNull()
 	}
 	return types.StringValue(sv.StringValue)
+}
+
+func (c *CoreToModelConverter) StringMapFromStructField(src *structpb.Struct, name string) types.Map {
+	if src == nil {
+		return types.MapNull(types.StringType)
+	}
+	v, ok := src.Fields[name]
+	if !ok {
+		return types.MapNull(types.StringType)
+	}
+	sv, ok := v.GetKind().(*structpb.Value_StructValue)
+	if !ok {
+		return types.MapNull(types.StringType)
+	}
+	m := map[string]attr.Value{}
+	for k, v := range sv.StructValue.Fields {
+		vv, ok := v.GetKind().(*structpb.Value_StringValue)
+		if !ok {
+			continue
+		}
+		m[k] = types.StringValue(vv.StringValue)
+	}
+	dst, d := types.MapValue(types.StringType, m)
+	c.diagnostics.Append(d...)
+	return dst
 }
