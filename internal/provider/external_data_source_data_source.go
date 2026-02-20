@@ -102,7 +102,7 @@ func (d *ExternalDataSourceDataSource) Read(ctx context.Context, req datasource.
 
 	resp.Diagnostics.Append(d.client.ByServerType(
 		func(client sdk.CoreClient) {
-			externalDataSource, err := databrokerGet(ctx, client, RecordTypeNamespace, state.ID.ValueString())
+			externalDataSource, err := databrokerGet(ctx, client, RecordTypeExternalDataSource, state.ID.ValueString())
 			if err != nil {
 				resp.Diagnostics.AddError("error reading external data source", err.Error())
 				return
