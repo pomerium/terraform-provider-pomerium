@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -39,7 +40,8 @@ func (r *ClusterResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 		Attributes: map[string]schema.Attribute{
 			"parent_namespace_id": schema.StringAttribute{
 				Description: "Parent namespace of the cluster.",
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
@@ -104,9 +106,47 @@ func (r *ClusterResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
+	if plan.ParentNamespaceID.IsNull() || plan.ParentNamespaceID.IsUnknown() {
+		plan.ParentNamespaceID = types.StringValue(GlobalNamespaceID)
+	}
+
 	resp.Diagnostics.Append(r.client.ByServerType(
-		func(_ sdk.CoreClient) {
-			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		func(client sdk.CoreClient) {
+			if plan.ID.IsNull() || plan.ID.IsUnknown() {
+				plan.ID = types.StringValue(uuid.NewString())
+			}
+			if plan.NamespaceID.IsNull() || plan.NamespaceID.IsUnknown() {
+				plan.NamespaceID = types.StringValue(uuid.NewString())
+			}
+
+			cluster := NewModelToCoreConverter(&resp.Diagnostics).Cluster(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			namespace := NewModelToCoreConverter(&resp.Diagnostics).Namespace(NamespaceModel{
+				ClusterID: plan.ID,
+				ID:        plan.NamespaceID,
+				Name:      plan.Name,
+				ParentID:  plan.ParentNamespaceID,
+			})
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			err := databrokerPut(ctx, client, RecordTypeCluster, plan.ID.ValueString(), cluster)
+			if err != nil {
+				resp.Diagnostics.AddError("error creating cluster", err.Error())
+				return
+			}
+
+			err = databrokerPut(ctx, client, RecordTypeNamespace, plan.NamespaceID.ValueString(), namespace)
+			if err != nil {
+				resp.Diagnostics.AddError("error creating cluster namespace", err.Error())
+				return
+			}
+
+			plan = NewCoreToModelConverter(&resp.Diagnostics).Cluster(cluster)
 		},
 		func(client *client.Client) {
 			pbCluster := NewModelToEnterpriseConverter(&resp.Diagnostics).Cluster(plan)
@@ -152,8 +192,17 @@ func (r *ClusterResource) Read(ctx context.Context, req resource.ReadRequest, re
 	}
 
 	resp.Diagnostics.Append(r.client.ByServerType(
-		func(_ sdk.CoreClient) {
-			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		func(client sdk.CoreClient) {
+			data, err := databrokerGet(ctx, client, RecordTypeCluster, state.ID.ValueString())
+			if status.Code(err) == codes.NotFound {
+				resp.State.RemoveResource(ctx)
+				return
+			} else if err != nil {
+				resp.Diagnostics.AddError("error reading cluster", err.Error())
+				return
+			}
+
+			state = NewCoreToModelConverter(&resp.Diagnostics).Cluster(data)
 		},
 		func(client *client.Client) {
 			getReq := &pb.GetClusterRequest{
@@ -190,8 +239,19 @@ func (r *ClusterResource) Update(ctx context.Context, req resource.UpdateRequest
 	}
 
 	resp.Diagnostics.Append(r.client.ByServerType(
-		func(_ sdk.CoreClient) {
-			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		func(client sdk.CoreClient) {
+			cluster := NewModelToCoreConverter(&resp.Diagnostics).Cluster(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			err := databrokerPut(ctx, client, RecordTypeCluster, plan.ID.ValueString(), cluster)
+			if err != nil {
+				resp.Diagnostics.AddError("error updating cluster", err.Error())
+				return
+			}
+
+			plan = NewCoreToModelConverter(&resp.Diagnostics).Cluster(cluster)
 		},
 		func(client *client.Client) {
 			pbCluster := NewModelToEnterpriseConverter(&resp.Diagnostics).Cluster(plan)
@@ -229,8 +289,18 @@ func (r *ClusterResource) Delete(ctx context.Context, req resource.DeleteRequest
 	}
 
 	resp.Diagnostics.Append(r.client.ByServerType(
-		func(_ sdk.CoreClient) {
-			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		func(client sdk.CoreClient) {
+			err := databrokerDelete(ctx, client, RecordTypeCluster, state.ID.ValueString())
+			if err != nil {
+				resp.Diagnostics.AddError("error deleting cluster", err.Error())
+				return
+			}
+
+			err = databrokerDelete(ctx, client, RecordTypeNamespace, state.NamespaceID.ValueString())
+			if err != nil {
+				resp.Diagnostics.AddError("error deleting cluster namespace", err.Error())
+				return
+			}
 		},
 		func(client *client.Client) {
 			deleteReq := &pb.DeleteClusterRequest{

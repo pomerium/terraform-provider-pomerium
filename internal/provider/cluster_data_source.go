@@ -94,8 +94,14 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 	}
 
 	resp.Diagnostics.Append(d.client.ByServerType(
-		func(_ sdk.CoreClient) {
-			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		func(client sdk.CoreClient) {
+			cluster, err := databrokerGet(ctx, client, RecordTypeCluster, data.ID.ValueString())
+			if err != nil {
+				resp.Diagnostics.AddError("error reading cluster", err.Error())
+				return
+			}
+
+			data = NewCoreToModelConverter(&resp.Diagnostics).Cluster(cluster)
 		},
 		func(client *client.Client) {
 			getReq := &pb.GetClusterRequest{

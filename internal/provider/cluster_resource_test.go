@@ -3,7 +3,6 @@ package provider_test
 import (
 	"encoding/base64"
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -18,8 +17,13 @@ func TestAccCluster(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccClusterConfig(t, apiURL, sharedSecret, "test"),
-				ExpectError: regexp.MustCompile(`unsupported server type`),
+				Config: testAccClusterConfig(t, apiURL, sharedSecret, "test"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("pomerium_cluster.test", "id"),
+					resource.TestCheckResourceAttrSet("pomerium_cluster.test", "namespace_id"),
+					resource.TestCheckResourceAttrSet("pomerium_cluster.test", "parent_namespace_id"),
+					resource.TestCheckResourceAttr("pomerium_cluster.test", "name", "test"),
+				),
 			},
 		},
 	})

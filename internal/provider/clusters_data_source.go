@@ -56,8 +56,21 @@ func (d *ClustersDataSource) Read(ctx context.Context, req datasource.ReadReques
 	}
 
 	resp.Diagnostics.Append(d.client.ByServerType(
-		func(_ sdk.CoreClient) {
-			data.Clusters = make([]ClusterModel, 0)
+		func(client sdk.CoreClient) {
+			clusters, err := databrokerList(ctx, client, RecordTypeCluster)
+			if err != nil {
+				resp.Diagnostics.AddError("Error reading clusters", err.Error())
+				return
+			}
+
+			data.Clusters = make([]ClusterModel, 0, len(clusters))
+			for _, cluster := range clusters {
+				clusterModel := NewCoreToModelConverter(&resp.Diagnostics).Cluster(cluster)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				data.Clusters = append(data.Clusters, clusterModel)
+			}
 		},
 		func(client *client.Client) {
 			listReq := &pb.ListClustersRequest{}

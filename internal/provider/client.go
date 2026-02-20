@@ -49,6 +49,7 @@ type Client struct {
 
 func NewClient(apiURL, serviceAccountToken, sharedSecretB64 string, tlsConfig *tls.Config) *Client {
 	httpTransport := http.DefaultTransport.(*http.Transport).Clone()
+	httpTransport.ForceAttemptHTTP2 = true
 	httpTransport.TLSClientConfig = tlsConfig
 	httpClient := &http.Client{
 		Transport: httpTransport,
