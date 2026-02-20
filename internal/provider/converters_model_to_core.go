@@ -65,6 +65,18 @@ func (c *ModelToCoreConverter) Namespace(src NamespaceModel) *structpb.Struct {
 	}
 }
 
+func (c *ModelToCoreConverter) NamespacePermission(src NamespacePermissionModel) *structpb.Struct {
+	return &structpb.Struct{
+		Fields: map[string]*structpb.Value{
+			"id":           c.StructString(src.ID),
+			"namespace_id": c.StructString(src.NamespaceID),
+			"role":         c.StructString(src.Role),
+			"subject_id":   c.StructString(src.SubjectID),
+			"subject_type": c.StructString(src.SubjectType),
+		},
+	}
+}
+
 func (c *ModelToCoreConverter) StructBool(src types.Bool) *structpb.Value {
 	if src.IsNull() || src.IsUnknown() {
 		return structpb.NewNullValue()

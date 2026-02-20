@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -85,8 +86,23 @@ func (r *NamespacePermissionResource) Create(ctx context.Context, req resource.C
 	}
 
 	resp.Diagnostics.Append(r.client.ByServerType(
-		func(_ sdk.CoreClient) {
-			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		func(client sdk.CoreClient) {
+			if plan.ID.IsNull() || plan.ID.IsUnknown() {
+				plan.ID = types.StringValue(uuid.NewString())
+			}
+
+			namespacePermission := NewModelToCoreConverter(&resp.Diagnostics).NamespacePermission(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			err := databrokerPut(ctx, client, RecordTypeNamespacePermission, plan.ID.ValueString(), namespacePermission)
+			if err != nil {
+				resp.Diagnostics.AddError("error creating namespace permission", err.Error())
+				return
+			}
+
+			plan = NewCoreToModelConverter(&resp.Diagnostics).NamespacePermission(namespacePermission)
 		},
 		func(client *client.Client) {
 			pbNamespacePermission := NewModelToEnterpriseConverter(&resp.Diagnostics).NamespacePermission(plan)
@@ -132,8 +148,17 @@ func (r *NamespacePermissionResource) Read(ctx context.Context, req resource.Rea
 	}
 
 	resp.Diagnostics.Append(r.client.ByServerType(
-		func(_ sdk.CoreClient) {
-			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		func(client sdk.CoreClient) {
+			data, err := databrokerGet(ctx, client, RecordTypeNamespacePermission, state.ID.ValueString())
+			if status.Code(err) == codes.NotFound {
+				resp.State.RemoveResource(ctx)
+				return
+			} else if err != nil {
+				resp.Diagnostics.AddError("error reading namespace permission", err.Error())
+				return
+			}
+
+			state = NewCoreToModelConverter(&resp.Diagnostics).NamespacePermission(data)
 		},
 		func(client *client.Client) {
 			getReq := &pb.GetNamespacePermissionRequest{
@@ -170,8 +195,19 @@ func (r *NamespacePermissionResource) Update(ctx context.Context, req resource.U
 	}
 
 	resp.Diagnostics.Append(r.client.ByServerType(
-		func(_ sdk.CoreClient) {
-			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		func(client sdk.CoreClient) {
+			namespacePermission := NewModelToCoreConverter(&resp.Diagnostics).NamespacePermission(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			err := databrokerPut(ctx, client, RecordTypeNamespacePermission, plan.ID.ValueString(), namespacePermission)
+			if err != nil {
+				resp.Diagnostics.AddError("error updating namespace permission", err.Error())
+				return
+			}
+
+			plan = NewCoreToModelConverter(&resp.Diagnostics).NamespacePermission(namespacePermission)
 		},
 		func(client *client.Client) {
 			pbNamespacePermission := NewModelToEnterpriseConverter(&resp.Diagnostics).NamespacePermission(plan)
@@ -206,8 +242,12 @@ func (r *NamespacePermissionResource) Delete(ctx context.Context, req resource.D
 	}
 
 	resp.Diagnostics.Append(r.client.ByServerType(
-		func(_ sdk.CoreClient) {
-			resp.Diagnostics.AddError("unsupported server type: core", "unsupported server type: core")
+		func(client sdk.CoreClient) {
+			err := databrokerDelete(ctx, client, RecordTypeNamespace, plan.ID.ValueString())
+			if err != nil {
+				resp.Diagnostics.AddError("error deleting namespace permission", err.Error())
+				return
+			}
 		},
 		func(client *client.Client) {
 			deleteReq := &pb.DeleteNamespacePermissionRequest{

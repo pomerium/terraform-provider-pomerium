@@ -90,6 +90,16 @@ func (c *CoreToModelConverter) Namespace(src *structpb.Struct) NamespaceModel {
 	}
 }
 
+func (c *CoreToModelConverter) NamespacePermission(src *structpb.Struct) NamespacePermissionModel {
+	return NamespacePermissionModel{
+		ID:          c.StringFromStructField(src, "id"),
+		NamespaceID: c.StringFromStructField(src, "namespace_id"),
+		Role:        c.StringFromStructField(src, "role"),
+		SubjectID:   c.StringFromStructField(src, "subject_id"),
+		SubjectType: c.StringFromStructField(src, "subject_type"),
+	}
+}
+
 func (c *CoreToModelConverter) StringFromStructField(src *structpb.Struct, name string) types.String {
 	if src == nil {
 		return types.StringNull()
