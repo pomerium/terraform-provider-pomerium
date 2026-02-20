@@ -22,11 +22,15 @@ generate: docs
 	@echo "@==> $@"
 	go run ./internal/generate
 
-
 .PHONY: test
 test:
 	@echo "@==> $@"
-	@go test ./internal/provider/...
+	@go test ./...
+
+.PHONY: testacc
+testacc:
+	@echo "@==> $@"
+	@env TF_ACC=1 go test -v ./...
 
 .PHONY: update-pomerium
 update-pomerium:

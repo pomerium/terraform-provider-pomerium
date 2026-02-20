@@ -92,31 +92,31 @@ func (p *PomeriumProvider) Configure(ctx context.Context, req provider.Configure
 	}
 
 	tlsConfig := &tls.Config{InsecureSkipVerify: data.TLSInsecureSkipVerify.ValueBool()}
-	var token string
-	var err error
+
+	var serviceAccountToken string
 	if !data.ServiceAccountToken.IsNull() {
-		token = data.ServiceAccountToken.ValueString()
-		if token == "" {
+		serviceAccountToken = data.ServiceAccountToken.ValueString()
+		if serviceAccountToken == "" {
 			resp.Diagnostics.AddError("service_account_token is empty", "service_account_token is empty")
 			return
 		}
-	} else if !data.SharedSecretB64.IsNull() {
-		token, err = GenerateBootstrapServiceAccountToken(data.SharedSecretB64.ValueString())
-		if err != nil {
-			resp.Diagnostics.AddError("failed to decode shared_secret_b64", err.Error())
+	}
+
+	var sharedSecretB64 string
+	if !data.SharedSecretB64.IsNull() {
+		sharedSecretB64 = data.SharedSecretB64.ValueString()
+		if sharedSecretB64 == "" {
+			resp.Diagnostics.AddError("shared_secret_b64 is empty", "shared_secret_b64 is empty")
 			return
 		}
-	} else {
+	}
+
+	if serviceAccountToken == "" && sharedSecretB64 == "" {
 		resp.Diagnostics.AddError("service_account_token or shared_secret_b64 is required", "service_account_token or shared_secret_b64 is required")
 		return
 	}
 
-	c, err := NewClient(data.APIURL.ValueString(), token, tlsConfig)
-	if err != nil {
-		resp.Diagnostics.AddError("failed to create Pomerium Enterprise API client", err.Error())
-		return
-	}
-
+	c := NewClient(data.APIURL.ValueString(), serviceAccountToken, sharedSecretB64, tlsConfig)
 	resp.ResourceData = c
 	resp.DataSourceData = c
 }

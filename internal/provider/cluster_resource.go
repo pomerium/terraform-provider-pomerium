@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -14,6 +15,7 @@ import (
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go"
 )
 
 type ClusterResourceModel = ClusterModel
@@ -38,7 +40,8 @@ func (r *ClusterResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 		Attributes: map[string]schema.Attribute{
 			"parent_namespace_id": schema.StringAttribute{
 				Description: "Parent namespace of the cluster.",
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
@@ -103,26 +106,71 @@ func (r *ClusterResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbCluster := NewModelToEnterpriseConverter(&resp.Diagnostics).Cluster(plan)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	if plan.ParentNamespaceID.IsNull() || plan.ParentNamespaceID.IsUnknown() {
+		plan.ParentNamespaceID = types.StringValue(GlobalNamespaceID)
+	}
 
-		addReq := &pb.AddClusterRequest{
-			ParentNamespaceId: plan.ParentNamespaceID.ValueString(),
-			Cluster:           pbCluster,
-		}
-		addRes, err := client.ClustersService.AddCluster(ctx, addReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error creating cluster", err.Error())
-			return
-		}
+	resp.Diagnostics.Append(r.client.ByServerType(
+		func(client sdk.CoreClient) {
+			if plan.ID.IsNull() || plan.ID.IsUnknown() {
+				plan.ID = types.StringValue(uuid.NewString())
+			}
+			if plan.NamespaceID.IsNull() || plan.NamespaceID.IsUnknown() {
+				plan.NamespaceID = types.StringValue(uuid.NewString())
+			}
 
-		plan.NamespaceID = types.StringValue(addRes.Namespace.Id)
-		plan.ParentNamespaceID = types.StringValue(addRes.Namespace.ParentId)
-		plan.ID = types.StringValue(addRes.Cluster.Id)
-	})...)
+			cluster := NewModelToCoreConverter(&resp.Diagnostics).Cluster(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			namespace := NewModelToCoreConverter(&resp.Diagnostics).Namespace(NamespaceModel{
+				ClusterID: plan.ID,
+				ID:        plan.NamespaceID,
+				Name:      plan.Name,
+				ParentID:  plan.ParentNamespaceID,
+			})
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			err := databrokerPut(ctx, client, RecordTypeCluster, plan.ID.ValueString(), cluster)
+			if err != nil {
+				resp.Diagnostics.AddError("error creating cluster", err.Error())
+				return
+			}
+
+			err = databrokerPut(ctx, client, RecordTypeNamespace, plan.NamespaceID.ValueString(), namespace)
+			if err != nil {
+				resp.Diagnostics.AddError("error creating cluster namespace", err.Error())
+				return
+			}
+
+			plan = NewCoreToModelConverter(&resp.Diagnostics).Cluster(cluster)
+		},
+		func(client *client.Client) {
+			pbCluster := NewModelToEnterpriseConverter(&resp.Diagnostics).Cluster(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			addReq := &pb.AddClusterRequest{
+				ParentNamespaceId: plan.ParentNamespaceID.ValueString(),
+				Cluster:           pbCluster,
+			}
+			addRes, err := client.ClustersService.AddCluster(ctx, addReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error creating cluster", err.Error())
+				return
+			}
+
+			plan.NamespaceID = types.StringValue(addRes.Namespace.Id)
+			plan.ParentNamespaceID = types.StringValue(addRes.Namespace.ParentId)
+			plan.ID = types.StringValue(addRes.Cluster.Id)
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -143,22 +191,38 @@ func (r *ClusterResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		getReq := &pb.GetClusterRequest{
-			Id: state.ID.ValueString(),
-		}
-		getRes, err := client.ClustersService.GetCluster(ctx, getReq)
-		if err != nil {
+	resp.Diagnostics.Append(r.client.ByServerType(
+		func(client sdk.CoreClient) {
+			data, err := databrokerGet(ctx, client, RecordTypeCluster, state.ID.ValueString())
 			if status.Code(err) == codes.NotFound {
 				resp.State.RemoveResource(ctx)
 				return
+			} else if err != nil {
+				resp.Diagnostics.AddError("error reading cluster", err.Error())
+				return
 			}
-			resp.Diagnostics.AddError("Error reading cluster", err.Error())
-			return
-		}
 
-		state = NewEnterpriseToModelConverter(&resp.Diagnostics).Cluster(getRes.GetCluster(), getRes.GetNamespace())
-	})...)
+			state = NewCoreToModelConverter(&resp.Diagnostics).Cluster(data)
+		},
+		func(client *client.Client) {
+			getReq := &pb.GetClusterRequest{
+				Id: state.ID.ValueString(),
+			}
+			getRes, err := client.ClustersService.GetCluster(ctx, getReq)
+			if err != nil {
+				if status.Code(err) == codes.NotFound {
+					resp.State.RemoveResource(ctx)
+					return
+				}
+				resp.Diagnostics.AddError("Error reading cluster", err.Error())
+				return
+			}
+
+			state = NewEnterpriseToModelConverter(&resp.Diagnostics).Cluster(getRes.GetCluster(), getRes.GetNamespace())
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -174,23 +238,41 @@ func (r *ClusterResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbCluster := NewModelToEnterpriseConverter(&resp.Diagnostics).Cluster(plan)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	resp.Diagnostics.Append(r.client.ByServerType(
+		func(client sdk.CoreClient) {
+			cluster := NewModelToCoreConverter(&resp.Diagnostics).Cluster(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 
-		updateReq := &pb.UpdateClusterRequest{
-			Cluster: pbCluster,
-		}
-		updateRes, err := client.ClustersService.UpdateCluster(ctx, updateReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error updating cluster", err.Error())
-			return
-		}
+			err := databrokerPut(ctx, client, RecordTypeCluster, plan.ID.ValueString(), cluster)
+			if err != nil {
+				resp.Diagnostics.AddError("error updating cluster", err.Error())
+				return
+			}
 
-		plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Cluster(updateRes.GetCluster(), updateRes.GetNamespace())
-	})...)
+			plan = NewCoreToModelConverter(&resp.Diagnostics).Cluster(cluster)
+		},
+		func(client *client.Client) {
+			pbCluster := NewModelToEnterpriseConverter(&resp.Diagnostics).Cluster(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			updateReq := &pb.UpdateClusterRequest{
+				Cluster: pbCluster,
+			}
+			updateRes, err := client.ClustersService.UpdateCluster(ctx, updateReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error updating cluster", err.Error())
+				return
+			}
+
+			plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Cluster(updateRes.GetCluster(), updateRes.GetNamespace())
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -206,16 +288,33 @@ func (r *ClusterResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		deleteReq := &pb.DeleteClusterRequest{
-			Id: state.ID.ValueString(),
-		}
-		_, err := client.ClustersService.DeleteCluster(ctx, deleteReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error deleting cluster", err.Error())
-			return
-		}
-	})...)
+	resp.Diagnostics.Append(r.client.ByServerType(
+		func(client sdk.CoreClient) {
+			err := databrokerDelete(ctx, client, RecordTypeCluster, state.ID.ValueString())
+			if err != nil {
+				resp.Diagnostics.AddError("error deleting cluster", err.Error())
+				return
+			}
+
+			err = databrokerDelete(ctx, client, RecordTypeNamespace, state.NamespaceID.ValueString())
+			if err != nil {
+				resp.Diagnostics.AddError("error deleting cluster namespace", err.Error())
+				return
+			}
+		},
+		func(client *client.Client) {
+			deleteReq := &pb.DeleteClusterRequest{
+				Id: state.ID.ValueString(),
+			}
+			_, err := client.ClustersService.DeleteCluster(ctx, deleteReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error deleting cluster", err.Error())
+				return
+			}
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

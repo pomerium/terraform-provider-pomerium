@@ -18,7 +18,6 @@ Policy for Pomerium.
 ### Required
 
 - `name` (String) Name of the policy.
-- `namespace_id` (String) ID of the namespace the policy belongs to.
 - `ppl` (String) Policy Policy Language (PPL) string.
 
 ### Optional
@@ -26,6 +25,7 @@ Policy for Pomerium.
 - `description` (String) Description of the policy.
 - `enforced` (Boolean) Whether the policy is enforced within the namespace hierarchy.
 - `explanation` (String) Explanation of the policy.
+- `namespace_id` (String) ID of the namespace the policy belongs to.
 - `rego` (List of String) Rego policies.
 - `remediation` (String) Remediation of the policy.
 

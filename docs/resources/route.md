@@ -19,7 +19,6 @@ Route for Pomerium.
 
 - `from` (String) The external URL for a proxied request. Must contain a scheme and Hostname, must not contain a path.
 - `name` (String) Name of the route.
-- `namespace_id` (String) ID of the namespace the route belongs to.
 - `to` (Set of String) The destination(s) of a proxied request. Must contain a scheme and Hostname, with an optional weight.
 
 ### Optional
@@ -52,6 +51,7 @@ Route for Pomerium.
   - `ring_hash`
   - `least_request`
 - `logo_url` (String) URL to the logo image.
+- `namespace_id` (String) ID of the namespace the route belongs to.
 - `pass_identity_headers` (Boolean) If applied, passes X-Pomerium-Jwt-Assertion header and JWT Claims Headers to the upstream application.
 - `path` (String) Matches incoming requests with a path that is an exact match for the specified path.
 - `policies` (Set of String) List of policy IDs associated with the route.

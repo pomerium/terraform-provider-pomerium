@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -16,6 +17,7 @@ import (
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go"
 )
 
 var (
@@ -106,23 +108,45 @@ func (r *ExternalDataSourceResource) Create(ctx context.Context, req resource.Cr
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbExternalDataSource := NewModelToEnterpriseConverter(&resp.Diagnostics).ExternalDataSource(plan)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	resp.Diagnostics.Append(r.client.ByServerType(
+		func(client sdk.CoreClient) {
+			if plan.ID.IsNull() || plan.ID.IsUnknown() {
+				plan.ID = types.StringValue(uuid.NewString())
+			}
 
-		createReq := &pb.SetExternalDataSourceRequest{
-			ExternalDataSource: pbExternalDataSource,
-		}
-		createRes, err := client.ExternalDataSourceService.SetExternalDataSource(ctx, createReq)
-		if err != nil {
-			resp.Diagnostics.AddError("set external data source", err.Error())
-			return
-		}
+			externalDataSource := NewModelToCoreConverter(&resp.Diagnostics).ExternalDataSource(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 
-		plan = NewEnterpriseToModelConverter(&resp.Diagnostics).ExternalDataSource(createRes.GetExternalDataSource())
-	})...)
+			err := databrokerPut(ctx, client, RecordTypeExternalDataSource, plan.ID.ValueString(), externalDataSource)
+			if err != nil {
+				resp.Diagnostics.AddError("error creating external data source", err.Error())
+				return
+			}
+
+			plan = NewCoreToModelConverter(&resp.Diagnostics).ExternalDataSource(externalDataSource)
+		},
+		func(client *client.Client) {
+			pbExternalDataSource := NewModelToEnterpriseConverter(&resp.Diagnostics).ExternalDataSource(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			createReq := &pb.SetExternalDataSourceRequest{
+				ExternalDataSource: pbExternalDataSource,
+			}
+			createRes, err := client.ExternalDataSourceService.SetExternalDataSource(ctx, createReq)
+			if err != nil {
+				resp.Diagnostics.AddError("set external data source", err.Error())
+				return
+			}
+
+			plan = NewEnterpriseToModelConverter(&resp.Diagnostics).ExternalDataSource(createRes.GetExternalDataSource())
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -142,22 +166,39 @@ func (r *ExternalDataSourceResource) Read(ctx context.Context, req resource.Read
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		getReq := &pb.GetExternalDataSourceRequest{
-			Id: state.ID.ValueString(),
-		}
-		getRes, err := client.ExternalDataSourceService.GetExternalDataSource(ctx, getReq)
-		if err != nil {
+	resp.Diagnostics.Append(r.client.ByServerType(
+		func(client sdk.CoreClient) {
+			data, err := databrokerGet(ctx, client, RecordTypeExternalDataSource, state.ID.ValueString())
 			if status.Code(err) == codes.NotFound {
 				resp.State.RemoveResource(ctx)
 				return
+			} else if err != nil {
+				resp.Diagnostics.AddError("error reading external data source", err.Error())
+				return
 			}
-			resp.Diagnostics.AddError("get external data source", err.Error())
-			return
-		}
 
-		state = NewEnterpriseToModelConverter(&resp.Diagnostics).ExternalDataSource(getRes.GetExternalDataSource())
-	})...)
+			state = NewCoreToModelConverter(&resp.Diagnostics).ExternalDataSource(data)
+		},
+		func(client *client.Client) {
+			getReq := &pb.GetExternalDataSourceRequest{
+				Id: state.ID.ValueString(),
+			}
+			getRes, err := client.ExternalDataSourceService.GetExternalDataSource(ctx, getReq)
+			if err != nil {
+				if status.Code(err) == codes.NotFound {
+					resp.State.RemoveResource(ctx)
+					return
+				}
+				resp.Diagnostics.AddError("get external data source", err.Error())
+				return
+			}
+
+			state = NewEnterpriseToModelConverter(&resp.Diagnostics).ExternalDataSource(getRes.GetExternalDataSource())
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		},
+	)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -173,23 +214,41 @@ func (r *ExternalDataSourceResource) Update(ctx context.Context, req resource.Up
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbExternalDataSource := NewModelToEnterpriseConverter(&resp.Diagnostics).ExternalDataSource(plan)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	resp.Diagnostics.Append(r.client.ByServerType(
+		func(client sdk.CoreClient) {
+			externalDataSource := NewModelToCoreConverter(&resp.Diagnostics).ExternalDataSource(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 
-		setReq := &pb.SetExternalDataSourceRequest{
-			ExternalDataSource: pbExternalDataSource,
-		}
-		setRes, err := client.ExternalDataSourceService.SetExternalDataSource(ctx, setReq)
-		if err != nil {
-			resp.Diagnostics.AddError("set external data source", err.Error())
-			return
-		}
+			err := databrokerPut(ctx, client, RecordTypeExternalDataSource, plan.ID.ValueString(), externalDataSource)
+			if err != nil {
+				resp.Diagnostics.AddError("error updating external data source", err.Error())
+				return
+			}
 
-		plan = NewEnterpriseToModelConverter(&resp.Diagnostics).ExternalDataSource(setRes.GetExternalDataSource())
-	})...)
+			plan = NewCoreToModelConverter(&resp.Diagnostics).ExternalDataSource(externalDataSource)
+		},
+		func(client *client.Client) {
+			pbExternalDataSource := NewModelToEnterpriseConverter(&resp.Diagnostics).ExternalDataSource(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			setReq := &pb.SetExternalDataSourceRequest{
+				ExternalDataSource: pbExternalDataSource,
+			}
+			setRes, err := client.ExternalDataSourceService.SetExternalDataSource(ctx, setReq)
+			if err != nil {
+				resp.Diagnostics.AddError("set external data source", err.Error())
+				return
+			}
+
+			plan = NewEnterpriseToModelConverter(&resp.Diagnostics).ExternalDataSource(setRes.GetExternalDataSource())
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -205,16 +264,27 @@ func (r *ExternalDataSourceResource) Delete(ctx context.Context, req resource.De
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		deleteReq := &pb.DeleteExternalDataSourceRequest{
-			Id: data.ID.ValueString(),
-		}
-		_, err := client.ExternalDataSourceService.DeleteExternalDataSource(ctx, deleteReq)
-		if err != nil {
-			resp.Diagnostics.AddError("delete external data source", err.Error())
-			return
-		}
-	})...)
+	resp.Diagnostics.Append(r.client.ByServerType(
+		func(client sdk.CoreClient) {
+			err := databrokerDelete(ctx, client, RecordTypeExternalDataSource, data.ID.ValueString())
+			if err != nil {
+				resp.Diagnostics.AddError("error deleting external data source", err.Error())
+				return
+			}
+		},
+		func(client *client.Client) {
+			deleteReq := &pb.DeleteExternalDataSourceRequest{
+				Id: data.ID.ValueString(),
+			}
+			_, err := client.ExternalDataSourceService.DeleteExternalDataSource(ctx, deleteReq)
+			if err != nil {
+				resp.Diagnostics.AddError("delete external data source", err.Error())
+				return
+			}
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

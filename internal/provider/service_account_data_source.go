@@ -71,7 +71,7 @@ func (d *ServiceAccountDataSource) Read(ctx context.Context, req datasource.Read
 		return
 	}
 
-	resp.Diagnostics.Append(d.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(d.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			getReq := connect.NewRequest(&pomerium.GetServiceAccountRequest{
 				Id: data.ID.ValueString(),

@@ -137,7 +137,7 @@ func (d *PoliciesDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	resp.Diagnostics.Append(d.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(d.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			listReq := connect.NewRequest(NewModelToAPIConverter(&resp.Diagnostics).ListPoliciesRequest(data))
 			if resp.Diagnostics.HasError() {

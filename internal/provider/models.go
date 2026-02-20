@@ -5,7 +5,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-const OriginatorID = "terraform"
+const (
+	OriginatorID = "terraform"
+
+	RecordTypeCluster             = "pomerium.io/TerraformCluster"
+	RecordTypeExternalDataSource  = "pomerium.io/TerraformExternalDataSource"
+	RecordTypeNamespace           = "pomerium.io/TerraformNamespace"
+	RecordTypeNamespacePermission = "pomerium.io/TerraformNamespacePermission"
+)
 
 type ClusterModel struct {
 	CertificateAuthorityB64  types.String `tfsdk:"certificate_authority_b64"`

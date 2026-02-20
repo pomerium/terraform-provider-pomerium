@@ -55,8 +55,9 @@ func (r *KeyPairResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 				Description: "Name of the key pair",
 			},
 			"namespace_id": schema.StringAttribute{
-				Required:    true,
 				Description: "ID of the namespace this key pair belongs to",
+				Optional:    true,
+				Computed:    true,
 			},
 			"certificate": schema.StringAttribute{
 				Required:    true,
@@ -83,7 +84,7 @@ func (r *KeyPairResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			apiKeyPair := NewModelToAPIConverter(&resp.Diagnostics).KeyPair(plan)
 			if resp.Diagnostics.HasError() {
@@ -135,7 +136,7 @@ func (r *KeyPairResource) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			getReq := connect.NewRequest(&pomerium.GetKeyPairRequest{
 				Id: state.ID.ValueString(),
@@ -185,7 +186,7 @@ func (r *KeyPairResource) Update(ctx context.Context, req resource.UpdateRequest
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			apiKeyPair := NewModelToAPIConverter(&resp.Diagnostics).KeyPair(plan)
 			if resp.Diagnostics.HasError() {
@@ -230,7 +231,7 @@ func (r *KeyPairResource) Delete(ctx context.Context, req resource.DeleteRequest
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			deleteReq := connect.NewRequest(&pomerium.DeleteKeyPairRequest{
 				Id: state.ID.ValueString(),
