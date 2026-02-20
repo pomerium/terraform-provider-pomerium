@@ -221,7 +221,7 @@ func (r *ExternalDataSourceResource) Update(ctx context.Context, req resource.Up
 				return
 			}
 
-			err := databrokerPut(ctx, client, RecordTypeNamespace, plan.ID.ValueString(), externalDataSource)
+			err := databrokerPut(ctx, client, RecordTypeExternalDataSource, plan.ID.ValueString(), externalDataSource)
 			if err != nil {
 				resp.Diagnostics.AddError("error updating external data source", err.Error())
 				return

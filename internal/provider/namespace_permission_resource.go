@@ -243,7 +243,7 @@ func (r *NamespacePermissionResource) Delete(ctx context.Context, req resource.D
 
 	resp.Diagnostics.Append(r.client.ByServerType(
 		func(client sdk.CoreClient) {
-			err := databrokerDelete(ctx, client, RecordTypeNamespace, plan.ID.ValueString())
+			err := databrokerDelete(ctx, client, RecordTypeNamespacePermission, plan.ID.ValueString())
 			if err != nil {
 				resp.Diagnostics.AddError("error deleting namespace permission", err.Error())
 				return

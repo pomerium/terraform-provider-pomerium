@@ -25,6 +25,12 @@ func TestAccCluster(t *testing.T) {
 					resource.TestCheckResourceAttr("pomerium_cluster.test", "name", "test"),
 				),
 			},
+			{
+				Config: testAccClusterConfig(t, apiURL, sharedSecret, "test-update"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("pomerium_cluster.test", "name", "test-update"),
+				),
+			},
 		},
 	})
 }
