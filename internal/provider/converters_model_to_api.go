@@ -50,6 +50,21 @@ func (c *ModelToAPIConverter) CircuitBreakerThresholds(src types.Object) *pomeri
 	}
 }
 
+func (c *ModelToAPIConverter) EntityInfosFromIDs(src []string) []*pomerium.EntityInfo {
+	if src == nil {
+		return nil
+	}
+	dst := make([]*pomerium.EntityInfo, len(src))
+	for i := range src {
+		dst[i] = &pomerium.EntityInfo{
+			Id:         new(src[i]),
+			Name:       nil,
+			ModifiedAt: nil,
+		}
+	}
+	return dst
+}
+
 func (c *ModelToAPIConverter) Filter(src map[string]types.String) *structpb.Struct {
 	var dst *structpb.Struct
 	for field, value := range src {
@@ -332,6 +347,7 @@ func (c *ModelToAPIConverter) Route(src RouteModel) *pomerium.Route {
 	return &pomerium.Route{
 		AllowSpdy:                src.AllowSPDY.ValueBool(),
 		AllowWebsockets:          src.AllowWebsockets.ValueBool(),
+		AssignedPolicies:         c.EntityInfosFromIDs(c.StringSliceFromSet(path.Root("policies"), src.Policies)),
 		BearerTokenFormat:        c.BearerTokenFormat(path.Root("bearer_token_format"), src.BearerTokenFormat),
 		CircuitBreakerThresholds: c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
 		DependsOn:                c.StringSliceFromSet(path.Root("depends_on"), src.DependsOnHosts),

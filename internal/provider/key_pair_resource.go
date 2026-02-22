@@ -90,6 +90,7 @@ func (r *KeyPairResource) Create(ctx context.Context, req resource.CreateRequest
 			if resp.Diagnostics.HasError() {
 				return
 			}
+			resp.Diagnostics.AddWarning("KEY BEFORE", "|"+string(apiKeyPair.GetKey())+"|")
 
 			createReq := connect.NewRequest(&pomerium.CreateKeyPairRequest{
 				KeyPair: apiKeyPair,
@@ -101,6 +102,8 @@ func (r *KeyPairResource) Create(ctx context.Context, req resource.CreateRequest
 			}
 
 			plan = NewAPIToModelConverter(&resp.Diagnostics).KeyPair(createRes.Msg.KeyPair)
+
+			resp.Diagnostics.AddWarning("KEY AFTER", "|"+string(createRes.Msg.KeyPair.GetKey())+"|")
 		},
 		func(client *client.Client) {
 			createReq := NewModelToEnterpriseConverter(&resp.Diagnostics).CreateKeyPairRequest(plan)

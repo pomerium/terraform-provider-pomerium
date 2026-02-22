@@ -2,6 +2,7 @@ package provider
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -115,8 +116,23 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 			data = NewEnterpriseToModelConverter(&resp.Diagnostics).Cluster(getRes.GetCluster(), getRes.GetNamespace())
 		},
-		func(_ sdk.ZeroClient) {
-			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		func(client sdk.ZeroClient) {
+			organizationID, err := getZeroOrganizationID(ctx, client)
+			if err != nil {
+				resp.Diagnostics.AddError(err.Error(), err.Error())
+				return
+			}
+
+			res, err := client.GetClusterWithResponse(ctx, organizationID, data.ID.ValueString())
+			if err != nil {
+				resp.Diagnostics.AddError(err.Error(), err.Error())
+				return
+			} else if res.JSON200 == nil {
+				resp.Diagnostics.AddError("error retrieving cluster", fmt.Sprintf("unexpected cluster response: %s", res.Status()))
+				return
+			}
+
+			data = NewZeroToModelConverter(&resp.Diagnostics).Cluster(*res.JSON200)
 		})...)
 	if resp.Diagnostics.HasError() {
 		return

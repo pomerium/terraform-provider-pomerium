@@ -205,3 +205,19 @@ func (c *Client) ConsolidatedOrLegacy(
 
 	return diagnostics
 }
+
+func getZeroOrganizationID(
+	ctx context.Context,
+	client sdk.ZeroClient,
+) (string, error) {
+	res, err := client.ListOrganizationsWithResponse(ctx)
+	if err != nil {
+		return "", fmt.Errorf("error retrieving zero organization id: %w", err)
+	}
+
+	if res.JSON200 == nil || len(*res.JSON200) != 1 {
+		return "", fmt.Errorf("error retrieving zero organization id")
+	}
+
+	return (*res.JSON200)[0].Id, nil
+}
