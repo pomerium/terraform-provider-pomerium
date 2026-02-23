@@ -31,3 +31,16 @@ func (c *ZeroToModelConverter) Cluster(src zeroapi.Cluster) ClusterModel {
 		SharedSecretB64:          types.StringNull(),
 	}
 }
+
+func (c *ZeroToModelConverter) Namespace(src zeroapi.NamespaceWithRole) NamespaceModel {
+	dst := NamespaceModel{
+		ClusterID: types.StringNull(),
+		ID:        types.StringValue(src.Id),
+		Name:      types.StringValue(src.Name),
+		ParentID:  types.StringPointerValue(src.ParentId),
+	}
+	if src.Type == zeroapi.NamespaceTypeCluster {
+		dst.ClusterID = types.StringValue(src.Id)
+	}
+	return dst
+}

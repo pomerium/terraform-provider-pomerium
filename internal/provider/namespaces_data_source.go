@@ -112,8 +112,30 @@ func (d *NamespacesDataSource) Read(ctx context.Context, _ datasource.ReadReques
 
 			data.Namespaces = namespaces
 		},
-		func(_ sdk.ZeroClient) {
-			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		func(client sdk.ZeroClient) {
+			organizationID, err := getZeroOrganizationID(ctx, client)
+			if err != nil {
+				resp.Diagnostics.AddError(err.Error(), err.Error())
+				return
+			}
+
+			listRes, err := client.ListNamespacesWithResponse(ctx, organizationID)
+			if err != nil {
+				resp.Diagnostics.AddError(err.Error(), err.Error())
+				return
+			} else if listRes.JSON200 == nil {
+				resp.Diagnostics.AddError("error retrieving namespaces", "unexpected namespace response")
+				return
+			}
+
+			data.Namespaces = nil
+			for _, namespace := range *listRes.JSON200 {
+				namespaceModel := NewZeroToModelConverter(&resp.Diagnostics).Namespace(namespace)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				data.Namespaces = append(data.Namespaces, namespaceModel)
+			}
 		})...)
 	if resp.Diagnostics.HasError() {
 		return
