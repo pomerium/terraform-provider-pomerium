@@ -2,7 +2,6 @@ package provider
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -55,6 +54,22 @@ func getClusterDataSourceAttributes(idRequired bool) map[string]schema.Attribute
 		"certificate_authority_file": schema.StringAttribute{
 			Computed:    true,
 			Description: "Certificate authority file for the cluster",
+		},
+		"domain": schema.StringAttribute{
+			Computed:    true,
+			Description: "Domain name of the cluster.",
+		},
+		"flavor": schema.StringAttribute{
+			Computed:    true,
+			Description: "Flavor of the cluster.",
+		},
+		"fqdn": schema.StringAttribute{
+			Computed:    true,
+			Description: "Fully-qualified domain name of the cluster.",
+		},
+		"manual_override_ip_address": schema.StringAttribute{
+			Computed:    true,
+			Description: "Manual override for the cluster ip address.",
 		},
 	}
 }
@@ -123,16 +138,12 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 				return
 			}
 
-			res, err := client.GetClusterWithResponse(ctx, organizationID, data.ID.ValueString())
-			if err != nil {
-				resp.Diagnostics.AddError(err.Error(), err.Error())
-				return
-			} else if res.JSON200 == nil {
-				resp.Diagnostics.AddError("error retrieving cluster", fmt.Sprintf("unexpected cluster response: %s", res.Status()))
+			cluster, namespace := getZeroCluster(ctx, client, &resp.Diagnostics, organizationID, data.ID.ValueString())
+			if resp.Diagnostics.HasError() {
 				return
 			}
 
-			data = NewZeroToModelConverter(&resp.Diagnostics).Cluster(*res.JSON200)
+			data = NewZeroToModelConverter(&resp.Diagnostics).Cluster(cluster, namespace)
 		})...)
 	if resp.Diagnostics.HasError() {
 		return

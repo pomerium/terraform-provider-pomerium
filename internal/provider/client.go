@@ -1,9 +1,11 @@
 package provider
 
 import (
+	"bytes"
 	"cmp"
 	"context"
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"net"
 	"net/http"
@@ -12,10 +14,13 @@ import (
 	"sync"
 
 	"connectrpc.com/connect"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/sdk-go"
+	"github.com/pomerium/sdk-go/pkg/zeroapi"
 	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
@@ -206,6 +211,66 @@ func (c *Client) ConsolidatedOrLegacy(
 	return diagnostics
 }
 
+func addZeroResponseError(
+	diagnostics *diag.Diagnostics,
+	body []byte,
+	httpResponse *http.Response,
+) {
+	var buf bytes.Buffer
+	if httpResponse != nil {
+		if httpResponse.Request != nil {
+			fmt.Fprintf(&buf, "%s %s: ", httpResponse.Request.Method, httpResponse.Request.URL.String())
+		}
+		fmt.Fprintf(&buf, "%s", httpResponse.Status)
+		if len(body) > 0 {
+			var result struct {
+				Error string `json:"error"`
+			}
+			if err := json.Unmarshal(body, &result); err == nil {
+				fmt.Fprintf(&buf, ": %s", result.Error)
+			} else {
+				fmt.Fprintf(&buf, ": %s", string(body))
+			}
+		}
+	}
+	diagnostics.AddError("unexpected response from zero api", buf.String())
+}
+
+func getZeroCluster(
+	ctx context.Context,
+	client sdk.ZeroClient,
+	diagnostics *diag.Diagnostics,
+	organizationID string,
+	clusterID string,
+) (cluster zeroapi.Cluster, namespace zeroapi.NamespaceWithRole) {
+	getClusterRes, err := client.GetClusterWithResponse(ctx, organizationID, clusterID)
+	if err != nil {
+		diagnostics.AddError(err.Error(), err.Error())
+		return cluster, namespace
+	} else if getClusterRes.JSON200 == nil {
+		addZeroResponseError(diagnostics, getClusterRes.Body, getClusterRes.HTTPResponse)
+		return cluster, namespace
+	}
+
+	listNamespaceRes, err := client.ListNamespacesWithResponse(ctx, organizationID)
+	if err != nil {
+		diagnostics.AddError(err.Error(), err.Error())
+		return cluster, namespace
+	} else if listNamespaceRes.JSON200 == nil {
+		addZeroResponseError(diagnostics, getClusterRes.Body, getClusterRes.HTTPResponse)
+		return cluster, namespace
+	}
+
+	for _, n := range *listNamespaceRes.JSON200 {
+		if n.Id == getClusterRes.JSON200.Id {
+			namespace = n
+			break
+		}
+	}
+
+	return *getClusterRes.JSON200, namespace
+}
+
 func getZeroOrganizationID(
 	ctx context.Context,
 	client sdk.ZeroClient,
@@ -220,4 +285,19 @@ func getZeroOrganizationID(
 	}
 
 	return (*res.JSON200)[0].Id, nil
+}
+
+type unsupportedProperty struct {
+	name  string
+	value attr.Value
+}
+
+func checkUnsupportedProperties(serverType serverType, diagnostics *diag.Diagnostics, properties []unsupportedProperty) {
+	for _, p := range properties {
+		if !p.value.IsNull() && !p.value.IsUnknown() {
+			diagnostics.AddAttributeError(path.Root(p.name),
+				fmt.Sprintf("cannot be used with %s", serverType),
+				fmt.Sprintf("%s cannot be used with %s", p.name, serverType))
+		}
+	}
 }

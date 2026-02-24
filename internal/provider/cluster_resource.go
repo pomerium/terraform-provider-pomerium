@@ -39,9 +39,9 @@ func (r *ClusterResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 		MarkdownDescription: "Cluster for Pomerium.",
 		Attributes: map[string]schema.Attribute{
 			"parent_namespace_id": schema.StringAttribute{
-				Description: "Parent namespace of the cluster.",
 				Optional:    true,
 				Computed:    true,
+				Description: "Parent namespace of the cluster.",
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
@@ -62,33 +62,61 @@ func (r *ClusterResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 				},
 			},
 			"name": schema.StringAttribute{
-				Description: "Name for the cluster.",
 				Required:    true,
+				Description: "Name for the cluster.",
 			},
 			"databroker_service_url": schema.StringAttribute{
+				Optional:    true,
 				Description: "Databroker service url for the cluster.",
-				Required:    true,
 			},
 			"shared_secret_b64": schema.StringAttribute{
-				Description: "Shared secret for the cluster as base64.",
-				Required:    true,
+				Optional:    true,
 				Sensitive:   true,
+				Description: "Shared secret for the cluster as base64.",
 			},
 			"insecure_skip_verify": schema.BoolAttribute{
-				Description: "Skip verification of TLS certificates for the cluster.",
 				Optional:    true,
+				Description: "Skip verification of TLS certificates for the cluster.",
 			},
 			"override_certificate_name": schema.StringAttribute{
-				Description: "Override the certificate name for TLS verification for the cluster.",
 				Optional:    true,
+				Description: "Override the certificate name for TLS verification for the cluster.",
 			},
 			"certificate_authority_b64": schema.StringAttribute{
-				Description: "Certificate authority for the cluster as base64.",
 				Optional:    true,
+				Description: "Certificate authority for the cluster as base64.",
 			},
 			"certificate_authority_file": schema.StringAttribute{
-				Description: "Certificate authority file for the cluster",
 				Optional:    true,
+				Description: "Certificate authority file for the cluster",
+			},
+			"domain": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Domain name of the cluster.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"flavor": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Flavor of the cluster.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"fqdn": schema.StringAttribute{
+				Computed:    true,
+				Description: "Fully-qualified domain name of the cluster.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"manual_override_ip_address": schema.StringAttribute{
+				Optional:    true,
+				Description: "Manual override for the cluster ip address.",
 			},
 		},
 	}
@@ -154,6 +182,14 @@ func (r *ClusterResource) Create(ctx context.Context, req resource.CreateRequest
 				return
 			}
 
+			checkUnsupportedProperties(serverTypeEnterprise, &resp.Diagnostics, []unsupportedProperty{
+				{"domain", plan.Domain},
+				{"manual_override_ip_address", plan.ManualOverrideIPAddress},
+			})
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
 			addReq := &pb.AddClusterRequest{
 				ParentNamespaceId: plan.ParentNamespaceID.ValueString(),
 				Cluster:           pbCluster,
@@ -168,8 +204,57 @@ func (r *ClusterResource) Create(ctx context.Context, req resource.CreateRequest
 			plan.ParentNamespaceID = types.StringValue(addRes.Namespace.ParentId)
 			plan.ID = types.StringValue(addRes.Cluster.Id)
 		},
-		func(_ sdk.ZeroClient) {
-			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		func(client sdk.ZeroClient) {
+			organizationID, err := getZeroOrganizationID(ctx, client)
+			if err != nil {
+				resp.Diagnostics.AddError(err.Error(), err.Error())
+				return
+			}
+
+			checkUnsupportedProperties(serverTypeZero, &resp.Diagnostics, []unsupportedProperty{
+				{"certificate_authority_b64", plan.CertificateAuthorityB64},
+				{"certificate_authority_file", plan.CertificateAuthorityFile},
+				{"databroker_service_url", plan.DatabrokerServiceURL},
+				{"insecure_skip_verify", plan.InsecureSkipVerify},
+				{"override_certificate_name", plan.OverrideCertificateName},
+				{"shared_secret_b64", plan.SharedSecretB64},
+			})
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			if plan.Domain.IsNull() || plan.Domain.IsUnknown() {
+				generateRes, err := client.GenerateSubdomainNameWithResponse(ctx)
+				if err != nil {
+					resp.Diagnostics.AddError("error generating subdomain for cluster", err.Error())
+					return
+				} else if generateRes.JSON200 == nil || generateRes.JSON200.Name == "" {
+					addZeroResponseError(&resp.Diagnostics, generateRes.Body, generateRes.HTTPResponse)
+					return
+				}
+				plan.Domain = types.StringValue(generateRes.JSON200.Name)
+			}
+
+			createReq := NewModelToZeroConverter(&resp.Diagnostics).CreateClusterRequest(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			createRes, err := client.CreateClusterWithResponse(ctx, organizationID, createReq)
+			if err != nil {
+				resp.Diagnostics.AddError("error creating cluster", err.Error())
+				return
+			} else if createRes.JSON201 == nil {
+				addZeroResponseError(&resp.Diagnostics, createRes.Body, createRes.HTTPResponse)
+				return
+			}
+
+			cluster, namespace := getZeroCluster(ctx, client, &resp.Diagnostics, organizationID, createRes.JSON201.Id)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			plan = NewZeroToModelConverter(&resp.Diagnostics).Cluster(cluster, namespace)
 		})...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -220,8 +305,19 @@ func (r *ClusterResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 			state = NewEnterpriseToModelConverter(&resp.Diagnostics).Cluster(getRes.GetCluster(), getRes.GetNamespace())
 		},
-		func(_ sdk.ZeroClient) {
-			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		func(client sdk.ZeroClient) {
+			organizationID, err := getZeroOrganizationID(ctx, client)
+			if err != nil {
+				resp.Diagnostics.AddError(err.Error(), err.Error())
+				return
+			}
+
+			cluster, namespace := getZeroCluster(ctx, client, &resp.Diagnostics, organizationID, state.ID.ValueString())
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			state = NewZeroToModelConverter(&resp.Diagnostics).Cluster(cluster, namespace)
 		})...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -270,8 +366,33 @@ func (r *ClusterResource) Update(ctx context.Context, req resource.UpdateRequest
 
 			plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Cluster(updateRes.GetCluster(), updateRes.GetNamespace())
 		},
-		func(_ sdk.ZeroClient) {
-			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		func(client sdk.ZeroClient) {
+			organizationID, err := getZeroOrganizationID(ctx, client)
+			if err != nil {
+				resp.Diagnostics.AddError(err.Error(), err.Error())
+				return
+			}
+
+			updateReq := NewModelToZeroConverter(&resp.Diagnostics).UpdateClusterRequest(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			updateRes, err := client.UpdateClusterWithResponse(ctx, organizationID, plan.ID.ValueString(), updateReq)
+			if err != nil {
+				resp.Diagnostics.AddError("error updating cluster", err.Error())
+				return
+			} else if updateRes.JSON200 == nil {
+				addZeroResponseError(&resp.Diagnostics, updateRes.Body, updateRes.HTTPResponse)
+				return
+			}
+
+			cluster, namespace := getZeroCluster(ctx, client, &resp.Diagnostics, organizationID, plan.ID.ValueString())
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			plan = NewZeroToModelConverter(&resp.Diagnostics).Cluster(cluster, namespace)
 		})...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -312,8 +433,21 @@ func (r *ClusterResource) Delete(ctx context.Context, req resource.DeleteRequest
 				return
 			}
 		},
-		func(_ sdk.ZeroClient) {
-			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		func(client sdk.ZeroClient) {
+			organizationID, err := getZeroOrganizationID(ctx, client)
+			if err != nil {
+				resp.Diagnostics.AddError(err.Error(), err.Error())
+				return
+			}
+
+			deleteRes, err := client.DeleteClusterWithResponse(ctx, organizationID, state.ID.ValueString())
+			if err != nil {
+				resp.Diagnostics.AddError("error deleting cluster", err.Error())
+				return
+			} else if deleteRes.StatusCode() != 204 {
+				addZeroResponseError(&resp.Diagnostics, deleteRes.Body, deleteRes.HTTPResponse)
+				return
+			}
 		})...)
 	if resp.Diagnostics.HasError() {
 		return

@@ -108,8 +108,12 @@ func (d *ClustersDataSource) Read(ctx context.Context, req datasource.ReadReques
 			}
 
 			data.Clusters = nil
-			for _, cluster := range *listRes.JSON200 {
-				clusterModel := NewZeroToModelConverter(&resp.Diagnostics).Cluster(cluster)
+			for _, c := range *listRes.JSON200 {
+				cluster, namespace := getZeroCluster(ctx, client, &resp.Diagnostics, organizationID, c.Id)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				clusterModel := NewZeroToModelConverter(&resp.Diagnostics).Cluster(cluster, namespace)
 				if resp.Diagnostics.HasError() {
 					return
 				}

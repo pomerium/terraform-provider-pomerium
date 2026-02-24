@@ -27,8 +27,12 @@ Read-Only:
 - `certificate_authority_b64` (String) Certificate authority for the cluster as base64.
 - `certificate_authority_file` (String) Certificate authority file for the cluster
 - `databroker_service_url` (String) Databroker service URL of the cluster.
+- `domain` (String) Domain name of the cluster.
+- `flavor` (String) Flavor of the cluster.
+- `fqdn` (String) Fully-qualified domain name of the cluster.
 - `id` (String) Unique identifier for the cluster.
 - `insecure_skip_verify` (Boolean) Skip verification of TLS certificates for the cluster.
+- `manual_override_ip_address` (String) Manual override for the cluster ip address.
 - `name` (String) Name of the cluster.
 - `namespace_id` (String) Namespace ID of the cluster.
 - `override_certificate_name` (String) Override the certificate name for TLS verification for the cluster.

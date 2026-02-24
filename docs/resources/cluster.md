@@ -17,19 +17,23 @@ Cluster for Pomerium.
 
 ### Required
 
-- `databroker_service_url` (String) Databroker service url for the cluster.
 - `name` (String) Name for the cluster.
-- `shared_secret_b64` (String, Sensitive) Shared secret for the cluster as base64.
 
 ### Optional
 
 - `certificate_authority_b64` (String) Certificate authority for the cluster as base64.
 - `certificate_authority_file` (String) Certificate authority file for the cluster
+- `databroker_service_url` (String) Databroker service url for the cluster.
+- `domain` (String) Domain name of the cluster.
+- `flavor` (String) Flavor of the cluster.
 - `insecure_skip_verify` (Boolean) Skip verification of TLS certificates for the cluster.
+- `manual_override_ip_address` (String) Manual override for the cluster ip address.
 - `override_certificate_name` (String) Override the certificate name for TLS verification for the cluster.
 - `parent_namespace_id` (String) Parent namespace of the cluster.
+- `shared_secret_b64` (String, Sensitive) Shared secret for the cluster as base64.
 
 ### Read-Only
 
+- `fqdn` (String) Fully-qualified domain name of the cluster.
 - `id` (String) Unique identifier for the cluster.
 - `namespace_id` (String) Namespace ID for the cluster.
