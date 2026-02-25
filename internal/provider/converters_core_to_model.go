@@ -1,9 +1,12 @@
 package provider
 
 import (
+	"fmt"
+
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"google.golang.org/protobuf/types/known/structpb"
 )
@@ -25,9 +28,13 @@ func (c *CoreToModelConverter) BoolFromStructField(src *structpb.Struct, name st
 	v, ok := src.Fields[name]
 	if !ok {
 		return types.BoolNull()
+	} else if _, ok = v.GetKind().(*structpb.Value_NullValue); ok {
+		return types.BoolNull()
 	}
 	sv, ok := v.GetKind().(*structpb.Value_BoolValue)
 	if !ok {
+		c.diagnostics.AddAttributeError(path.Root(name),
+			"expected bool in struct", fmt.Sprintf("expected bool in struct but got %T", v.GetKind()))
 		return types.BoolNull()
 	}
 	return types.BoolValue(sv.BoolValue)
@@ -59,9 +66,13 @@ func (c *CoreToModelConverter) DurationFromStructField(src *structpb.Struct, nam
 	v, ok := src.Fields[name]
 	if !ok {
 		return timetypes.NewGoDurationNull()
+	} else if _, ok = v.GetKind().(*structpb.Value_NullValue); ok {
+		return timetypes.NewGoDurationNull()
 	}
 	sv, ok := v.GetKind().(*structpb.Value_StringValue)
 	if !ok {
+		c.diagnostics.AddAttributeError(path.Root(name),
+			"expected string in struct", fmt.Sprintf("expected string in struct but got %T", v.GetKind()))
 		return timetypes.NewGoDurationNull()
 	}
 
@@ -111,9 +122,13 @@ func (c *CoreToModelConverter) StringFromStructField(src *structpb.Struct, name 
 	v, ok := src.Fields[name]
 	if !ok {
 		return types.StringNull()
+	} else if _, ok = v.GetKind().(*structpb.Value_NullValue); ok {
+		return types.StringNull()
 	}
 	sv, ok := v.GetKind().(*structpb.Value_StringValue)
 	if !ok {
+		c.diagnostics.AddAttributeError(path.Root(name),
+			"expected string in struct", fmt.Sprintf("expected string in struct but got %T", v.GetKind()))
 		return types.StringNull()
 	}
 	return types.StringValue(sv.StringValue)
@@ -126,16 +141,22 @@ func (c *CoreToModelConverter) StringMapFromStructField(src *structpb.Struct, na
 	v, ok := src.Fields[name]
 	if !ok {
 		return types.MapNull(types.StringType)
+	} else if _, ok = v.GetKind().(*structpb.Value_NullValue); ok {
+		return types.MapNull(types.StringType)
 	}
 	sv, ok := v.GetKind().(*structpb.Value_StructValue)
 	if !ok {
+		c.diagnostics.AddAttributeError(path.Root(name),
+			"expected map in struct", fmt.Sprintf("expected map in struct but got %T", v.GetKind()))
 		return types.MapNull(types.StringType)
 	}
 	m := map[string]attr.Value{}
 	for k, v := range sv.StructValue.Fields {
 		vv, ok := v.GetKind().(*structpb.Value_StringValue)
 		if !ok {
-			continue
+			c.diagnostics.AddAttributeError(path.Root(name),
+				"expected string in map", fmt.Sprintf("expected string in map but got %T", v.GetKind()))
+			return types.MapNull(types.StringType)
 		}
 		m[k] = types.StringValue(vv.StringValue)
 	}

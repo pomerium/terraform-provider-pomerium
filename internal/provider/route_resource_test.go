@@ -23,6 +23,12 @@ func TestAccRoute(t *testing.T) {
 					resource.TestCheckResourceAttrSet("pomerium_route.test", "id"),
 				),
 			},
+			{
+				Config: testAccRouteConfig(t, apiURL, sharedSecret, "updated-name"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("pomerium_route.test", "name", "updated-name"),
+				),
+			},
 		},
 	})
 }

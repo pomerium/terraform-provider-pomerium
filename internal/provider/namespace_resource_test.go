@@ -22,6 +22,12 @@ func TestAccNamespace(t *testing.T) {
 					resource.TestCheckResourceAttr("pomerium_namespace.test", "name", "test"),
 				),
 			},
+			{
+				Config: testAccNamespaceConfig(t, apiURL, sharedSecret, "updated-name"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("pomerium_namespace.test", "name", "updated-name"),
+				),
+			},
 		},
 	})
 }
