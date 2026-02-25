@@ -257,7 +257,7 @@ func getZeroCluster(
 		diagnostics.AddError(err.Error(), err.Error())
 		return cluster, namespace
 	} else if listNamespaceRes.JSON200 == nil {
-		addZeroResponseError(diagnostics, getClusterRes.Body, getClusterRes.HTTPResponse)
+		addZeroResponseError(diagnostics, listNamespaceRes.Body, listNamespaceRes.HTTPResponse)
 		return cluster, namespace
 	}
 
