@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"math"
 	"reflect"
 	"time"
 
@@ -17,6 +18,7 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"github.com/pomerium/enterprise-client-go/pb"
 )
@@ -322,6 +324,9 @@ func (c *baseModelConverter) Duration(p path.Path, src timetypes.GoDuration) *du
 
 	dur, diagnostics := src.ValueGoDuration()
 	appendAttributeDiagnostics(c.diagnostics, p, diagnostics...)
+	if diagnostics.HasError() {
+		return nil
+	}
 	return durationpb.New(dur)
 }
 
@@ -343,21 +348,44 @@ func (c *baseModelConverter) NullableInt32(src types.Int64) *int32 {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
-	return new(int32(src.ValueInt64()))
+	v := src.ValueInt64()
+	if v < math.MinInt32 || v > math.MaxInt32 {
+		c.diagnostics.AddError("value out of range for int32", fmt.Sprintf("value %d is outside int32 range [%d, %d]", v, math.MinInt32, math.MaxInt32))
+		return nil
+	}
+	return new(int32(v))
 }
 
 func (c *baseModelConverter) NullableUint32(src types.Int64) *uint32 {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
-	return new(uint32(src.ValueInt64()))
+	v := src.ValueInt64()
+	if v < 0 || v > math.MaxUint32 {
+		c.diagnostics.AddError("value out of range for uint32", fmt.Sprintf("value %d is outside uint32 range [0, %d]", v, math.MaxUint32))
+		return nil
+	}
+	return new(uint32(v))
+}
+
+func (c *baseModelConverter) WrappedUint32(src types.Int64) *wrapperspb.UInt32Value {
+	v := c.NullableUint32(src)
+	if v == nil {
+		return nil
+	}
+	return wrapperspb.UInt32(*v)
 }
 
 func (c *baseModelConverter) NullableUint64(src types.Int64) *uint64 {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
-	return new(uint64(src.ValueInt64()))
+	v := src.ValueInt64()
+	if v < 0 {
+		c.diagnostics.AddError("value out of range for uint64", fmt.Sprintf("value %d is negative, expected non-negative", v))
+		return nil
+	}
+	return new(uint64(v))
 }
 
 func (c *baseModelConverter) StringMap(p path.Path, src types.Map) map[string]string {

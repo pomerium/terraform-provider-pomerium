@@ -6,7 +6,6 @@ import (
 	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
@@ -59,7 +58,7 @@ func (r *SettingsResource) Create(ctx context.Context, req resource.CreateReques
 			})
 			updateRes, err := client.UpdateSettings(ctx, updateReq)
 			if err != nil {
-				resp.Diagnostics.AddError("Error updating service account", err.Error())
+				resp.Diagnostics.AddError("Error updating settings", err.Error())
 				return
 			}
 
@@ -154,7 +153,7 @@ func (r *SettingsResource) Update(ctx context.Context, req resource.UpdateReques
 			})
 			updateRes, err := client.UpdateSettings(ctx, updateReq)
 			if err != nil {
-				resp.Diagnostics.AddError("Error updating service account", err.Error())
+				resp.Diagnostics.AddError("Error updating settings", err.Error())
 				return
 			}
 
@@ -175,7 +174,7 @@ func (r *SettingsResource) Update(ctx context.Context, req resource.UpdateReques
 				return
 			}
 
-			plan.ID = types.StringValue(setRes.GetSettings().GetId())
+			plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Settings(setRes.GetSettings())
 		})...)
 	if resp.Diagnostics.HasError() {
 		return

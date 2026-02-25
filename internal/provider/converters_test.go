@@ -55,6 +55,12 @@ func TestBaseModelConverter(t *testing.T) {
 				input:    timetypes.NewGoDurationValueFromStringMust("1h1m0s"),
 				expected: durationpb.New(time.Hour + time.Minute),
 			},
+			{
+				name:        "invalid duration returns nil",
+				input:       timetypes.GoDuration{StringValue: basetypes.NewStringValue("not-a-duration")},
+				expected:    nil,
+				expectError: true,
+			},
 		}
 
 		for _, tt := range tests {
@@ -66,6 +72,7 @@ func TestBaseModelConverter(t *testing.T) {
 
 				if tt.expectError {
 					assert.True(t, diagnostics.HasError())
+					assert.Nil(t, result, "Duration should return nil on error")
 					return
 				}
 
@@ -257,6 +264,92 @@ func TestBaseModelConverter(t *testing.T) {
 			))
 			assert.Empty(t, diagnostics)
 		})
+	})
+
+	t.Run("NullableInt32", func(t *testing.T) {
+		t.Parallel()
+
+		tests := []struct {
+			name        string
+			input       types.Int64
+			expected    *int32
+			expectError bool
+		}{
+			{"null", types.Int64Null(), nil, false},
+			{"valid", types.Int64Value(42), new(int32(42)), false},
+			{"overflow", types.Int64Value(2147483648), nil, true},
+			{"underflow", types.Int64Value(-2147483649), nil, true},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				t.Parallel()
+				var diagnostics diag.Diagnostics
+				result := provider.NewModelToAPIConverter(&diagnostics).NullableInt32(tt.input)
+				assert.Equal(t, tt.expected, result)
+				if tt.expectError {
+					assert.True(t, diagnostics.HasError())
+				} else {
+					assert.Empty(t, diagnostics)
+				}
+			})
+		}
+	})
+
+	t.Run("NullableUint32", func(t *testing.T) {
+		t.Parallel()
+
+		tests := []struct {
+			name        string
+			input       types.Int64
+			expected    *uint32
+			expectError bool
+		}{
+			{"null", types.Int64Null(), nil, false},
+			{"valid", types.Int64Value(100), new(uint32(100)), false},
+			{"negative", types.Int64Value(-1), nil, true},
+			{"overflow", types.Int64Value(4294967296), nil, true},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				t.Parallel()
+				var diagnostics diag.Diagnostics
+				result := provider.NewModelToAPIConverter(&diagnostics).NullableUint32(tt.input)
+				assert.Equal(t, tt.expected, result)
+				if tt.expectError {
+					assert.True(t, diagnostics.HasError())
+				} else {
+					assert.Empty(t, diagnostics)
+				}
+			})
+		}
+	})
+
+	t.Run("NullableUint64", func(t *testing.T) {
+		t.Parallel()
+
+		tests := []struct {
+			name        string
+			input       types.Int64
+			expected    *uint64
+			expectError bool
+		}{
+			{"null", types.Int64Null(), nil, false},
+			{"valid", types.Int64Value(100), new(uint64(100)), false},
+			{"negative", types.Int64Value(-1), nil, true},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				t.Parallel()
+				var diagnostics diag.Diagnostics
+				result := provider.NewModelToAPIConverter(&diagnostics).NullableUint64(tt.input)
+				assert.Equal(t, tt.expected, result)
+				if tt.expectError {
+					assert.True(t, diagnostics.HasError())
+				} else {
+					assert.Empty(t, diagnostics)
+				}
+			})
+		}
 	})
 }
 
@@ -1288,6 +1381,37 @@ func TestHealthCheckWithUnknownObject(t *testing.T) {
 	result := provider.NewModelToEnterpriseConverter(&diagnostics).HealthCheck(unknownObj)
 	assert.Nil(t, result, "HealthCheck should return nil for unknown objects")
 	assert.Empty(t, diagnostics, "HealthCheck with unknown object should not produce diagnostics")
+}
+
+func TestHealthCheckNullThresholdsAreNil(t *testing.T) {
+	t.Parallel()
+
+	// When unhealthy_threshold and healthy_threshold are null (not set by user),
+	// the resulting proto fields should be nil, not wrapperspb.UInt32(0).
+	hcObj := types.ObjectValueMust(provider.HealthCheckObjectType().AttrTypes, map[string]attr.Value{
+		"timeout":                 timetypes.NewGoDurationValueFromStringMust("5s"),
+		"interval":                timetypes.NewGoDurationValueFromStringMust("10s"),
+		"initial_jitter":          timetypes.NewGoDurationNull(),
+		"interval_jitter":         timetypes.NewGoDurationNull(),
+		"interval_jitter_percent": types.Int64Null(),
+		"unhealthy_threshold":     types.Int64Null(),
+		"healthy_threshold":       types.Int64Null(),
+		"http_health_check":       types.ObjectNull(provider.HTTPHealthCheckObjectType().AttrTypes),
+		"tcp_health_check":        types.ObjectNull(provider.TCPHealthCheckObjectType().AttrTypes),
+		"grpc_health_check": types.ObjectValueMust(provider.GrpcHealthCheckObjectType().AttrTypes, map[string]attr.Value{
+			"service_name": types.StringValue("my-service"),
+			"authority":    types.StringNull(),
+		}),
+	})
+
+	var diagnostics diag.Diagnostics
+	result := provider.NewModelToAPIConverter(&diagnostics).HealthCheck(hcObj)
+	require.NotNil(t, result)
+	assert.Empty(t, diagnostics)
+
+	assert.Nil(t, result.UnhealthyThreshold, "null unhealthy_threshold should produce nil, not UInt32(0)")
+	assert.Nil(t, result.HealthyThreshold, "null healthy_threshold should produce nil, not UInt32(0)")
+	assert.Equal(t, uint32(0), result.IntervalJitterPercent, "null interval_jitter_percent can be zero since it's not a wrapper type")
 }
 
 func TestToBearerTokenFormatInvalidValue(t *testing.T) {
