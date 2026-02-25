@@ -10,7 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"google.golang.org/protobuf/types/known/structpb"
-	"google.golang.org/protobuf/types/known/wrapperspb"
 
 	"github.com/pomerium/sdk-go/proto/pomerium"
 )
@@ -86,8 +85,8 @@ func (c *ModelToAPIConverter) HealthCheck(src types.Object) *pomerium.HealthChec
 		InitialJitter:         c.Duration(path.Root("initial_jitter"), initialJitter),
 		IntervalJitter:        c.Duration(path.Root("interval_jitter"), intervalJitter),
 		IntervalJitterPercent: uint32(intervalJitterPercent.ValueInt64()),
-		UnhealthyThreshold:    wrapperspb.UInt32(uint32(unhealthyThreshold.ValueInt64())),
-		HealthyThreshold:      wrapperspb.UInt32(uint32(healthyThreshold.ValueInt64())),
+		UnhealthyThreshold:    c.WrappedUint32(unhealthyThreshold),
+		HealthyThreshold:      c.WrappedUint32(healthyThreshold),
 	}
 
 	httpHc := attrs["http_health_check"].(types.Object)
@@ -350,6 +349,7 @@ func (c *ModelToAPIConverter) Route(src RouteModel) *pomerium.Route {
 		IdpClientId:                       src.IDPClientID.ValueStringPointer(),
 		IdpClientSecret:                   src.IDPClientSecret.ValueStringPointer(),
 		JwtGroupsFilter:                   c.JWTGroupsFilter(src.JWTGroupsFilter),
+		JwtGroupsFilterInferFromPpl:       c.JWTGroupsFilterInferFromPpl(src.JWTGroupsFilter),
 		JwtIssuerFormat:                   c.IssuerFormat(path.Root("jwt_issuer_format"), src.JWTIssuerFormat),
 		KubernetesServiceAccountToken:     src.KubernetesServiceAccountToken.ValueString(),
 		KubernetesServiceAccountTokenFile: src.KubernetesServiceAccountTokenFile.ValueString(),
