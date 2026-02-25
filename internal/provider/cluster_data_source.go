@@ -8,6 +8,7 @@ import (
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go"
 )
 
 func getClusterDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
@@ -92,18 +93,31 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 		return
 	}
 
-	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		getReq := &pb.GetClusterRequest{
-			Id: data.ID.ValueString(),
-		}
-		getRes, err := client.ClustersService.GetCluster(ctx, getReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error reading cluster", err.Error())
-			return
-		}
+	resp.Diagnostics.Append(d.client.ByServerType(
+		func(client sdk.CoreClient) {
+			cluster, err := databrokerGet(ctx, client, RecordTypeCluster, data.ID.ValueString())
+			if err != nil {
+				resp.Diagnostics.AddError("error reading cluster", err.Error())
+				return
+			}
 
-		data = NewEnterpriseToModelConverter(&resp.Diagnostics).Cluster(getRes.GetCluster(), getRes.GetNamespace())
-	})...)
+			data = NewCoreToModelConverter(&resp.Diagnostics).Cluster(cluster)
+		},
+		func(client *client.Client) {
+			getReq := &pb.GetClusterRequest{
+				Id: data.ID.ValueString(),
+			}
+			getRes, err := client.ClustersService.GetCluster(ctx, getReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error reading cluster", err.Error())
+				return
+			}
+
+			data = NewEnterpriseToModelConverter(&resp.Diagnostics).Cluster(getRes.GetCluster(), getRes.GetNamespace())
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

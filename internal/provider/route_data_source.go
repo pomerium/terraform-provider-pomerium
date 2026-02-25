@@ -423,7 +423,7 @@ func (d *RouteDataSource) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
-	resp.Diagnostics.Append(d.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(d.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			getReq := connect.NewRequest(&pomerium.GetRouteRequest{
 				Id: data.ID.ValueString(),

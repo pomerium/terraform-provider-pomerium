@@ -8,6 +8,7 @@ import (
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go"
 )
 
 type ClustersDataSourceModel struct {
@@ -54,25 +55,45 @@ func (d *ClustersDataSource) Read(ctx context.Context, req datasource.ReadReques
 		return
 	}
 
-	resp.Diagnostics.Append(d.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		listReq := &pb.ListClustersRequest{}
-		listRes, err := client.ClustersService.ListClusters(ctx, listReq)
-		if err != nil {
-			resp.Diagnostics.AddError("Error reading clusters", err.Error())
-			return
-		}
-
-		clusters := make([]ClusterModel, 0, len(listRes.Clusters))
-		for _, cluster := range listRes.Clusters {
-			clusterModel := NewEnterpriseToModelConverter(&resp.Diagnostics).Cluster(cluster, nil)
-			if resp.Diagnostics.HasError() {
+	resp.Diagnostics.Append(d.client.ByServerType(
+		func(client sdk.CoreClient) {
+			clusters, err := databrokerList(ctx, client, RecordTypeCluster)
+			if err != nil {
+				resp.Diagnostics.AddError("Error reading clusters", err.Error())
 				return
 			}
-			clusters = append(clusters, clusterModel)
-		}
 
-		data.Clusters = clusters
-	})...)
+			data.Clusters = make([]ClusterModel, 0, len(clusters))
+			for _, cluster := range clusters {
+				clusterModel := NewCoreToModelConverter(&resp.Diagnostics).Cluster(cluster)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				data.Clusters = append(data.Clusters, clusterModel)
+			}
+		},
+		func(client *client.Client) {
+			listReq := &pb.ListClustersRequest{}
+			listRes, err := client.ClustersService.ListClusters(ctx, listReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error reading clusters", err.Error())
+				return
+			}
+
+			clusters := make([]ClusterModel, 0, len(listRes.Clusters))
+			for _, cluster := range listRes.Clusters {
+				clusterModel := NewEnterpriseToModelConverter(&resp.Diagnostics).Cluster(cluster, nil)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				clusters = append(clusters, clusterModel)
+			}
+
+			data.Clusters = clusters
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

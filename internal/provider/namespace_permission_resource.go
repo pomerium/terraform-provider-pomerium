@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 
+	"github.com/google/uuid"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -17,6 +18,7 @@ import (
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	"github.com/pomerium/sdk-go"
 )
 
 //go:embed help/namespace_permissions.md
@@ -83,23 +85,45 @@ func (r *NamespacePermissionResource) Create(ctx context.Context, req resource.C
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbNamespacePermission := NewModelToEnterpriseConverter(&resp.Diagnostics).NamespacePermission(plan)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	resp.Diagnostics.Append(r.client.ByServerType(
+		func(client sdk.CoreClient) {
+			if plan.ID.IsNull() || plan.ID.IsUnknown() {
+				plan.ID = types.StringValue(uuid.NewString())
+			}
 
-		setReq := &pb.SetNamespacePermissionRequest{
-			NamespacePermission: pbNamespacePermission,
-		}
-		setRes, err := client.NamespacePermissionService.SetNamespacePermission(ctx, setReq)
-		if err != nil {
-			resp.Diagnostics.AddError("failed to create namespace permission", err.Error())
-			return
-		}
+			namespacePermission := NewModelToCoreConverter(&resp.Diagnostics).NamespacePermission(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 
-		plan.ID = types.StringValue(setRes.NamespacePermission.Id)
-	})...)
+			err := databrokerPut(ctx, client, RecordTypeNamespacePermission, plan.ID.ValueString(), namespacePermission)
+			if err != nil {
+				resp.Diagnostics.AddError("error creating namespace permission", err.Error())
+				return
+			}
+
+			plan = NewCoreToModelConverter(&resp.Diagnostics).NamespacePermission(namespacePermission)
+		},
+		func(client *client.Client) {
+			pbNamespacePermission := NewModelToEnterpriseConverter(&resp.Diagnostics).NamespacePermission(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			setReq := &pb.SetNamespacePermissionRequest{
+				NamespacePermission: pbNamespacePermission,
+			}
+			setRes, err := client.NamespacePermissionService.SetNamespacePermission(ctx, setReq)
+			if err != nil {
+				resp.Diagnostics.AddError("failed to create namespace permission", err.Error())
+				return
+			}
+
+			plan.ID = types.StringValue(setRes.NamespacePermission.Id)
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -123,22 +147,38 @@ func (r *NamespacePermissionResource) Read(ctx context.Context, req resource.Rea
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		getReq := &pb.GetNamespacePermissionRequest{
-			Id: state.ID.ValueString(),
-		}
-		getRes, err := client.NamespacePermissionService.GetNamespacePermission(ctx, getReq)
-		if err != nil {
+	resp.Diagnostics.Append(r.client.ByServerType(
+		func(client sdk.CoreClient) {
+			data, err := databrokerGet(ctx, client, RecordTypeNamespacePermission, state.ID.ValueString())
 			if status.Code(err) == codes.NotFound {
 				resp.State.RemoveResource(ctx)
 				return
+			} else if err != nil {
+				resp.Diagnostics.AddError("error reading namespace permission", err.Error())
+				return
 			}
-			resp.Diagnostics.AddError("failed to read namespace permission", err.Error())
-			return
-		}
 
-		state = NewEnterpriseToModelConverter(&resp.Diagnostics).NamespacePermission(getRes.GetNamespacePermission())
-	})...)
+			state = NewCoreToModelConverter(&resp.Diagnostics).NamespacePermission(data)
+		},
+		func(client *client.Client) {
+			getReq := &pb.GetNamespacePermissionRequest{
+				Id: state.ID.ValueString(),
+			}
+			getRes, err := client.NamespacePermissionService.GetNamespacePermission(ctx, getReq)
+			if err != nil {
+				if status.Code(err) == codes.NotFound {
+					resp.State.RemoveResource(ctx)
+					return
+				}
+				resp.Diagnostics.AddError("failed to read namespace permission", err.Error())
+				return
+			}
+
+			state = NewEnterpriseToModelConverter(&resp.Diagnostics).NamespacePermission(getRes.GetNamespacePermission())
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -154,20 +194,38 @@ func (r *NamespacePermissionResource) Update(ctx context.Context, req resource.U
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		pbNamespacePermission := NewModelToEnterpriseConverter(&resp.Diagnostics).NamespacePermission(plan)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	resp.Diagnostics.Append(r.client.ByServerType(
+		func(client sdk.CoreClient) {
+			namespacePermission := NewModelToCoreConverter(&resp.Diagnostics).NamespacePermission(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 
-		setReq := &pb.SetNamespacePermissionRequest{
-			NamespacePermission: pbNamespacePermission,
-		}
-		_, err := client.NamespacePermissionService.SetNamespacePermission(ctx, setReq)
-		if err != nil {
-			resp.Diagnostics.AddError("failed to update namespace permission", err.Error())
-		}
-	})...)
+			err := databrokerPut(ctx, client, RecordTypeNamespacePermission, plan.ID.ValueString(), namespacePermission)
+			if err != nil {
+				resp.Diagnostics.AddError("error updating namespace permission", err.Error())
+				return
+			}
+
+			plan = NewCoreToModelConverter(&resp.Diagnostics).NamespacePermission(namespacePermission)
+		},
+		func(client *client.Client) {
+			pbNamespacePermission := NewModelToEnterpriseConverter(&resp.Diagnostics).NamespacePermission(plan)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			setReq := &pb.SetNamespacePermissionRequest{
+				NamespacePermission: pbNamespacePermission,
+			}
+			_, err := client.NamespacePermissionService.SetNamespacePermission(ctx, setReq)
+			if err != nil {
+				resp.Diagnostics.AddError("failed to update namespace permission", err.Error())
+			}
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -183,15 +241,26 @@ func (r *NamespacePermissionResource) Delete(ctx context.Context, req resource.D
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.EnterpriseOnly(ctx, func(client *client.Client) {
-		deleteReq := &pb.DeleteNamespacePermissionRequest{
-			Id: plan.ID.ValueString(),
-		}
-		_, err := client.NamespacePermissionService.DeleteNamespacePermission(ctx, deleteReq)
-		if err != nil {
-			resp.Diagnostics.AddError("failed to delete namespace permission", err.Error())
-		}
-	})...)
+	resp.Diagnostics.Append(r.client.ByServerType(
+		func(client sdk.CoreClient) {
+			err := databrokerDelete(ctx, client, RecordTypeNamespacePermission, plan.ID.ValueString())
+			if err != nil {
+				resp.Diagnostics.AddError("error deleting namespace permission", err.Error())
+				return
+			}
+		},
+		func(client *client.Client) {
+			deleteReq := &pb.DeleteNamespacePermissionRequest{
+				Id: plan.ID.ValueString(),
+			}
+			_, err := client.NamespacePermissionService.DeleteNamespacePermission(ctx, deleteReq)
+			if err != nil {
+				resp.Diagnostics.AddError("failed to delete namespace permission", err.Error())
+			}
+		},
+		func(_ sdk.ZeroClient) {
+			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		})...)
 	if resp.Diagnostics.HasError() {
 		return
 	}

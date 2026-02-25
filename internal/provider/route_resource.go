@@ -73,7 +73,8 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			},
 			"namespace_id": schema.StringAttribute{
 				Description: "ID of the namespace the route belongs to.",
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 			},
 			"policies": schema.SetAttribute{
 				ElementType: types.StringType,
@@ -476,7 +477,7 @@ func (r *RouteResource) Create(ctx context.Context, req resource.CreateRequest, 
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			apiRoute := NewModelToAPIConverter(&resp.Diagnostics).Route(plan)
 			if resp.Diagnostics.HasError() {
@@ -531,7 +532,7 @@ func (r *RouteResource) Read(ctx context.Context, req resource.ReadRequest, resp
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			getReq := connect.NewRequest(&pomerium.GetRouteRequest{
 				Id: state.ID.ValueString(),
@@ -578,7 +579,7 @@ func (r *RouteResource) Update(ctx context.Context, req resource.UpdateRequest, 
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			apiRoute := NewModelToAPIConverter(&resp.Diagnostics).Route(plan)
 			if resp.Diagnostics.HasError() {
@@ -628,7 +629,7 @@ func (r *RouteResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 		return
 	}
 
-	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(ctx,
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
 			deleteReq := connect.NewRequest(&pomerium.DeleteRouteRequest{
 				Id: data.ID.ValueString(),
