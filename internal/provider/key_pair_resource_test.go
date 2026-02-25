@@ -25,6 +25,12 @@ func TestAccKeyPair(t *testing.T) {
 					resource.TestCheckResourceAttrSet("pomerium_key_pair.test", "id"),
 				),
 			},
+			{
+				Config: testAccKeyPairConfig(t, apiURL, sharedSecret, "updated-name"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("pomerium_key_pair.test", "name", "updated-name"),
+				),
+			},
 		},
 	})
 }

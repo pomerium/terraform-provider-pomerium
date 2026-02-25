@@ -22,6 +22,12 @@ func TestAccSettings(t *testing.T) {
 					resource.TestCheckResourceAttrSet("pomerium_settings.test", "id"),
 				),
 			},
+			{
+				Config: testAccSettingsConfig(t, apiURL, sharedSecret),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet("pomerium_settings.test", "id"),
+				),
+			},
 		},
 	})
 }

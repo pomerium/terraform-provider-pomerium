@@ -23,6 +23,12 @@ func TestAccPolicy(t *testing.T) {
 					resource.TestCheckResourceAttrSet("pomerium_policy.test", "id"),
 				),
 			},
+			{
+				Config: testAccPolicyConfig(t, apiURL, sharedSecret, "updated-name"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("pomerium_policy.test", "name", "updated-name"),
+				),
+			},
 		},
 	})
 }

@@ -28,6 +28,8 @@ func (c *CoreToModelConverter) BoolFromStructField(src *structpb.Struct, name st
 	v, ok := src.Fields[name]
 	if !ok {
 		return types.BoolNull()
+	} else if _, ok = v.GetKind().(*structpb.Value_NullValue); ok {
+		return types.BoolNull()
 	}
 	sv, ok := v.GetKind().(*structpb.Value_BoolValue)
 	if !ok {
@@ -59,6 +61,8 @@ func (c *CoreToModelConverter) DurationFromStructField(src *structpb.Struct, nam
 	}
 	v, ok := src.Fields[name]
 	if !ok {
+		return timetypes.NewGoDurationNull()
+	} else if _, ok = v.GetKind().(*structpb.Value_NullValue); ok {
 		return timetypes.NewGoDurationNull()
 	}
 	sv, ok := v.GetKind().(*structpb.Value_StringValue)
@@ -114,6 +118,8 @@ func (c *CoreToModelConverter) StringFromStructField(src *structpb.Struct, name 
 	v, ok := src.Fields[name]
 	if !ok {
 		return types.StringNull()
+	} else if _, ok = v.GetKind().(*structpb.Value_NullValue); ok {
+		return types.StringNull()
 	}
 	sv, ok := v.GetKind().(*structpb.Value_StringValue)
 	if !ok {
@@ -130,6 +136,8 @@ func (c *CoreToModelConverter) StringMapFromStructField(src *structpb.Struct, na
 	}
 	v, ok := src.Fields[name]
 	if !ok {
+		return types.MapNull(types.StringType)
+	} else if _, ok = v.GetKind().(*structpb.Value_NullValue); ok {
 		return types.MapNull(types.StringType)
 	}
 	sv, ok := v.GetKind().(*structpb.Value_StructValue)

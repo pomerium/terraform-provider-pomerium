@@ -17,17 +17,23 @@ func TestAccExternalDataSource(t *testing.T) {
 		ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExternalDataSourceConfig(t, apiURL, sharedSecret),
+				Config: testAccExternalDataSourceConfig(t, apiURL, sharedSecret, "user.id"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("pomerium_external_data_source.test", "id"),
 					resource.TestCheckResourceAttr("pomerium_external_data_source.test", "foreign_key", "user.id"),
+				),
+			},
+			{
+				Config: testAccExternalDataSourceConfig(t, apiURL, sharedSecret, "user.name"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr("pomerium_external_data_source.test", "foreign_key", "user.name"),
 				),
 			},
 		},
 	})
 }
 
-func testAccExternalDataSourceConfig(t *testing.T, apiURL string, sharedSecret []byte) string {
+func testAccExternalDataSourceConfig(t *testing.T, apiURL string, sharedSecret []byte, foreignKey string) string {
 	t.Helper()
 
 	return fmt.Sprintf(`
@@ -38,8 +44,8 @@ provider "pomerium" {
 
 resource "pomerium_external_data_source" "test" {
 	url = "http://localhost:8080"
-	foreign_key = "user.id"
+	foreign_key = "%s"
 	record_type = "pomerium.io/Test"
 }
-`, apiURL, base64.StdEncoding.EncodeToString(sharedSecret))
+`, apiURL, base64.StdEncoding.EncodeToString(sharedSecret), foreignKey)
 }
