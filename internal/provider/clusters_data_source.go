@@ -103,7 +103,7 @@ func (d *ClustersDataSource) Read(ctx context.Context, req datasource.ReadReques
 				resp.Diagnostics.AddError(err.Error(), err.Error())
 				return
 			} else if listRes.JSON200 == nil {
-				resp.Diagnostics.AddError("error retrieving clusters", "unexpected cluster response")
+				addZeroResponseError(&resp.Diagnostics, listRes.Body, listRes.HTTPResponse)
 				return
 			}
 

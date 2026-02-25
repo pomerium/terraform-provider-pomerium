@@ -96,7 +96,7 @@ func (d *NamespaceDataSource) Read(ctx context.Context, req datasource.ReadReque
 				resp.Diagnostics.AddError(err.Error(), err.Error())
 				return
 			} else if listRes.JSON200 == nil {
-				resp.Diagnostics.AddError("error retrieving namespaces", "unexpected namespace response")
+				addZeroResponseError(&resp.Diagnostics, listRes.Body, listRes.HTTPResponse)
 				return
 			}
 
