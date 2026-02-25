@@ -13,8 +13,8 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.29.0
 	github.com/hashicorp/terraform-plugin-log v0.10.0
 	github.com/iancoleman/strcase v0.3.0
-	github.com/pomerium/enterprise-client-go v0.32.1-0.20260218185111-26eed12b0dc6
-	github.com/pomerium/pomerium v0.32.1-0.20260220001731-921eae4ee8f4
+	github.com/pomerium/enterprise-client-go v0.32.1-0.20260220150742-18a3cdf62dc7
+	github.com/pomerium/pomerium v0.32.1-0.20260224200911-5fc80174e0d2
 	github.com/pomerium/sdk-go v0.0.10-0.20260217154758-4f7e568ccec3
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
@@ -56,7 +56,7 @@ require (
 	golang.org/x/net v0.50.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.34.0 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260217215200-42d3e9bedb6d // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260223185530-2f722ef697dc // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
