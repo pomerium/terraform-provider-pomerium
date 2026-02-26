@@ -444,7 +444,7 @@ func (r *ClusterResource) Delete(ctx context.Context, req resource.DeleteRequest
 			if err != nil {
 				resp.Diagnostics.AddError("error deleting cluster", err.Error())
 				return
-			} else if deleteRes.StatusCode() != 204 {
+			} else if deleteRes.StatusCode() != 204 && deleteRes.StatusCode() != 404 {
 				addZeroResponseError(&resp.Diagnostics, deleteRes.Body, deleteRes.HTTPResponse)
 				return
 			}
