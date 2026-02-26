@@ -301,10 +301,10 @@ github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10/go.mod h1
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRIccs7FGNTlIRMkT8wgtp5eCXdBlqhYGL6U=
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/pomerium/enterprise-client-go v0.32.1-0.20260225123725-6c5059f2642b h1:6r3Eadd5lmkbx79awZz96IcgppUl6dHyAUusxcxBllw=
-github.com/pomerium/enterprise-client-go v0.32.1-0.20260225123725-6c5059f2642b/go.mod h1:h7U5C+Hkec/G4qdJkK7qQ0i56Xx2ztvsa0Yz01mshQA=
-github.com/pomerium/pomerium v0.32.1-0.20260225193751-3b9b6e951fd2 h1:LCdUsX2vvLhgunE/3pO7vsQaCMqD2hodl076Yb44ovU=
-github.com/pomerium/pomerium v0.32.1-0.20260225193751-3b9b6e951fd2/go.mod h1:mdmbsWOhpsiF9DQ/1aKBLv3urryWWumQA03SepAnGOU=
+github.com/pomerium/enterprise-client-go v0.32.1-0.20260226163436-a5a269aaaf91 h1:QijuInnGDzQAcd/uqznm2bR/1RW3L/IhGn3ryzaA5ec=
+github.com/pomerium/enterprise-client-go v0.32.1-0.20260226163436-a5a269aaaf91/go.mod h1:h7U5C+Hkec/G4qdJkK7qQ0i56Xx2ztvsa0Yz01mshQA=
+github.com/pomerium/pomerium v0.32.1-0.20260226163410-39cf710f3a2e h1:yQXQCramseRxjhtafe+B7OvL4NLNA3VuXIvPP4l2d1w=
+github.com/pomerium/pomerium v0.32.1-0.20260226163410-39cf710f3a2e/go.mod h1:KBFkRlN7RgjLeaH7h2PMclWq+zc3fBsv6fh9zPBAUL8=
 github.com/pomerium/protoutil v0.0.0-20260209181235-7f885c699ece h1:9IGryPFBdxwhLhQhYSaBLzgodVc0GYPwGz9JI2Xm594=
 github.com/pomerium/protoutil v0.0.0-20260209181235-7f885c699ece/go.mod h1:kfw2KUEwHK4MHAXvdRxTLRRFDnZUvbpTciqXj6vONK8=
 github.com/pomerium/sdk-go v0.0.10-0.20260225123729-1b4ae3a13ea3 h1:ALpXnWCkz1DZrch1Iu3j0guCXHcKlKFbaod3OWnL21Y=
