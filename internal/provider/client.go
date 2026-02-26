@@ -281,7 +281,7 @@ func getZeroOrganizationID(
 	}
 
 	if res.JSON200 == nil || len(*res.JSON200) != 1 {
-		return "", fmt.Errorf("error retrieving zero organization id")
+		return "", fmt.Errorf("error retrieving zero organization id, unexpected response from list organizations")
 	}
 
 	return (*res.JSON200)[0].Id, nil
