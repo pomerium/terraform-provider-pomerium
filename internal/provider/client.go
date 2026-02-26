@@ -262,7 +262,7 @@ func getZeroCluster(
 	}
 
 	for _, n := range *listNamespaceRes.JSON200 {
-		if n.Id == getClusterRes.JSON200.Id {
+		if n.Id == getClusterRes.JSON200.NamespaceId {
 			namespace = n
 			break
 		}
