@@ -18,8 +18,12 @@ type ClusterModel struct {
 	CertificateAuthorityB64  types.String `tfsdk:"certificate_authority_b64"`
 	CertificateAuthorityFile types.String `tfsdk:"certificate_authority_file"`
 	DatabrokerServiceURL     types.String `tfsdk:"databroker_service_url"`
+	Domain                   types.String `tfsdk:"domain"`
+	Flavor                   types.String `tfsdk:"flavor"`
+	FQDN                     types.String `tfsdk:"fqdn"`
 	ID                       types.String `tfsdk:"id"`
 	InsecureSkipVerify       types.Bool   `tfsdk:"insecure_skip_verify"`
+	ManualOverrideIPAddress  types.String `tfsdk:"manual_override_ip_address"`
 	Name                     types.String `tfsdk:"name"`
 	NamespaceID              types.String `tfsdk:"namespace_id"`
 	OverrideCertificateName  types.String `tfsdk:"override_certificate_name"`

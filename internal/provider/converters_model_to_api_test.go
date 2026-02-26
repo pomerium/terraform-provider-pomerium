@@ -169,8 +169,11 @@ func TestModelToAPI(t *testing.T) {
 				To:                    types.SetValueMust(types.StringType, []attr.Value{types.StringValue("https://to1.example.com"), types.StringValue("https://to2.example.com")}),
 			})
 			assert.Empty(t, cmp.Diff(&pomerium.Route{
-				AllowSpdy:                   true,
-				AllowWebsockets:             true,
+				AllowSpdy:       true,
+				AllowWebsockets: true,
+				AssignedPolicies: []*pomerium.EntityInfo{
+					{Id: new("POLICY1")}, {Id: new("POLICY2")},
+				},
 				DependsOn:                   []string{"host1.example.com", "host2.example.com"},
 				Description:                 new("DESCRIPTION"),
 				From:                        "https://from.example.com",

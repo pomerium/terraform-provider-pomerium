@@ -31,9 +31,6 @@ linters:
       - std-error-handling
     rules:
       - linters:
-          - gosec
-        path: internal/provider/provider.go
-      - linters:
           - bodyclose
           - errcheck
           - gosec
@@ -42,20 +39,18 @@ linters:
         path: _test\.go$|^test/|^examples/|templates\.go$
       - linters:
           - gosec
-        text: 'G112:'
+        text: "G112|G115|G705"
       - path: (.+)\.go$
         text: Error return value of .((os\.)?std(out|err)\..*|.*Close|.*Flush|os\.Remove(All)?|.*printf?|os\.(Un)?Setenv). is not checked
       - path: (.+)\.go$
         text: SA1019
-      - path: (.+)\.go$
-        text: G115
       - linters:
           - staticcheck
         path: (.+)\.go$
         text: QF1008
       - linters:
-        - golint
-        - revive
+          - golint
+          - revive
         text: should have a package comment
     paths:
       - third_party$

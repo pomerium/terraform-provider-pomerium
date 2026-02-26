@@ -91,8 +91,34 @@ func (d *ClustersDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 			data.Clusters = clusters
 		},
-		func(_ sdk.ZeroClient) {
-			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		func(client sdk.ZeroClient) {
+			organizationID, err := getZeroOrganizationID(ctx, client)
+			if err != nil {
+				resp.Diagnostics.AddError(err.Error(), err.Error())
+				return
+			}
+
+			listRes, err := client.ListClustersWithResponse(ctx, organizationID)
+			if err != nil {
+				resp.Diagnostics.AddError(err.Error(), err.Error())
+				return
+			} else if listRes.JSON200 == nil {
+				addZeroResponseError(&resp.Diagnostics, listRes.Body, listRes.HTTPResponse)
+				return
+			}
+
+			data.Clusters = nil
+			for _, c := range *listRes.JSON200 {
+				cluster, namespace := getZeroCluster(ctx, client, &resp.Diagnostics, organizationID, c.Id)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				clusterModel := NewZeroToModelConverter(&resp.Diagnostics).Cluster(cluster, namespace)
+				if resp.Diagnostics.HasError() {
+					return
+				}
+				data.Clusters = append(data.Clusters, clusterModel)
+			}
 		})...)
 	if resp.Diagnostics.HasError() {
 		return

@@ -55,6 +55,22 @@ func getClusterDataSourceAttributes(idRequired bool) map[string]schema.Attribute
 			Computed:    true,
 			Description: "Certificate authority file for the cluster",
 		},
+		"domain": schema.StringAttribute{
+			Computed:    true,
+			Description: "Domain name of the cluster.",
+		},
+		"flavor": schema.StringAttribute{
+			Computed:    true,
+			Description: "Flavor of the cluster.",
+		},
+		"fqdn": schema.StringAttribute{
+			Computed:    true,
+			Description: "Fully-qualified domain name of the cluster.",
+		},
+		"manual_override_ip_address": schema.StringAttribute{
+			Computed:    true,
+			Description: "Manual override for the cluster ip address.",
+		},
 	}
 }
 
@@ -115,8 +131,19 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 
 			data = NewEnterpriseToModelConverter(&resp.Diagnostics).Cluster(getRes.GetCluster(), getRes.GetNamespace())
 		},
-		func(_ sdk.ZeroClient) {
-			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
+		func(client sdk.ZeroClient) {
+			organizationID, err := getZeroOrganizationID(ctx, client)
+			if err != nil {
+				resp.Diagnostics.AddError(err.Error(), err.Error())
+				return
+			}
+
+			cluster, namespace := getZeroCluster(ctx, client, &resp.Diagnostics, organizationID, data.ID.ValueString())
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			data = NewZeroToModelConverter(&resp.Diagnostics).Cluster(cluster, namespace)
 		})...)
 	if resp.Diagnostics.HasError() {
 		return

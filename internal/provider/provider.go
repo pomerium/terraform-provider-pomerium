@@ -91,7 +91,7 @@ func (p *PomeriumProvider) Configure(ctx context.Context, req provider.Configure
 		return
 	}
 
-	tlsConfig := &tls.Config{InsecureSkipVerify: data.TLSInsecureSkipVerify.ValueBool()}
+	tlsConfig := &tls.Config{InsecureSkipVerify: data.TLSInsecureSkipVerify.ValueBool()} //nolint: gosec
 
 	var serviceAccountToken string
 	if !data.ServiceAccountToken.IsNull() {
