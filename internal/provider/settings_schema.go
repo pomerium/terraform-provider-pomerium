@@ -190,17 +190,17 @@ var SettingsResourceSchema = schema.Schema{
 		},
 		"idp_service_account": schema.StringAttribute{
 			Optional:    true,
-			Description: "IDP service account",
+			Description: "IDP service account. Only supported by the legacy enterprise API.",
 			Sensitive:   true,
 		},
 		"idp_refresh_directory_timeout": schema.StringAttribute{
 			Optional:    true,
-			Description: "IDP refresh directory timeout",
+			Description: "IDP refresh directory timeout. Only supported by the legacy enterprise API.",
 			CustomType:  timetypes.GoDurationType{},
 		},
 		"idp_refresh_directory_interval": schema.StringAttribute{
 			Optional:    true,
-			Description: "IDP refresh directory interval",
+			Description: "IDP refresh directory interval. Only supported by the legacy enterprise API.",
 			CustomType:  timetypes.GoDurationType{},
 		},
 		"request_params": schema.MapAttribute{
@@ -218,7 +218,7 @@ var SettingsResourceSchema = schema.Schema{
 		},
 		"certificate_authority_file": schema.StringAttribute{
 			Optional:    true,
-			Description: "Certificate authority file",
+			Description: "Certificate authority file. Only supported by the legacy enterprise API.",
 		},
 		"certificate_authority_key_pair_id": schema.StringAttribute{
 			Optional:    true,
@@ -269,15 +269,15 @@ var SettingsResourceSchema = schema.Schema{
 		},
 		"client_ca": schema.StringAttribute{
 			Optional:    true,
-			Description: "Client CA",
+			Description: "Client CA. Only supported by the legacy enterprise API.",
 		},
 		"client_ca_file": schema.StringAttribute{
 			Optional:    true,
-			Description: "Client CA file",
+			Description: "Client CA file. Only supported by the legacy enterprise API.",
 		},
 		"client_ca_key_pair_id": schema.StringAttribute{
 			Optional:    true,
-			Description: "Client CA key pair ID",
+			Description: "Client CA key pair ID. Only supported by the legacy enterprise API.",
 		},
 		"google_cloud_serverless_authentication_service_account": schema.StringAttribute{
 			Optional:    true,

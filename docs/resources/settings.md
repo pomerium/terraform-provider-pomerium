@@ -32,12 +32,12 @@ The settings are global object.
 - `bearer_token_format` (String) Bearer token format.
 - `cache_service_url` (String) Cache service URL
 - `certificate_authority` (String) Certificate authority
-- `certificate_authority_file` (String) Certificate authority file
+- `certificate_authority_file` (String) Certificate authority file. Only supported by the legacy enterprise API.
 - `certificate_authority_key_pair_id` (String) Certificate authority key pair ID
 - `circuit_breaker_thresholds` (Attributes) Circuit breaker thresholds for the route. (see [below for nested schema](#nestedatt--circuit_breaker_thresholds))
-- `client_ca` (String) Client CA
-- `client_ca_file` (String) Client CA file
-- `client_ca_key_pair_id` (String) Client CA key pair ID
+- `client_ca` (String) Client CA. Only supported by the legacy enterprise API.
+- `client_ca_file` (String) Client CA file. Only supported by the legacy enterprise API.
+- `client_ca_key_pair_id` (String) Client CA key pair ID. Only supported by the legacy enterprise API.
 - `cluster_id` (String) Cluster ID of settings
 - `codec_type` (String) Codec Type
 - `cookie_domain` (String) Cookie domain
@@ -82,9 +82,9 @@ The settings are global object.
 - `idp_client_secret` (String, Sensitive) IDP client secret
 - `idp_provider` (String) IDP provider
 - `idp_provider_url` (String) IDP provider URL
-- `idp_refresh_directory_interval` (String) IDP refresh directory interval
-- `idp_refresh_directory_timeout` (String) IDP refresh directory timeout
-- `idp_service_account` (String, Sensitive) IDP service account
+- `idp_refresh_directory_interval` (String) IDP refresh directory interval. Only supported by the legacy enterprise API.
+- `idp_refresh_directory_timeout` (String) IDP refresh directory timeout. Only supported by the legacy enterprise API.
+- `idp_service_account` (String, Sensitive) IDP service account. Only supported by the legacy enterprise API.
 - `insecure_server` (Boolean) Insecure server
 - `installation_id` (String) Installation ID
 - `jwt_claims_headers` (Map of String) JWT claims headers mapping
