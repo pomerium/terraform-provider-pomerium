@@ -441,6 +441,33 @@ func (c *ModelToAPIConverter) ServiceAccount(src ServiceAccountModel) *pomerium.
 }
 
 func (c *ModelToAPIConverter) Settings(src SettingsModel) *pomerium.Settings {
+	if !src.CacheServiceURL.IsNull() && !src.CacheServiceURL.IsUnknown() {
+		c.diagnostics.AddAttributeError(path.Root("cache_service_url"), "cache_service_url is not supported by the consolidated api", "cache_service_url is not supported by the consolidated api")
+	}
+	if !src.CertificateAuthorityFile.IsNull() && !src.CertificateAuthorityFile.IsUnknown() {
+		c.diagnostics.AddAttributeError(path.Root("certificate_authority_file"), "certificate_authority_file is not supported by the consolidated api", "certificate_authority_file is not supported by the consolidated api")
+	}
+	if !src.ClientCA.IsNull() && !src.ClientCA.IsUnknown() {
+		c.diagnostics.AddAttributeError(path.Root("client_ca"), "client_ca is not supported by the consolidated api", "client_ca is not supported by the consolidated api")
+	}
+	if !src.ClientCAFile.IsNull() && !src.ClientCAFile.IsUnknown() {
+		c.diagnostics.AddAttributeError(path.Root("client_ca_file"), "client_ca_file is not supported by the consolidated api", "client_ca_file is not supported by the consolidated api")
+	}
+	if !src.ClientCAKeyPairID.IsNull() && !src.ClientCAKeyPairID.IsUnknown() {
+		c.diagnostics.AddAttributeError(path.Root("client_ca_key_pair_id"), "client_ca_key_pair_id is not supported by the consolidated api", "client_ca_key_pair_id is not supported by the consolidated api")
+	}
+	if !src.CookieSecure.IsNull() && !src.CookieSecure.IsUnknown() {
+		c.diagnostics.AddAttributeError(path.Root("cookie_secure"), "cookie_secure is not supported by the consolidated api", "cookie_secure is not supported by the consolidated api")
+	}
+	if !src.IdpServiceAccount.IsNull() && !src.IdpServiceAccount.IsUnknown() {
+		c.diagnostics.AddAttributeError(path.Root("idp_service_account"), "idp_service_account is not supported by the consolidated api", "idp_service_account is not supported by the consolidated api")
+	}
+	if !src.IdpRefreshDirectoryInterval.IsNull() && !src.IdpRefreshDirectoryInterval.IsUnknown() {
+		c.diagnostics.AddAttributeError(path.Root("idp_refresh_directory_interval"), "idp_refresh_directory_interval is not supported by the consolidated api", "idp_refresh_directory_interval is not supported by the consolidated api")
+	}
+	if !src.IdpRefreshDirectoryTimeout.IsNull() && !src.IdpRefreshDirectoryTimeout.IsUnknown() {
+		c.diagnostics.AddAttributeError(path.Root("idp_refresh_directory_timeout"), "idp_refresh_directory_timeout is not supported by the consolidated api", "idp_refresh_directory_timeout is not supported by the consolidated api")
+	}
 	return &pomerium.Settings{
 		AccessLogFields:                   c.SettingsStringList(path.Root("access_log_fields"), src.AccessLogFields),
 		Address:                           src.Address.ValueStringPointer(),

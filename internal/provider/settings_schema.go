@@ -151,7 +151,7 @@ var SettingsResourceSchema = schema.Schema{
 		},
 		"cookie_secure": schema.BoolAttribute{
 			Optional:    true,
-			Description: "Cookie secure",
+			Description: "Cookie secure. Only supported by the legacy enterprise API.",
 		},
 		"cookie_http_only": schema.BoolAttribute{
 			Optional:    true,
@@ -206,7 +206,7 @@ var SettingsResourceSchema = schema.Schema{
 		"request_params": schema.MapAttribute{
 			ElementType: types.StringType,
 			Optional:    true,
-			Description: "Request parameters",
+			Description: "The identity provider parameters you want to include as part of a sign-in request using the OAuth 2.0 code flow.",
 		},
 		"authorize_service_url": schema.StringAttribute{
 			Optional:    true,
@@ -500,12 +500,12 @@ var SettingsResourceSchema = schema.Schema{
 		"access_log_fields": schema.SetAttribute{
 			Optional:    true,
 			ElementType: types.StringType,
-			Description: "Displays HTTP request logs from the Pomerium Proxy service.",
+			Description: "Displays HTTP request logs from the Pomerium Proxy service. Only available in Core and Enterprise.",
 		},
 		"authorize_log_fields": schema.SetAttribute{
 			Optional:    true,
 			ElementType: types.StringType,
-			Description: "Displays HTTP request logs from the Pomerium Authorize service.",
+			Description: "Displays HTTP request logs from the Pomerium Authorize service. Only available in Core and Enterprise.",
 		},
 		"pass_identity_headers": schema.BoolAttribute{
 			Optional:    true,

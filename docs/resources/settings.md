@@ -20,10 +20,10 @@ The settings are global object.
 
 ### Optional
 
-- `access_log_fields` (Set of String) Displays HTTP request logs from the Pomerium Proxy service.
+- `access_log_fields` (Set of String) Displays HTTP request logs from the Pomerium Proxy service. Only available in Core and Enterprise.
 - `address` (String) Specifies the IP Address and Port to serve HTTP requests from.
 - `authenticate_service_url` (String) The externally accessible URL for the authenticate service.
-- `authorize_log_fields` (Set of String) Displays HTTP request logs from the Pomerium Authorize service.
+- `authorize_log_fields` (Set of String) Displays HTTP request logs from the Pomerium Authorize service. Only available in Core and Enterprise.
 - `authorize_service_url` (String) Authorize service URL
 - `autocert` (Boolean) Turning on autocert allows Pomerium to automatically retrieve, manage, and renew public facing TLS certificates from Lets Encrypt.
 - `autocert_dir` (String) Autocert directory is the path which Autocert will store x509 certificate data.
@@ -46,7 +46,7 @@ The settings are global object.
 - `cookie_name` (String) Cookie name
 - `cookie_same_site` (String) Cookie same site
 - `cookie_secret` (String, Sensitive) Cookie secret
-- `cookie_secure` (Boolean) Cookie secure
+- `cookie_secure` (Boolean) Cookie secure. Only supported by the legacy enterprise API.
 - `darkmode_primary_color` (String) A hex code that determines the primary color for the Enterprise Console and Route Error Details pages when in Dark Mode.
 - `darkmode_secondary_color` (String) A hex code that determines the secondary color for the Enterprise Console and Route Error Details pages when in Dark Mode.
 - `databroker_service_url` (String) Databroker service URL
@@ -111,7 +111,7 @@ The settings are global object.
 - `pass_identity_headers` (Boolean) If applied, passes X-Pomerium-Jwt-Assertion header and JWT Claims Headers to all upstream applications.
 - `primary_color` (String) A hex code that determines the primary color for the Enterprise Console and Route Error Details pages.
 - `proxy_log_level` (String) Proxy log level
-- `request_params` (Map of String) Request parameters
+- `request_params` (Map of String) The identity provider parameters you want to include as part of a sign-in request using the OAuth 2.0 code flow.
 - `scopes` (Set of String) Scopes
 - `secondary_color` (String) A hex code that determines the secondary color for the Enterprise Console and Route Error Details pages.
 - `set_response_headers` (Map of String) Response headers to set
