@@ -197,6 +197,8 @@ github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 h1:iCEnooe7Ulw
 github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761/go.mod h1:5TJZWKEWniPve33vlWYSoGYefn3gLQRzjfDlhSJ9ZKM=
 github.com/jackc/pgx/v5 v5.8.0 h1:TYPDoleBBme0xGSAX3/+NujXXtpZn9HBONkQC7IEZSo=
 github.com/jackc/pgx/v5 v5.8.0/go.mod h1:QVeDInX2m9VyzvNeiCJVjCkNFqzsNb43204HshNSZKw=
+github.com/jackc/puddle/v2 v2.2.2 h1:PR8nw+E/1w0GLuRFSmiioY6UooMp6KJv0/61nB7icHo=
+github.com/jackc/puddle/v2 v2.2.2/go.mod h1:vriiEXHvEE654aYKXXjOvZM39qJ0q+azkZFrfEOc3H4=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOlocH6Fxy8MmwDt+yVQYULKfN0RoTN8A=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99/go.mod h1:1lJo3i6rXxKeerYnT8Nvf0QmHCRC1n8sfWVwXF2Frvo=
 github.com/jhump/protoreflect v1.17.0 h1:qOEr613fac2lOuTgWN4tPAtLL7fUSbuJL5X5XumQh94=
@@ -303,8 +305,8 @@ github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRI
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pomerium/enterprise-client-go v0.32.1-0.20260226163436-a5a269aaaf91 h1:QijuInnGDzQAcd/uqznm2bR/1RW3L/IhGn3ryzaA5ec=
 github.com/pomerium/enterprise-client-go v0.32.1-0.20260226163436-a5a269aaaf91/go.mod h1:h7U5C+Hkec/G4qdJkK7qQ0i56Xx2ztvsa0Yz01mshQA=
-github.com/pomerium/pomerium v0.32.1-0.20260226163410-39cf710f3a2e h1:yQXQCramseRxjhtafe+B7OvL4NLNA3VuXIvPP4l2d1w=
-github.com/pomerium/pomerium v0.32.1-0.20260226163410-39cf710f3a2e/go.mod h1:KBFkRlN7RgjLeaH7h2PMclWq+zc3fBsv6fh9zPBAUL8=
+github.com/pomerium/pomerium v0.32.1-0.20260227221212-1bb410f73f18 h1:bYnSS8+FfFm/dI+OqhdXWwOo4s3djAXB1Tlxtff4u+I=
+github.com/pomerium/pomerium v0.32.1-0.20260227221212-1bb410f73f18/go.mod h1:/0xkyu3HCf2HweDdNNIijermYf25dt6twpfxmJ3bPxQ=
 github.com/pomerium/protoutil v0.0.0-20260209181235-7f885c699ece h1:9IGryPFBdxwhLhQhYSaBLzgodVc0GYPwGz9JI2Xm594=
 github.com/pomerium/protoutil v0.0.0-20260209181235-7f885c699ece/go.mod h1:kfw2KUEwHK4MHAXvdRxTLRRFDnZUvbpTciqXj6vONK8=
 github.com/pomerium/sdk-go v0.0.10-0.20260225123729-1b4ae3a13ea3 h1:ALpXnWCkz1DZrch1Iu3j0guCXHcKlKFbaod3OWnL21Y=
@@ -506,8 +508,8 @@ google.golang.org/appengine v1.6.8/go.mod h1:1jJ3jBArFh5pcgW8gCtRJnepW8FzD1V44FJ
 google.golang.org/genproto v0.0.0-20251202230838-ff82c1b0f217 h1:GvESR9BIyHUahIb0NcTum6itIWtdoglGX+rnGxm2934=
 google.golang.org/genproto/googleapis/api v0.0.0-20251222181119-0a764e51fe1b h1:uA40e2M6fYRBf0+8uN5mLlqUtV192iiksiICIBkYJ1E=
 google.golang.org/genproto/googleapis/api v0.0.0-20251222181119-0a764e51fe1b/go.mod h1:Xa7le7qx2vmqB/SzWUBa7KdMjpdpAHlh5QCSnjessQk=
-google.golang.org/genproto/googleapis/rpc v0.0.0-20260223185530-2f722ef697dc h1:51Wupg8spF+5FC6D+iMKbOddFjMckETnNnEiZ+HX37s=
-google.golang.org/genproto/googleapis/rpc v0.0.0-20260223185530-2f722ef697dc/go.mod h1:4Hqkh8ycfw05ld/3BWL7rJOSfebL2Q+DVDeRgYgxUU8=
+google.golang.org/genproto/googleapis/rpc v0.0.0-20260226221140-a57be14db171 h1:ggcbiqK8WWh6l1dnltU4BgWGIGo+EVYxCaAPih/zQXQ=
+google.golang.org/genproto/googleapis/rpc v0.0.0-20260226221140-a57be14db171/go.mod h1:4Hqkh8ycfw05ld/3BWL7rJOSfebL2Q+DVDeRgYgxUU8=
 google.golang.org/grpc v1.79.1 h1:zGhSi45ODB9/p3VAawt9a+O/MULLl9dpizzNNpq7flY=
 google.golang.org/grpc v1.79.1/go.mod h1:KmT0Kjez+0dde/v2j9vzwoAScgEPx/Bw1CYChhHLrHQ=
 google.golang.org/protobuf v1.26.0-rc.1/go.mod h1:jlhhOSvTdKEhbULTjvd4ARK9grFBp09yW+WbY/TyQbw=
