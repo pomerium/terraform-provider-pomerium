@@ -500,12 +500,12 @@ var SettingsResourceSchema = schema.Schema{
 		"access_log_fields": schema.SetAttribute{
 			Optional:    true,
 			ElementType: types.StringType,
-			Description: "Displays HTTP request logs from the Pomerium Proxy service. Only available in Core and Enterprise.",
+			Description: "Displays HTTP request logs from the Pomerium Proxy service.",
 		},
 		"authorize_log_fields": schema.SetAttribute{
 			Optional:    true,
 			ElementType: types.StringType,
-			Description: "Displays HTTP request logs from the Pomerium Authorize service. Only available in Core and Enterprise.",
+			Description: "Displays HTTP request logs from the Pomerium Authorize service.",
 		},
 		"pass_identity_headers": schema.BoolAttribute{
 			Optional:    true,

@@ -20,10 +20,10 @@ The settings are global object.
 
 ### Optional
 
-- `access_log_fields` (Set of String) Displays HTTP request logs from the Pomerium Proxy service. Only available in Core and Enterprise.
+- `access_log_fields` (Set of String) Displays HTTP request logs from the Pomerium Proxy service.
 - `address` (String) Specifies the IP Address and Port to serve HTTP requests from.
 - `authenticate_service_url` (String) The externally accessible URL for the authenticate service.
-- `authorize_log_fields` (Set of String) Displays HTTP request logs from the Pomerium Authorize service. Only available in Core and Enterprise.
+- `authorize_log_fields` (Set of String) Displays HTTP request logs from the Pomerium Authorize service.
 - `authorize_service_url` (String) Authorize service URL
 - `autocert` (Boolean) Turning on autocert allows Pomerium to automatically retrieve, manage, and renew public facing TLS certificates from Lets Encrypt.
 - `autocert_dir` (String) Autocert directory is the path which Autocert will store x509 certificate data.
