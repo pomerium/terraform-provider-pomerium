@@ -184,6 +184,31 @@ func (r *SettingsResource) Update(ctx context.Context, req resource.UpdateReques
 }
 
 func (r *SettingsResource) Delete(ctx context.Context, _ resource.DeleteRequest, resp *resource.DeleteResponse) {
+	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
+		func(client sdk.Client) {
+			updateReq := connect.NewRequest(&pomerium.UpdateSettingsRequest{
+				Settings: new(pomerium.Settings),
+			})
+			_, err := client.UpdateSettings(ctx, updateReq)
+			if err != nil {
+				resp.Diagnostics.AddError("Error updating settings", err.Error())
+				return
+			}
+		},
+		func(client *client.Client) {
+			setReq := &pb.SetSettingsRequest{
+				Settings: new(pb.Settings),
+			}
+			_, err := client.SettingsService.SetSettings(ctx, setReq)
+			if err != nil {
+				resp.Diagnostics.AddError("set settings", err.Error())
+				return
+			}
+		})...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.State.RemoveResource(ctx)
 }
 

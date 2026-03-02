@@ -32,12 +32,12 @@ The settings are global object.
 - `bearer_token_format` (String) Bearer token format.
 - `cache_service_url` (String) Cache service URL
 - `certificate_authority` (String) Certificate authority
-- `certificate_authority_file` (String) Certificate authority file
+- `certificate_authority_file` (String) Certificate authority file. Only supported by the legacy enterprise API.
 - `certificate_authority_key_pair_id` (String) Certificate authority key pair ID
 - `circuit_breaker_thresholds` (Attributes) Circuit breaker thresholds for the route. (see [below for nested schema](#nestedatt--circuit_breaker_thresholds))
-- `client_ca` (String) Client CA
-- `client_ca_file` (String) Client CA file
-- `client_ca_key_pair_id` (String) Client CA key pair ID
+- `client_ca` (String) Client CA. Only supported by the legacy enterprise API.
+- `client_ca_file` (String) Client CA file. Only supported by the legacy enterprise API.
+- `client_ca_key_pair_id` (String) Client CA key pair ID. Only supported by the legacy enterprise API.
 - `cluster_id` (String) Cluster ID of settings
 - `codec_type` (String) Codec Type
 - `cookie_domain` (String) Cookie domain
@@ -46,7 +46,7 @@ The settings are global object.
 - `cookie_name` (String) Cookie name
 - `cookie_same_site` (String) Cookie same site
 - `cookie_secret` (String, Sensitive) Cookie secret
-- `cookie_secure` (Boolean) Cookie secure
+- `cookie_secure` (Boolean) Cookie secure. Only supported by the legacy enterprise API.
 - `darkmode_primary_color` (String) A hex code that determines the primary color for the Enterprise Console and Route Error Details pages when in Dark Mode.
 - `darkmode_secondary_color` (String) A hex code that determines the secondary color for the Enterprise Console and Route Error Details pages when in Dark Mode.
 - `databroker_service_url` (String) Databroker service URL
@@ -82,9 +82,9 @@ The settings are global object.
 - `idp_client_secret` (String, Sensitive) IDP client secret
 - `idp_provider` (String) IDP provider
 - `idp_provider_url` (String) IDP provider URL
-- `idp_refresh_directory_interval` (String) IDP refresh directory interval
-- `idp_refresh_directory_timeout` (String) IDP refresh directory timeout
-- `idp_service_account` (String, Sensitive) IDP service account
+- `idp_refresh_directory_interval` (String) IDP refresh directory interval. Only supported by the legacy enterprise API.
+- `idp_refresh_directory_timeout` (String) IDP refresh directory timeout. Only supported by the legacy enterprise API.
+- `idp_service_account` (String, Sensitive) IDP service account. Only supported by the legacy enterprise API.
 - `insecure_server` (Boolean) Insecure server
 - `installation_id` (String) Installation ID
 - `jwt_claims_headers` (Map of String) JWT claims headers mapping
@@ -111,7 +111,7 @@ The settings are global object.
 - `pass_identity_headers` (Boolean) If applied, passes X-Pomerium-Jwt-Assertion header and JWT Claims Headers to all upstream applications.
 - `primary_color` (String) A hex code that determines the primary color for the Enterprise Console and Route Error Details pages.
 - `proxy_log_level` (String) Proxy log level
-- `request_params` (Map of String) Request parameters
+- `request_params` (Map of String) The identity provider parameters you want to include as part of a sign-in request using the OAuth 2.0 code flow.
 - `scopes` (Set of String) Scopes
 - `secondary_color` (String) A hex code that determines the secondary color for the Enterprise Console and Route Error Details pages.
 - `set_response_headers` (Map of String) Response headers to set
