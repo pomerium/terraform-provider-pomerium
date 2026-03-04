@@ -6,6 +6,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
+func BlobStorageSettingsObjectType() types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"bucket_uri":     types.StringType,
+			"managed_prefix": types.StringType,
+		},
+	}
+}
+
 func CircuitBreakerThresholdsObjectType() types.ObjectType {
 	return CircuitBreakerThresholdsSchema.GetType().(types.ObjectType)
 }

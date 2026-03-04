@@ -30,6 +30,7 @@ The settings are global object.
 - `autocert_must_staple` (Boolean) Controls whether the must-staple flag is enabled when requesting certificates.
 - `autocert_use_staging` (Boolean) Autocert Use Staging setting allows you to use Let's Encrypt's staging environment, which has more lenient usage limits than the production environment.
 - `bearer_token_format` (String) Bearer token format.
+- `blob_storage` (Attributes) (see [below for nested schema](#nestedatt--blob_storage))
 - `cache_service_url` (String) Cache service URL
 - `certificate_authority` (String) Certificate authority
 - `certificate_authority_file` (String) Certificate authority file. Only supported by the legacy enterprise API.
@@ -92,6 +93,8 @@ The settings are global object.
 - `jwt_issuer_format` (String) Format for JWT issuer strings. Use 'IssuerHostOnly' for hostname without scheme or trailing slash, or 'IssuerURI' for complete URI including scheme and trailing slash.
 - `log_level` (String) Log level
 - `logo_url` (String) A URL pointing to your logo. Defaults to Pomerium's Logo.
+- `mcp_allowed_as_metadata_domains` (Set of String)
+- `mcp_allowed_client_id_domains` (Set of String)
 - `metrics_address` (String) Metrics address
 - `otel_attribute_value_length_limit` (Number) OpenTelemetry attribute value length limit
 - `otel_bsp_max_export_batch_size` (Number) OpenTelemetry BSP max export batch size
@@ -114,6 +117,7 @@ The settings are global object.
 - `request_params` (Map of String) The identity provider parameters you want to include as part of a sign-in request using the OAuth 2.0 code flow.
 - `scopes` (Set of String) Scopes
 - `secondary_color` (String) A hex code that determines the secondary color for the Enterprise Console and Route Error Details pages.
+- `session_recording_enabled` (Boolean)
 - `set_response_headers` (Map of String) Response headers to set
 - `skip_xff_append` (Boolean) Skip XFF append
 - `ssh_address` (String) SSH Address
@@ -124,6 +128,15 @@ The settings are global object.
 - `timeout_idle` (String) Sets the time at which a downstream or upstream connection will be terminated if no active streams.
 - `timeout_read` (String) Sets the amount of time for the client to receive the entire request stream.
 - `timeout_write` (String) Sets max stream duration of an HTTP request/response exchange. Must be greater than read timeout.
+
+<a id="nestedatt--blob_storage"></a>
+### Nested Schema for `blob_storage`
+
+Optional:
+
+- `bucket_uri` (String, Sensitive)
+- `managed_prefix` (String)
+
 
 <a id="nestedatt--circuit_breaker_thresholds"></a>
 ### Nested Schema for `circuit_breaker_thresholds`

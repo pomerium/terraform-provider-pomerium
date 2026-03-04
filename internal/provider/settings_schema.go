@@ -619,5 +619,28 @@ var SettingsResourceSchema = schema.Schema{
 			Optional:    true,
 			Description: "SSH User CA Key File",
 		},
+		"blob_storage": schema.SingleNestedAttribute{
+			Optional: true,
+			Attributes: map[string]schema.Attribute{
+				"bucket_uri": schema.StringAttribute{
+					Optional:  true,
+					Sensitive: true,
+				},
+				"managed_prefix": schema.StringAttribute{
+					Optional: true,
+				},
+			},
+		},
+		"session_recording_enabled": schema.BoolAttribute{
+			Optional: true,
+		},
+		"mcp_allowed_as_metadata_domains": schema.SetAttribute{
+			Optional:    true,
+			ElementType: types.StringType,
+		},
+		"mcp_allowed_client_id_domains": schema.SetAttribute{
+			Optional:    true,
+			ElementType: types.StringType,
+		},
 	},
 }

@@ -28,6 +28,20 @@ func NewModelToAPIConverter(diagnostics *diag.Diagnostics) *ModelToAPIConverter 
 	}
 }
 
+func (c *ModelToAPIConverter) BlobStorageSettings(src types.Object) *pomerium.BlobStorageSettings {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	attrs := src.Attributes()
+	bucketURI, _ := attrs["bucket_uri"].(types.String)
+	managedPrefix, _ := attrs["managed_prefix"].(types.String)
+	return &pomerium.BlobStorageSettings{
+		BucketUri:     c.NullableString(bucketURI),
+		ManagedPrefix: c.NullableString(managedPrefix),
+	}
+}
+
 func (c *ModelToAPIConverter) CircuitBreakerThresholds(src types.Object) *pomerium.CircuitBreakerThresholds {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
@@ -488,6 +502,7 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *pomerium.Settings {
 		AutocertTrustedCaKeyPairId:        nil, // not supported
 		AutocertUseStaging:                src.AutocertUseStaging.ValueBoolPointer(),
 		BearerTokenFormat:                 c.BearerTokenFormat(path.Root("bearer_token_format"), src.BearerTokenFormat),
+		BlobStorage:                       c.BlobStorageSettings(src.BlobStorage),
 		CertificateAuthority:              src.CertificateAuthority.ValueStringPointer(),
 		CertificateAuthorityKeyPairId:     src.CertificateAuthorityKeyPairID.ValueStringPointer(),
 		CertificateKeyPairIds:             nil, // not supported
@@ -554,7 +569,8 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *pomerium.Settings {
 		JwtIssuerFormat:                     c.IssuerFormat(path.Root("jwt_issuer_format"), src.JWTIssuerFormat),
 		LogLevel:                            src.LogLevel.ValueStringPointer(),
 		LogoUrl:                             src.LogoURL.ValueStringPointer(),
-		McpAllowedClientIdDomains:           nil, // not supported
+		McpAllowedAsMetadataDomains:         c.StringSliceFromSet(path.Root("mcp_allowed_as_metadata_domains"), src.MCPAllowedAsMetadataDomains),
+		McpAllowedClientIdDomains:           c.StringSliceFromSet(path.Root("mcp_allowed_client_id_domains"), src.MCPAllowedClientIDDomains),
 		MetricsAddress:                      src.MetricsAddress.ValueStringPointer(),
 		MetricsBasicAuth:                    nil, // not supported
 		MetricsCertificate:                  nil, // not supported
@@ -589,6 +605,7 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *pomerium.Settings {
 		Scopes:                              c.StringSliceFromSet(path.Root("scopes"), src.Scopes),
 		SecondaryColor:                      src.SecondaryColor.ValueStringPointer(),
 		Services:                            nil, // not supported
+		SessionRecordingEnabled:             c.NullableBool(src.SessionRecordingEnabled),
 		SetResponseHeaders:                  c.StringMap(path.Root("set_response_headers"), src.SetResponseHeaders),
 		SharedSecret:                        nil, // not supported
 		SigningKey:                          nil, // not supported

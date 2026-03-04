@@ -286,6 +286,7 @@ func TestAPIToModel(t *testing.T) {
 				AutocertMustStaple:            types.BoolNull(),
 				AutocertUseStaging:            types.BoolNull(),
 				BearerTokenFormat:             types.StringNull(),
+				BlobStorage:                   types.ObjectNull(provider.BlobStorageSettingsObjectType().AttrTypes),
 				CacheServiceURL:               types.StringNull(),
 				CertificateAuthority:          types.StringNull(),
 				CertificateAuthorityFile:      types.StringNull(),
@@ -349,6 +350,8 @@ func TestAPIToModel(t *testing.T) {
 				LogLevel:                        types.StringNull(),
 				LogoURL:                         types.StringNull(),
 				MetricsAddress:                  types.StringNull(),
+				MCPAllowedAsMetadataDomains:     types.SetNull(types.StringType),
+				MCPAllowedClientIDDomains:       types.SetNull(types.StringType),
 				OtelAttributeValueLengthLimit:   types.Int64Null(),
 				OtelBspMaxExportBatchSize:       types.Int64Null(),
 				OtelBspScheduleDelay:            timetypes.NewGoDurationNull(),
@@ -370,6 +373,7 @@ func TestAPIToModel(t *testing.T) {
 				RequestParams:                   types.MapNull(types.StringType),
 				Scopes:                          types.SetNull(types.StringType),
 				SecondaryColor:                  types.StringNull(),
+				SessionRecordingEnabled:         types.BoolNull(),
 				SetResponseHeaders:              types.MapNull(types.StringType),
 				SkipXFFAppend:                   types.BoolNull(),
 				SSHAddress:                      types.StringNull(),
@@ -388,52 +392,63 @@ func TestAPIToModel(t *testing.T) {
 
 			var diagnostics diag.Diagnostics
 			result := provider.NewAPIToModelConverter(&diagnostics).Settings(&pomerium.Settings{
-				Address:                    new(":443"),
-				AuthenticateServiceUrl:     new("https://authenticate.example.com"),
-				AuthorizeServiceUrls:       []string{"https://authorize.example.com"},
-				Autocert:                   new(true),
-				CertificateAuthority:       new("CA_CERT"),
-				ClusterId:                  new("CLUSTER_ID"),
-				CookieDomain:               new(".example.com"),
-				CookieExpire:               durationpb.New(24 * time.Hour),
-				CookieHttpOnly:             new(true),
-				CookieName:                 new("_pomerium"),
-				CookieSameSite:             new("lax"),
-				CookieSecret:               new("SECRET"),
-				DefaultUpstreamTimeout:     durationpb.New(30 * time.Second),
-				ErrorMessageFirstParagraph: new("ACCESS_DENIED"),
-				GrpcAddress:                new(":5443"),
-				GrpcInsecure:               new(false),
-				HttpRedirectAddr:           new(":80"),
-				Id:                         new("SETTINGS_ID"),
-				IdpClientId:                new("IDP_CLIENT_ID"),
-				IdpClientSecret:            new("IDP_CLIENT_SECRET"),
-				IdpProvider:                new("google"),
-				IdpProviderUrl:             new("https://accounts.google.com"),
-				InsecureServer:             new(false),
-				InstallationId:             new("INSTALLATION_ID"),
-				JwtClaimsHeaders:           map[string]string{"X-Email": "email"},
-				LogLevel:                   new("info"),
-				LogoUrl:                    new("https://example.com/logo.png"),
-				MetricsAddress:             new(":9090"),
-				PassIdentityHeaders:        new(true),
-				PrimaryColor:               new("#000000"),
-				ProxyLogLevel:              new("debug"),
-				RequestParams:              map[string]string{"param1": "value1"},
-				Scopes:                     []string{"openid", "profile"},
-				SecondaryColor:             new("#FFFFFF"),
-				SetResponseHeaders:         map[string]string{"X-Frame-Options": "DENY"},
-				SkipXffAppend:              new(false),
-				SshAddress:                 new(":22"),
-				SshUserCaKey:               new("SSH_CA_KEY"),
-				TimeoutIdle:                durationpb.New(5 * time.Minute),
-				TimeoutRead:                durationpb.New(30 * time.Second),
-				TimeoutWrite:               durationpb.New(30 * time.Second),
+				Address:                new(":443"),
+				AuthenticateServiceUrl: new("https://authenticate.example.com"),
+				AuthorizeServiceUrls:   []string{"https://authorize.example.com"},
+				Autocert:               new(true),
+				BlobStorage: &pomerium.BlobStorageSettings{
+					BucketUri:     new("BUCKET_URI"),
+					ManagedPrefix: new("MANAGED_PREFIX"),
+				},
+				CertificateAuthority:        new("CA_CERT"),
+				ClusterId:                   new("CLUSTER_ID"),
+				CookieDomain:                new(".example.com"),
+				CookieExpire:                durationpb.New(24 * time.Hour),
+				CookieHttpOnly:              new(true),
+				CookieName:                  new("_pomerium"),
+				CookieSameSite:              new("lax"),
+				CookieSecret:                new("SECRET"),
+				DefaultUpstreamTimeout:      durationpb.New(30 * time.Second),
+				ErrorMessageFirstParagraph:  new("ACCESS_DENIED"),
+				GrpcAddress:                 new(":5443"),
+				GrpcInsecure:                new(false),
+				HttpRedirectAddr:            new(":80"),
+				Id:                          new("SETTINGS_ID"),
+				IdpClientId:                 new("IDP_CLIENT_ID"),
+				IdpClientSecret:             new("IDP_CLIENT_SECRET"),
+				IdpProvider:                 new("google"),
+				IdpProviderUrl:              new("https://accounts.google.com"),
+				InsecureServer:              new(false),
+				InstallationId:              new("INSTALLATION_ID"),
+				JwtClaimsHeaders:            map[string]string{"X-Email": "email"},
+				LogLevel:                    new("info"),
+				LogoUrl:                     new("https://example.com/logo.png"),
+				MetricsAddress:              new(":9090"),
+				McpAllowedAsMetadataDomains: []string{"a", "b", "c"},
+				McpAllowedClientIdDomains:   []string{"x", "y", "z"},
+				PassIdentityHeaders:         new(true),
+				PrimaryColor:                new("#000000"),
+				ProxyLogLevel:               new("debug"),
+				RequestParams:               map[string]string{"param1": "value1"},
+				Scopes:                      []string{"openid", "profile"},
+				SecondaryColor:              new("#FFFFFF"),
+				SessionRecordingEnabled:     new(true),
+				SetResponseHeaders:          map[string]string{"X-Frame-Options": "DENY"},
+				SkipXffAppend:               new(false),
+				SshAddress:                  new(":22"),
+				SshUserCaKey:                new("SSH_CA_KEY"),
+				TimeoutIdle:                 durationpb.New(5 * time.Minute),
+				TimeoutRead:                 durationpb.New(30 * time.Second),
+				TimeoutWrite:                durationpb.New(30 * time.Second),
 			})
 			assert.Equal(t, types.StringValue(":443"), result.Address)
 			assert.Equal(t, types.StringValue("https://authenticate.example.com"), result.AuthenticateServiceURL)
 			assert.Equal(t, types.StringValue("https://authorize.example.com"), result.AuthorizeServiceURL)
 			assert.Equal(t, types.BoolValue(true), result.Autocert)
+			assert.Equal(t, types.ObjectValueMust(provider.BlobStorageSettingsObjectType().AttrTypes, map[string]attr.Value{
+				"bucket_uri":     types.StringValue("BUCKET_URI"),
+				"managed_prefix": types.StringValue("MANAGED_PREFIX"),
+			}), result.BlobStorage)
 			assert.Equal(t, types.StringValue("CA_CERT"), result.CertificateAuthority)
 			assert.Equal(t, types.StringValue("CLUSTER_ID"), result.ClusterID)
 			assert.Equal(t, types.StringValue(".example.com"), result.CookieDomain)
@@ -458,12 +473,15 @@ func TestAPIToModel(t *testing.T) {
 			assert.Equal(t, types.StringValue("info"), result.LogLevel)
 			assert.Equal(t, types.StringValue("https://example.com/logo.png"), result.LogoURL)
 			assert.Equal(t, types.StringValue(":9090"), result.MetricsAddress)
+			assert.Equal(t, types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a"), types.StringValue("b"), types.StringValue("c")}), result.MCPAllowedAsMetadataDomains)
+			assert.Equal(t, types.SetValueMust(types.StringType, []attr.Value{types.StringValue("x"), types.StringValue("y"), types.StringValue("z")}), result.MCPAllowedClientIDDomains)
 			assert.Equal(t, types.BoolValue(true), result.PassIdentityHeaders)
 			assert.Equal(t, types.StringValue("#000000"), result.PrimaryColor)
 			assert.Equal(t, types.StringValue("debug"), result.ProxyLogLevel)
 			assert.Equal(t, types.MapValueMust(types.StringType, map[string]attr.Value{"param1": types.StringValue("value1")}), result.RequestParams)
 			assert.Equal(t, types.SetValueMust(types.StringType, []attr.Value{types.StringValue("openid"), types.StringValue("profile")}), result.Scopes)
 			assert.Equal(t, types.StringValue("#FFFFFF"), result.SecondaryColor)
+			assert.Equal(t, types.BoolValue(true), result.SessionRecordingEnabled)
 			assert.Equal(t, types.MapValueMust(types.StringType, map[string]attr.Value{"X-Frame-Options": types.StringValue("DENY")}), result.SetResponseHeaders)
 			assert.Equal(t, types.BoolValue(false), result.SkipXFFAppend)
 			assert.Equal(t, types.StringValue(":22"), result.SSHAddress)
