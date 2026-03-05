@@ -27,6 +27,18 @@ func NewAPIToModelConverter(diagnostics *diag.Diagnostics) *APIToModelConverter 
 	}
 }
 
+func (c *APIToModelConverter) BlobStorageSettings(src *pomerium.BlobStorageSettings) types.Object {
+	if src == nil {
+		return types.ObjectNull(BlobStorageSettingsObjectType().AttrTypes)
+	}
+	dst, diagnostics := types.ObjectValue(BlobStorageSettingsObjectType().AttrTypes, map[string]attr.Value{
+		"bucket_uri":     types.StringPointerValue(src.BucketUri),
+		"managed_prefix": types.StringPointerValue(src.ManagedPrefix),
+	})
+	c.diagnostics.Append(diagnostics...)
+	return dst
+}
+
 func (c *APIToModelConverter) CircuitBreakerThresholds(src *pomerium.CircuitBreakerThresholds) types.Object {
 	if src == nil {
 		return types.ObjectNull(CircuitBreakerThresholdsObjectType().AttrTypes)
@@ -306,6 +318,7 @@ func (c *APIToModelConverter) Settings(src *pomerium.Settings) SettingsModel {
 		AutocertMustStaple:            types.BoolPointerValue(src.AutocertMustStaple),
 		AutocertUseStaging:            types.BoolPointerValue(src.AutocertUseStaging),
 		BearerTokenFormat:             c.BearerTokenFormat(src.BearerTokenFormat),
+		BlobStorage:                   c.BlobStorageSettings(src.BlobStorage),
 		CacheServiceURL:               types.StringNull(),
 		CertificateAuthority:          types.StringPointerValue(src.CertificateAuthority),
 		CertificateAuthorityFile:      types.StringNull(),
@@ -369,6 +382,8 @@ func (c *APIToModelConverter) Settings(src *pomerium.Settings) SettingsModel {
 		LogLevel:                        types.StringPointerValue(src.LogLevel),
 		LogoURL:                         types.StringPointerValue(src.LogoUrl),
 		MetricsAddress:                  types.StringPointerValue(src.MetricsAddress),
+		MCPAllowedAsMetadataDomains:     FromStringSliceToSet(src.McpAllowedAsMetadataDomains),
+		MCPAllowedClientIDDomains:       FromStringSliceToSet(src.McpAllowedClientIdDomains),
 		OtelAttributeValueLengthLimit:   Int64PointerValue(src.OtelAttributeValueLengthLimit),
 		OtelBspMaxExportBatchSize:       Int64PointerValue(src.OtelBspMaxExportBatchSize),
 		OtelBspScheduleDelay:            c.Duration(src.OtelBspScheduleDelay),
@@ -390,6 +405,7 @@ func (c *APIToModelConverter) Settings(src *pomerium.Settings) SettingsModel {
 		RequestParams:                   FromStringMap(src.RequestParams),
 		Scopes:                          FromStringSliceToSet(src.Scopes),
 		SecondaryColor:                  types.StringPointerValue(src.SecondaryColor),
+		SessionRecordingEnabled:         types.BoolPointerValue(src.SessionRecordingEnabled),
 		SetResponseHeaders:              FromStringMap(src.SetResponseHeaders),
 		SkipXFFAppend:                   types.BoolPointerValue(src.SkipXffAppend),
 		SSHAddress:                      types.StringPointerValue(src.SshAddress),

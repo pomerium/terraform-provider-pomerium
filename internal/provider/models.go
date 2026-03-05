@@ -153,6 +153,7 @@ type SettingsModel struct {
 	AutocertMustStaple                                types.Bool           `tfsdk:"autocert_must_staple"`
 	AutocertUseStaging                                types.Bool           `tfsdk:"autocert_use_staging"`
 	BearerTokenFormat                                 types.String         `tfsdk:"bearer_token_format"`
+	BlobStorage                                       types.Object         `tfsdk:"blob_storage"`
 	CacheServiceURL                                   types.String         `tfsdk:"cache_service_url"`
 	CertificateAuthority                              types.String         `tfsdk:"certificate_authority"`
 	CertificateAuthorityFile                          types.String         `tfsdk:"certificate_authority_file"`
@@ -215,6 +216,8 @@ type SettingsModel struct {
 	JWTIssuerFormat                                   types.String         `tfsdk:"jwt_issuer_format"`
 	LogLevel                                          types.String         `tfsdk:"log_level"`
 	LogoURL                                           types.String         `tfsdk:"logo_url"`
+	MCPAllowedAsMetadataDomains                       types.Set            `tfsdk:"mcp_allowed_as_metadata_domains"`
+	MCPAllowedClientIDDomains                         types.Set            `tfsdk:"mcp_allowed_client_id_domains"`
 	MetricsAddress                                    types.String         `tfsdk:"metrics_address"`
 	OtelAttributeValueLengthLimit                     types.Int64          `tfsdk:"otel_attribute_value_length_limit"`
 	OtelBspMaxExportBatchSize                         types.Int64          `tfsdk:"otel_bsp_max_export_batch_size"`
@@ -237,6 +240,7 @@ type SettingsModel struct {
 	RequestParams                                     types.Map            `tfsdk:"request_params"`
 	Scopes                                            types.Set            `tfsdk:"scopes"`
 	SecondaryColor                                    types.String         `tfsdk:"secondary_color"`
+	SessionRecordingEnabled                           types.Bool           `tfsdk:"session_recording_enabled"`
 	SetResponseHeaders                                types.Map            `tfsdk:"set_response_headers"`
 	SkipXFFAppend                                     types.Bool           `tfsdk:"skip_xff_append"`
 	SSHAddress                                        types.String         `tfsdk:"ssh_address"`
