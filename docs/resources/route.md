@@ -75,6 +75,7 @@ Route for Pomerium.
 - `tls_skip_verify` (Boolean) If applied, Pomerium accepts any certificate presented by the upstream server and any Hostname in that certificate. Use for testing only.
 - `tls_upstream_allow_renegotiation` (Boolean) TLS upstream allow renegotiation.
 - `tls_upstream_server_name` (String) This server name overrides the Hostname in the 'To:' field, and will be used to verify the certificate name.
+- `upstream_tunnel` (Attributes) Upstream tunnel settings. (see [below for nested schema](#nestedatt--upstream_tunnel))
 
 ### Read-Only
 
@@ -195,3 +196,11 @@ Required:
 Optional:
 
 - `prefix` (String) Prefix matcher for the header
+
+
+<a id="nestedatt--upstream_tunnel"></a>
+### Nested Schema for `upstream_tunnel`
+
+Optional:
+
+- `ssh_policy` (String)

@@ -176,6 +176,7 @@ func TestAPIToModel(t *testing.T) {
 				TLSUpstreamAllowRenegotiation:     types.BoolValue(false),
 				TLSUpstreamServerName:             types.StringValue(""),
 				To:                                types.SetNull(types.StringType),
+				UpstreamTunnel:                    types.ObjectNull(provider.UpstreamTunnelObjectType().AttrTypes),
 			}, result)
 			assert.Empty(t, diagnostics)
 		})
@@ -210,6 +211,11 @@ func TestAPIToModel(t *testing.T) {
 				TlsSkipVerify:         true,
 				TlsUpstreamServerName: "upstream.example.com",
 				To:                    []string{"https://to1.example.com", "https://to2.example.com"},
+				UpstreamTunnel: &pomerium.UpstreamTunnel{
+					SshPolicy: &pomerium.PPLPolicy{
+						Raw: []byte("SSH_POLICY"),
+					},
+				},
 			})
 			assert.Equal(t, provider.RouteModel{
 				AllowSPDY:                types.BoolValue(true),
@@ -263,6 +269,9 @@ func TestAPIToModel(t *testing.T) {
 				TLSUpstreamAllowRenegotiation:     types.BoolValue(false),
 				TLSUpstreamServerName:             types.StringValue("upstream.example.com"),
 				To:                                types.SetValueMust(types.StringType, []attr.Value{types.StringValue("https://to1.example.com"), types.StringValue("https://to2.example.com")}),
+				UpstreamTunnel: types.ObjectValueMust(provider.UpstreamTunnelObjectType().AttrTypes, map[string]attr.Value{
+					"ssh_policy": types.StringValue("SSH_POLICY"),
+				}),
 			}, result)
 			assert.Empty(t, diagnostics)
 		})

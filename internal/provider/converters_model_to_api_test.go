@@ -167,6 +167,9 @@ func TestModelToAPI(t *testing.T) {
 				TLSSkipVerify:         types.BoolValue(true),
 				TLSUpstreamServerName: types.StringValue("upstream.example.com"),
 				To:                    types.SetValueMust(types.StringType, []attr.Value{types.StringValue("https://to1.example.com"), types.StringValue("https://to2.example.com")}),
+				UpstreamTunnel: types.ObjectValueMust(provider.UpstreamTunnelObjectType().AttrTypes, map[string]attr.Value{
+					"ssh_policy": types.StringValue("SSH_POLICY"),
+				}),
 			})
 			assert.Empty(t, cmp.Diff(&pomerium.Route{
 				AllowSpdy:       true,
@@ -202,6 +205,11 @@ func TestModelToAPI(t *testing.T) {
 				TlsSkipVerify:         true,
 				TlsUpstreamServerName: "upstream.example.com",
 				To:                    []string{"https://to1.example.com", "https://to2.example.com"},
+				UpstreamTunnel: &pomerium.UpstreamTunnel{
+					SshPolicy: &pomerium.PPLPolicy{
+						Raw: []byte("SSH_POLICY"),
+					},
+				},
 			}, result, protocmp.Transform()))
 			assert.Empty(t, diagnostics)
 		})

@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -412,6 +413,7 @@ func (c *ModelToAPIConverter) Route(src RouteModel) *pomerium.Route {
 		TlsUpstreamAllowRenegotiation:     src.TLSUpstreamAllowRenegotiation.ValueBool(),
 		TlsUpstreamServerName:             src.TLSUpstreamServerName.ValueString(),
 		To:                                c.StringSliceFromSet(path.Root("to"), src.To),
+		UpstreamTunnel:                    c.UpstreamTunnel(path.Root("upstream_tunnel"), src.UpstreamTunnel),
 	}
 }
 
@@ -633,4 +635,29 @@ func (c *ModelToAPIConverter) SettingsStringList(p path.Path, src types.Set) *po
 	var values []string
 	appendAttributeDiagnostics(c.diagnostics, p, src.ElementsAs(context.Background(), &values, false)...)
 	return &pomerium.Settings_StringList{Values: values}
+}
+
+func (c *ModelToAPIConverter) UpstreamTunnel(p path.Path, src types.Object) *pomerium.UpstreamTunnel {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	dst := new(pomerium.UpstreamTunnel)
+	for k, v := range src.Attributes() {
+		switch k {
+		case "ssh_policy":
+			str, ok := v.(types.String)
+			if ok {
+				bs := c.Bytes(str)
+				if bs != nil {
+					dst.SshPolicy = &pomerium.PPLPolicy{Raw: bs}
+				}
+			} else {
+				c.diagnostics.AddAttributeError(p.AtName("ssh_policy"), "unexpected type for field", fmt.Sprintf("unexpected type for field: %T", v))
+			}
+		default:
+			c.diagnostics.AddAttributeError(p, "unknown object field", fmt.Sprintf("unknown object field: %s", k))
+		}
+	}
+	return dst
 }

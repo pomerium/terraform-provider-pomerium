@@ -131,6 +131,7 @@ type RouteModel struct {
 	TLSUpstreamAllowRenegotiation             types.Bool           `tfsdk:"tls_upstream_allow_renegotiation"`
 	TLSUpstreamServerName                     types.String         `tfsdk:"tls_upstream_server_name"`
 	To                                        types.Set            `tfsdk:"to"`
+	UpstreamTunnel                            types.Object         `tfsdk:"upstream_tunnel"`
 }
 
 type ServiceAccountModel struct {

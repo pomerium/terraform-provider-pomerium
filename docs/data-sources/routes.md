@@ -88,6 +88,7 @@ Read-Only:
 - `tls_upstream_allow_renegotiation` (Boolean) TLS upstream allow renegotiation.
 - `tls_upstream_server_name` (String) TLS upstream server name.
 - `to` (Set of String) To URLs.
+- `upstream_tunnel` (Attributes) Upstream tunnel settings. (see [below for nested schema](#nestedatt--routes--upstream_tunnel))
 
 <a id="nestedatt--routes--circuit_breaker_thresholds"></a>
 ### Nested Schema for `routes.circuit_breaker_thresholds`
@@ -204,3 +205,11 @@ Required:
 Optional:
 
 - `prefix` (String) Prefix matcher for the header
+
+
+<a id="nestedatt--routes--upstream_tunnel"></a>
+### Nested Schema for `routes.upstream_tunnel`
+
+Optional:
+
+- `ssh_policy` (String)
