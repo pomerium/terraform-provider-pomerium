@@ -206,9 +206,7 @@ func TestModelToAPI(t *testing.T) {
 				TlsUpstreamServerName: "upstream.example.com",
 				To:                    []string{"https://to1.example.com", "https://to2.example.com"},
 				UpstreamTunnel: &pomerium.UpstreamTunnel{
-					SshPolicy: &pomerium.PPLPolicy{
-						Raw: []byte("SSH_POLICY"),
-					},
+					SshPolicyId: new("SSH_POLICY"),
 				},
 			}, result, protocmp.Transform()))
 			assert.Empty(t, diagnostics)

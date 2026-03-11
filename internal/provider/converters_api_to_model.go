@@ -437,6 +437,6 @@ func (c *APIToModelConverter) UpstreamTunnel(src *pomerium.UpstreamTunnel) types
 		return types.ObjectNull(UpstreamTunnelObjectType().AttrTypes)
 	}
 	return types.ObjectValueMust(UpstreamTunnelObjectType().AttrTypes, map[string]attr.Value{
-		"ssh_policy": c.StringFromBytes(src.GetSshPolicy().GetRaw()),
+		"ssh_policy": types.StringPointerValue(src.SshPolicyId),
 	})
 }

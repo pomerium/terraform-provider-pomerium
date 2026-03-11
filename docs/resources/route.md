@@ -203,4 +203,4 @@ Optional:
 
 Optional:
 
-- `ssh_policy` (String)
+- `ssh_policy` (String) ID of an associated policy for SSH access

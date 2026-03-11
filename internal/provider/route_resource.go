@@ -466,7 +466,8 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Description: "Upstream tunnel settings.",
 				Attributes: map[string]schema.Attribute{
 					"ssh_policy": schema.StringAttribute{
-						Optional: true,
+						Optional:    true,
+						Description: "ID of an associated policy for SSH access",
 					},
 				},
 			},

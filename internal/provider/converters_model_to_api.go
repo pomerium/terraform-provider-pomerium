@@ -648,10 +648,7 @@ func (c *ModelToAPIConverter) UpstreamTunnel(p path.Path, src types.Object) *pom
 		case "ssh_policy":
 			str, ok := v.(types.String)
 			if ok {
-				bs := c.Bytes(str)
-				if bs != nil {
-					dst.SshPolicy = &pomerium.PPLPolicy{Raw: bs}
-				}
+				dst.SshPolicyId = str.ValueStringPointer()
 			} else {
 				c.diagnostics.AddAttributeError(p.AtName("ssh_policy"), "unexpected type for field", fmt.Sprintf("unexpected type for field: %T", v))
 			}

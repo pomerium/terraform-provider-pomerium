@@ -212,9 +212,7 @@ func TestAPIToModel(t *testing.T) {
 				TlsUpstreamServerName: "upstream.example.com",
 				To:                    []string{"https://to1.example.com", "https://to2.example.com"},
 				UpstreamTunnel: &pomerium.UpstreamTunnel{
-					SshPolicy: &pomerium.PPLPolicy{
-						Raw: []byte("SSH_POLICY"),
-					},
+					SshPolicyId: new("SSH_POLICY"),
 				},
 			})
 			assert.Equal(t, provider.RouteModel{
