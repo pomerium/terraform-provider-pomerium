@@ -262,6 +262,7 @@ func (c *APIToModelConverter) Route(src *pomerium.Route) RouteModel {
 		TLSUpstreamAllowRenegotiation:     types.BoolValue(src.TlsUpstreamAllowRenegotiation),
 		TLSUpstreamServerName:             types.StringValue(src.TlsUpstreamServerName),
 		To:                                FromStringSliceToSet(src.To),
+		UpstreamTunnel:                    c.UpstreamTunnel(src.UpstreamTunnel),
 	}
 }
 
@@ -429,4 +430,13 @@ func (c *APIToModelConverter) StringFromSingleElementSlice(p path.Path, src []st
 	}
 
 	return types.StringValue(src[0])
+}
+
+func (c *APIToModelConverter) UpstreamTunnel(src *pomerium.UpstreamTunnel) types.Object {
+	if src == nil {
+		return types.ObjectNull(UpstreamTunnelObjectType().AttrTypes)
+	}
+	return types.ObjectValueMust(UpstreamTunnelObjectType().AttrTypes, map[string]attr.Value{
+		"ssh_policy": types.StringPointerValue(src.SshPolicyId),
+	})
 }

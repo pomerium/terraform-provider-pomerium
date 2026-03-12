@@ -97,3 +97,11 @@ func TCPHealthCheckObjectType() types.ObjectType {
 		},
 	}
 }
+
+func UpstreamTunnelObjectType() types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"ssh_policy": types.StringType,
+		},
+	}
+}

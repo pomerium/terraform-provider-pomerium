@@ -461,6 +461,16 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Description: "If the number of healthy hosts falls below this percentage, traffic will be balanced among all hosts regardless of health, allowing some requests to fail. 0% disables this behavior.",
 				Optional:    true,
 			},
+			"upstream_tunnel": schema.SingleNestedAttribute{
+				Optional:    true,
+				Description: "Upstream tunnel settings.",
+				Attributes: map[string]schema.Attribute{
+					"ssh_policy": schema.StringAttribute{
+						Optional:    true,
+						Description: "ID of an associated policy for SSH access",
+					},
+				},
+			},
 		},
 	}
 }
