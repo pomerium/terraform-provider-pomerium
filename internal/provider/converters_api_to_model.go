@@ -385,6 +385,7 @@ func (c *APIToModelConverter) Settings(src *pomerium.Settings) SettingsModel {
 		MetricsAddress:                  types.StringPointerValue(src.MetricsAddress),
 		MCPAllowedAsMetadataDomains:     FromStringSliceToSet(src.McpAllowedAsMetadataDomains),
 		MCPAllowedClientIDDomains:       FromStringSliceToSet(src.McpAllowedClientIdDomains),
+		NamespaceID:                     types.StringPointerValue(src.NamespaceId),
 		OtelAttributeValueLengthLimit:   Int64PointerValue(src.OtelAttributeValueLengthLimit),
 		OtelBspMaxExportBatchSize:       Int64PointerValue(src.OtelBspMaxExportBatchSize),
 		OtelBspScheduleDelay:            c.Duration(src.OtelBspScheduleDelay),

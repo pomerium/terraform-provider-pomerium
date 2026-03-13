@@ -580,7 +580,7 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *pomerium.Settings {
 		MetricsClientCaKeyPairId:            nil, // not supported
 		ModifiedAt:                          nil, // not supported
 		Name:                                nil, // not supported
-		NamespaceId:                         nil, // not supported
+		NamespaceId:                         c.NullableString(src.NamespaceID),
 		OriginatorId:                        new(OriginatorID),
 		OtelAttributeValueLengthLimit:       c.NullableInt32(src.OtelAttributeValueLengthLimit),
 		OtelBspMaxExportBatchSize:           c.NullableInt32(src.OtelBspMaxExportBatchSize),

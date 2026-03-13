@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -45,42 +46,158 @@ var SettingsResourceSchema = schema.Schema{
 	MarkdownDescription: settingsResourceHelp,
 
 	Attributes: map[string]schema.Attribute{
-		"id": schema.StringAttribute{
+		"access_log_fields": schema.SetAttribute{
+			Optional:    true,
+			ElementType: types.StringType,
+			Description: "Displays HTTP request logs from the Pomerium Proxy service.",
+		},
+		"address": schema.StringAttribute{
+			Optional:    true,
+			Description: "Specifies the IP Address and Port to serve HTTP requests from.",
+		},
+		"authenticate_service_url": schema.StringAttribute{
+			Optional:    true,
+			Description: "The externally accessible URL for the authenticate service.",
+		},
+		"authorize_log_fields": schema.SetAttribute{
+			Optional:    true,
+			ElementType: types.StringType,
+			Description: "Displays HTTP request logs from the Pomerium Authorize service.",
+		},
+		"authorize_service_url": schema.StringAttribute{
+			Optional:    true,
+			Description: "Authorize service URL",
+		},
+		"autocert": schema.BoolAttribute{
 			Optional:    true,
 			Computed:    true,
-			Description: "ID of settings",
-			PlanModifiers: []planmodifier.String{
-				stringplanmodifier.UseStateForUnknown(),
+			Description: "Turning on autocert allows Pomerium to automatically retrieve, manage, and renew public facing TLS certificates from Lets Encrypt.",
+			PlanModifiers: []planmodifier.Bool{
+				boolplanmodifier.UseStateForUnknown(),
 			},
+		},
+		"autocert_dir": schema.StringAttribute{
+			Optional:    true,
+			Description: "Autocert directory is the path which Autocert will store x509 certificate data.",
+		},
+		"autocert_must_staple": schema.BoolAttribute{
+			Optional:    true,
+			Description: "Controls whether the must-staple flag is enabled when requesting certificates.",
+		},
+		"autocert_use_staging": schema.BoolAttribute{
+			Optional:    true,
+			Description: "Autocert Use Staging setting allows you to use Let's Encrypt's staging environment, which has more lenient usage limits than the production environment.",
+		},
+		"bearer_token_format": schema.StringAttribute{
+			Description: "Bearer token format.",
+			Optional:    true,
+			Validators: []validator.String{
+				stringvalidator.OneOf("default", "idp_access_token", "idp_identity_token"),
+			},
+		},
+		"blob_storage": schema.SingleNestedAttribute{
+			Optional: true,
+			Attributes: map[string]schema.Attribute{
+				"bucket_uri": schema.StringAttribute{
+					Optional:  true,
+					Sensitive: true,
+				},
+				"managed_prefix": schema.StringAttribute{
+					Optional: true,
+				},
+			},
+		},
+		"cache_service_url": schema.StringAttribute{
+			Optional:    true,
+			Description: "Cache service URL",
+		},
+		"certificate_authority": schema.StringAttribute{
+			Optional:    true,
+			Description: "Certificate authority",
+		},
+		"certificate_authority_file": schema.StringAttribute{
+			Optional:    true,
+			Description: "Certificate authority file. Only supported by the legacy enterprise API.",
+		},
+		"certificate_authority_key_pair_id": schema.StringAttribute{
+			Optional:    true,
+			Description: "Certificate authority key pair ID",
+		},
+		"circuit_breaker_thresholds": CircuitBreakerThresholdsSchema,
+		"client_ca": schema.StringAttribute{
+			Optional:    true,
+			Description: "Client CA. Only supported by the legacy enterprise API.",
+		},
+		"client_ca_file": schema.StringAttribute{
+			Optional:    true,
+			Description: "Client CA file. Only supported by the legacy enterprise API.",
+		},
+		"client_ca_key_pair_id": schema.StringAttribute{
+			Optional:    true,
+			Description: "Client CA key pair ID. Only supported by the legacy enterprise API.",
 		},
 		"cluster_id": schema.StringAttribute{
 			Optional:    true,
+			Computed:    true,
 			Description: "Cluster ID of settings",
 			PlanModifiers: []planmodifier.String{
 				stringplanmodifier.RequiresReplace(),
 				stringplanmodifier.UseStateForUnknown(),
 			},
 		},
-		"installation_id": schema.StringAttribute{
+		"codec_type": schema.StringAttribute{
 			Optional:    true,
-			Computed:    true,
-			Description: "Installation ID",
+			Description: "Codec Type",
+			Validators: []validator.String{
+				stringvalidator.OneOf("auto", "http1", "http2", "http3"),
+			},
 		},
-		"log_level": schema.StringAttribute{
+		"cookie_domain": schema.StringAttribute{
 			Optional:    true,
-			Description: "Log level",
+			Description: "Cookie domain",
 		},
-		"proxy_log_level": schema.StringAttribute{
+		"cookie_expire": schema.StringAttribute{
 			Optional:    true,
-			Description: "Proxy log level",
+			Description: "Cookie expire",
+			CustomType:  timetypes.GoDurationType{},
 		},
-		"address": schema.StringAttribute{
+		"cookie_http_only": schema.BoolAttribute{
 			Optional:    true,
-			Description: "Specifies the IP Address and Port to serve HTTP requests from.",
+			Description: "Cookie HTTP only",
 		},
-		"insecure_server": schema.BoolAttribute{
+		"cookie_name": schema.StringAttribute{
 			Optional:    true,
-			Description: "Insecure server",
+			Description: "Cookie name",
+		},
+		"cookie_same_site": schema.StringAttribute{
+			Optional:    true,
+			Description: "Cookie same site",
+		},
+		"cookie_secret": schema.StringAttribute{
+			Optional:    true,
+			Description: "Cookie secret",
+			Sensitive:   true,
+		},
+		"cookie_secure": schema.BoolAttribute{
+			Optional:    true,
+			Description: "Cookie secure. Only supported by the legacy enterprise API.",
+		},
+		"darkmode_primary_color": schema.StringAttribute{
+			Optional:    true,
+			Description: "A hex code that determines the primary color for the Enterprise Console and Route Error Details pages when in Dark Mode.",
+		},
+		"darkmode_secondary_color": schema.StringAttribute{
+			Optional:    true,
+			Description: "A hex code that determines the secondary color for the Enterprise Console and Route Error Details pages when in Dark Mode.",
+		},
+		"databroker_service_url": schema.StringAttribute{
+			Optional:    true,
+			Description: "Databroker service URL",
+		},
+		"default_upstream_timeout": schema.StringAttribute{
+			Optional:    true,
+			Description: "Default upstream timeout",
+			CustomType:  timetypes.GoDurationType{},
 		},
 		"dns_failure_refresh_rate": schema.StringAttribute{
 			Optional:    true,
@@ -113,223 +230,45 @@ var SettingsResourceSchema = schema.Schema{
 			Optional:    true,
 			Description: "Use TCP for all DNS queries instead of the default protocol UDP.",
 		},
-		"http_redirect_addr": schema.StringAttribute{
+		"error_message_first_paragraph": schema.StringAttribute{
 			Optional:    true,
-			Description: "HTTP redirect address",
-		},
-		"timeout_read": schema.StringAttribute{
-			Optional:    true,
-			Description: "Sets the amount of time for the client to receive the entire request stream.",
-			CustomType:  timetypes.GoDurationType{},
-		},
-		"timeout_write": schema.StringAttribute{
-			Optional:    true,
-			Description: "Sets max stream duration of an HTTP request/response exchange. Must be greater than read timeout.",
-			CustomType:  timetypes.GoDurationType{},
-		},
-		"timeout_idle": schema.StringAttribute{
-			Optional:    true,
-			Description: "Sets the time at which a downstream or upstream connection will be terminated if no active streams.",
-			CustomType:  timetypes.GoDurationType{},
-		},
-		"authenticate_service_url": schema.StringAttribute{
-			Optional:    true,
-			Description: "The externally accessible URL for the authenticate service.",
-		},
-		"cookie_name": schema.StringAttribute{
-			Optional:    true,
-			Description: "Cookie name",
-		},
-		"cookie_secret": schema.StringAttribute{
-			Optional:    true,
-			Description: "Cookie secret",
-			Sensitive:   true,
-		},
-		"cookie_domain": schema.StringAttribute{
-			Optional:    true,
-			Description: "Cookie domain",
-		},
-		"cookie_secure": schema.BoolAttribute{
-			Optional:    true,
-			Description: "Cookie secure. Only supported by the legacy enterprise API.",
-		},
-		"cookie_http_only": schema.BoolAttribute{
-			Optional:    true,
-			Description: "Cookie HTTP only",
-		},
-		"cookie_same_site": schema.StringAttribute{
-			Optional:    true,
-			Description: "Cookie same site",
-		},
-		"cookie_expire": schema.StringAttribute{
-			Optional:    true,
-			Description: "Cookie expire",
-			CustomType:  timetypes.GoDurationType{},
-		},
-		"idp_client_id": schema.StringAttribute{
-			Optional:    true,
-			Description: "IDP client ID",
-		},
-		"idp_client_secret": schema.StringAttribute{
-			Optional:    true,
-			Description: "IDP client secret",
-			Sensitive:   true,
-		},
-		"idp_provider": schema.StringAttribute{
-			Optional:    true,
-			Description: "IDP provider",
-		},
-		"idp_provider_url": schema.StringAttribute{
-			Optional:    true,
-			Description: "IDP provider URL",
-		},
-		"scopes": schema.SetAttribute{
-			Optional:    true,
-			ElementType: types.StringType,
-			Description: "Scopes",
-		},
-		"idp_service_account": schema.StringAttribute{
-			Optional:    true,
-			Description: "IDP service account. Only supported by the legacy enterprise API.",
-			Sensitive:   true,
-		},
-		"idp_refresh_directory_timeout": schema.StringAttribute{
-			Optional:    true,
-			Description: "IDP refresh directory timeout. Only supported by the legacy enterprise API.",
-			CustomType:  timetypes.GoDurationType{},
-		},
-		"idp_refresh_directory_interval": schema.StringAttribute{
-			Optional:    true,
-			Description: "IDP refresh directory interval. Only supported by the legacy enterprise API.",
-			CustomType:  timetypes.GoDurationType{},
-		},
-		"request_params": schema.MapAttribute{
-			ElementType: types.StringType,
-			Optional:    true,
-			Description: "The identity provider parameters you want to include as part of a sign-in request using the OAuth 2.0 code flow.",
-		},
-		"authorize_service_url": schema.StringAttribute{
-			Optional:    true,
-			Description: "Authorize service URL",
-		},
-		"certificate_authority": schema.StringAttribute{
-			Optional:    true,
-			Description: "Certificate authority",
-		},
-		"certificate_authority_file": schema.StringAttribute{
-			Optional:    true,
-			Description: "Certificate authority file. Only supported by the legacy enterprise API.",
-		},
-		"certificate_authority_key_pair_id": schema.StringAttribute{
-			Optional:    true,
-			Description: "Certificate authority key pair ID",
-		},
-		"set_response_headers": schema.MapAttribute{
-			ElementType: types.StringType,
-			Optional:    true,
-			Description: "Response headers to set",
-		},
-		"jwt_claims_headers": schema.MapAttribute{
-			ElementType: types.StringType,
-			Optional:    true,
-			Description: "JWT claims headers mapping",
-		},
-		"jwt_groups_filter": JWTGroupsFilterSchema,
-		"jwt_issuer_format": schema.StringAttribute{
-			Optional:    true,
-			Description: "Format for JWT issuer strings. Use 'IssuerHostOnly' for hostname without scheme or trailing slash, or 'IssuerURI' for complete URI including scheme and trailing slash.",
-			Validators: []validator.String{
-				stringvalidator.OneOf(IssuerFormatValues...),
-			},
-		},
-		"default_upstream_timeout": schema.StringAttribute{
-			Optional:    true,
-			Description: "Default upstream timeout",
-			CustomType:  timetypes.GoDurationType{},
-		},
-		"metrics_address": schema.StringAttribute{
-			Optional:    true,
-			Description: "Metrics address",
-		},
-		"grpc_address": schema.StringAttribute{
-			Optional:    true,
-			Description: "gRPC address",
-		},
-		"grpc_insecure": schema.BoolAttribute{
-			Optional:    true,
-			Description: "gRPC insecure",
-		},
-		"cache_service_url": schema.StringAttribute{
-			Optional:    true,
-			Description: "Cache service URL",
-		},
-		"databroker_service_url": schema.StringAttribute{
-			Optional:    true,
-			Description: "Databroker service URL",
-		},
-		"client_ca": schema.StringAttribute{
-			Optional:    true,
-			Description: "Client CA. Only supported by the legacy enterprise API.",
-		},
-		"client_ca_file": schema.StringAttribute{
-			Optional:    true,
-			Description: "Client CA file. Only supported by the legacy enterprise API.",
-		},
-		"client_ca_key_pair_id": schema.StringAttribute{
-			Optional:    true,
-			Description: "Client CA key pair ID. Only supported by the legacy enterprise API.",
-		},
-		"google_cloud_serverless_authentication_service_account": schema.StringAttribute{
-			Optional:    true,
-			Description: "Google Cloud Serverless Authentication service account credentials.",
-		},
-		"autocert": schema.BoolAttribute{
-			Optional:    true,
-			Description: "Turning on autocert allows Pomerium to automatically retrieve, manage, and renew public facing TLS certificates from Lets Encrypt.",
-		},
-		"autocert_use_staging": schema.BoolAttribute{
-			Optional:    true,
-			Description: "Autocert Use Staging setting allows you to use Let's Encrypt's staging environment, which has more lenient usage limits than the production environment.",
-		},
-		"autocert_must_staple": schema.BoolAttribute{
-			Optional:    true,
-			Description: "Controls whether the must-staple flag is enabled when requesting certificates.",
-		},
-		"autocert_dir": schema.StringAttribute{
-			Optional:    true,
-			Description: "Autocert directory is the path which Autocert will store x509 certificate data.",
-		},
-		"skip_xff_append": schema.BoolAttribute{
-			Optional:    true,
-			Description: "Skip XFF append",
-		},
-		"primary_color": schema.StringAttribute{
-			Optional:    true,
-			Description: "A hex code that determines the primary color for the Enterprise Console and Route Error Details pages.",
-		},
-		"secondary_color": schema.StringAttribute{
-			Optional:    true,
-			Description: "A hex code that determines the secondary color for the Enterprise Console and Route Error Details pages.",
-		},
-		"darkmode_primary_color": schema.StringAttribute{
-			Optional:    true,
-			Description: "A hex code that determines the primary color for the Enterprise Console and Route Error Details pages when in Dark Mode.",
-		},
-		"darkmode_secondary_color": schema.StringAttribute{
-			Optional:    true,
-			Description: "A hex code that determines the secondary color for the Enterprise Console and Route Error Details pages when in Dark Mode.",
-		},
-		"logo_url": schema.StringAttribute{
-			Optional:    true,
-			Description: "A URL pointing to your logo. Defaults to Pomerium's Logo.",
+			Description: "A paragraph that will appear on all Route Error Pages in the top section.",
 		},
 		"favicon_url": schema.StringAttribute{
 			Optional:    true,
 			Description: "A Url pointing to your favicon. Defaults to Pomerium's Favicon.",
 		},
-		"error_message_first_paragraph": schema.StringAttribute{
+		"google_cloud_serverless_authentication_service_account": schema.StringAttribute{
 			Optional:    true,
-			Description: "A paragraph that will appear on all Route Error Pages in the top section.",
+			Description: "Google Cloud Serverless Authentication service account credentials.",
+		},
+		"grpc_address": schema.StringAttribute{
+			Optional:    true,
+			Computed:    true,
+			Description: "gRPC address",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"grpc_insecure": schema.BoolAttribute{
+			Optional:    true,
+			Computed:    true,
+			Description: "gRPC insecure",
+			PlanModifiers: []planmodifier.Bool{
+				boolplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"http_redirect_addr": schema.StringAttribute{
+			Optional:    true,
+			Description: "HTTP redirect address",
+		},
+		"id": schema.StringAttribute{
+			Optional:    true,
+			Computed:    true,
+			Description: "ID of settings",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"identity_provider_auth0": schema.SingleNestedAttribute{
 			Optional:    true,
@@ -497,31 +436,158 @@ var SettingsResourceSchema = schema.Schema{
 			Description: "Identity provider refresh timeout",
 			CustomType:  timetypes.GoDurationType{},
 		},
-		"access_log_fields": schema.SetAttribute{
-			Optional:    true,
-			ElementType: types.StringType,
-			Description: "Displays HTTP request logs from the Pomerium Proxy service.",
-		},
-		"authorize_log_fields": schema.SetAttribute{
-			Optional:    true,
-			ElementType: types.StringType,
-			Description: "Displays HTTP request logs from the Pomerium Authorize service.",
-		},
-		"pass_identity_headers": schema.BoolAttribute{
-			Optional:    true,
-			Description: "If applied, passes X-Pomerium-Jwt-Assertion header and JWT Claims Headers to all upstream applications.",
-		},
-		"bearer_token_format": schema.StringAttribute{
-			Description: "Bearer token format.",
-			Optional:    true,
-			Validators: []validator.String{
-				stringvalidator.OneOf("default", "idp_access_token", "idp_identity_token"),
-			},
-		},
 		"idp_access_token_allowed_audiences": schema.SetAttribute{
 			Description: "IDP access token allowed audiences.",
 			Optional:    true,
 			ElementType: types.StringType,
+		},
+		"idp_client_id": schema.StringAttribute{
+			Optional:    true,
+			Description: "IDP client ID",
+		},
+		"idp_client_secret": schema.StringAttribute{
+			Optional:    true,
+			Description: "IDP client secret",
+			Sensitive:   true,
+		},
+		"idp_provider": schema.StringAttribute{
+			Optional:    true,
+			Description: "IDP provider",
+		},
+		"idp_provider_url": schema.StringAttribute{
+			Optional:    true,
+			Description: "IDP provider URL",
+		},
+		"idp_refresh_directory_interval": schema.StringAttribute{
+			Optional:    true,
+			Description: "IDP refresh directory interval. Only supported by the legacy enterprise API.",
+			CustomType:  timetypes.GoDurationType{},
+		},
+		"idp_refresh_directory_timeout": schema.StringAttribute{
+			Optional:    true,
+			Description: "IDP refresh directory timeout. Only supported by the legacy enterprise API.",
+			CustomType:  timetypes.GoDurationType{},
+		},
+		"idp_service_account": schema.StringAttribute{
+			Optional:    true,
+			Description: "IDP service account. Only supported by the legacy enterprise API.",
+			Sensitive:   true,
+		},
+		"insecure_server": schema.BoolAttribute{
+			Optional:    true,
+			Computed:    true,
+			Description: "Insecure server",
+			PlanModifiers: []planmodifier.Bool{
+				boolplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"installation_id": schema.StringAttribute{
+			Optional:    true,
+			Computed:    true,
+			Description: "Installation ID",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"jwt_claims_headers": schema.MapAttribute{
+			ElementType: types.StringType,
+			Optional:    true,
+			Description: "JWT claims headers mapping",
+		},
+		"jwt_groups_filter": JWTGroupsFilterSchema,
+		"jwt_issuer_format": schema.StringAttribute{
+			Optional:    true,
+			Description: "Format for JWT issuer strings. Use 'IssuerHostOnly' for hostname without scheme or trailing slash, or 'IssuerURI' for complete URI including scheme and trailing slash.",
+			Validators: []validator.String{
+				stringvalidator.OneOf(IssuerFormatValues...),
+			},
+		},
+		"log_level": schema.StringAttribute{
+			Optional:    true,
+			Description: "Log level",
+		},
+		"logo_url": schema.StringAttribute{
+			Optional:    true,
+			Description: "A URL pointing to your logo. Defaults to Pomerium's Logo.",
+		},
+		"mcp_allowed_as_metadata_domains": schema.SetAttribute{
+			Optional:    true,
+			ElementType: types.StringType,
+		},
+		"mcp_allowed_client_id_domains": schema.SetAttribute{
+			Optional:    true,
+			ElementType: types.StringType,
+		},
+		"metrics_address": schema.StringAttribute{
+			Optional:    true,
+			Description: "Metrics address",
+		},
+		"namespace_id": schema.StringAttribute{
+			Optional:    true,
+			Computed:    true,
+			Description: "Namespace ID of settings",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.RequiresReplace(),
+				stringplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"otel_attribute_value_length_limit": schema.Int64Attribute{
+			Optional:    true,
+			Description: "OpenTelemetry attribute value length limit",
+		},
+		"otel_bsp_max_export_batch_size": schema.Int64Attribute{
+			Optional:    true,
+			Description: "OpenTelemetry BSP max export batch size",
+		},
+		"otel_bsp_schedule_delay": schema.StringAttribute{
+			Optional:    true,
+			Description: "OpenTelemetry BSP schedule delay",
+			CustomType:  timetypes.GoDurationType{},
+		},
+		"otel_exporter_otlp_endpoint": schema.StringAttribute{
+			Optional:    true,
+			Description: "OpenTelemetry OTLP exporter endpoint",
+		},
+		"otel_exporter_otlp_headers": schema.SetAttribute{
+			Optional:    true,
+			ElementType: types.StringType,
+			Description: "OpenTelemetry OTLP exporter headers",
+		},
+		"otel_exporter_otlp_protocol": schema.StringAttribute{
+			Optional:    true,
+			Description: "OpenTelemetry OTLP exporter protocol",
+		},
+		"otel_exporter_otlp_timeout": schema.StringAttribute{
+			Optional:    true,
+			Description: "OpenTelemetry OTLP exporter timeout",
+			CustomType:  timetypes.GoDurationType{},
+		},
+		"otel_exporter_otlp_traces_endpoint": schema.StringAttribute{
+			Optional:    true,
+			Description: "OpenTelemetry OTLP traces endpoint",
+		},
+		"otel_exporter_otlp_traces_headers": schema.SetAttribute{
+			Optional:    true,
+			ElementType: types.StringType,
+			Description: "OpenTelemetry OTLP traces headers",
+		},
+		"otel_exporter_otlp_traces_protocol": schema.StringAttribute{
+			Optional:    true,
+			Description: "OpenTelemetry OTLP traces protocol",
+		},
+		"otel_exporter_otlp_traces_timeout": schema.StringAttribute{
+			Optional:    true,
+			Description: "OpenTelemetry OTLP traces timeout",
+			CustomType:  timetypes.GoDurationType{},
+		},
+		"otel_log_level": schema.StringAttribute{
+			Optional:    true,
+			Description: "OpenTelemetry log level",
+		},
+		"otel_resource_attributes": schema.SetAttribute{
+			Optional:    true,
+			ElementType: types.StringType,
+			Description: "OpenTelemetry resource attributes",
 		},
 		"otel_traces_exporter": schema.StringAttribute{
 			Optional:    true,
@@ -531,84 +597,60 @@ var SettingsResourceSchema = schema.Schema{
 			Optional:    true,
 			Description: "OpenTelemetry traces sampler argument",
 		},
-		"otel_resource_attributes": schema.SetAttribute{
+		"pass_identity_headers": schema.BoolAttribute{
 			Optional:    true,
-			ElementType: types.StringType,
-			Description: "OpenTelemetry resource attributes",
-		},
-		"otel_log_level": schema.StringAttribute{
-			Optional:    true,
-			Description: "OpenTelemetry log level",
-		},
-		"otel_attribute_value_length_limit": schema.Int64Attribute{
-			Optional:    true,
-			Description: "OpenTelemetry attribute value length limit",
-		},
-		"otel_exporter_otlp_endpoint": schema.StringAttribute{
-			Optional:    true,
-			Description: "OpenTelemetry OTLP exporter endpoint",
-		},
-		"otel_exporter_otlp_traces_endpoint": schema.StringAttribute{
-			Optional:    true,
-			Description: "OpenTelemetry OTLP traces endpoint",
-		},
-		"otel_exporter_otlp_protocol": schema.StringAttribute{
-			Optional:    true,
-			Description: "OpenTelemetry OTLP exporter protocol",
-		},
-		"otel_exporter_otlp_traces_protocol": schema.StringAttribute{
-			Optional:    true,
-			Description: "OpenTelemetry OTLP traces protocol",
-		},
-		"otel_exporter_otlp_headers": schema.SetAttribute{
-			Optional:    true,
-			ElementType: types.StringType,
-			Description: "OpenTelemetry OTLP exporter headers",
-		},
-		"otel_exporter_otlp_traces_headers": schema.SetAttribute{
-			Optional:    true,
-			ElementType: types.StringType,
-			Description: "OpenTelemetry OTLP traces headers",
-		},
-		"otel_exporter_otlp_timeout": schema.StringAttribute{
-			Optional:    true,
-			Description: "OpenTelemetry OTLP exporter timeout",
-			CustomType:  timetypes.GoDurationType{},
-		},
-		"otel_exporter_otlp_traces_timeout": schema.StringAttribute{
-			Optional:    true,
-			Description: "OpenTelemetry OTLP traces timeout",
-			CustomType:  timetypes.GoDurationType{},
-		},
-		"otel_bsp_schedule_delay": schema.StringAttribute{
-			Optional:    true,
-			Description: "OpenTelemetry BSP schedule delay",
-			CustomType:  timetypes.GoDurationType{},
-		},
-		"otel_bsp_max_export_batch_size": schema.Int64Attribute{
-			Optional:    true,
-			Description: "OpenTelemetry BSP max export batch size",
-		},
-		"codec_type": schema.StringAttribute{
-			Optional:    true,
-			Description: "Codec Type",
-			Validators: []validator.String{
-				stringvalidator.OneOf("auto", "http1", "http2", "http3"),
+			Computed:    true,
+			Description: "If applied, passes X-Pomerium-Jwt-Assertion header and JWT Claims Headers to all upstream applications.",
+			PlanModifiers: []planmodifier.Bool{
+				boolplanmodifier.UseStateForUnknown(),
 			},
 		},
-		"circuit_breaker_thresholds": CircuitBreakerThresholdsSchema,
+		"primary_color": schema.StringAttribute{
+			Optional:    true,
+			Description: "A hex code that determines the primary color for the Enterprise Console and Route Error Details pages.",
+		},
+		"proxy_log_level": schema.StringAttribute{
+			Optional:    true,
+			Description: "Proxy log level",
+		},
+		"request_params": schema.MapAttribute{
+			ElementType: types.StringType,
+			Optional:    true,
+			Description: "The identity provider parameters you want to include as part of a sign-in request using the OAuth 2.0 code flow.",
+		},
+		"scopes": schema.SetAttribute{
+			Optional:    true,
+			ElementType: types.StringType,
+			Description: "Scopes",
+		},
+		"secondary_color": schema.StringAttribute{
+			Optional:    true,
+			Description: "A hex code that determines the secondary color for the Enterprise Console and Route Error Details pages.",
+		},
+		"session_recording_enabled": schema.BoolAttribute{
+			Optional: true,
+		},
+		"set_response_headers": schema.MapAttribute{
+			ElementType: types.StringType,
+			Optional:    true,
+			Description: "Response headers to set",
+		},
+		"skip_xff_append": schema.BoolAttribute{
+			Optional:    true,
+			Description: "Skip XFF append",
+		},
 		"ssh_address": schema.StringAttribute{
 			Optional:    true,
 			Description: "SSH Address",
 		},
-		"ssh_host_key_files": schema.SetAttribute{
-			Optional:    true,
-			Description: "SSH Host Key Files",
-			ElementType: types.StringType,
-		},
 		"ssh_host_keys": schema.SetAttribute{
 			Optional:    true,
 			Description: "SSH Host Keys",
+			ElementType: types.StringType,
+		},
+		"ssh_host_key_files": schema.SetAttribute{
+			Optional:    true,
+			Description: "SSH Host Key Files",
 			ElementType: types.StringType,
 		},
 		"ssh_user_ca_key": schema.StringAttribute{
@@ -619,28 +661,20 @@ var SettingsResourceSchema = schema.Schema{
 			Optional:    true,
 			Description: "SSH User CA Key File",
 		},
-		"blob_storage": schema.SingleNestedAttribute{
-			Optional: true,
-			Attributes: map[string]schema.Attribute{
-				"bucket_uri": schema.StringAttribute{
-					Optional:  true,
-					Sensitive: true,
-				},
-				"managed_prefix": schema.StringAttribute{
-					Optional: true,
-				},
-			},
-		},
-		"session_recording_enabled": schema.BoolAttribute{
-			Optional: true,
-		},
-		"mcp_allowed_as_metadata_domains": schema.SetAttribute{
+		"timeout_idle": schema.StringAttribute{
 			Optional:    true,
-			ElementType: types.StringType,
+			Description: "Sets the time at which a downstream or upstream connection will be terminated if no active streams.",
+			CustomType:  timetypes.GoDurationType{},
 		},
-		"mcp_allowed_client_id_domains": schema.SetAttribute{
+		"timeout_read": schema.StringAttribute{
 			Optional:    true,
-			ElementType: types.StringType,
+			Description: "Sets the amount of time for the client to receive the entire request stream.",
+			CustomType:  timetypes.GoDurationType{},
+		},
+		"timeout_write": schema.StringAttribute{
+			Optional:    true,
+			Description: "Sets max stream duration of an HTTP request/response exchange. Must be greater than read timeout.",
+			CustomType:  timetypes.GoDurationType{},
 		},
 	},
 }
