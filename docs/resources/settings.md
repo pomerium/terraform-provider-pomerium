@@ -96,6 +96,7 @@ The settings are global object.
 - `mcp_allowed_as_metadata_domains` (Set of String)
 - `mcp_allowed_client_id_domains` (Set of String)
 - `metrics_address` (String) Metrics address
+- `namespace_id` (String) Namespace ID of settings
 - `otel_attribute_value_length_limit` (Number) OpenTelemetry attribute value length limit
 - `otel_bsp_max_export_batch_size` (Number) OpenTelemetry BSP max export batch size
 - `otel_bsp_schedule_delay` (String) OpenTelemetry BSP schedule delay

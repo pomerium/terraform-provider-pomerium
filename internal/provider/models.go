@@ -220,6 +220,7 @@ type SettingsModel struct {
 	MCPAllowedAsMetadataDomains                       types.Set            `tfsdk:"mcp_allowed_as_metadata_domains"`
 	MCPAllowedClientIDDomains                         types.Set            `tfsdk:"mcp_allowed_client_id_domains"`
 	MetricsAddress                                    types.String         `tfsdk:"metrics_address"`
+	NamespaceID                                       types.String         `tfsdk:"namespace_id"`
 	OtelAttributeValueLengthLimit                     types.Int64          `tfsdk:"otel_attribute_value_length_limit"`
 	OtelBspMaxExportBatchSize                         types.Int64          `tfsdk:"otel_bsp_max_export_batch_size"`
 	OtelBspScheduleDelay                              timetypes.GoDuration `tfsdk:"otel_bsp_schedule_delay"`

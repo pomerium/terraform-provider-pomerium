@@ -359,6 +359,7 @@ func TestAPIToModel(t *testing.T) {
 				MetricsAddress:                  types.StringNull(),
 				MCPAllowedAsMetadataDomains:     types.SetNull(types.StringType),
 				MCPAllowedClientIDDomains:       types.SetNull(types.StringType),
+				NamespaceID:                     types.StringNull(),
 				OtelAttributeValueLengthLimit:   types.Int64Null(),
 				OtelBspMaxExportBatchSize:       types.Int64Null(),
 				OtelBspScheduleDelay:            timetypes.NewGoDurationNull(),
@@ -433,6 +434,7 @@ func TestAPIToModel(t *testing.T) {
 				MetricsAddress:              new(":9090"),
 				McpAllowedAsMetadataDomains: []string{"a", "b", "c"},
 				McpAllowedClientIdDomains:   []string{"x", "y", "z"},
+				NamespaceId:                 new("NAMESPACE_ID"),
 				PassIdentityHeaders:         new(true),
 				PrimaryColor:                new("#000000"),
 				ProxyLogLevel:               new("debug"),
@@ -482,6 +484,7 @@ func TestAPIToModel(t *testing.T) {
 			assert.Equal(t, types.StringValue(":9090"), result.MetricsAddress)
 			assert.Equal(t, types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a"), types.StringValue("b"), types.StringValue("c")}), result.MCPAllowedAsMetadataDomains)
 			assert.Equal(t, types.SetValueMust(types.StringType, []attr.Value{types.StringValue("x"), types.StringValue("y"), types.StringValue("z")}), result.MCPAllowedClientIDDomains)
+			assert.Equal(t, types.StringValue("NAMESPACE_ID"), result.NamespaceID)
 			assert.Equal(t, types.BoolValue(true), result.PassIdentityHeaders)
 			assert.Equal(t, types.StringValue("#000000"), result.PrimaryColor)
 			assert.Equal(t, types.StringValue("debug"), result.ProxyLogLevel)
