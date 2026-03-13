@@ -42,6 +42,8 @@ provider "pomerium" {
 }
 
 resource "pomerium_settings" "test" {
+	grpc_address  = "0.0.0.0:5443"
+	grpc_insecure = true
 }
 `, apiURL, base64.StdEncoding.EncodeToString(sharedSecret))
 }
