@@ -93,24 +93,34 @@ func (c *EnterpriseToModelConverter) HealthCheck(src *enterprise.HealthCheck) ty
 	}
 
 	if httpHc := src.GetHttpHealthCheck(); httpHc != nil {
-		expectedStatusesElem := []attr.Value{}
-		for _, status := range httpHc.ExpectedStatuses {
-			expectedStatusesElem = append(expectedStatusesElem, c.Int64Range(status))
+		var expectedStatuses attr.Value
+		if len(httpHc.ExpectedStatuses) > 0 {
+			elems := make([]attr.Value, 0, len(httpHc.ExpectedStatuses))
+			for _, status := range httpHc.ExpectedStatuses {
+				elems = append(elems, c.Int64Range(status))
+			}
+			expectedStatuses, _ = types.SetValue(Int64RangeObjectType(), elems)
+		} else {
+			expectedStatuses = types.SetNull(Int64RangeObjectType())
 		}
-		expectedStatuses, _ := types.SetValue(Int64RangeObjectType(), expectedStatusesElem)
 
-		retriableStatusesElem := []attr.Value{}
-		for _, status := range httpHc.RetriableStatuses {
-			retriableStatusesElem = append(retriableStatusesElem, c.Int64Range(status))
+		var retriableStatuses attr.Value
+		if len(httpHc.RetriableStatuses) > 0 {
+			elems := make([]attr.Value, 0, len(httpHc.RetriableStatuses))
+			for _, status := range httpHc.RetriableStatuses {
+				elems = append(elems, c.Int64Range(status))
+			}
+			retriableStatuses, _ = types.SetValue(Int64RangeObjectType(), elems)
+		} else {
+			retriableStatuses = types.SetNull(Int64RangeObjectType())
 		}
-		retriableStatuses, _ := types.SetValue(Int64RangeObjectType(), retriableStatusesElem)
 
 		httpAttrs := map[string]attr.Value{
-			"host":               types.StringValue(httpHc.Host),
+			"host":               stringValueOrNull(httpHc.Host),
 			"path":               types.StringValue(httpHc.Path),
 			"expected_statuses":  expectedStatuses,
 			"retriable_statuses": retriableStatuses,
-			"codec_client_type":  types.StringValue(httpHc.CodecClientType.String()),
+			"codec_client_type":  codecClientTypeValueOrNull(int(httpHc.CodecClientType.Number())),
 		}
 
 		httpHealthCheck, _ := types.ObjectValue(HTTPHealthCheckObjectType().AttrTypes, httpAttrs)
@@ -246,7 +256,7 @@ func (c *EnterpriseToModelConverter) Route(src *enterprise.Route) RouteModel {
 		CircuitBreakerThresholds: c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
 		DependsOnHosts:           FromStringSliceToSet(src.DependsOn),
 		Description:              types.StringPointerValue(src.Description),
-		EnableGoogleCloudServerlessAuthentication: types.BoolPointerValue(zeroToNil(src.EnableGoogleCloudServerlessAuthentication)),
+		EnableGoogleCloudServerlessAuthentication: types.BoolValue(src.EnableGoogleCloudServerlessAuthentication),
 		From:                              types.StringValue(src.From),
 		HealthChecks:                      toSetOfObjects(src.HealthChecks, HealthCheckObjectType(), c.HealthCheck),
 		HealthyPanicThreshold:             types.Int32PointerValue(src.HealthyPanicThreshold),
