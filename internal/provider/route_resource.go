@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
@@ -489,16 +490,46 @@ func (r *RouteResource) Create(ctx context.Context, req resource.CreateRequest, 
 				return
 			}
 
-			createReq := newConnectRequest(&pomerium.CreateRouteRequest{
-				Route: apiRoute,
-			}, apiRoute)
-			createRes, err := client.CreateRoute(ctx, createReq)
+			err := createOrUpdateByName(apiRoute,
+				func() error {
+					createReq := newConnectRequest(&pomerium.CreateRouteRequest{
+						Route: apiRoute,
+					}, apiRoute)
+					createRes, err := client.CreateRoute(ctx, createReq)
+					if err != nil {
+						return err
+					}
+					apiRoute = createRes.Msg.GetRoute()
+					return nil
+				},
+				func(filter *structpb.Struct) ([]*pomerium.Route, error) {
+					listReq := connect.NewRequest(&pomerium.ListRoutesRequest{
+						Filter: filter,
+					})
+					listRes, err := client.ListRoutes(ctx, listReq)
+					if err != nil {
+						return nil, err
+					}
+					return listRes.Msg.GetRoutes(), nil
+				},
+				func(id string) error {
+					apiRoute.Id = new(id)
+					updateReq := newConnectRequest(&pomerium.UpdateRouteRequest{
+						Route: apiRoute,
+					}, apiRoute)
+					updateRes, err := client.UpdateRoute(ctx, updateReq)
+					if err != nil {
+						return err
+					}
+					apiRoute = updateRes.Msg.GetRoute()
+					return nil
+				})
 			if err != nil {
 				resp.Diagnostics.AddError("Error creating route", err.Error())
 				return
 			}
 
-			plan = NewAPIToModelConverter(&resp.Diagnostics).Route(createRes.Msg.Route)
+			plan = NewAPIToModelConverter(&resp.Diagnostics).Route(apiRoute)
 		},
 		func(client *client.Client) {
 			pbRoute := NewModelToEnterpriseConverter(&resp.Diagnostics).Route(plan)

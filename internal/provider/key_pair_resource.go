@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
@@ -91,16 +92,46 @@ func (r *KeyPairResource) Create(ctx context.Context, req resource.CreateRequest
 				return
 			}
 
-			createReq := newConnectRequest(&pomerium.CreateKeyPairRequest{
-				KeyPair: apiKeyPair,
-			}, apiKeyPair)
-			createRes, err := client.CreateKeyPair(ctx, createReq)
+			err := createOrUpdateByName(apiKeyPair,
+				func() error {
+					createReq := newConnectRequest(&pomerium.CreateKeyPairRequest{
+						KeyPair: apiKeyPair,
+					}, apiKeyPair)
+					createRes, err := client.CreateKeyPair(ctx, createReq)
+					if err != nil {
+						return err
+					}
+					apiKeyPair = createRes.Msg.GetKeyPair()
+					return nil
+				},
+				func(filter *structpb.Struct) ([]*pomerium.KeyPair, error) {
+					listReq := connect.NewRequest(&pomerium.ListKeyPairsRequest{
+						Filter: filter,
+					})
+					listRes, err := client.ListKeyPairs(ctx, listReq)
+					if err != nil {
+						return nil, err
+					}
+					return listRes.Msg.GetKeyPairs(), nil
+				},
+				func(id string) error {
+					apiKeyPair.Id = new(id)
+					updateReq := newConnectRequest(&pomerium.UpdateKeyPairRequest{
+						KeyPair: apiKeyPair,
+					}, apiKeyPair)
+					updateRes, err := client.UpdateKeyPair(ctx, updateReq)
+					if err != nil {
+						return err
+					}
+					apiKeyPair = updateRes.Msg.GetKeyPair()
+					return nil
+				})
 			if err != nil {
 				resp.Diagnostics.AddError("Error creating key pair", err.Error())
 				return
 			}
 
-			plan = NewAPIToModelConverter(&resp.Diagnostics).KeyPair(createRes.Msg.KeyPair)
+			plan = NewAPIToModelConverter(&resp.Diagnostics).KeyPair(apiKeyPair)
 		},
 		func(client *client.Client) {
 			createReq := NewModelToEnterpriseConverter(&resp.Diagnostics).CreateKeyPairRequest(plan)
