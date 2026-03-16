@@ -622,6 +622,28 @@ func toSetOfObjects[T any](srcs []T, elementType types.ObjectType, fn func(src T
 	return types.SetValueMust(elementType, elements)
 }
 
+// stringValueOrNull returns a null string if s is empty, otherwise a string value.
+func stringValueOrNull(s string) types.String {
+	if s == "" {
+		return types.StringNull()
+	}
+	return types.StringValue(s)
+}
+
+// codecClientTypeValueOrNull maps a proto enum number to the Terraform string
+// value, returning null for the zero value (HTTP1 default) so that unset fields
+// in the plan stay null after apply.
+func codecClientTypeValueOrNull(n int) types.String {
+	switch n {
+	case 1:
+		return types.StringValue("http2")
+	case 2:
+		return types.StringValue("http3")
+	default:
+		return types.StringNull()
+	}
+}
+
 func zeroToNil[T comparable](v T) *T {
 	var def T
 	if def == v {

@@ -1135,7 +1135,7 @@ func TestConvertRoute(t *testing.T) {
 							map[string]attr.Value{
 								"host":              types.StringValue("health.example.com"),
 								"path":              types.StringValue("/health"),
-								"codec_client_type": types.StringValue("HTTP2"),
+								"codec_client_type": types.StringValue("http2"),
 								"expected_statuses": types.SetValueMust(
 									provider.Int64RangeObjectType(),
 									[]attr.Value{

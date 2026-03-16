@@ -294,7 +294,9 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			},
 			"enable_google_cloud_serverless_authentication": schema.BoolAttribute{
 				Description: "Enable Google Cloud serverless authentication.",
+				Computed:    true,
 				Optional:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"bearer_token_format": schema.StringAttribute{
 				Description: "Bearer token format.",
