@@ -89,7 +89,7 @@ func (c *EnterpriseToModelConverter) HealthCheck(src *enterprise.HealthCheck) ty
 		"healthy_threshold":       UInt32ToInt64OrNull(src.HealthyThreshold),
 		"http_health_check":       types.ObjectNull(HTTPHealthCheckObjectType().AttrTypes),
 		"tcp_health_check":        types.ObjectNull(TCPHealthCheckObjectType().AttrTypes),
-		"grpc_health_check":       types.ObjectNull(GrpcHealthCheckObjectType().AttrTypes),
+		"grpc_health_check":       types.ObjectNull(GRPCHealthCheckObjectType().AttrTypes),
 	}
 
 	if httpHc := src.GetHttpHealthCheck(); httpHc != nil {
@@ -138,7 +138,7 @@ func (c *EnterpriseToModelConverter) HealthCheck(src *enterprise.HealthCheck) ty
 			"authority":    types.StringValue(grpcHc.Authority),
 		}
 
-		grpcHealthCheck, _ := types.ObjectValue(GrpcHealthCheckObjectType().AttrTypes, grpcAttrs)
+		grpcHealthCheck, _ := types.ObjectValue(GRPCHealthCheckObjectType().AttrTypes, grpcAttrs)
 		attrs["grpc_health_check"] = grpcHealthCheck
 	} else {
 		c.diagnostics.AddAttributeError(path.Root("health_checks"), "health check not specified", "must specify one of http_health_check, tcp_health_check, or grpc_health_check")

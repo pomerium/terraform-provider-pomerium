@@ -4,7 +4,7 @@ import (
 	"math"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -56,4 +56,19 @@ var JWTGroupsFilterSchema = schema.SingleNestedAttribute{
 			Optional: true,
 		},
 	},
+}
+
+func Int64RangeSchema() schema.NestedAttributeObject {
+	return schema.NestedAttributeObject{
+		Attributes: map[string]schema.Attribute{
+			"end": schema.Int64Attribute{
+				Description: "End of status code range.",
+				Required:    true,
+			},
+			"start": schema.Int64Attribute{
+				Description: "Start of status code range.",
+				Required:    true,
+			},
+		},
+	}
 }
