@@ -337,6 +337,13 @@ func (c *baseModelConverter) NullableBool(src types.Bool) *bool {
 	return src.ValueBoolPointer()
 }
 
+func (c *baseModelConverter) NullableFloat64(src types.Float64) *float64 {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	return new(src.ValueFloat64())
+}
+
 func (c *baseModelConverter) NullableString(src types.String) *string {
 	if src.IsNull() || src.IsUnknown() {
 		return nil

@@ -91,9 +91,9 @@ func (r *KeyPairResource) Create(ctx context.Context, req resource.CreateRequest
 				return
 			}
 
-			createReq := connect.NewRequest(&pomerium.CreateKeyPairRequest{
+			createReq := newConnectRequest(&pomerium.CreateKeyPairRequest{
 				KeyPair: apiKeyPair,
-			})
+			}, apiKeyPair)
 			createRes, err := client.CreateKeyPair(ctx, createReq)
 			if err != nil {
 				resp.Diagnostics.AddError("Error creating key pair", err.Error())
@@ -193,9 +193,9 @@ func (r *KeyPairResource) Update(ctx context.Context, req resource.UpdateRequest
 				return
 			}
 
-			updateReq := connect.NewRequest(&pomerium.UpdateKeyPairRequest{
+			updateReq := newConnectRequest(&pomerium.UpdateKeyPairRequest{
 				KeyPair: apiKeyPair,
-			})
+			}, apiKeyPair)
 			updateRes, err := client.UpdateKeyPair(ctx, updateReq)
 			if err != nil {
 				resp.Diagnostics.AddError("Error updating key pair", err.Error())

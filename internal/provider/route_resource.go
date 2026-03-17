@@ -494,9 +494,9 @@ func (r *RouteResource) Create(ctx context.Context, req resource.CreateRequest, 
 				return
 			}
 
-			createReq := connect.NewRequest(&pomerium.CreateRouteRequest{
+			createReq := newConnectRequest(&pomerium.CreateRouteRequest{
 				Route: apiRoute,
-			})
+			}, apiRoute)
 			createRes, err := client.CreateRoute(ctx, createReq)
 			if err != nil {
 				resp.Diagnostics.AddError("Error creating route", err.Error())
@@ -596,9 +596,9 @@ func (r *RouteResource) Update(ctx context.Context, req resource.UpdateRequest, 
 				return
 			}
 
-			updateReq := connect.NewRequest(&pomerium.UpdateRouteRequest{
+			updateReq := newConnectRequest(&pomerium.UpdateRouteRequest{
 				Route: apiRoute,
-			})
+			}, apiRoute)
 			updateRes, err := client.UpdateRoute(ctx, updateReq)
 			if err != nil {
 				resp.Diagnostics.AddError("Error updating route", err.Error())

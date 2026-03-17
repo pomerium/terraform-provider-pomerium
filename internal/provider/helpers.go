@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"google.golang.org/protobuf/proto"
 )
 
 // ConfigureClient is a helper to configure resources and data sources with the API client
@@ -51,4 +53,15 @@ func ConfigureClient(req any, resp any) *Client {
 // ImportStatePassthroughID is a helper that implements the common import state pattern
 func ImportStatePassthroughID(req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resp.Diagnostics.Append(resp.State.SetAttribute(context.Background(), path.Root("id"), req.ID)...)
+}
+
+func newConnectRequest[T any](msg *T, obj proto.Message) *connect.Request[T] {
+	req := connect.NewRequest(msg)
+	if o, ok := obj.(interface{ GetClusterId() string }); ok && o.GetClusterId() != "" {
+		req.Header().Set("Cluster-Id", o.GetClusterId())
+	}
+	if o, ok := obj.(interface{ GetNamespaceId() string }); ok && o.GetNamespaceId() != "" {
+		req.Header().Set("Namespace-Id", o.GetNamespaceId())
+	}
+	return req
 }
