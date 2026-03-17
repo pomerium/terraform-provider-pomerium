@@ -19,11 +19,11 @@ func CircuitBreakerThresholdsObjectType() types.ObjectType {
 	return CircuitBreakerThresholdsSchema.GetType().(types.ObjectType)
 }
 
-func GrpcHealthCheckObjectType() types.ObjectType {
+func GRPCHealthCheckObjectType() types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"service_name": types.StringType,
 			"authority":    types.StringType,
+			"service_name": types.StringType,
 		},
 	}
 }
@@ -31,16 +31,16 @@ func GrpcHealthCheckObjectType() types.ObjectType {
 func HealthCheckObjectType() types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"timeout":                 timetypes.GoDurationType{},
-			"interval":                timetypes.GoDurationType{},
-			"initial_jitter":          timetypes.GoDurationType{},
-			"interval_jitter":         timetypes.GoDurationType{},
-			"interval_jitter_percent": types.Int64Type,
-			"unhealthy_threshold":     types.Int64Type,
+			"grpc_health_check":       GRPCHealthCheckObjectType(),
 			"healthy_threshold":       types.Int64Type,
 			"http_health_check":       HTTPHealthCheckObjectType(),
+			"initial_jitter":          timetypes.GoDurationType{},
+			"interval_jitter_percent": types.Int64Type,
+			"interval_jitter":         timetypes.GoDurationType{},
+			"interval":                timetypes.GoDurationType{},
 			"tcp_health_check":        TCPHealthCheckObjectType(),
-			"grpc_health_check":       GrpcHealthCheckObjectType(),
+			"timeout":                 timetypes.GoDurationType{},
+			"unhealthy_threshold":     types.Int64Type,
 		},
 	}
 }

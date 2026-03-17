@@ -27,6 +27,7 @@ func TestAccRoute(t *testing.T) {
 				Config: testAccRouteConfig(t, apiURL, sharedSecret, "updated-name"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("pomerium_route.test", "name", "updated-name"),
+					resource.TestCheckResourceAttr("pomerium_route.test", "health_checks.0.http_health_check.codec_client_type", "http1"),
 				),
 			},
 		},
@@ -46,6 +47,9 @@ resource "pomerium_route" "test" {
 	name = "%s"
 	from = "https://from.example.com"
 	to = ["https://to.example.com"]
+	health_checks = [{
+		http_health_check = {}
+	}]
 }
 `, apiURL, base64.StdEncoding.EncodeToString(sharedSecret), name)
 }

@@ -55,77 +55,34 @@ func (c *APIToModelConverter) CircuitBreakerThresholds(src *pomerium.CircuitBrea
 	return dst
 }
 
+func (c *APIToModelConverter) GRPCHealthCheck(src *pomerium.HealthCheck_GrpcHealthCheck) types.Object {
+	if src == nil {
+		return types.ObjectNull(GRPCHealthCheckObjectType().AttrTypes)
+	}
+	dst, diagnostics := types.ObjectValue(GRPCHealthCheckObjectType().AttrTypes, map[string]attr.Value{
+		"authority":    types.StringPointerValue(zeroToNil(src.Authority)),
+		"service_name": types.StringPointerValue(zeroToNil(src.ServiceName)),
+	})
+	c.diagnostics.Append(diagnostics...)
+	return dst
+}
+
 func (c *APIToModelConverter) HealthCheck(src *pomerium.HealthCheck) types.Object {
 	if src == nil {
 		return types.ObjectNull(HealthCheckObjectType().AttrTypes)
 	}
-
-	attrs := map[string]attr.Value{
-		"timeout":                 c.Duration(src.Timeout),
-		"interval":                c.Duration(src.Interval),
-		"initial_jitter":          c.Duration(src.InitialJitter),
-		"interval_jitter":         c.Duration(src.IntervalJitter),
-		"interval_jitter_percent": UInt32ToInt64OrNull(src.IntervalJitterPercent),
-		"unhealthy_threshold":     UInt32ToInt64OrNull(src.GetUnhealthyThreshold().GetValue()),
+	dst, diagnostics := types.ObjectValue(HealthCheckObjectType().AttrTypes, map[string]attr.Value{
+		"grpc_health_check":       c.GRPCHealthCheck(src.GetGrpcHealthCheck()),
 		"healthy_threshold":       UInt32ToInt64OrNull(src.GetHealthyThreshold().GetValue()),
-		"http_health_check":       types.ObjectNull(HTTPHealthCheckObjectType().AttrTypes),
-		"tcp_health_check":        types.ObjectNull(TCPHealthCheckObjectType().AttrTypes),
-		"grpc_health_check":       types.ObjectNull(GrpcHealthCheckObjectType().AttrTypes),
-	}
-
-	if httpHc := src.GetHttpHealthCheck(); httpHc != nil {
-		expectedStatusesElem := []attr.Value{}
-		for _, status := range httpHc.ExpectedStatuses {
-			expectedStatusesElem = append(expectedStatusesElem, c.HealthCheckInt64Range(status))
-		}
-		expectedStatuses, _ := types.SetValue(Int64RangeObjectType(), expectedStatusesElem)
-
-		retriableStatusesElem := []attr.Value{}
-		for _, status := range httpHc.RetriableStatuses {
-			retriableStatusesElem = append(retriableStatusesElem, c.HealthCheckInt64Range(status))
-		}
-		retriableStatuses, _ := types.SetValue(Int64RangeObjectType(), retriableStatusesElem)
-
-		httpAttrs := map[string]attr.Value{
-			"host":               types.StringValue(httpHc.Host),
-			"path":               types.StringValue(httpHc.Path),
-			"expected_statuses":  expectedStatuses,
-			"retriable_statuses": retriableStatuses,
-			"codec_client_type":  types.StringValue(httpHc.CodecClientType.String()),
-		}
-
-		httpHealthCheck, _ := types.ObjectValue(HTTPHealthCheckObjectType().AttrTypes, httpAttrs)
-		attrs["http_health_check"] = httpHealthCheck
-	} else if tcpHc := src.GetTcpHealthCheck(); tcpHc != nil {
-		sendPayload := c.HealthCheckPayload(tcpHc.Send)
-
-		receiveElements := []attr.Value{}
-		for _, payload := range tcpHc.Receive {
-			payloadObj := c.HealthCheckPayload(payload)
-			receiveElements = append(receiveElements, payloadObj)
-		}
-		receiveSet, _ := types.SetValue(HealthCheckPayloadObjectType(), receiveElements)
-
-		tcpAttrs := map[string]attr.Value{
-			"send":    sendPayload,
-			"receive": receiveSet,
-		}
-
-		tcpHealthCheck, _ := types.ObjectValue(TCPHealthCheckObjectType().AttrTypes, tcpAttrs)
-		attrs["tcp_health_check"] = tcpHealthCheck
-	} else if grpcHc := src.GetGrpcHealthCheck(); grpcHc != nil {
-		grpcAttrs := map[string]attr.Value{
-			"service_name": types.StringValue(grpcHc.ServiceName),
-			"authority":    types.StringValue(grpcHc.Authority),
-		}
-
-		grpcHealthCheck, _ := types.ObjectValue(GrpcHealthCheckObjectType().AttrTypes, grpcAttrs)
-		attrs["grpc_health_check"] = grpcHealthCheck
-	} else {
-		c.diagnostics.AddAttributeError(path.Root("health_checks"), "health check not specified", "must specify one of http_health_check, tcp_health_check, or grpc_health_check")
-	}
-
-	dst, diagnostics := types.ObjectValue(HealthCheckObjectType().AttrTypes, attrs)
+		"http_health_check":       c.HTTPHealthCheck(src.GetHttpHealthCheck()),
+		"initial_jitter":          c.Duration(src.InitialJitter),
+		"interval_jitter_percent": UInt32ToInt64OrNull(src.IntervalJitterPercent),
+		"interval_jitter":         c.Duration(src.IntervalJitter),
+		"interval":                c.Duration(src.Interval),
+		"tcp_health_check":        c.TCPHealthCheck(src.GetTcpHealthCheck()),
+		"timeout":                 c.Duration(src.Timeout),
+		"unhealthy_threshold":     UInt32ToInt64OrNull(src.GetUnhealthyThreshold().GetValue()),
+	})
 	c.diagnostics.Append(diagnostics...)
 	return dst
 }
@@ -158,6 +115,21 @@ func (c *APIToModelConverter) HealthCheckInt64Range(src *pomerium.HealthCheck_In
 		"start": types.Int64Value(src.Start),
 		"end":   types.Int64Value(src.End),
 	})
+}
+
+func (c *APIToModelConverter) HTTPHealthCheck(src *pomerium.HealthCheck_HttpHealthCheck) types.Object {
+	if src == nil {
+		return types.ObjectNull(HTTPHealthCheckObjectType().AttrTypes)
+	}
+	dst, diagnostics := types.ObjectValue(HTTPHealthCheckObjectType().AttrTypes, map[string]attr.Value{
+		"codec_client_type":  c.HealthCheckCodecClientType(src.CodecClientType.Enum()),
+		"expected_statuses":  toSetOfObjects(src.ExpectedStatuses, Int64RangeObjectType(), c.HealthCheckInt64Range),
+		"host":               types.StringPointerValue(zeroToNil(src.Host)),
+		"path":               types.StringPointerValue(zeroToNil(src.Path)),
+		"retriable_statuses": toSetOfObjects(src.RetriableStatuses, Int64RangeObjectType(), c.HealthCheckInt64Range),
+	})
+	c.diagnostics.Append(diagnostics...)
+	return dst
 }
 
 func (c *APIToModelConverter) JWTGroupsFilter(src []string, inferFromPPL *bool) types.Object {
@@ -431,6 +403,18 @@ func (c *APIToModelConverter) StringFromSingleElementSlice(p path.Path, src []st
 	}
 
 	return types.StringValue(src[0])
+}
+
+func (c *APIToModelConverter) TCPHealthCheck(src *pomerium.HealthCheck_TcpHealthCheck) types.Object {
+	if src == nil {
+		return types.ObjectNull(TCPHealthCheckObjectType().AttrTypes)
+	}
+	dst, diagnostics := types.ObjectValue(TCPHealthCheckObjectType().AttrTypes, map[string]attr.Value{
+		"send":    c.HealthCheckPayload(src.Send),
+		"receive": toSetOfObjects(src.Receive, HealthCheckPayloadObjectType(), c.HealthCheckPayload),
+	})
+	c.diagnostics.Append(diagnostics...)
+	return dst
 }
 
 func (c *APIToModelConverter) UpstreamTunnel(src *pomerium.UpstreamTunnel) types.Object {

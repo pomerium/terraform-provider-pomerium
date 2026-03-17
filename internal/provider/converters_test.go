@@ -1129,7 +1129,7 @@ func TestConvertRoute(t *testing.T) {
 						"unhealthy_threshold":     types.Int64Value(2),
 						"healthy_threshold":       types.Int64Value(2),
 						"tcp_health_check":        types.ObjectNull(provider.TCPHealthCheckObjectType().AttrTypes),
-						"grpc_health_check":       types.ObjectNull(provider.GrpcHealthCheckObjectType().AttrTypes),
+						"grpc_health_check":       types.ObjectNull(provider.GRPCHealthCheckObjectType().AttrTypes),
 						"http_health_check": types.ObjectValueMust(
 							provider.HTTPHealthCheckObjectType().AttrTypes,
 							map[string]attr.Value{
@@ -1175,7 +1175,7 @@ func TestConvertRoute(t *testing.T) {
 						"unhealthy_threshold":     types.Int64Value(3),
 						"healthy_threshold":       types.Int64Value(1),
 						"http_health_check":       types.ObjectNull(provider.HTTPHealthCheckObjectType().AttrTypes),
-						"grpc_health_check":       types.ObjectNull(provider.GrpcHealthCheckObjectType().AttrTypes),
+						"grpc_health_check":       types.ObjectNull(provider.GRPCHealthCheckObjectType().AttrTypes),
 						"tcp_health_check": types.ObjectValueMust(
 							provider.TCPHealthCheckObjectType().AttrTypes,
 							map[string]attr.Value{
@@ -1215,7 +1215,7 @@ func TestConvertRoute(t *testing.T) {
 						"http_health_check":       types.ObjectNull(provider.HTTPHealthCheckObjectType().AttrTypes),
 						"tcp_health_check":        types.ObjectNull(provider.TCPHealthCheckObjectType().AttrTypes),
 						"grpc_health_check": types.ObjectValueMust(
-							provider.GrpcHealthCheckObjectType().AttrTypes,
+							provider.GRPCHealthCheckObjectType().AttrTypes,
 							map[string]attr.Value{
 								"service_name": types.StringValue("my-service"),
 								"authority":    types.StringValue("grpc.example.com"),
@@ -1398,7 +1398,7 @@ func TestHealthCheckNullThresholdsAreNil(t *testing.T) {
 		"healthy_threshold":       types.Int64Null(),
 		"http_health_check":       types.ObjectNull(provider.HTTPHealthCheckObjectType().AttrTypes),
 		"tcp_health_check":        types.ObjectNull(provider.TCPHealthCheckObjectType().AttrTypes),
-		"grpc_health_check": types.ObjectValueMust(provider.GrpcHealthCheckObjectType().AttrTypes, map[string]attr.Value{
+		"grpc_health_check": types.ObjectValueMust(provider.GRPCHealthCheckObjectType().AttrTypes, map[string]attr.Value{
 			"service_name": types.StringValue("my-service"),
 			"authority":    types.StringNull(),
 		}),
@@ -1465,7 +1465,7 @@ func TestCodecClientTypeSilentDefault(t *testing.T) {
 			"healthy_threshold":       types.Int64Value(0),
 			"http_health_check":       httpHcObj,
 			"tcp_health_check":        types.ObjectNull(provider.TCPHealthCheckObjectType().AttrTypes),
-			"grpc_health_check":       types.ObjectNull(provider.GrpcHealthCheckObjectType().AttrTypes),
+			"grpc_health_check":       types.ObjectNull(provider.GRPCHealthCheckObjectType().AttrTypes),
 		},
 	)
 
