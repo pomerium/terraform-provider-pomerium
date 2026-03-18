@@ -527,7 +527,7 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *pomerium.Settings {
 		DatabrokerInternalServiceUrl:      nil, // not supported
 		DatabrokerRaftBindAddress:         nil, // not supported
 		DatabrokerServiceUrls:             c.StringSliceFromString(src.DatabrokerServiceURL),
-		DatabrokerStorageConnectionString: nil, // not supported
+		DatabrokerStorageConnectionString: c.NullableString(src.DatabrokerStorageConnectionString),
 		DatabrokerStorageType:             nil, // not supported
 		DebugAddress:                      nil, // not supported
 		DefaultUpstreamTimeout:            c.Duration(path.Root("default_upstream_timeout"), src.DefaultUpstreamTimeout),
