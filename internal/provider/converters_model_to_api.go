@@ -486,41 +486,41 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *pomerium.Settings {
 	}
 	return &pomerium.Settings{
 		AccessLogFields:                   c.SettingsStringList(path.Root("access_log_fields"), src.AccessLogFields),
-		Address:                           src.Address.ValueStringPointer(),
+		Address:                           c.NullableString(src.Address),
 		AuthenticateInternalServiceUrl:    nil, // not supported
-		AuthenticateServiceUrl:            src.AuthenticateServiceURL.ValueStringPointer(),
+		AuthenticateServiceUrl:            c.NullableString(src.AuthenticateServiceURL),
 		AuthorizeInternalServiceUrl:       nil, // not supported
 		AuthorizeLogFields:                c.SettingsStringList(path.Root("authorize_log_fields"), src.AuthorizeLogFields),
 		AuthorizeServiceUrls:              c.StringSliceFromString(src.AuthorizeServiceURL),
-		Autocert:                          src.Autocert.ValueBoolPointer(),
+		Autocert:                          c.NullableBool(src.Autocert),
 		AutocertCa:                        nil, // not supported
 		AutocertCaKeyPairId:               nil, // not supported
-		AutocertDir:                       src.AutocertDir.ValueStringPointer(),
+		AutocertDir:                       c.NullableString(src.AutocertDir),
 		AutocertEabKeyId:                  nil, // not supported
 		AutocertEabMacKey:                 nil, // not supported
 		AutocertEmail:                     nil, // not supported
-		AutocertMustStaple:                src.AutocertMustStaple.ValueBoolPointer(),
+		AutocertMustStaple:                c.NullableBool(src.AutocertMustStaple),
 		AutocertTrustedCa:                 nil, // not supported
 		AutocertTrustedCaKeyPairId:        nil, // not supported
-		AutocertUseStaging:                src.AutocertUseStaging.ValueBoolPointer(),
+		AutocertUseStaging:                c.NullableBool(src.AutocertUseStaging),
 		BearerTokenFormat:                 c.BearerTokenFormat(path.Root("bearer_token_format"), src.BearerTokenFormat),
 		BlobStorage:                       c.BlobStorageSettings(src.BlobStorage),
-		CertificateAuthority:              src.CertificateAuthority.ValueStringPointer(),
-		CertificateAuthorityKeyPairId:     src.CertificateAuthorityKeyPairID.ValueStringPointer(),
+		CertificateAuthority:              c.NullableString(src.CertificateAuthority),
+		CertificateAuthorityKeyPairId:     c.NullableString(src.CertificateAuthorityKeyPairID),
 		CertificateKeyPairIds:             nil, // not supported
 		Certificates:                      nil, // not supported
 		CircuitBreakerThresholds:          c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
-		ClusterId:                         src.ClusterID.ValueStringPointer(),
+		ClusterId:                         c.NullableString(src.ClusterID),
 		CodecType:                         c.CodecType(path.Root("codec_type"), src.CodecType),
-		CookieDomain:                      src.CookieDomain.ValueStringPointer(),
+		CookieDomain:                      c.NullableString(src.CookieDomain),
 		CookieExpire:                      c.Duration(path.Root("cookie_expire"), src.CookieExpire),
-		CookieHttpOnly:                    src.CookieHTTPOnly.ValueBoolPointer(),
-		CookieName:                        src.CookieName.ValueStringPointer(),
-		CookieSameSite:                    src.CookieSameSite.ValueStringPointer(),
-		CookieSecret:                      src.CookieSecret.ValueStringPointer(),
+		CookieHttpOnly:                    c.NullableBool(src.CookieHTTPOnly),
+		CookieName:                        c.NullableString(src.CookieName),
+		CookieSameSite:                    c.NullableString(src.CookieSameSite),
+		CookieSecret:                      c.NullableString(src.CookieSecret),
 		CreatedAt:                         nil, // not supported
-		DarkmodePrimaryColor:              src.DarkmodePrimaryColor.ValueStringPointer(),
-		DarkmodeSecondaryColor:            src.DarkmodeSecondaryColor.ValueStringPointer(),
+		DarkmodePrimaryColor:              c.NullableString(src.DarkmodePrimaryColor),
+		DarkmodeSecondaryColor:            c.NullableString(src.DarkmodeSecondaryColor),
 		DatabrokerClusterLeaderId:         nil, // not supported
 		DatabrokerClusterNodeId:           nil, // not supported
 		DatabrokerClusterNodes:            nil, // not supported
@@ -537,43 +537,43 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *pomerium.Settings {
 		DirectoryProviderRefreshInterval:  c.Duration(path.Root("identity_provider_refresh_interval"), src.IdentityProviderRefreshInterval),
 		DirectoryProviderRefreshTimeout:   c.Duration(path.Root("identity_provider_refresh_timeout"), src.IdentityProviderRefreshTimeout),
 		DnsFailureRefreshRate:             c.Duration(path.Root("dns_failure_refresh_rate"), src.DNSFailureRefreshRate),
-		DnsLookupFamily:                   src.DNSLookupFamily.ValueStringPointer(),
+		DnsLookupFamily:                   c.NullableString(src.DNSLookupFamily),
 		DnsQueryTimeout:                   c.Duration(path.Root("dns_query_timeout"), src.DNSQueryTimeout),
 		DnsQueryTries:                     c.NullableUint32(src.DNSQueryTries),
 		DnsRefreshRate:                    c.Duration(path.Root("dns_refresh_rate"), src.DNSRefreshRate),
 		DnsUdpMaxQueries:                  c.NullableUint32(src.DNSUDPMaxQueries),
-		DnsUseTcp:                         src.DNSUseTCP.ValueBoolPointer(),
+		DnsUseTcp:                         c.NullableBool(src.DNSUseTCP),
 		DownstreamMtls:                    nil, // not supported
 		EnvoyAdminAccessLogPath:           nil, // not supported
 		EnvoyAdminAddress:                 nil, // not supported
 		EnvoyAdminProfilePath:             nil, // not supported
 		EnvoyBindConfigFreebind:           nil, // not supported
 		EnvoyBindConfigSourceAddress:      nil, // not supported
-		ErrorMessageFirstParagraph:        src.ErrorMessageFirstParagraph.ValueStringPointer(),
-		FaviconUrl:                        src.FaviconURL.ValueStringPointer(),
-		GoogleCloudServerlessAuthenticationServiceAccount: src.GoogleCloudServerlessAuthenticationServiceAccount.ValueStringPointer(),
-		GrpcAddress:                         src.GRPCAddress.ValueStringPointer(),
+		ErrorMessageFirstParagraph:        c.NullableString(src.ErrorMessageFirstParagraph),
+		FaviconUrl:                        c.NullableString(src.FaviconURL),
+		GoogleCloudServerlessAuthenticationServiceAccount: c.NullableString(src.GoogleCloudServerlessAuthenticationServiceAccount),
+		GrpcAddress:                         c.NullableString(src.GRPCAddress),
 		GrpcClientTimeout:                   nil, // not supported
-		GrpcInsecure:                        src.GRPCInsecure.ValueBoolPointer(),
+		GrpcInsecure:                        c.NullableBool(src.GRPCInsecure),
 		Http3AdvertisePort:                  nil, // not supported
-		HttpRedirectAddr:                    src.HTTPRedirectAddr.ValueStringPointer(),
+		HttpRedirectAddr:                    c.NullableString(src.HTTPRedirectAddr),
 		Id:                                  c.NullableString(src.ID),
 		IdpAccessTokenAllowedAudiences:      c.SettingsStringList(path.Root("idp_access_token_allowed_audiences"), src.IDPAccessTokenAllowedAudiences),
-		IdpClientId:                         src.IdpClientID.ValueStringPointer(),
-		IdpClientSecret:                     src.IdpClientSecret.ValueStringPointer(),
-		IdpProvider:                         src.IdpProvider.ValueStringPointer(),
-		IdpProviderUrl:                      src.IdpProviderURL.ValueStringPointer(),
-		InsecureServer:                      src.InsecureServer.ValueBoolPointer(),
-		InstallationId:                      src.InstallationID.ValueStringPointer(),
+		IdpClientId:                         c.NullableString(src.IdpClientID),
+		IdpClientSecret:                     c.NullableString(src.IdpClientSecret),
+		IdpProvider:                         c.NullableString(src.IdpProvider),
+		IdpProviderUrl:                      c.NullableString(src.IdpProviderURL),
+		InsecureServer:                      c.NullableBool(src.InsecureServer),
+		InstallationId:                      c.NullableString(src.InstallationID),
 		JwtClaimsHeaders:                    c.StringMap(path.Root("jwt_claims_headers"), src.JWTClaimsHeaders),
 		JwtGroupsFilter:                     c.JWTGroupsFilter(src.JWTGroupsFilter),
 		JwtGroupsFilterInferFromPpl:         c.JWTGroupsFilterInferFromPpl(src.JWTGroupsFilter),
 		JwtIssuerFormat:                     c.IssuerFormat(path.Root("jwt_issuer_format"), src.JWTIssuerFormat),
-		LogLevel:                            src.LogLevel.ValueStringPointer(),
-		LogoUrl:                             src.LogoURL.ValueStringPointer(),
+		LogLevel:                            c.NullableString(src.LogLevel),
+		LogoUrl:                             c.NullableString(src.LogoURL),
 		McpAllowedAsMetadataDomains:         c.StringSliceFromSet(path.Root("mcp_allowed_as_metadata_domains"), src.MCPAllowedAsMetadataDomains),
 		McpAllowedClientIdDomains:           c.StringSliceFromSet(path.Root("mcp_allowed_client_id_domains"), src.MCPAllowedClientIDDomains),
-		MetricsAddress:                      src.MetricsAddress.ValueStringPointer(),
+		MetricsAddress:                      c.NullableString(src.MetricsAddress),
 		MetricsBasicAuth:                    nil, // not supported
 		MetricsCertificate:                  nil, // not supported
 		MetricsClientCa:                     nil, // not supported
@@ -585,40 +585,40 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *pomerium.Settings {
 		OtelAttributeValueLengthLimit:       c.NullableInt32(src.OtelAttributeValueLengthLimit),
 		OtelBspMaxExportBatchSize:           c.NullableInt32(src.OtelBspMaxExportBatchSize),
 		OtelBspScheduleDelay:                c.Duration(path.Root("otel_bsp_schedule_delay"), src.OtelBspScheduleDelay),
-		OtelExporterOtlpEndpoint:            src.OtelExporterOtlpEndpoint.ValueStringPointer(),
+		OtelExporterOtlpEndpoint:            c.NullableString(src.OtelExporterOtlpEndpoint),
 		OtelExporterOtlpHeaders:             c.StringSliceFromSet(path.Root("otel_exporter_otlp_headers"), src.OtelExporterOtlpHeaders),
-		OtelExporterOtlpProtocol:            src.OtelExporterOtlpProtocol.ValueStringPointer(),
+		OtelExporterOtlpProtocol:            c.NullableString(src.OtelExporterOtlpProtocol),
 		OtelExporterOtlpTimeout:             c.Duration(path.Root("otel_exporter_otlp_timeout"), src.OtelExporterOtlpTimeout),
-		OtelExporterOtlpTracesEndpoint:      src.OtelExporterOtlpTracesEndpoint.ValueStringPointer(),
+		OtelExporterOtlpTracesEndpoint:      c.NullableString(src.OtelExporterOtlpTracesEndpoint),
 		OtelExporterOtlpTracesHeaders:       c.StringSliceFromSet(path.Root("otel_exporter_otlp_traces_headers"), src.OtelExporterOtlpTracesHeaders),
-		OtelExporterOtlpTracesProtocol:      src.OtelExporterOtlpTracesProtocol.ValueStringPointer(),
+		OtelExporterOtlpTracesProtocol:      c.NullableString(src.OtelExporterOtlpTracesProtocol),
 		OtelExporterOtlpTracesTimeout:       c.Duration(path.Root("otel_exporter_otlp_traces_timeout"), src.OtelExporterOtlpTracesTimeout),
-		OtelLogLevel:                        src.OtelLogLevel.ValueStringPointer(),
+		OtelLogLevel:                        c.NullableString(src.OtelLogLevel),
 		OtelResourceAttributes:              c.StringSliceFromSet(path.Root("otel_resource_attributes"), src.OtelResourceAttributes),
-		OtelTracesExporter:                  src.OtelTracesExporter.ValueStringPointer(),
-		OtelTracesSamplerArg:                src.OtelTracesSamplerArg.ValueFloat64Pointer(),
+		OtelTracesExporter:                  c.NullableString(src.OtelTracesExporter),
+		OtelTracesSamplerArg:                c.NullableFloat64(src.OtelTracesSamplerArg),
 		OverrideCertificateName:             nil, // not supported
-		PassIdentityHeaders:                 src.PassIdentityHeaders.ValueBoolPointer(),
-		PrimaryColor:                        src.PrimaryColor.ValueStringPointer(),
+		PassIdentityHeaders:                 c.NullableBool(src.PassIdentityHeaders),
+		PrimaryColor:                        c.NullableString(src.PrimaryColor),
 		ProgrammaticRedirectDomainWhitelist: nil, // not supported
-		ProxyLogLevel:                       src.ProxyLogLevel.ValueStringPointer(),
+		ProxyLogLevel:                       c.NullableString(src.ProxyLogLevel),
 		RequestParams:                       c.StringMap(path.Root("request_params"), src.RequestParams),
 		RuntimeFlags:                        nil, // not supported
 		Scopes:                              c.StringSliceFromSet(path.Root("scopes"), src.Scopes),
-		SecondaryColor:                      src.SecondaryColor.ValueStringPointer(),
+		SecondaryColor:                      c.NullableString(src.SecondaryColor),
 		Services:                            nil, // not supported
 		SessionRecordingEnabled:             c.NullableBool(src.SessionRecordingEnabled),
 		SetResponseHeaders:                  c.StringMap(path.Root("set_response_headers"), src.SetResponseHeaders),
 		SharedSecret:                        nil, // not supported
 		SigningKey:                          nil, // not supported
 		SignoutRedirectUrl:                  nil, // not supported
-		SkipXffAppend:                       src.SkipXFFAppend.ValueBoolPointer(),
-		SshAddress:                          src.SSHAddress.ValueStringPointer(),
+		SkipXffAppend:                       c.NullableBool(src.SkipXFFAppend),
+		SshAddress:                          c.NullableString(src.SSHAddress),
 		SshHostKeyFiles:                     c.SettingsStringList(path.Root("ssh_host_key_files"), src.SSHHostKeyFiles),
 		SshHostKeyPairIds:                   nil, // not supported
 		SshHostKeys:                         c.SettingsStringList(path.Root("ssh_host_keys"), src.SSHHostKeys),
-		SshUserCaKey:                        src.SSHUserCAKey.ValueStringPointer(),
-		SshUserCaKeyFile:                    src.SSHUserCAKeyFile.ValueStringPointer(),
+		SshUserCaKey:                        c.NullableString(src.SSHUserCAKey),
+		SshUserCaKeyFile:                    c.NullableString(src.SSHUserCAKeyFile),
 		SshUserCaKeyPairId:                  nil, // not supported
 		TimeoutIdle:                         c.Duration(path.Root("timeout_idle"), src.TimeoutIdle),
 		TimeoutRead:                         c.Duration(path.Root("timeout_read"), src.TimeoutRead),

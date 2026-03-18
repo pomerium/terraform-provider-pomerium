@@ -53,9 +53,9 @@ func (r *SettingsResource) Create(ctx context.Context, req resource.CreateReques
 				return
 			}
 
-			updateReq := connect.NewRequest(&pomerium.UpdateSettingsRequest{
+			updateReq := newConnectRequest(&pomerium.UpdateSettingsRequest{
 				Settings: apiSettings,
-			})
+			}, apiSettings)
 			updateRes, err := client.UpdateSettings(ctx, updateReq)
 			if err != nil {
 				resp.Diagnostics.AddError("Error updating settings", err.Error())
@@ -148,9 +148,10 @@ func (r *SettingsResource) Update(ctx context.Context, req resource.UpdateReques
 				return
 			}
 
-			updateReq := connect.NewRequest(&pomerium.UpdateSettingsRequest{
+			updateReq := newConnectRequest(&pomerium.UpdateSettingsRequest{
 				Settings: apiSettings,
-			})
+			}, apiSettings)
+			newConnectRequest(updateReq, apiSettings)
 			updateRes, err := client.UpdateSettings(ctx, updateReq)
 			if err != nil {
 				resp.Diagnostics.AddError("Error updating settings", err.Error())
@@ -183,12 +184,24 @@ func (r *SettingsResource) Update(ctx context.Context, req resource.UpdateReques
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *SettingsResource) Delete(ctx context.Context, _ resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *SettingsResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state SettingsModel
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
 	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
-			updateReq := connect.NewRequest(&pomerium.UpdateSettingsRequest{
+			apiSettings := NewModelToAPIConverter(&resp.Diagnostics).Settings(state)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			updateReq := newConnectRequest(&pomerium.UpdateSettingsRequest{
 				Settings: new(pomerium.Settings),
-			})
+			}, apiSettings)
 			_, err := client.UpdateSettings(ctx, updateReq)
 			if err != nil {
 				resp.Diagnostics.AddError("Error updating settings", err.Error())

@@ -123,9 +123,9 @@ func (r *PolicyResource) Create(ctx context.Context, req resource.CreateRequest,
 				return
 			}
 
-			createReq := connect.NewRequest(&pomerium.CreatePolicyRequest{
+			createReq := newConnectRequest(&pomerium.CreatePolicyRequest{
 				Policy: apiPolicy,
-			})
+			}, apiPolicy)
 			createRes, err := client.CreatePolicy(ctx, createReq)
 			if err != nil {
 				resp.Diagnostics.AddError("Error creating policy", err.Error())
@@ -225,9 +225,9 @@ func (r *PolicyResource) Update(ctx context.Context, req resource.UpdateRequest,
 				return
 			}
 
-			updateReq := connect.NewRequest(&pomerium.UpdatePolicyRequest{
+			updateReq := newConnectRequest(&pomerium.UpdatePolicyRequest{
 				Policy: apiPolicy,
-			})
+			}, apiPolicy)
 			updateRes, err := client.UpdatePolicy(ctx, updateReq)
 			if err != nil {
 				resp.Diagnostics.AddError("Error updating policy", err.Error())

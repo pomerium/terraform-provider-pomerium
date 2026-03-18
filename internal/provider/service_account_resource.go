@@ -113,9 +113,9 @@ func (r *ServiceAccountResource) Create(ctx context.Context, req resource.Create
 				return
 			}
 
-			createReq := connect.NewRequest(&pomerium.CreateServiceAccountRequest{
+			createReq := newConnectRequest(&pomerium.CreateServiceAccountRequest{
 				ServiceAccount: apiServiceAccount,
-			})
+			}, apiServiceAccount)
 			createRes, err := client.CreateServiceAccount(ctx, createReq)
 			if err != nil {
 				resp.Diagnostics.AddError("Error creating service account", err.Error())
@@ -221,9 +221,9 @@ func (r *ServiceAccountResource) Update(ctx context.Context, req resource.Update
 				return
 			}
 
-			updateReq := connect.NewRequest(&pomerium.UpdateServiceAccountRequest{
+			updateReq := newConnectRequest(&pomerium.UpdateServiceAccountRequest{
 				ServiceAccount: apiServiceAccount,
-			})
+			}, apiServiceAccount)
 			updateRes, err := client.UpdateServiceAccount(ctx, updateReq)
 			if err != nil {
 				resp.Diagnostics.AddError("Error updating service account", err.Error())
