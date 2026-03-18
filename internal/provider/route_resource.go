@@ -82,7 +82,9 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			},
 			"enable_google_cloud_serverless_authentication": schema.BoolAttribute{
 				Description: "Enable Google Cloud serverless authentication.",
+				Computed:    true,
 				Optional:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"from": schema.StringAttribute{
 				Description: "The external URL for a proxied request. Must contain a scheme and Hostname, must not contain a path.",
@@ -241,8 +243,11 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"idle_timeout": schema.StringAttribute{
 				Description: "Sets the time to terminate the upstream connection if there are no active streams. Defaults to 5 minutes.",
 				Optional:    true,
-				CustomType:  timetypes.GoDurationType{},
 				Computed:    true,
+				CustomType:  timetypes.GoDurationType{},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"idp_access_token_allowed_audiences": schema.SetAttribute{
 				Description: "IDP access token allowed audiences.",
@@ -297,6 +302,9 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Description: "ID of the namespace the route belongs to.",
 				Optional:    true,
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"pass_identity_headers": schema.BoolAttribute{
 				Description: "If applied, passes X-Pomerium-Jwt-Assertion header and JWT Claims Headers to the upstream application.",
@@ -392,17 +400,24 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Description: "If applied, shows error details, including policy explanation and remediation for 403 Forbidden responses.",
 				Optional:    true,
 				Computed:    true,
+				Default:     booldefault.StaticBool(false),
 			},
 			"stat_name": schema.StringAttribute{
 				Description: "Name of the stat.",
 				Optional:    true,
 				Computed:    true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"timeout": schema.StringAttribute{
 				Description: "Sets the per-route timeout value. Cannot exceed global timeout values. Defaults to 30 seconds.",
 				Optional:    true,
-				CustomType:  timetypes.GoDurationType{},
 				Computed:    true,
+				CustomType:  timetypes.GoDurationType{},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"tls_client_key_pair_id": schema.StringAttribute{
 				Description: "Client key pair ID for TLS client authentication.",

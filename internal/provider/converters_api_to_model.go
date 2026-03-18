@@ -189,7 +189,7 @@ func (c *APIToModelConverter) Route(src *pomerium.Route) RouteModel {
 		CircuitBreakerThresholds: c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
 		DependsOnHosts:           FromStringSliceToSet(src.DependsOn),
 		Description:              types.StringPointerValue(src.Description),
-		EnableGoogleCloudServerlessAuthentication: types.BoolPointerValue(zeroToNil(src.EnableGoogleCloudServerlessAuthentication)),
+		EnableGoogleCloudServerlessAuthentication: types.BoolValue(src.EnableGoogleCloudServerlessAuthentication),
 		From:                              types.StringValue(src.From),
 		HealthChecks:                      toSetOfObjects(src.HealthChecks, HealthCheckObjectType(), c.HealthCheck),
 		HealthyPanicThreshold:             types.Int32PointerValue(src.HealthyPanicThreshold),
