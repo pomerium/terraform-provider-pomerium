@@ -286,6 +286,7 @@ func (c *APIToModelConverter) Settings(src *pomerium.Settings) SettingsModel {
 		AuthenticateServiceURL:        types.StringPointerValue(src.AuthenticateServiceUrl),
 		AuthorizeLogFields:            c.SetFromSettingsStringList(src.AuthorizeLogFields),
 		AuthorizeServiceURL:           c.StringFromSingleElementSlice(path.Root("authorize_service_url"), src.AuthorizeServiceUrls),
+		AutoApplyChangesets:           types.BoolPointerValue(src.AutoApplyChangesets),
 		Autocert:                      types.BoolPointerValue(src.Autocert),
 		AutocertDir:                   types.StringPointerValue(src.AutocertDir),
 		AutocertMustStaple:            types.BoolPointerValue(src.AutocertMustStaple),

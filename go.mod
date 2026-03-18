@@ -17,7 +17,7 @@ require (
 	github.com/iancoleman/strcase v0.3.0
 	github.com/pomerium/enterprise-client-go v0.32.1-0.20260313165842-cc0cad6d7496
 	github.com/pomerium/pomerium v0.32.1-0.20260317224044-0b4631bf0633
-	github.com/pomerium/sdk-go v0.0.10-0.20260311203000-91586db3e133
+	github.com/pomerium/sdk-go v0.0.10-0.20260318190911-e441fc05821b
 	github.com/rs/zerolog v1.34.0
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.40.0

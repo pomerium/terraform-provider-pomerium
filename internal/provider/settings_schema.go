@@ -68,6 +68,14 @@ var SettingsResourceSchema = schema.Schema{
 			Optional:    true,
 			Description: "Authorize service URL",
 		},
+		"auto_apply_changesets": schema.BoolAttribute{
+			Optional:    true,
+			Computed:    true,
+			Description: "Controls whether or not changesets are automatically applied or require an administrator to apply them. This setting is currently only used in Pomerium Zero.",
+			PlanModifiers: []planmodifier.Bool{
+				boolplanmodifier.UseStateForUnknown(),
+			},
+		},
 		"autocert": schema.BoolAttribute{
 			Optional:    true,
 			Computed:    true,
