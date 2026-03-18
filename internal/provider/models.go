@@ -175,6 +175,7 @@ type SettingsModel struct {
 	DarkmodePrimaryColor                              types.String         `tfsdk:"darkmode_primary_color"`
 	DarkmodeSecondaryColor                            types.String         `tfsdk:"darkmode_secondary_color"`
 	DatabrokerServiceURL                              types.String         `tfsdk:"databroker_service_url"`
+	DatabrokerStorageConnectionString                 types.String         `tfsdk:"databroker_storage_connection_string"`
 	DefaultUpstreamTimeout                            timetypes.GoDuration `tfsdk:"default_upstream_timeout"`
 	DNSFailureRefreshRate                             timetypes.GoDuration `tfsdk:"dns_failure_refresh_rate"`
 	DNSLookupFamily                                   types.String         `tfsdk:"dns_lookup_family"`
