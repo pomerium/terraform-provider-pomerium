@@ -149,6 +149,7 @@ type SettingsModel struct {
 	AuthenticateServiceURL                            types.String         `tfsdk:"authenticate_service_url"`
 	AuthorizeLogFields                                types.Set            `tfsdk:"authorize_log_fields"`
 	AuthorizeServiceURL                               types.String         `tfsdk:"authorize_service_url"`
+	AutoApplyChangesets                               types.Bool           `tfsdk:"auto_apply_changesets"`
 	Autocert                                          types.Bool           `tfsdk:"autocert"`
 	AutocertDir                                       types.String         `tfsdk:"autocert_dir"`
 	AutocertMustStaple                                types.Bool           `tfsdk:"autocert_must_staple"`

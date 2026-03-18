@@ -25,6 +25,7 @@ The settings are global object.
 - `authenticate_service_url` (String) The externally accessible URL for the authenticate service.
 - `authorize_log_fields` (Set of String) Displays HTTP request logs from the Pomerium Authorize service.
 - `authorize_service_url` (String) Authorize service URL
+- `auto_apply_changesets` (Boolean) Controls whether or not changesets are automatically applied or require an administrator to apply them. This setting is currently only used in Pomerium Zero.
 - `autocert` (Boolean) Turning on autocert allows Pomerium to automatically retrieve, manage, and renew public facing TLS certificates from Lets Encrypt.
 - `autocert_dir` (String) Autocert directory is the path which Autocert will store x509 certificate data.
 - `autocert_must_staple` (Boolean) Controls whether the must-staple flag is enabled when requesting certificates.
