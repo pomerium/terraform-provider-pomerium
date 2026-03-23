@@ -391,6 +391,8 @@ func (c *EnterpriseToModelConverter) Settings(src *enterprise.Settings) Settings
 		JWTIssuerFormat:                 c.IssuerFormat(src.JwtIssuerFormat),
 		LogLevel:                        types.StringPointerValue(src.LogLevel),
 		LogoURL:                         types.StringPointerValue(src.LogoUrl),
+		MCPAllowedAsMetadataDomains:     FromStringList(src.McpAllowedAsMetadataDomains),
+		MCPAllowedClientIDDomains:       FromStringList(src.McpAllowedClientIdDomains),
 		MetricsAddress:                  types.StringPointerValue(src.MetricsAddress),
 		OtelAttributeValueLengthLimit:   Int64PointerValue(src.OtelAttributeValueLengthLimit),
 		OtelBspMaxExportBatchSize:       Int64PointerValue(src.OtelBspMaxExportBatchSize),
