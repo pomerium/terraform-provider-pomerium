@@ -178,6 +178,95 @@ func TestModelToEnterpriseConverter(t *testing.T) {
 		}
 	})
 
+	t.Run("Route", func(t *testing.T) {
+		t.Parallel()
+		t.Run("MCP", func(t *testing.T) {
+			t.Parallel()
+			t.Run("Client", func(t *testing.T) {
+				t.Parallel()
+				expected := &pb.Route{
+					OriginatorId: provider.OriginatorID,
+					Mcp: &pb.MCP{
+						Mode: &pb.MCP_Client{
+							Client: &pb.MCPClient{},
+						},
+					},
+				}
+				var diagnostics diag.Diagnostics
+				actual := provider.NewModelToEnterpriseConverter(&diagnostics).Route(provider.RouteModel{
+					MCP: types.ObjectValueMust(provider.RouteMCPObjectType().AttrTypes, map[string]attr.Value{
+						"client": types.ObjectValueMust(provider.RouteMCPClientObjectType().AttrTypes, map[string]attr.Value{}),
+						"server": types.ObjectNull(provider.RouteMCPServerObjectType().AttrTypes),
+					}),
+				})
+				if !assert.Equal(t, 0, diagnostics.ErrorsCount()) {
+					t.Log(diagnostics.Errors())
+				}
+				if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
+					t.Errorf("unexpected difference: %s", diff)
+				}
+			})
+			t.Run("Server", func(t *testing.T) {
+				t.Parallel()
+				expected := &pb.Route{
+					OriginatorId: provider.OriginatorID,
+					Mcp: &pb.MCP{
+						Mode: &pb.MCP_Server{
+							Server: &pb.MCPServer{
+								AuthorizationServerUrl: new("AUTHORIZATION_SERVER_URL"),
+								UpstreamOauth2: &pb.UpstreamOAuth2{
+									AuthorizationUrlParams: map[string]string{"x": "y"},
+									ClientId:               "CLIENT_ID",
+									ClientSecret:           "CLIENT_SECRET",
+									Oauth2Endpoint: &pb.OAuth2Endpoint{
+										AuthStyle: pb.OAuth2AuthStyle_OAUTH2_AUTH_STYLE_IN_HEADER.Enum(),
+										AuthUrl:   "AUTH_URL",
+										TokenUrl:  "TOKEN_URL",
+									},
+									Scopes: []string{"SCOPE1", "SCOPE2"},
+								},
+								MaxRequestBytes: new(uint32(1234)),
+								Path:            new("PATH"),
+							},
+						},
+					},
+				}
+				var diagnostics diag.Diagnostics
+				actual := provider.NewModelToEnterpriseConverter(&diagnostics).Route(provider.RouteModel{
+					MCP: types.ObjectValueMust(provider.RouteMCPObjectType().AttrTypes, map[string]attr.Value{
+						"client": types.ObjectNull(provider.RouteMCPClientObjectType().AttrTypes),
+						"server": types.ObjectValueMust(provider.RouteMCPServerObjectType().AttrTypes, map[string]attr.Value{
+							"authorization_server_url": types.StringValue("AUTHORIZATION_SERVER_URL"),
+							"max_request_bytes":        types.Int64Value(1234),
+							"path":                     types.StringValue("PATH"),
+							"upstream_oauth2": types.ObjectValueMust(provider.RouteMCPServerUpstreamOAuth2ObjectType().AttrTypes, map[string]attr.Value{
+								"authorization_url_params": types.MapValueMust(types.StringType, map[string]attr.Value{
+									"x": types.StringValue("y"),
+								}),
+								"client_id":     types.StringValue("CLIENT_ID"),
+								"client_secret": types.StringValue("CLIENT_SECRET"),
+								"oauth2_endpoint": types.ObjectValueMust(provider.RouteMCPServerUpstreamOAuth2OAuth2EndpointObjectType().AttrTypes, map[string]attr.Value{
+									"auth_style": types.StringValue("in_header"),
+									"auth_url":   types.StringValue("AUTH_URL"),
+									"token_url":  types.StringValue("TOKEN_URL"),
+								}),
+								"scopes": types.SetValueMust(types.StringType, []attr.Value{
+									types.StringValue("SCOPE1"), types.StringValue("SCOPE2"),
+								}),
+							}),
+						}),
+					}),
+				})
+				if !assert.Equal(t, 0, diagnostics.ErrorsCount()) {
+					t.Log(diagnostics.Errors())
+				}
+				if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
+					t.Errorf("unexpected difference: %s", diff)
+				}
+			})
+		})
+	})
+
 	t.Run("RouteStringList", func(t *testing.T) {
 		t.Parallel()
 

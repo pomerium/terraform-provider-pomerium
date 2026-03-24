@@ -89,6 +89,58 @@ func RewriteHeaderObjectType() types.ObjectType {
 	}
 }
 
+func RouteMCPObjectType() types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"client": RouteMCPClientObjectType(),
+			"server": RouteMCPServerObjectType(),
+		},
+	}
+}
+
+func RouteMCPClientObjectType() types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{},
+	}
+}
+
+func RouteMCPServerObjectType() types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"authorization_server_url": types.StringType,
+			"max_request_bytes":        types.Int64Type,
+			"path":                     types.StringType,
+			"upstream_oauth2":          RouteMCPServerUpstreamOAuth2ObjectType(),
+		},
+	}
+}
+
+func RouteMCPServerUpstreamOAuth2ObjectType() types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"authorization_url_params": types.MapType{
+				ElemType: types.StringType,
+			},
+			"client_id":       types.StringType,
+			"client_secret":   types.StringType,
+			"oauth2_endpoint": RouteMCPServerUpstreamOAuth2OAuth2EndpointObjectType(),
+			"scopes": types.SetType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
+func RouteMCPServerUpstreamOAuth2OAuth2EndpointObjectType() types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"auth_style": types.StringType,
+			"auth_url":   types.StringType,
+			"token_url":  types.StringType,
+		},
+	}
+}
+
 func TCPHealthCheckObjectType() types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{

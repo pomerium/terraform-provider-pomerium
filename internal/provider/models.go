@@ -105,6 +105,7 @@ type RouteModel struct {
 	KubernetesServiceAccountTokenFile         types.String         `tfsdk:"kubernetes_service_account_token_file"`
 	LoadBalancingPolicy                       types.String         `tfsdk:"load_balancing_policy"`
 	LogoURL                                   types.String         `tfsdk:"logo_url"`
+	MCP                                       types.Object         `tfsdk:"mcp"`
 	Name                                      types.String         `tfsdk:"name"`
 	NamespaceID                               types.String         `tfsdk:"namespace_id"`
 	PassIdentityHeaders                       types.Bool           `tfsdk:"pass_identity_headers"`

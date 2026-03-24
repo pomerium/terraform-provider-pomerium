@@ -3,6 +3,7 @@ package provider_test
 import (
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -51,5 +52,76 @@ func TestEnterpriseToModelConverter(t *testing.T) {
 			assert.Empty(t, diagnostics)
 			assert.Equal(t, tc.expect, actual)
 		}
+	})
+	t.Run("Route", func(t *testing.T) {
+		t.Parallel()
+		t.Run("MCP", func(t *testing.T) {
+			t.Parallel()
+			t.Run("Client", func(t *testing.T) {
+				t.Parallel()
+				var diagnostics diag.Diagnostics
+				expect := types.ObjectValueMust(provider.RouteMCPObjectType().AttrTypes, map[string]attr.Value{
+					"client": types.ObjectValueMust(provider.RouteMCPClientObjectType().AttrTypes, map[string]attr.Value{}),
+					"server": types.ObjectNull(provider.RouteMCPServerObjectType().AttrTypes),
+				})
+				actual := provider.NewEnterpriseToModelConverter(&diagnostics).RouteMCP(&pb.MCP{
+					Mode: &pb.MCP_Client{
+						Client: &pb.MCPClient{},
+					},
+				})
+				assert.Empty(t, diagnostics)
+				assert.Empty(t, cmp.Diff(expect, actual))
+			})
+			t.Run("Server", func(t *testing.T) {
+				t.Parallel()
+				var diagnostics diag.Diagnostics
+				expect := types.ObjectValueMust(provider.RouteMCPObjectType().AttrTypes, map[string]attr.Value{
+					"client": types.ObjectNull(provider.RouteMCPClientObjectType().AttrTypes),
+					"server": types.ObjectValueMust(provider.RouteMCPServerObjectType().AttrTypes, map[string]attr.Value{
+						"authorization_server_url": types.StringValue("AUTHORIZATION_SERVER_URL"),
+						"max_request_bytes":        types.Int64Value(1234),
+						"path":                     types.StringValue("PATH"),
+						"upstream_oauth2": types.ObjectValueMust(provider.RouteMCPServerUpstreamOAuth2ObjectType().AttrTypes, map[string]attr.Value{
+							"authorization_url_params": types.MapValueMust(types.StringType, map[string]attr.Value{
+								"x": types.StringValue("y"),
+							}),
+							"client_id":     types.StringValue("CLIENT_ID"),
+							"client_secret": types.StringValue("CLIENT_SECRET"),
+							"oauth2_endpoint": types.ObjectValueMust(provider.RouteMCPServerUpstreamOAuth2OAuth2EndpointObjectType().AttrTypes, map[string]attr.Value{
+								"auth_style": types.StringValue("in_header"),
+								"auth_url":   types.StringValue("AUTH_URL"),
+								"token_url":  types.StringValue("TOKEN_URL"),
+							}),
+							"scopes": types.SetValueMust(types.StringType, []attr.Value{
+								types.StringValue("SCOPE1"),
+								types.StringValue("SCOPE2"),
+							}),
+						}),
+					}),
+				})
+				actual := provider.NewEnterpriseToModelConverter(&diagnostics).RouteMCP(&pb.MCP{
+					Mode: &pb.MCP_Server{
+						Server: &pb.MCPServer{
+							AuthorizationServerUrl: new("AUTHORIZATION_SERVER_URL"),
+							MaxRequestBytes:        new(uint32(1234)),
+							Path:                   new("PATH"),
+							UpstreamOauth2: &pb.UpstreamOAuth2{
+								AuthorizationUrlParams: map[string]string{"x": "y"},
+								ClientId:               "CLIENT_ID",
+								ClientSecret:           "CLIENT_SECRET",
+								Oauth2Endpoint: &pb.OAuth2Endpoint{
+									AuthStyle: pb.OAuth2AuthStyle_OAUTH2_AUTH_STYLE_IN_HEADER.Enum(),
+									AuthUrl:   "AUTH_URL",
+									TokenUrl:  "TOKEN_URL",
+								},
+								Scopes: []string{"SCOPE1", "SCOPE2"},
+							},
+						},
+					},
+				})
+				assert.Empty(t, diagnostics)
+				assert.Empty(t, cmp.Diff(expect, actual))
+			})
+		})
 	})
 }

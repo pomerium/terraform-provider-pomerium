@@ -386,6 +386,7 @@ func (c *ModelToAPIConverter) Route(src RouteModel) *pomerium.Route {
 		KubernetesServiceAccountTokenFile: src.KubernetesServiceAccountTokenFile.ValueString(),
 		LoadBalancingPolicy:               c.LoadBalancingPolicy(path.Root("load_balancing_policy"), src.LoadBalancingPolicy),
 		LogoUrl:                           src.LogoURL.ValueStringPointer(),
+		Mcp:                               c.RouteMCP(path.Root("mcp"), src.MCP),
 		Name:                              c.NullableString(src.Name),
 		NamespaceId:                       c.NullableString(src.NamespaceID),
 		OriginatorId:                      new(OriginatorID),
@@ -414,6 +415,70 @@ func (c *ModelToAPIConverter) Route(src RouteModel) *pomerium.Route {
 		TlsUpstreamServerName:             src.TLSUpstreamServerName.ValueString(),
 		To:                                c.StringSliceFromSet(path.Root("to"), src.To),
 		UpstreamTunnel:                    c.UpstreamTunnel(path.Root("upstream_tunnel"), src.UpstreamTunnel),
+	}
+}
+
+func (c *ModelToAPIConverter) RouteMCP(p path.Path, src types.Object) *pomerium.MCP {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	attrs := src.Attributes()
+	dst := &pomerium.MCP{Mode: nil}
+	if v := getObjectAttribute(attrs, "client"); !v.IsNull() && !v.IsUnknown() {
+		dst.Mode = &pomerium.MCP_Client{
+			Client: c.RouteMCPClient(p.AtName("client"), v),
+		}
+	} else if v := getObjectAttribute(attrs, "server"); !v.IsNull() && !v.IsUnknown() {
+		dst.Mode = &pomerium.MCP_Server{
+			Server: c.RouteMCPServer(p.AtName("server"), v),
+		}
+	}
+	return dst
+}
+
+func (c *ModelToAPIConverter) RouteMCPClient(_ path.Path, src types.Object) *pomerium.MCPClient {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	return &pomerium.MCPClient{}
+}
+
+func (c *ModelToAPIConverter) RouteMCPServer(p path.Path, src types.Object) *pomerium.MCPServer {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	attrs := src.Attributes()
+	return &pomerium.MCPServer{
+		AuthorizationServerUrl: c.NullableString(getStringAttribute(attrs, "authorization_server_url")),
+		MaxRequestBytes:        c.NullableUint32(getInt64Attribute(attrs, "max_request_bytes")),
+		Path:                   c.NullableString(getStringAttribute(attrs, "path")),
+		UpstreamOauth2:         c.RouteMCPServerUpstreamOAuth2(p.AtName("upstream_oauth2"), getObjectAttribute(attrs, "upstream_oauth2")),
+	}
+}
+
+func (c *ModelToAPIConverter) RouteMCPServerUpstreamOAuth2(p path.Path, src types.Object) *pomerium.UpstreamOAuth2 {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	attrs := src.Attributes()
+	return &pomerium.UpstreamOAuth2{
+		AuthorizationUrlParams: c.StringMap(p.AtName("authorization_url_params"), getMapAttribute(attrs, "authorization_url_params")),
+		ClientId:               getStringAttribute(attrs, "client_id").ValueString(),
+		ClientSecret:           getStringAttribute(attrs, "client_secret").ValueString(),
+		Oauth2Endpoint:         c.RouteMCPServerUpstreamOAuth2OAuth2Endpoint(p.AtName("oauth2_endpoint"), getObjectAttribute(attrs, "oauth2_endpoint")),
+		Scopes:                 c.StringSliceFromSet(p.AtName("scopes"), getSetAttribute(attrs, "scopes")),
+	}
+}
+
+func (c *ModelToAPIConverter) RouteMCPServerUpstreamOAuth2OAuth2Endpoint(p path.Path, src types.Object) *pomerium.OAuth2Endpoint {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	attrs := src.Attributes()
+	return &pomerium.OAuth2Endpoint{
+		AuthStyle: c.OAuth2AuthStyle(p.AtName("auth_style"), getStringAttribute(attrs, "auth_style")),
+		AuthUrl:   getStringAttribute(attrs, "auth_url").ValueString(),
+		TokenUrl:  getStringAttribute(attrs, "token_url").ValueString(),
 	}
 }
 

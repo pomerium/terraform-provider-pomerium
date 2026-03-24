@@ -294,6 +294,7 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Description: "URL to the logo image.",
 				Optional:    true,
 			},
+			"mcp": RouteMCPSchema(),
 			"name": schema.StringAttribute{
 				Description: "Name of the route.",
 				Required:    true,
