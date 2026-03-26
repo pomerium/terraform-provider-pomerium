@@ -202,6 +202,11 @@ var SettingsResourceSchema = schema.Schema{
 			Optional:    true,
 			Description: "Databroker service URL",
 		},
+		"databroker_storage_connection_string": schema.StringAttribute{
+			Optional:    true,
+			Sensitive:   true,
+			Description: "Databroker storage connection string",
+		},
 		"default_upstream_timeout": schema.StringAttribute{
 			Optional:    true,
 			Description: "Default upstream timeout",
