@@ -492,6 +492,7 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *pomerium.Settings {
 		AuthorizeInternalServiceUrl:       nil, // not supported
 		AuthorizeLogFields:                c.SettingsStringList(path.Root("authorize_log_fields"), src.AuthorizeLogFields),
 		AuthorizeServiceUrls:              c.StringSliceFromString(src.AuthorizeServiceURL),
+		AutoApplyChangesets:               c.NullableBool(src.AutoApplyChangesets),
 		Autocert:                          c.NullableBool(src.Autocert),
 		AutocertCa:                        nil, // not supported
 		AutocertCaKeyPairId:               nil, // not supported
