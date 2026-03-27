@@ -5,6 +5,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -220,18 +221,37 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			"host_path_regex_rewrite_pattern": schema.StringAttribute{
 				Description: "Rewrites the Host header according to a regular expression matching the path.",
 				Optional:    true,
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("host_rewrite")),
+					stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("host_rewrite_header")),
+				},
 			},
 			"host_path_regex_rewrite_substitution": schema.StringAttribute{
 				Description: "Rewrites the Host header according to a regular expression matching the substitution.",
 				Optional:    true,
+				Validators: []validator.String{
+					stringvalidator.AlsoRequires(path.MatchRelative().AtParent().AtName("host_path_regex_rewrite_pattern")),
+					stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("host_rewrite")),
+					stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("host_rewrite_header")),
+				},
 			},
 			"host_rewrite": schema.StringAttribute{
 				Description: "Rewrites the Host header to a new literal value.",
 				Optional:    true,
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("host_path_regex_rewrite_pattern")),
+					stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("host_path_regex_rewrite_substitution")),
+					stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("host_rewrite_header")),
+				},
 			},
 			"host_rewrite_header": schema.StringAttribute{
 				Description: "Rewrites the Host header to match an incoming header value.",
 				Optional:    true,
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("host_path_regex_rewrite_pattern")),
+					stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("host_path_regex_rewrite_substitution")),
+					stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("host_rewrite")),
+				},
 			},
 			"id": schema.StringAttribute{
 				Computed:    true,
@@ -315,6 +335,10 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Computed:    true,
 				Optional:    true,
 				Default:     stringdefault.StaticString(""),
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("prefix")),
+					stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("regex")),
+				},
 			},
 			"policies": schema.SetAttribute{
 				ElementType: types.StringType,
@@ -326,12 +350,20 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Computed:    true,
 				Optional:    true,
 				Default:     stringdefault.StaticString(""),
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("path")),
+					stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("regex")),
+				},
 			},
 			"prefix_rewrite": schema.StringAttribute{
 				Description: "While forwarding a request, Prefix Rewrite swaps the matched prefix (or path) with the specified value.",
 				Computed:    true,
 				Optional:    true,
 				Default:     stringdefault.StaticString(""),
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("regex_rewrite_pattern")),
+					stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("regex_rewrite_substitution")),
+				},
 			},
 			"preserve_host_header": schema.BoolAttribute{
 				Description: "Passes the host header from the incoming request to the proxied host, instead of the destination hostname.",
@@ -344,22 +376,36 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Computed:    true,
 				Optional:    true,
 				Default:     stringdefault.StaticString(""),
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("path")),
+					stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("prefix")),
+				},
 			},
 			"regex_priority_order": schema.Int64Attribute{
 				Description: "Regex priority order.",
 				Optional:    true,
+				Validators: []validator.Int64{
+					int64validator.AlsoRequires(path.MatchRelative().AtParent().AtName("regex")),
+				},
 			},
 			"regex_rewrite_pattern": schema.StringAttribute{
 				Description: "Rewrites the URL path according to the regex rewrite pattern.",
 				Computed:    true,
 				Optional:    true,
 				Default:     stringdefault.StaticString(""),
+				Validators: []validator.String{
+					stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("prefix_rewrite")),
+				},
 			},
 			"regex_rewrite_substitution": schema.StringAttribute{
 				Description: "Rewrites the URL path according to the regex rewrite substitution.",
 				Computed:    true,
 				Optional:    true,
 				Default:     stringdefault.StaticString(""),
+				Validators: []validator.String{
+					stringvalidator.AlsoRequires(path.MatchRelative().AtParent().AtName("regex_rewrite_pattern")),
+					stringvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("prefix_rewrite")),
+				},
 			},
 			"remove_request_headers": schema.SetAttribute{
 				ElementType: types.StringType,

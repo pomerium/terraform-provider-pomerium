@@ -52,6 +52,7 @@ The settings are global object.
 - `darkmode_primary_color` (String) A hex code that determines the primary color for the Enterprise Console and Route Error Details pages when in Dark Mode.
 - `darkmode_secondary_color` (String) A hex code that determines the secondary color for the Enterprise Console and Route Error Details pages when in Dark Mode.
 - `databroker_service_url` (String) Databroker service URL
+- `databroker_storage_connection_string` (String, Sensitive) Databroker storage connection string
 - `default_upstream_timeout` (String) Default upstream timeout
 - `dns_failure_refresh_rate` (String) The rate at which DNS lookups are refreshed when requests are failing.
 - `dns_lookup_family` (String) DNS lookup family
