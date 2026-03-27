@@ -477,6 +477,8 @@ func (c *ModelToEnterpriseConverter) Settings(src SettingsModel) *enterprise.Set
 		JwtIssuerFormat:                 c.IssuerFormat(path.Root("jwt_issuer_format"), src.JWTIssuerFormat),
 		LogLevel:                        src.LogLevel.ValueStringPointer(),
 		LogoUrl:                         src.LogoURL.ValueStringPointer(),
+		McpAllowedAsMetadataDomains:     c.SettingsStringList(path.Root("mcp_allowed_as_metadata_domains"), src.MCPAllowedAsMetadataDomains),
+		McpAllowedClientIdDomains:       c.SettingsStringList(path.Root("mcp_allowed_client_id_domains"), src.MCPAllowedClientIDDomains),
 		MetricsAddress:                  src.MetricsAddress.ValueStringPointer(),
 		OriginatorId:                    OriginatorID,
 		OtelAttributeValueLengthLimit:   c.NullableInt32(src.OtelAttributeValueLengthLimit),
