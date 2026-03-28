@@ -208,6 +208,7 @@ func (c *APIToModelConverter) Route(src *pomerium.Route) RouteModel {
 		KubernetesServiceAccountTokenFile: types.StringValue(src.KubernetesServiceAccountTokenFile),
 		LoadBalancingPolicy:               c.LoadBalancingPolicy(src.LoadBalancingPolicy),
 		LogoURL:                           types.StringPointerValue(src.LogoUrl),
+		MCP:                               c.RouteMCP(src.Mcp),
 		Name:                              types.StringPointerValue(src.Name),
 		NamespaceID:                       types.StringPointerValue(src.NamespaceId),
 		PassIdentityHeaders:               types.BoolPointerValue(src.PassIdentityHeaders),
@@ -236,6 +237,69 @@ func (c *APIToModelConverter) Route(src *pomerium.Route) RouteModel {
 		To:                                FromStringSliceToSet(src.To),
 		UpstreamTunnel:                    c.UpstreamTunnel(src.UpstreamTunnel),
 	}
+}
+
+func (c *APIToModelConverter) RouteMCP(src *pomerium.MCP) types.Object {
+	if src == nil {
+		return types.ObjectNull(RouteMCPObjectType().AttrTypes)
+	}
+	dst, diagnostics := types.ObjectValue(RouteMCPObjectType().AttrTypes, map[string]attr.Value{
+		"client": c.RouteMCPClient(src.GetClient()),
+		"server": c.RouteMCPServer(src.GetServer()),
+	})
+	c.diagnostics.Append(diagnostics...)
+	return dst
+}
+
+func (c *APIToModelConverter) RouteMCPClient(src *pomerium.MCPClient) types.Object {
+	if src == nil {
+		return types.ObjectNull(RouteMCPClientObjectType().AttrTypes)
+	}
+	dst, diagnostics := types.ObjectValue(RouteMCPClientObjectType().AttrTypes, map[string]attr.Value{})
+	c.diagnostics.Append(diagnostics...)
+	return dst
+}
+
+func (c *APIToModelConverter) RouteMCPServer(src *pomerium.MCPServer) types.Object {
+	if src == nil {
+		return types.ObjectNull(RouteMCPServerObjectType().AttrTypes)
+	}
+	dst, diagnostics := types.ObjectValue(RouteMCPServerObjectType().AttrTypes, map[string]attr.Value{
+		"authorization_server_url": types.StringPointerValue(src.AuthorizationServerUrl),
+		"max_request_bytes":        Int64PointerValue(src.MaxRequestBytes),
+		"path":                     types.StringPointerValue(src.Path),
+		"upstream_oauth2":          c.RouteMCPServerUpstreamOAuth2(src.UpstreamOauth2),
+	})
+	c.diagnostics.Append(diagnostics...)
+	return dst
+}
+
+func (c *APIToModelConverter) RouteMCPServerUpstreamOAuth2(src *pomerium.UpstreamOAuth2) types.Object {
+	if src == nil {
+		return types.ObjectNull(RouteMCPServerUpstreamOAuth2ObjectType().AttrTypes)
+	}
+	dst, diagnostics := types.ObjectValue(RouteMCPServerUpstreamOAuth2ObjectType().AttrTypes, map[string]attr.Value{
+		"authorization_url_params": FromStringMap(src.AuthorizationUrlParams),
+		"client_id":                types.StringValue(src.ClientId),
+		"client_secret":            types.StringValue(src.ClientSecret),
+		"oauth2_endpoint":          c.RouteMCPServerUpstreamOAuth2OAuth2Endpoint(src.Oauth2Endpoint),
+		"scopes":                   FromStringSliceToSet(src.Scopes),
+	})
+	c.diagnostics.Append(diagnostics...)
+	return dst
+}
+
+func (c *APIToModelConverter) RouteMCPServerUpstreamOAuth2OAuth2Endpoint(src *pomerium.OAuth2Endpoint) types.Object {
+	if src == nil {
+		return types.ObjectNull(RouteMCPServerUpstreamOAuth2OAuth2EndpointObjectType().AttrTypes)
+	}
+	dst, diagnostics := types.ObjectValue(RouteMCPServerUpstreamOAuth2OAuth2EndpointObjectType().AttrTypes, map[string]attr.Value{
+		"auth_style": c.OAuth2AuthStyle(src.AuthStyle),
+		"auth_url":   types.StringValue(src.AuthUrl),
+		"token_url":  types.StringValue(src.TokenUrl),
+	})
+	c.diagnostics.Append(diagnostics...)
+	return dst
 }
 
 func (c *APIToModelConverter) RouteRewriteHeader(src *pomerium.RouteRewriteHeader) types.Object {

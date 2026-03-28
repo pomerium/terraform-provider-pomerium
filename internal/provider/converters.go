@@ -344,13 +344,6 @@ func (c *baseModelConverter) NullableFloat64(src types.Float64) *float64 {
 	return new(src.ValueFloat64())
 }
 
-func (c *baseModelConverter) NullableString(src types.String) *string {
-	if src.IsNull() || src.IsUnknown() {
-		return nil
-	}
-	return src.ValueStringPointer()
-}
-
 func (c *baseModelConverter) NullableInt32(src types.Int64) *int32 {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
@@ -363,6 +356,13 @@ func (c *baseModelConverter) NullableInt32(src types.Int64) *int32 {
 	return new(int32(v))
 }
 
+func (c *baseModelConverter) NullableString(src types.String) *string {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	return src.ValueStringPointer()
+}
+
 func (c *baseModelConverter) NullableUint32(src types.Int64) *uint32 {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
@@ -373,14 +373,6 @@ func (c *baseModelConverter) NullableUint32(src types.Int64) *uint32 {
 		return nil
 	}
 	return new(uint32(v))
-}
-
-func (c *baseModelConverter) WrappedUint32(src types.Int64) *wrapperspb.UInt32Value {
-	v := c.NullableUint32(src)
-	if v == nil {
-		return nil
-	}
-	return wrapperspb.UInt32(*v)
 }
 
 func (c *baseModelConverter) NullableUint64(src types.Int64) *uint64 {
@@ -441,6 +433,14 @@ func (c *baseModelConverter) Timestamp(p path.Path, src types.String) *timestamp
 	}
 
 	return timestamppb.New(tm)
+}
+
+func (c *baseModelConverter) WrappedUint32(src types.Int64) *wrapperspb.UInt32Value {
+	v := c.NullableUint32(src)
+	if v == nil {
+		return nil
+	}
+	return wrapperspb.UInt32(*v)
 }
 
 type baseProtoConverter struct {
@@ -614,6 +614,46 @@ func fromSetOfObjects[T any](srcs types.Set, elementType types.ObjectType, fn fu
 		dst[i] = fn(src.(types.Object))
 	}
 	return dst
+}
+
+func getInt64Attribute(attrs map[string]attr.Value, key string) types.Int64 {
+	v, ok := attrs[key].(types.Int64)
+	if !ok {
+		v = types.Int64Null()
+	}
+	return v
+}
+
+func getMapAttribute(attrs map[string]attr.Value, key string) types.Map {
+	v, ok := attrs[key].(types.Map)
+	if !ok {
+		v = types.MapNull(types.StringType)
+	}
+	return v
+}
+
+func getObjectAttribute(attrs map[string]attr.Value, key string) types.Object {
+	v, ok := attrs[key].(types.Object)
+	if !ok {
+		v = types.ObjectNull(map[string]attr.Type{})
+	}
+	return v
+}
+
+func getSetAttribute(attrs map[string]attr.Value, key string) types.Set {
+	v, ok := attrs[key].(types.Set)
+	if !ok {
+		v = types.SetNull(types.StringType)
+	}
+	return v
+}
+
+func getStringAttribute(attrs map[string]attr.Value, key string) types.String {
+	v, ok := attrs[key].(types.String)
+	if !ok {
+		v = types.StringNull()
+	}
+	return v
 }
 
 func toSetOfObjects[T any](srcs []T, elementType types.ObjectType, fn func(src T) types.Object) types.Set {

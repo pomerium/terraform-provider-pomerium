@@ -343,6 +343,7 @@ func (c *ModelToEnterpriseConverter) Route(src RouteModel) *enterprise.Route {
 		KubernetesServiceAccountTokenFile: src.KubernetesServiceAccountTokenFile.ValueStringPointer(),
 		LoadBalancingPolicy:               c.LoadBalancingPolicy(path.Root("load_balancing_policy"), src.LoadBalancingPolicy),
 		LogoUrl:                           src.LogoURL.ValueStringPointer(),
+		Mcp:                               c.RouteMCP(path.Root("mcp"), src.MCP),
 		Name:                              src.Name.ValueString(),
 		NamespaceId:                       src.NamespaceID.ValueString(),
 		OriginatorId:                      OriginatorID,
@@ -370,6 +371,70 @@ func (c *ModelToEnterpriseConverter) Route(src RouteModel) *enterprise.Route {
 		TlsUpstreamAllowRenegotiation:     src.TLSUpstreamAllowRenegotiation.ValueBoolPointer(),
 		TlsUpstreamServerName:             src.TLSUpstreamServerName.ValueStringPointer(),
 		To:                                c.StringSliceFromSet(path.Root("to"), src.To),
+	}
+}
+
+func (c *ModelToEnterpriseConverter) RouteMCP(p path.Path, src types.Object) *enterprise.MCP {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	attrs := src.Attributes()
+	dst := &enterprise.MCP{Mode: nil}
+	if v := getObjectAttribute(attrs, "client"); !v.IsNull() && !v.IsUnknown() {
+		dst.Mode = &enterprise.MCP_Client{
+			Client: c.RouteMCPClient(p.AtName("client"), v),
+		}
+	} else if v := getObjectAttribute(attrs, "server"); !v.IsNull() && !v.IsUnknown() {
+		dst.Mode = &enterprise.MCP_Server{
+			Server: c.RouteMCPServer(p.AtName("server"), v),
+		}
+	}
+	return dst
+}
+
+func (c *ModelToEnterpriseConverter) RouteMCPClient(_ path.Path, src types.Object) *enterprise.MCPClient {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	return &enterprise.MCPClient{}
+}
+
+func (c *ModelToEnterpriseConverter) RouteMCPServer(p path.Path, src types.Object) *enterprise.MCPServer {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	attrs := src.Attributes()
+	return &enterprise.MCPServer{
+		AuthorizationServerUrl: c.NullableString(getStringAttribute(attrs, "authorization_server_url")),
+		MaxRequestBytes:        c.NullableUint32(getInt64Attribute(attrs, "max_request_bytes")),
+		Path:                   c.NullableString(getStringAttribute(attrs, "path")),
+		UpstreamOauth2:         c.RouteMCPServerUpstreamOAuth2(p.AtName("upstream_oauth2"), getObjectAttribute(attrs, "upstream_oauth2")),
+	}
+}
+
+func (c *ModelToEnterpriseConverter) RouteMCPServerUpstreamOAuth2(p path.Path, src types.Object) *enterprise.UpstreamOAuth2 {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	attrs := src.Attributes()
+	return &enterprise.UpstreamOAuth2{
+		AuthorizationUrlParams: c.StringMap(p.AtName("authorization_url_params"), getMapAttribute(attrs, "authorization_url_params")),
+		ClientId:               getStringAttribute(attrs, "client_id").ValueString(),
+		ClientSecret:           getStringAttribute(attrs, "client_secret").ValueString(),
+		Oauth2Endpoint:         c.RouteMCPServerUpstreamOAuth2OAuth2Endpoint(p.AtName("oauth2_endpoint"), getObjectAttribute(attrs, "oauth2_endpoint")),
+		Scopes:                 c.StringSliceFromSet(p.AtName("scopes"), getSetAttribute(attrs, "scopes")),
+	}
+}
+
+func (c *ModelToEnterpriseConverter) RouteMCPServerUpstreamOAuth2OAuth2Endpoint(p path.Path, src types.Object) *enterprise.OAuth2Endpoint {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	attrs := src.Attributes()
+	return &enterprise.OAuth2Endpoint{
+		AuthStyle: c.OAuth2AuthStyle(p.AtName("auth_style"), getStringAttribute(attrs, "auth_style")),
+		AuthUrl:   getStringAttribute(attrs, "auth_url").ValueString(),
+		TokenUrl:  getStringAttribute(attrs, "token_url").ValueString(),
 	}
 }
 
