@@ -142,5 +142,11 @@ func RouteMCPSchema() schema.SingleNestedAttribute {
 				},
 			},
 		},
+		Validators: []validator.Object{
+			objectvalidator.Any(
+				objectvalidator.AlsoRequires(path.MatchRelative().AtName("client")),
+				objectvalidator.AlsoRequires(path.MatchRelative().AtName("server")),
+			),
+		},
 	}
 }
