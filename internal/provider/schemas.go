@@ -4,6 +4,9 @@ import (
 	"math"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -69,6 +72,81 @@ func Int64RangeSchema() schema.NestedAttributeObject {
 				Description: "Start of status code range.",
 				Required:    true,
 			},
+		},
+	}
+}
+
+func RouteMCPSchema() schema.SingleNestedAttribute {
+	return schema.SingleNestedAttribute{
+		Optional:    true,
+		Description: "Model Context Protocol configuration for this route.",
+		Attributes: map[string]schema.Attribute{
+			"client": schema.SingleNestedAttribute{
+				Optional:    true,
+				Description: "MCP Client configuration",
+				Attributes:  map[string]schema.Attribute{},
+				Validators: []validator.Object{
+					objectvalidator.ConflictsWith(path.MatchRelative().AtParent().AtName("server")),
+				},
+			},
+			"server": schema.SingleNestedAttribute{
+				Optional:    true,
+				Description: "MCP Server configuration",
+				Attributes: map[string]schema.Attribute{
+					"authorization_server_url": schema.StringAttribute{
+						Optional: true,
+					},
+					"max_request_bytes": schema.Int64Attribute{
+						Optional: true,
+					},
+					"path": schema.StringAttribute{
+						Optional: true,
+					},
+					"upstream_oauth2": schema.SingleNestedAttribute{
+						Optional: true,
+						Attributes: map[string]schema.Attribute{
+							"authorization_url_params": schema.MapAttribute{
+								Optional:    true,
+								ElementType: types.StringType,
+							},
+							"client_id": schema.StringAttribute{
+								Optional: true,
+							},
+							"client_secret": schema.StringAttribute{
+								Optional:  true,
+								Sensitive: true,
+							},
+							"oauth2_endpoint": schema.SingleNestedAttribute{
+								Optional: true,
+								Attributes: map[string]schema.Attribute{
+									"auth_style": schema.StringAttribute{
+										Optional: true,
+										Validators: []validator.String{
+											stringvalidator.OneOf(OAuth2AuthStyleValues...),
+										},
+									},
+									"auth_url": schema.StringAttribute{
+										Optional: true,
+									},
+									"token_url": schema.StringAttribute{
+										Optional: true,
+									},
+								},
+							},
+							"scopes": schema.SetAttribute{
+								Optional:    true,
+								ElementType: types.StringType,
+							},
+						},
+					},
+				},
+			},
+		},
+		Validators: []validator.Object{
+			objectvalidator.Any(
+				objectvalidator.AlsoRequires(path.MatchRelative().AtName("client")),
+				objectvalidator.AlsoRequires(path.MatchRelative().AtName("server")),
+			),
 		},
 	}
 }
