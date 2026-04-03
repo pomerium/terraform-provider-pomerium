@@ -5,7 +5,7 @@ go 1.26.0
 require (
 	connectrpc.com/connect v1.19.1
 	github.com/dave/jennifer v1.7.1
-	github.com/go-jose/go-jose/v3 v3.0.4
+	github.com/go-jose/go-jose/v3 v3.0.5
 	github.com/google/go-cmp v0.7.0
 	github.com/google/uuid v1.6.0
 	github.com/hashicorp/terraform-plugin-framework v1.18.0
