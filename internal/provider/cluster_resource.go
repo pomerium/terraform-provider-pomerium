@@ -38,50 +38,6 @@ func (r *ClusterResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 	resp.Schema = schema.Schema{
 		MarkdownDescription: "Cluster for Pomerium.",
 		Attributes: map[string]schema.Attribute{
-			"parent_namespace_id": schema.StringAttribute{
-				Optional:    true,
-				Computed:    true,
-				Description: "Parent namespace of the cluster.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"namespace_id": schema.StringAttribute{
-				Computed:    true,
-				Description: "Namespace ID for the cluster.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"id": schema.StringAttribute{
-				Computed:    true,
-				Description: "Unique identifier for the cluster.",
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"name": schema.StringAttribute{
-				Required:    true,
-				Description: "Name for the cluster.",
-			},
-			"databroker_service_url": schema.StringAttribute{
-				Optional:    true,
-				Description: "Databroker service url for the cluster.",
-			},
-			"shared_secret_b64": schema.StringAttribute{
-				Optional:    true,
-				Sensitive:   true,
-				Description: "Shared secret for the cluster as base64.",
-			},
-			"insecure_skip_verify": schema.BoolAttribute{
-				Optional:    true,
-				Description: "Skip verification of TLS certificates for the cluster.",
-			},
-			"override_certificate_name": schema.StringAttribute{
-				Optional:    true,
-				Description: "Override the certificate name for TLS verification for the cluster.",
-			},
 			"certificate_authority_b64": schema.StringAttribute{
 				Optional:    true,
 				Description: "Certificate authority for the cluster as base64.",
@@ -89,6 +45,10 @@ func (r *ClusterResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 			"certificate_authority_file": schema.StringAttribute{
 				Optional:    true,
 				Description: "Certificate authority file for the cluster",
+			},
+			"databroker_service_url": schema.StringAttribute{
+				Optional:    true,
+				Description: "Databroker service url for the cluster.",
 			},
 			"domain": schema.StringAttribute{
 				Optional:    true,
@@ -114,9 +74,49 @@ func (r *ClusterResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"id": schema.StringAttribute{
+				Computed:    true,
+				Description: "Unique identifier for the cluster.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"insecure_skip_verify": schema.BoolAttribute{
+				Optional:    true,
+				Description: "Skip verification of TLS certificates for the cluster.",
+			},
 			"manual_override_ip_address": schema.StringAttribute{
 				Optional:    true,
 				Description: "Manual override for the cluster ip address.",
+			},
+			"name": schema.StringAttribute{
+				Required:    true,
+				Description: "Name for the cluster.",
+			},
+			"namespace_id": schema.StringAttribute{
+				Computed:    true,
+				Description: "Namespace ID for the cluster.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"override_certificate_name": schema.StringAttribute{
+				Optional:    true,
+				Description: "Override the certificate name for TLS verification for the cluster.",
+			},
+			"parent_namespace_id": schema.StringAttribute{
+				Optional:    true,
+				Computed:    true,
+				Description: "Parent namespace of the cluster.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"shared_secret_b64": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Shared secret for the cluster as base64.",
 			},
 		},
 	}
@@ -200,9 +200,7 @@ func (r *ClusterResource) Create(ctx context.Context, req resource.CreateRequest
 				return
 			}
 
-			plan.NamespaceID = types.StringValue(addRes.Namespace.Id)
-			plan.ParentNamespaceID = types.StringValue(addRes.Namespace.ParentId)
-			plan.ID = types.StringValue(addRes.Cluster.Id)
+			plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Cluster(addRes.GetCluster(), addRes.GetNamespace())
 		},
 		func(client sdk.ZeroClient) {
 			organizationID, err := getZeroOrganizationID(ctx, client)
