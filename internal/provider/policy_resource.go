@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
@@ -123,16 +124,46 @@ func (r *PolicyResource) Create(ctx context.Context, req resource.CreateRequest,
 				return
 			}
 
-			createReq := newConnectRequest(&pomerium.CreatePolicyRequest{
-				Policy: apiPolicy,
-			}, apiPolicy)
-			createRes, err := client.CreatePolicy(ctx, createReq)
+			apiPolicy, err := createOrUpdate(
+				func() (*pomerium.Policy, error) {
+					createReq := newConnectRequest(&pomerium.CreatePolicyRequest{
+						Policy: apiPolicy,
+					}, apiPolicy)
+					createRes, err := client.CreatePolicy(ctx, createReq)
+					if err != nil {
+						return nil, err
+					}
+					return createRes.Msg.Policy, nil
+				},
+				func(filter *structpb.Struct) ([]*pomerium.Policy, error) {
+					listReq := newConnectRequest(&pomerium.ListPoliciesRequest{
+						Limit:  new(uint64(1)),
+						Filter: filter,
+					}, apiPolicy)
+					listRes, err := client.ListPolicies(ctx, listReq)
+					if err != nil {
+						return nil, err
+					}
+					return listRes.Msg.Policies, nil
+				},
+				func() (*pomerium.Policy, error) {
+					updateReq := newConnectRequest(&pomerium.UpdatePolicyRequest{
+						Policy: apiPolicy,
+					}, apiPolicy)
+					updateRes, err := client.UpdatePolicy(ctx, updateReq)
+					if err != nil {
+						return nil, err
+					}
+					return updateRes.Msg.Policy, nil
+				},
+				apiPolicy,
+			)
 			if err != nil {
 				resp.Diagnostics.AddError("Error creating policy", err.Error())
 				return
 			}
 
-			plan = NewAPIToModelConverter(&resp.Diagnostics).Policy(createRes.Msg.Policy)
+			plan = NewAPIToModelConverter(&resp.Diagnostics).Policy(apiPolicy)
 		},
 		func(client *client.Client) {
 			pbPolicy := NewModelToEnterpriseConverter(&resp.Diagnostics).Policy(plan)
