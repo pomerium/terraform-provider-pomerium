@@ -517,7 +517,7 @@ func (c *ModelToAPIConverter) ServiceAccount(src ServiceAccountModel) *pomerium.
 		ModifiedAt:   nil, // not supported
 		NamespaceId:  zeroToNil(src.NamespaceID.ValueString()),
 		OriginatorId: new(OriginatorID),
-		UserId:       c.NullableString(src.UserID),
+		UserId:       c.NullableString(src.Name),
 	}
 }
 

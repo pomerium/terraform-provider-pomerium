@@ -39,7 +39,6 @@ provider "pomerium" {
 resource "pomerium_service_account" "test" {
 	name = "%s"
 	namespace_id = "test"
-	user_id = "test"
 }
 `, apiURL, base64.StdEncoding.EncodeToString(sharedSecret), name)
 }

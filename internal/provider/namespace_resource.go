@@ -57,8 +57,12 @@ func (r *NamespaceResource) Schema(_ context.Context, _ resource.SchemaRequest, 
 				Required:    true,
 			},
 			"parent_id": schema.StringAttribute{
-				Description: "ID of the parent namespace (optional).",
 				Optional:    true,
+				Computed:    true,
+				Description: "ID of the parent namespace (optional).",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"cluster_id": schema.StringAttribute{
 				Description: "ID of the cluster (optional).",
@@ -114,8 +118,7 @@ func (r *NamespaceResource) Create(ctx context.Context, req resource.CreateReque
 				return
 			}
 
-			plan.ID = types.StringValue(setRes.Namespace.Id)
-			plan.ClusterID = types.StringPointerValue(setRes.Namespace.ClusterId)
+			plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Namespace(setRes.Namespace)
 		},
 		func(_ sdk.ZeroClient) {
 			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
@@ -216,6 +219,8 @@ func (r *NamespaceResource) Update(ctx context.Context, req resource.UpdateReque
 				resp.Diagnostics.AddError("Error updating namespace", err.Error())
 				return
 			}
+
+			plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Namespace(setReq.Namespace)
 		},
 		func(_ sdk.ZeroClient) {
 			resp.Diagnostics.AddError("unsupported server type: zero", "unsupported server type: zero")
