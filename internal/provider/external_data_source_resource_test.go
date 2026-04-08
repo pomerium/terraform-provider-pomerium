@@ -47,5 +47,9 @@ resource "pomerium_external_data_source" "test" {
 	foreign_key = "%s"
 	record_type = "pomerium.io/Test"
 }
+
+data "pomerium_external_data_source" "test" {
+	id = pomerium_external_data_source.test.id
+}
 `, apiURL, base64.StdEncoding.EncodeToString(sharedSecret), foreignKey)
 }
