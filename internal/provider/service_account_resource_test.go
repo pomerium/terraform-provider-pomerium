@@ -40,5 +40,9 @@ resource "pomerium_service_account" "test" {
 	name = "%s"
 	namespace_id = "test"
 }
+
+data "pomerium_service_account" "test" {
+	id = pomerium_service_account.test.id
+}
 `, apiURL, base64.StdEncoding.EncodeToString(sharedSecret), name)
 }

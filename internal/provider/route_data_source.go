@@ -21,68 +21,179 @@ var _ datasource.DataSource = &RouteDataSource{}
 
 func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 	return map[string]schema.Attribute{
-		"id": schema.StringAttribute{
-			Description: "Unique identifier for the route.",
-			Required:    idRequired,
-			Computed:    !idRequired,
-		},
-		"name": schema.StringAttribute{
+		"allow_spdy": schema.BoolAttribute{
 			Computed:    true,
-			Description: "Name of the route.",
+			Description: "Allow SPDY.",
+		},
+		"allow_websockets": schema.BoolAttribute{
+			Computed:    true,
+			Description: "Allow websockets.",
+		},
+		"bearer_token_format": schema.StringAttribute{
+			Description: "Bearer token format.",
+			Computed:    true,
+		},
+		"circuit_breaker_thresholds": CircuitBreakerThresholdsSchema,
+		"depends_on_hosts": schema.SetAttribute{
+			Description: "Additional login redirect hosts.",
+			Computed:    true,
+			ElementType: types.StringType,
+		},
+		"description": schema.StringAttribute{
+			Description: "Description of the route.",
+			Computed:    true,
+		},
+		"enable_google_cloud_serverless_authentication": schema.BoolAttribute{
+			Description: "Enable Google Cloud serverless authentication.",
+			Computed:    true,
 		},
 		"from": schema.StringAttribute{
 			Computed:    true,
 			Description: "From URL.",
 		},
-		"to": schema.SetAttribute{
+		"health_checks": schema.SetNestedAttribute{
+			Description: "Health checks for the route.",
 			Computed:    true,
-			ElementType: types.StringType,
-			Description: "To URLs.",
+			NestedObject: schema.NestedAttributeObject{
+				Attributes: map[string]schema.Attribute{
+					"grpc_health_check": schema.SingleNestedAttribute{
+						Description: "gRPC health check settings.",
+						Computed:    true,
+						Attributes: map[string]schema.Attribute{
+							"authority": schema.StringAttribute{
+								Description: "Authority header value.",
+								Computed:    true,
+							},
+							"service_name": schema.StringAttribute{
+								Description: "Service name to check.",
+								Computed:    true,
+							},
+						},
+					},
+					"healthy_threshold": schema.Int64Attribute{
+						Description: "Number of successes before marking healthy.",
+						Computed:    true,
+					},
+					"http_health_check": schema.SingleNestedAttribute{
+						Description: "HTTP health check settings.",
+						Computed:    true,
+						Attributes: map[string]schema.Attribute{
+							"codec_client_type": schema.StringAttribute{
+								Description: "Application protocol for health checks.",
+								Computed:    true,
+							},
+							"expected_statuses": schema.SetNestedAttribute{
+								Description: "Expected status code ranges.",
+								Computed:    true,
+								NestedObject: schema.NestedAttributeObject{
+									Attributes: map[string]schema.Attribute{
+										"end": schema.Int64Attribute{
+											Description: "End of status code range.",
+											Computed:    true,
+										},
+										"start": schema.Int64Attribute{
+											Description: "Start of status code range.",
+											Computed:    true,
+										},
+									},
+								},
+							},
+							"host": schema.StringAttribute{
+								Description: "The host header value.",
+								Computed:    true,
+							},
+							"path": schema.StringAttribute{
+								Description: "The request path.",
+								Computed:    true,
+							},
+							"retriable_statuses": schema.SetNestedAttribute{
+								Description: "Retriable status code ranges.",
+								Computed:    true,
+								NestedObject: schema.NestedAttributeObject{
+									Attributes: map[string]schema.Attribute{
+										"end": schema.Int64Attribute{
+											Description: "End of status code range.",
+											Computed:    true,
+										},
+										"start": schema.Int64Attribute{
+											Description: "Start of status code range.",
+											Computed:    true,
+										},
+									},
+								},
+							},
+						},
+					},
+					"initial_jitter": schema.StringAttribute{
+						Description: "An optional jitter amount for the first health check.",
+						Computed:    true,
+						CustomType:  timetypes.GoDurationType{},
+					},
+					"interval": schema.StringAttribute{
+						Description: "The interval between health checks.",
+						Computed:    true,
+						CustomType:  timetypes.GoDurationType{},
+					},
+					"interval_jitter": schema.StringAttribute{
+						Description: "An optional jitter amount for every interval.",
+						Computed:    true,
+						CustomType:  timetypes.GoDurationType{},
+					},
+					"interval_jitter_percent": schema.Int64Attribute{
+						Description: "An optional jitter percentage.",
+						Computed:    true,
+					},
+					"tcp_health_check": schema.SingleNestedAttribute{
+						Description: "TCP health check settings.",
+						Computed:    true,
+						Attributes: map[string]schema.Attribute{
+							"receive": schema.SetNestedAttribute{
+								Description: "Expected response payloads.",
+								Computed:    true,
+								NestedObject: schema.NestedAttributeObject{
+									Attributes: map[string]schema.Attribute{
+										"binary_b64": schema.StringAttribute{
+											Description: "Base64 encoded binary payload.",
+											Computed:    true,
+										},
+										"text": schema.StringAttribute{
+											Description: "Hex encoded payload.",
+											Computed:    true,
+										},
+									},
+								},
+							},
+							"send": schema.SingleNestedAttribute{
+								Description: "Payload to send.",
+								Computed:    true,
+								Attributes: map[string]schema.Attribute{
+									"binary_b64": schema.StringAttribute{
+										Description: "Base64 encoded binary payload.",
+										Computed:    true,
+									},
+									"text": schema.StringAttribute{
+										Description: "Hex encoded payload.",
+										Computed:    true,
+									},
+								},
+							},
+						},
+					},
+					"timeout": schema.StringAttribute{
+						Description: "The time to wait for a health check response.",
+						Computed:    true,
+						CustomType:  timetypes.GoDurationType{},
+					},
+					"unhealthy_threshold": schema.Int64Attribute{
+						Description: "Number of failures before marking unhealthy.",
+						Computed:    true,
+					},
+				},
+			},
 		},
-		"namespace_id": schema.StringAttribute{
-			Computed:    true,
-			Description: "ID of the namespace the route belongs to.",
-		},
-		"policies": schema.SetAttribute{
-			Computed:    true,
-			ElementType: types.StringType,
-			Description: "List of policy IDs associated with the route.",
-		},
-		"stat_name": schema.StringAttribute{
-			Computed:    true,
-			Description: "Name of the stat.",
-		},
-		"prefix": schema.StringAttribute{
-			Computed:    true,
-			Description: "Prefix.",
-		},
-		"path": schema.StringAttribute{
-			Computed:    true,
-			Description: "Path.",
-		},
-		"regex": schema.StringAttribute{
-			Computed:    true,
-			Description: "Regex.",
-		},
-		"prefix_rewrite": schema.StringAttribute{
-			Computed:    true,
-			Description: "Prefix rewrite.",
-		},
-		"regex_rewrite_pattern": schema.StringAttribute{
-			Computed:    true,
-			Description: "Regex rewrite pattern.",
-		},
-		"regex_rewrite_substitution": schema.StringAttribute{
-			Computed:    true,
-			Description: "Regex rewrite substitution.",
-		},
-		"host_rewrite": schema.StringAttribute{
-			Computed:    true,
-			Description: "Host rewrite.",
-		},
-		"host_rewrite_header": schema.StringAttribute{
-			Computed:    true,
-			Description: "Host rewrite header.",
+		"healthy_panic_threshold": schema.Int32Attribute{
+			Description: "If the number of healthy hosts falls below this percentage, traffic will be balanced among all hosts regardless of health, allowing some requests to fail. 0% disables this behavior.",
+			Optional:    true,
 		},
 		"host_path_regex_rewrite_pattern": schema.StringAttribute{
 			Computed:    true,
@@ -92,70 +203,28 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 			Computed:    true,
 			Description: "Host path regex rewrite substitution.",
 		},
-		"regex_priority_order": schema.Int64Attribute{
+		"host_rewrite": schema.StringAttribute{
 			Computed:    true,
-			Description: "Regex priority order.",
+			Description: "Host rewrite.",
 		},
-		"timeout": schema.StringAttribute{
+		"host_rewrite_header": schema.StringAttribute{
 			Computed:    true,
-			Description: "Timeout.",
-			CustomType:  timetypes.GoDurationType{},
+			Description: "Host rewrite header.",
+		},
+		"id": schema.StringAttribute{
+			Description: "Unique identifier for the route.",
+			Required:    idRequired,
+			Computed:    !idRequired,
 		},
 		"idle_timeout": schema.StringAttribute{
 			Computed:    true,
 			Description: "Idle timeout.",
 			CustomType:  timetypes.GoDurationType{},
 		},
-		"allow_websockets": schema.BoolAttribute{
-			Computed:    true,
-			Description: "Allow websockets.",
-		},
-		"allow_spdy": schema.BoolAttribute{
-			Computed:    true,
-			Description: "Allow SPDY.",
-		},
-		"tls_skip_verify": schema.BoolAttribute{
-			Computed:    true,
-			Description: "TLS skip verify.",
-		},
-		"tls_upstream_server_name": schema.StringAttribute{
-			Computed:    true,
-			Description: "TLS upstream server name.",
-		},
-		"tls_downstream_server_name": schema.StringAttribute{
-			Computed:    true,
-			Description: "TLS downstream server name.",
-		},
-		"tls_upstream_allow_renegotiation": schema.BoolAttribute{
-			Computed:    true,
-			Description: "TLS upstream allow renegotiation.",
-		},
-		"set_request_headers": schema.MapAttribute{
+		"idp_access_token_allowed_audiences": schema.SetAttribute{
+			Description: "IDP access token allowed audiences.",
 			Computed:    true,
 			ElementType: types.StringType,
-			Description: "Set request headers.",
-		},
-		"remove_request_headers": schema.SetAttribute{
-			Computed:    true,
-			ElementType: types.StringType,
-			Description: "Remove request headers.",
-		},
-		"set_response_headers": schema.MapAttribute{
-			Computed:    true,
-			ElementType: types.StringType,
-			Description: "Set response headers.",
-		},
-		"preserve_host_header": schema.BoolAttribute{
-			Computed:    true,
-			Description: "Preserve host header.",
-		},
-		"pass_identity_headers": schema.BoolAttribute{
-			Computed:    true,
-			Description: "Pass identity headers.",
-		},
-		"kubernetes_service_account_token": schema.StringAttribute{
-			Computed:    true,
-			Description: "Kubernetes service account token.",
 		},
 		"idp_client_id": schema.StringAttribute{
 			Computed:    true,
@@ -164,10 +233,6 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 		"idp_client_secret": schema.StringAttribute{
 			Computed:    true,
 			Description: "IDP client secret.",
-		},
-		"show_error_details": schema.BoolAttribute{
-			Computed:    true,
-			Description: "Show error details.",
 		},
 		"jwt_groups_filter": JWTGroupsFilterSchema,
 		"jwt_issuer_format": schema.StringAttribute{
@@ -178,6 +243,14 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 				stringvalidator.OneOf(IssuerFormatValues...),
 			},
 		},
+		"kubernetes_service_account_token": schema.StringAttribute{
+			Computed:    true,
+			Description: "Kubernetes service account token.",
+		},
+		"kubernetes_service_account_token_file": schema.StringAttribute{
+			Description: "Path to the Kubernetes service account token file.",
+			Computed:    true,
+		},
 		"load_balancing_policy": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,
@@ -185,6 +258,65 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 			Validators: []validator.String{
 				stringvalidator.OneOf(LoadBalancingPolicyValues...),
 			},
+		},
+		"logo_url": schema.StringAttribute{
+			Description: "URL to the logo image.",
+			Computed:    true,
+		},
+		"mcp": RouteMCPSchema(),
+		"name": schema.StringAttribute{
+			Computed:    true,
+			Description: "Name of the route.",
+		},
+		"namespace_id": schema.StringAttribute{
+			Computed:    true,
+			Description: "ID of the namespace the route belongs to.",
+		},
+		"pass_identity_headers": schema.BoolAttribute{
+			Computed:    true,
+			Description: "Pass identity headers.",
+		},
+		"path": schema.StringAttribute{
+			Computed:    true,
+			Description: "Path.",
+		},
+		"policies": schema.SetAttribute{
+			Computed:    true,
+			ElementType: types.StringType,
+			Description: "List of policy IDs associated with the route.",
+		},
+		"prefix": schema.StringAttribute{
+			Computed:    true,
+			Description: "Prefix.",
+		},
+		"prefix_rewrite": schema.StringAttribute{
+			Computed:    true,
+			Description: "Prefix rewrite.",
+		},
+		"preserve_host_header": schema.BoolAttribute{
+			Computed:    true,
+			Description: "Preserve host header.",
+		},
+		"regex": schema.StringAttribute{
+			Computed:    true,
+			Description: "Regex.",
+		},
+		"regex_priority_order": schema.Int64Attribute{
+			Computed:    true,
+			Description: "Regex priority order.",
+		},
+		"regex_rewrite_pattern": schema.StringAttribute{
+			Computed:    true,
+			Description: "Regex rewrite pattern.",
+		},
+		"regex_rewrite_substitution": schema.StringAttribute{
+			Computed:    true,
+			Description: "Regex rewrite substitution.",
+		},
+		"remove_request_headers": schema.SetAttribute{
+			Computed:    true,
+			ElementType: types.StringType,
+			Description: "Remove request headers.",
 		},
 		"rewrite_response_headers": schema.SetNestedAttribute{
 			Description: "Response header rewrite rules.",
@@ -206,188 +338,57 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 				},
 			},
 		},
-		"tls_custom_ca_key_pair_id": schema.StringAttribute{
-			Description: "Custom CA key pair ID for TLS verification.",
+		"set_request_headers": schema.MapAttribute{
 			Computed:    true,
+			ElementType: types.StringType,
+			Description: "Set request headers.",
+		},
+		"set_response_headers": schema.MapAttribute{
+			Computed:    true,
+			ElementType: types.StringType,
+			Description: "Set response headers.",
+		},
+		"show_error_details": schema.BoolAttribute{
+			Computed:    true,
+			Description: "Show error details.",
+		},
+		"stat_name": schema.StringAttribute{
+			Computed:    true,
+			Description: "Name of the stat.",
+		},
+		"timeout": schema.StringAttribute{
+			Computed:    true,
+			Description: "Timeout.",
+			CustomType:  timetypes.GoDurationType{},
 		},
 		"tls_client_key_pair_id": schema.StringAttribute{
 			Description: "Client key pair ID for TLS client authentication.",
 			Computed:    true,
 		},
-		"description": schema.StringAttribute{
-			Description: "Description of the route.",
+		"tls_custom_ca_key_pair_id": schema.StringAttribute{
+			Description: "Custom CA key pair ID for TLS verification.",
 			Computed:    true,
 		},
-		"kubernetes_service_account_token_file": schema.StringAttribute{
-			Description: "Path to the Kubernetes service account token file.",
+		"tls_downstream_server_name": schema.StringAttribute{
 			Computed:    true,
+			Description: "TLS downstream server name.",
 		},
-		"logo_url": schema.StringAttribute{
-			Description: "URL to the logo image.",
+		"tls_skip_verify": schema.BoolAttribute{
 			Computed:    true,
+			Description: "TLS skip verify.",
 		},
-		"enable_google_cloud_serverless_authentication": schema.BoolAttribute{
-			Description: "Enable Google Cloud serverless authentication.",
+		"tls_upstream_allow_renegotiation": schema.BoolAttribute{
 			Computed:    true,
+			Description: "TLS upstream allow renegotiation.",
 		},
-		"bearer_token_format": schema.StringAttribute{
-			Description: "Bearer token format.",
+		"tls_upstream_server_name": schema.StringAttribute{
 			Computed:    true,
+			Description: "TLS upstream server name.",
 		},
-		"idp_access_token_allowed_audiences": schema.SetAttribute{
-			Description: "IDP access token allowed audiences.",
-			Computed:    true,
-			ElementType: types.StringType,
-		},
-		"health_checks": schema.SetNestedAttribute{
-			Description: "Health checks for the route.",
-			Computed:    true,
-			NestedObject: schema.NestedAttributeObject{
-				Attributes: map[string]schema.Attribute{
-					"timeout": schema.StringAttribute{
-						Description: "The time to wait for a health check response.",
-						Computed:    true,
-						CustomType:  timetypes.GoDurationType{},
-					},
-					"interval": schema.StringAttribute{
-						Description: "The interval between health checks.",
-						Computed:    true,
-						CustomType:  timetypes.GoDurationType{},
-					},
-					"initial_jitter": schema.StringAttribute{
-						Description: "An optional jitter amount for the first health check.",
-						Computed:    true,
-						CustomType:  timetypes.GoDurationType{},
-					},
-					"interval_jitter": schema.StringAttribute{
-						Description: "An optional jitter amount for every interval.",
-						Computed:    true,
-						CustomType:  timetypes.GoDurationType{},
-					},
-					"interval_jitter_percent": schema.Int64Attribute{
-						Description: "An optional jitter percentage.",
-						Computed:    true,
-					},
-					"unhealthy_threshold": schema.Int64Attribute{
-						Description: "Number of failures before marking unhealthy.",
-						Computed:    true,
-					},
-					"healthy_threshold": schema.Int64Attribute{
-						Description: "Number of successes before marking healthy.",
-						Computed:    true,
-					},
-					"http_health_check": schema.SingleNestedAttribute{
-						Description: "HTTP health check settings.",
-						Computed:    true,
-						Attributes: map[string]schema.Attribute{
-							"host": schema.StringAttribute{
-								Description: "The host header value.",
-								Computed:    true,
-							},
-							"path": schema.StringAttribute{
-								Description: "The request path.",
-								Computed:    true,
-							},
-							"expected_statuses": schema.SetNestedAttribute{
-								Description: "Expected status code ranges.",
-								Computed:    true,
-								NestedObject: schema.NestedAttributeObject{
-									Attributes: map[string]schema.Attribute{
-										"start": schema.Int64Attribute{
-											Description: "Start of status code range.",
-											Computed:    true,
-										},
-										"end": schema.Int64Attribute{
-											Description: "End of status code range.",
-											Computed:    true,
-										},
-									},
-								},
-							},
-							"retriable_statuses": schema.SetNestedAttribute{
-								Description: "Retriable status code ranges.",
-								Computed:    true,
-								NestedObject: schema.NestedAttributeObject{
-									Attributes: map[string]schema.Attribute{
-										"start": schema.Int64Attribute{
-											Description: "Start of status code range.",
-											Computed:    true,
-										},
-										"end": schema.Int64Attribute{
-											Description: "End of status code range.",
-											Computed:    true,
-										},
-									},
-								},
-							},
-							"codec_client_type": schema.StringAttribute{
-								Description: "Application protocol for health checks.",
-								Computed:    true,
-							},
-						},
-					},
-					"tcp_health_check": schema.SingleNestedAttribute{
-						Description: "TCP health check settings.",
-						Computed:    true,
-						Attributes: map[string]schema.Attribute{
-							"send": schema.SingleNestedAttribute{
-								Description: "Payload to send.",
-								Computed:    true,
-								Attributes: map[string]schema.Attribute{
-									"text": schema.StringAttribute{
-										Description: "Hex encoded payload.",
-										Computed:    true,
-									},
-									"binary_b64": schema.StringAttribute{
-										Description: "Base64 encoded binary payload.",
-										Computed:    true,
-									},
-								},
-							},
-							"receive": schema.SetNestedAttribute{
-								Description: "Expected response payloads.",
-								Computed:    true,
-								NestedObject: schema.NestedAttributeObject{
-									Attributes: map[string]schema.Attribute{
-										"text": schema.StringAttribute{
-											Description: "Hex encoded payload.",
-											Computed:    true,
-										},
-										"binary_b64": schema.StringAttribute{
-											Description: "Base64 encoded binary payload.",
-											Computed:    true,
-										},
-									},
-								},
-							},
-						},
-					},
-					"grpc_health_check": schema.SingleNestedAttribute{
-						Description: "gRPC health check settings.",
-						Computed:    true,
-						Attributes: map[string]schema.Attribute{
-							"service_name": schema.StringAttribute{
-								Description: "Service name to check.",
-								Computed:    true,
-							},
-							"authority": schema.StringAttribute{
-								Description: "Authority header value.",
-								Computed:    true,
-							},
-						},
-					},
-				},
-			},
-		},
-		"depends_on_hosts": schema.SetAttribute{
-			Description: "Additional login redirect hosts.",
+		"to": schema.SetAttribute{
 			Computed:    true,
 			ElementType: types.StringType,
-		},
-		"circuit_breaker_thresholds": CircuitBreakerThresholdsSchema,
-		"healthy_panic_threshold": schema.Int32Attribute{
-			Description: "If the number of healthy hosts falls below this percentage, traffic will be balanced among all hosts regardless of health, allowing some requests to fail. 0% disables this behavior.",
-			Optional:    true,
+			Description: "To URLs.",
 		},
 		"upstream_tunnel": schema.SingleNestedAttribute{
 			Description: "Upstream tunnel settings.",

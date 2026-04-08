@@ -69,5 +69,9 @@ resource "pomerium_route" "test" {
 	}]
 	%s
 }
+
+data "pomerium_route" "test" {
+	id = pomerium_route.test.id
+}
 `, apiURL, base64.StdEncoding.EncodeToString(sharedSecret), name, extraConfig)
 }

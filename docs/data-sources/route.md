@@ -26,6 +26,7 @@ Route data source
 - `jwt_groups_filter` (Attributes) JWT Groups Filter (see [below for nested schema](#nestedatt--jwt_groups_filter))
 - `jwt_issuer_format` (String) Format for JWT issuer strings. Use 'IssuerHostOnly' for hostname without scheme or trailing slash, or 'IssuerURI' for complete URI including scheme and trailing slash.
 - `load_balancing_policy` (String) Load balancing policy.
+- `mcp` (Attributes) Model Context Protocol configuration for this route. (see [below for nested schema](#nestedatt--mcp))
 
 ### Read-Only
 
@@ -95,6 +96,52 @@ Optional:
 
 - `groups` (Set of String) Group IDs to include
 - `infer_from_ppl` (Boolean)
+
+
+<a id="nestedatt--mcp"></a>
+### Nested Schema for `mcp`
+
+Optional:
+
+- `client` (Attributes) MCP Client configuration (see [below for nested schema](#nestedatt--mcp--client))
+- `server` (Attributes) MCP Server configuration (see [below for nested schema](#nestedatt--mcp--server))
+
+<a id="nestedatt--mcp--client"></a>
+### Nested Schema for `mcp.client`
+
+
+<a id="nestedatt--mcp--server"></a>
+### Nested Schema for `mcp.server`
+
+Optional:
+
+- `authorization_server_url` (String)
+- `max_request_bytes` (Number)
+- `path` (String)
+- `upstream_oauth2` (Attributes) (see [below for nested schema](#nestedatt--mcp--server--upstream_oauth2))
+
+<a id="nestedatt--mcp--server--upstream_oauth2"></a>
+### Nested Schema for `mcp.server.upstream_oauth2`
+
+Optional:
+
+- `authorization_url_params` (Map of String)
+- `client_id` (String)
+- `client_secret` (String, Sensitive)
+- `oauth2_endpoint` (Attributes) (see [below for nested schema](#nestedatt--mcp--server--upstream_oauth2--oauth2_endpoint))
+- `scopes` (Set of String)
+
+<a id="nestedatt--mcp--server--upstream_oauth2--oauth2_endpoint"></a>
+### Nested Schema for `mcp.server.upstream_oauth2.oauth2_endpoint`
+
+Optional:
+
+- `auth_style` (String)
+- `auth_url` (String)
+- `token_url` (String)
+
+
+
 
 
 <a id="nestedatt--health_checks"></a>
