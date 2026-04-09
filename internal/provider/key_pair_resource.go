@@ -20,10 +20,10 @@ import (
 	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
-var (
-	_ resource.Resource                = &KeyPairResource{}
-	_ resource.ResourceWithImportState = &KeyPairResource{}
-)
+var _ interface {
+	resource.Resource
+	resource.ResourceWithImportState
+} = (*KeyPairResource)(nil)
 
 type KeyPairResource struct {
 	client *Client
@@ -33,7 +33,7 @@ type KeyPairResource struct {
 type KeyPairResourceModel = KeyPairModel
 
 func NewKeyPairResource() resource.Resource {
-	return &KeyPairResource{}
+	return new(KeyPairResource)
 }
 
 func (r *KeyPairResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

@@ -25,7 +25,7 @@ import (
 var namespacePermissionMD string
 
 func NewNamespacePermissionResource() resource.Resource {
-	return &NamespacePermissionResource{}
+	return new(NamespacePermissionResource)
 }
 
 type NamespacePermissionResource struct {

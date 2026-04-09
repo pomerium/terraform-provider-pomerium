@@ -27,7 +27,7 @@ type ClusterResource struct {
 
 // NewClusterResource creates a new clusters resource.
 func NewClusterResource() resource.Resource {
-	return &ClusterResource{}
+	return new(ClusterResource)
 }
 
 func (r *ClusterResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

@@ -19,14 +19,14 @@ import (
 )
 
 // Ensure provider-defined types fully satisfy framework interfaces.
-var (
-	_ resource.Resource                = &NamespaceResource{}
-	_ resource.ResourceWithImportState = &NamespaceResource{}
-)
+var _ interface {
+	resource.Resource
+	resource.ResourceWithImportState
+} = (*NamespaceResource)(nil)
 
 // NewNamespaceResource creates a new NamespaceResource.
 func NewNamespaceResource() resource.Resource {
-	return &NamespaceResource{}
+	return new(NamespaceResource)
 }
 
 // NamespaceResource defines the resource implementation.

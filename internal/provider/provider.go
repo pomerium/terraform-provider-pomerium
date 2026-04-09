@@ -17,8 +17,10 @@ import (
 )
 
 var (
-	_ provider.Provider              = &PomeriumProvider{}
-	_ provider.ProviderWithFunctions = &PomeriumProvider{}
+	_ interface {
+		provider.Provider
+		provider.ProviderWithFunctions
+	} = (*PomeriumProvider)(nil)
 
 	//go:embed help/provider.md
 	providerDescription string
@@ -91,7 +93,7 @@ func (p *PomeriumProvider) Configure(ctx context.Context, req provider.Configure
 		return
 	}
 
-	tlsConfig := &tls.Config{InsecureSkipVerify: data.TLSInsecureSkipVerify.ValueBool()} //nolint: gosec
+	tlsConfig := &tls.Config{InsecureSkipVerify: data.TLSInsecureSkipVerify.ValueBool()} //nolint
 
 	var serviceAccountToken string
 	if !data.ServiceAccountToken.IsNull() {

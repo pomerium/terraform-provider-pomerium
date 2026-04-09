@@ -15,10 +15,12 @@ import (
 	"github.com/pomerium/sdk-go"
 )
 
-var _ datasource.DataSource = &PoliciesDataSource{}
+var _ interface {
+	datasource.DataSource
+} = (*PoliciesDataSource)(nil)
 
 func NewPoliciesDataSource() datasource.DataSource {
-	return &PoliciesDataSource{}
+	return new(PoliciesDataSource)
 }
 
 type PoliciesDataSource struct {

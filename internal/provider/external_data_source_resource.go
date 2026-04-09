@@ -20,13 +20,13 @@ import (
 	"github.com/pomerium/sdk-go"
 )
 
-var (
-	_ resource.Resource                = &ExternalDataSourceResource{}
-	_ resource.ResourceWithImportState = &ExternalDataSourceResource{}
-)
+var _ interface {
+	resource.Resource
+	resource.ResourceWithImportState
+} = (*ExternalDataSourceResource)(nil)
 
 func NewExternalDataSourceResource() resource.Resource {
-	return &ExternalDataSourceResource{}
+	return new(ExternalDataSourceResource)
 }
 
 // ExternalDataSourceResource defines the resource implementation.

@@ -24,7 +24,7 @@ func GenerateBootstrapServiceAccountToken(
 	}
 
 	sig, err := jose.NewSigner(jose.SigningKey{Algorithm: jose.HS256, Key: sharedSecret},
-		(&jose.SignerOptions{}).WithType("JWT"))
+		(new(jose.SignerOptions)).WithType("JWT"))
 	if err != nil {
 		return "", status.Errorf(codes.Internal, "signing JWT: %s", err.Error())
 	}

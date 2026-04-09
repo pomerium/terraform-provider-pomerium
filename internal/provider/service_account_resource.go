@@ -20,13 +20,13 @@ import (
 	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
-var (
-	_ resource.Resource                = &ServiceAccountResource{}
-	_ resource.ResourceWithImportState = &ServiceAccountResource{}
-)
+var _ interface {
+	resource.Resource
+	resource.ResourceWithImportState
+} = (*ServiceAccountResource)(nil)
 
 func NewServiceAccountResource() resource.Resource {
-	return &ServiceAccountResource{}
+	return new(ServiceAccountResource)
 }
 
 type ServiceAccountResource struct {
@@ -131,6 +131,7 @@ func (r *ServiceAccountResource) Create(ctx context.Context, req resource.Create
 			}
 
 			addReq := &pb.AddPomeriumServiceAccountRequest{
+				ClusterId:      nil,
 				ServiceAccount: pbServiceAccount,
 			}
 			addRes, err := client.PomeriumServiceAccountService.AddPomeriumServiceAccount(ctx, addReq)
@@ -184,7 +185,8 @@ func (r *ServiceAccountResource) Read(ctx context.Context, req resource.ReadRequ
 		},
 		func(client *client.Client) {
 			getReq := &pb.GetPomeriumServiceAccountRequest{
-				Id: state.ID.ValueString(),
+				ClusterId: nil,
+				Id:        state.ID.ValueString(),
 			}
 			getRes, err := client.PomeriumServiceAccountService.GetPomeriumServiceAccount(ctx, getReq)
 			if err != nil {
@@ -238,6 +240,7 @@ func (r *ServiceAccountResource) Update(ctx context.Context, req resource.Update
 			}
 
 			setReq := &pb.SetPomeriumServiceAccountRequest{
+				ClusterId:      nil,
 				ServiceAccount: pbServiceAccount,
 			}
 			_, err := client.PomeriumServiceAccountService.SetPomeriumServiceAccount(ctx, setReq)
@@ -274,7 +277,8 @@ func (r *ServiceAccountResource) Delete(ctx context.Context, req resource.Delete
 		},
 		func(client *client.Client) {
 			deleteReq := &pb.DeletePomeriumServiceAccountRequest{
-				Id: state.ID.ValueString(),
+				ClusterId: nil,
+				Id:        state.ID.ValueString(),
 			}
 			_, err := client.PomeriumServiceAccountService.DeletePomeriumServiceAccount(ctx, deleteReq)
 			if err != nil {

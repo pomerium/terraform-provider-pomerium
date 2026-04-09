@@ -7,9 +7,10 @@ import (
 	"os"
 
 	"github.com/hashicorp/terraform-plugin-framework/providerserver"
-	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc/grpclog"
+
+	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
 )
 
 var version = "dev"
@@ -31,8 +32,9 @@ func main() {
 		// TODO: Update this string with the published name of your provider.
 		// Also update the tfplugindocs generate command to either remove the
 		// -provider-name flag or set its value to the updated provider name.
-		Address: "registry.terraform.io/pomerium/pomerium",
-		Debug:   debug,
+		Address:         "registry.terraform.io/pomerium/pomerium",
+		Debug:           debug,
+		ProtocolVersion: 6,
 	}
 
 	err := providerserver.Serve(context.Background(), provider.New(version), opts)

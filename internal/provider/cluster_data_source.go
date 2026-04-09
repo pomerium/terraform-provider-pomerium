@@ -83,7 +83,7 @@ type ClusterDataSource struct {
 
 // NewClusterDataSource creates a new cluster data source.
 func NewClusterDataSource() datasource.DataSource {
-	return &ClusterDataSource{}
+	return new(ClusterDataSource)
 }
 
 func (*ClusterDataSource) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) {

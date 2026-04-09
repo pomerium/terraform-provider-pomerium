@@ -14,10 +14,12 @@ import (
 
 var GlobalNamespaceID = "9d8dbd2c-8cce-4e66-9c1f-c490b4a07243"
 
-var _ datasource.DataSource = &NamespacesDataSource{}
+var _ interface {
+	datasource.DataSource
+} = (*NamespacesDataSource)(nil)
 
 func NewNamespacesDataSource() datasource.DataSource {
-	return &NamespacesDataSource{}
+	return new(NamespacesDataSource)
 }
 
 type NamespacesDataSource struct {

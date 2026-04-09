@@ -24,15 +24,15 @@ import (
 )
 
 // Ensure provider-defined types fully satisfy framework interfaces.
-var (
-	_ resource.Resource                = (*PolicyResource)(nil)
-	_ resource.ResourceWithConfigure   = (*PolicyResource)(nil)
-	_ resource.ResourceWithImportState = (*PolicyResource)(nil)
-)
+var _ interface {
+	resource.Resource
+	resource.ResourceWithConfigure
+	resource.ResourceWithImportState
+} = (*PolicyResource)(nil)
 
 // NewPolicyResource creates a new PolicyResource.
 func NewPolicyResource() resource.Resource {
-	return &PolicyResource{}
+	return new(PolicyResource)
 }
 
 // PolicyResource defines the resource implementation.
@@ -137,8 +137,10 @@ func (r *PolicyResource) Create(ctx context.Context, req resource.CreateRequest,
 				},
 				func(filter *structpb.Struct) ([]*pomerium.Policy, error) {
 					listReq := newConnectRequest(&pomerium.ListPoliciesRequest{
-						Limit:  new(uint64(1)),
-						Filter: filter,
+						Filter:  filter,
+						Limit:   new(uint64(1)),
+						Offset:  new(uint64(0)),
+						OrderBy: nil,
 					}, apiPolicy)
 					listRes, err := client.ListPolicies(ctx, listReq)
 					if err != nil {
