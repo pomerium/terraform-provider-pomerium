@@ -14,6 +14,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/durationpb"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/pomerium/enterprise-client-go/pb"
 	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
@@ -309,6 +310,32 @@ func TestModelToEnterpriseConverter(t *testing.T) {
 			dst := provider.NewModelToEnterpriseConverter(&diagnostics).RouteStringList(path.Empty(), tc.in)
 			assert.Empty(t, diagnostics)
 			assert.Empty(t, cmp.Diff(tc.expect, dst, protocmp.Transform()))
+		}
+	})
+
+	t.Run("ServiceAccount", func(t *testing.T) {
+		t.Parallel()
+
+		expected := &pb.PomeriumServiceAccount{
+			Description:  new("DESCRIPTION"),
+			ExpiresAt:    timestamppb.New(time.Date(2026, 1, 1, 16, 0, 0, 0, time.UTC)),
+			Id:           "ID",
+			NamespaceId:  new("NAMESPACE_ID"),
+			OriginatorId: new("terraform"),
+			UserId:       "NAME",
+		}
+		var diagnostics diag.Diagnostics
+		actual := provider.NewModelToEnterpriseConverter(&diagnostics).ServiceAccount(provider.ServiceAccountModel{
+			Description: types.StringValue("DESCRIPTION"),
+			ExpiresAt:   types.StringValue("2026-01-01T16:00:00Z"),
+			ID:          types.StringValue("ID"),
+			Name:        types.StringValue("NAME"),
+			NamespaceID: types.StringValue("NAMESPACE_ID"),
+			UserID:      types.StringValue("USER_ID"),
+		})
+		assert.Empty(t, diagnostics)
+		if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
+			t.Errorf("unexpected difference: %s", diff)
 		}
 	})
 
