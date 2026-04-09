@@ -472,7 +472,7 @@ func (c *ModelToEnterpriseConverter) ServiceAccount(src ServiceAccountModel) *en
 		IssuedAt:     nil, // not supported
 		NamespaceId:  zeroToNil(src.NamespaceID.ValueString()),
 		OriginatorId: new(OriginatorID),
-		UserId:       src.UserID.ValueString(),
+		UserId:       src.Name.ValueString(),
 	}
 }
 
