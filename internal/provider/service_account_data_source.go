@@ -13,10 +13,12 @@ import (
 	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
-var _ datasource.DataSource = &ServiceAccountDataSource{}
+var _ interface {
+	datasource.DataSource
+} = (*ServiceAccountDataSource)(nil)
 
 func NewServiceAccountDataSource() datasource.DataSource {
-	return &ServiceAccountDataSource{}
+	return new(ServiceAccountDataSource)
 }
 
 type ServiceAccountDataSource struct {
@@ -86,7 +88,8 @@ func (d *ServiceAccountDataSource) Read(ctx context.Context, req datasource.Read
 		},
 		func(client *client.Client) {
 			getReq := &pb.GetPomeriumServiceAccountRequest{
-				Id: data.ID.ValueString(),
+				ClusterId: nil,
+				Id:        data.ID.ValueString(),
 			}
 			getRes, err := client.PomeriumServiceAccountService.GetPomeriumServiceAccount(ctx, getReq)
 			if err != nil {

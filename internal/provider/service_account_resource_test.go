@@ -20,7 +20,8 @@ func TestAccServiceAccount(t *testing.T) {
 				Config: testAccServiceAccountConfig(t, apiURL, sharedSecret, "test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("pomerium_service_account.test", "id"),
-					resource.TestCheckResourceAttrSet("pomerium_service_account.test", "name"),
+					resource.TestCheckResourceAttr("pomerium_service_account.test", "name", "test"),
+					resource.TestCheckResourceAttr("pomerium_service_account.test", "user_id", "test"),
 				),
 			},
 		},

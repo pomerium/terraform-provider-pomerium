@@ -3,6 +3,7 @@ package provider
 import (
 	"context"
 	"encoding/base64"
+	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -22,6 +23,18 @@ func NewModelToEnterpriseConverter(diagnostics *diag.Diagnostics) *ModelToEnterp
 	return &ModelToEnterpriseConverter{
 		baseModelConverter: baseModelConverter{diagnostics: diagnostics},
 		diagnostics:        diagnostics,
+	}
+}
+
+func (c *ModelToEnterpriseConverter) BlobStorage(src types.Object) *enterprise.BlobStorageSettings {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	attrs := src.Attributes()
+	bucketURI, _ := attrs["bucket_uri"].(types.String)
+	return &enterprise.BlobStorageSettings{
+		BucketUri: c.NullableString(bucketURI),
 	}
 }
 
@@ -80,9 +93,12 @@ func (c *ModelToEnterpriseConverter) ExternalDataSource(src ExternalDataSourceMo
 		AllowInsecureTls: src.AllowInsecureTLS.ValueBoolPointer(),
 		ClientTlsKeyId:   src.ClientTLSKeyID.ValueStringPointer(),
 		ClusterId:        src.ClusterID.ValueStringPointer(),
+		CreatedAt:        nil, // computed
+		DeletedAt:        nil, // computed
 		ForeignKey:       src.ForeignKey.ValueString(),
 		Headers:          c.StringMap(path.Root("headers"), src.Headers),
 		Id:               src.ID.ValueString(),
+		ModifiedAt:       nil, // computed
 		OriginatorId:     OriginatorID,
 		PollingMaxDelay:  c.Duration(path.Root("polling_max_delay"), src.PollingMaxDelay),
 		PollingMinDelay:  c.Duration(path.Root("polling_min_delay"), src.PollingMinDelay),
@@ -108,13 +124,14 @@ func (c *ModelToEnterpriseConverter) HealthCheck(src types.Object) *enterprise.H
 	healthyThreshold := attrs["healthy_threshold"].(types.Int64)
 
 	dst := &enterprise.HealthCheck{
-		Timeout:               c.Duration(path.Root("timeout"), timeout),
-		Interval:              c.Duration(path.Root("interval"), interval),
+		HealthChecker:         nil, // set below
+		HealthyThreshold:      uint32(healthyThreshold.ValueInt64()),
 		InitialJitter:         c.Duration(path.Root("initial_jitter"), initialJitter),
+		Interval:              c.Duration(path.Root("interval"), interval),
 		IntervalJitter:        c.Duration(path.Root("interval_jitter"), intervalJitter),
 		IntervalJitterPercent: uint32(intervalJitterPercent.ValueInt64()),
+		Timeout:               c.Duration(path.Root("timeout"), timeout),
 		UnhealthyThreshold:    uint32(unhealthyThreshold.ValueInt64()),
-		HealthyThreshold:      uint32(healthyThreshold.ValueInt64()),
 	}
 
 	httpHc := attrs["http_health_check"].(types.Object)
@@ -123,7 +140,13 @@ func (c *ModelToEnterpriseConverter) HealthCheck(src types.Object) *enterprise.H
 
 	if !httpHc.IsNull() {
 		httpAttrs := httpHc.Attributes()
-		httpHealthCheck := &enterprise.HealthCheck_HttpHealthCheck{}
+		httpHealthCheck := &enterprise.HealthCheck_HttpHealthCheck{
+			CodecClientType:   0,   // set below
+			ExpectedStatuses:  nil, // set below
+			Host:              "",  // set below
+			Path:              "",  // set below
+			RetriableStatuses: nil, // set below
+		}
 
 		host := httpAttrs["host"].(types.String)
 		httpPath := httpAttrs["path"].(types.String)
@@ -162,7 +185,10 @@ func (c *ModelToEnterpriseConverter) HealthCheck(src types.Object) *enterprise.H
 		}
 	} else if !tcpHc.IsNull() {
 		tcpAttrs := tcpHc.Attributes()
-		tcpHealthCheck := &enterprise.HealthCheck_TcpHealthCheck{}
+		tcpHealthCheck := &enterprise.HealthCheck_TcpHealthCheck{
+			Receive: nil, // set below
+			Send:    nil, // set below
+		}
 
 		send := tcpAttrs["send"].(types.Object)
 		receive := tcpAttrs["receive"].(types.Set)
@@ -183,7 +209,10 @@ func (c *ModelToEnterpriseConverter) HealthCheck(src types.Object) *enterprise.H
 		}
 	} else if !grpcHc.IsNull() {
 		grpcAttrs := grpcHc.Attributes()
-		grpcHealthCheck := &enterprise.HealthCheck_GrpcHealthCheck{}
+		grpcHealthCheck := &enterprise.HealthCheck_GrpcHealthCheck{
+			Authority:   "", // set below
+			ServiceName: "", // set below
+		}
 
 		serviceName := grpcAttrs["service_name"].(types.String)
 		authority := grpcAttrs["authority"].(types.String)
@@ -322,55 +351,66 @@ func (c *ModelToEnterpriseConverter) Route(src RouteModel) *enterprise.Route {
 		AllowWebsockets:          src.AllowWebsockets.ValueBoolPointer(),
 		BearerTokenFormat:        c.BearerTokenFormat(path.Root("bearer_token_format"), src.BearerTokenFormat),
 		CircuitBreakerThresholds: c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
+		CreatedAt:                nil, // computed
+		DeletedAt:                nil, // computed
 		DependsOn:                c.StringSliceFromSet(path.Root("depends_on"), src.DependsOnHosts),
 		Description:              src.Description.ValueStringPointer(),
 		EnableGoogleCloudServerlessAuthentication: src.EnableGoogleCloudServerlessAuthentication.ValueBool(),
-		From:                              src.From.ValueString(),
-		HealthChecks:                      fromSetOfObjects(src.HealthChecks, HealthCheckObjectType(), c.HealthCheck),
-		HealthyPanicThreshold:             src.HealthyPanicThreshold.ValueInt32Pointer(),
-		HostPathRegexRewritePattern:       src.HostPathRegexRewritePattern.ValueStringPointer(),
-		HostPathRegexRewriteSubstitution:  src.HostPathRegexRewriteSubstitution.ValueStringPointer(),
-		HostRewrite:                       src.HostRewrite.ValueStringPointer(),
-		HostRewriteHeader:                 src.HostRewriteHeader.ValueStringPointer(),
-		Id:                                src.ID.ValueString(),
-		IdleTimeout:                       c.Duration(path.Root("idle_timeout"), src.IdleTimeout),
-		IdpAccessTokenAllowedAudiences:    c.RouteStringList(path.Root("idp_access_token_allowed_audiences"), src.IDPAccessTokenAllowedAudiences),
-		IdpClientId:                       src.IDPClientID.ValueStringPointer(),
-		IdpClientSecret:                   src.IDPClientSecret.ValueStringPointer(),
-		JwtGroupsFilter:                   c.JWTGroupsFilter(src.JWTGroupsFilter),
-		JwtIssuerFormat:                   c.IssuerFormat(path.Root("jwt_issuer_format"), src.JWTIssuerFormat),
-		KubernetesServiceAccountToken:     src.KubernetesServiceAccountToken.ValueStringPointer(),
-		KubernetesServiceAccountTokenFile: src.KubernetesServiceAccountTokenFile.ValueStringPointer(),
-		LoadBalancingPolicy:               c.LoadBalancingPolicy(path.Root("load_balancing_policy"), src.LoadBalancingPolicy),
-		LogoUrl:                           src.LogoURL.ValueStringPointer(),
-		Mcp:                               c.RouteMCP(path.Root("mcp"), src.MCP),
-		Name:                              src.Name.ValueString(),
-		NamespaceId:                       src.NamespaceID.ValueString(),
-		OriginatorId:                      OriginatorID,
-		PassIdentityHeaders:               src.PassIdentityHeaders.ValueBoolPointer(),
-		Path:                              src.Path.ValueStringPointer(),
-		PolicyIds:                         c.StringSliceFromSet(path.Root("policies"), src.Policies),
-		Prefix:                            src.Prefix.ValueStringPointer(),
-		PrefixRewrite:                     src.PrefixRewrite.ValueStringPointer(),
-		PreserveHostHeader:                src.PreserveHostHeader.ValueBoolPointer(),
-		Regex:                             src.Regex.ValueStringPointer(),
-		RegexPriorityOrder:                src.RegexPriorityOrder.ValueInt64Pointer(),
-		RegexRewritePattern:               src.RegexRewritePattern.ValueStringPointer(),
-		RegexRewriteSubstitution:          src.RegexRewriteSubstitution.ValueStringPointer(),
-		RemoveRequestHeaders:              c.StringSliceFromSet(path.Root("remove_request_headers"), src.RemoveRequestHeaders),
-		RewriteResponseHeaders:            fromSetOfObjects(src.RewriteResponseHeaders, RewriteHeaderObjectType(), c.RouteRewriteHeader),
-		SetRequestHeaders:                 c.StringMap(path.Root("set_request_headers"), src.SetRequestHeaders),
-		SetResponseHeaders:                c.StringMap(path.Root("set_response_headers"), src.SetResponseHeaders),
-		ShowErrorDetails:                  src.ShowErrorDetails.ValueBool(),
-		StatName:                          src.StatName.ValueString(),
-		Timeout:                           c.Duration(path.Root("timeout"), src.Timeout),
-		TlsClientKeyPairId:                src.TLSClientKeyPairID.ValueStringPointer(),
-		TlsCustomCaKeyPairId:              src.TLSCustomCAKeyPairID.ValueStringPointer(),
-		TlsDownstreamServerName:           src.TLSDownstreamServerName.ValueStringPointer(),
-		TlsSkipVerify:                     src.TLSSkipVerify.ValueBoolPointer(),
-		TlsUpstreamAllowRenegotiation:     src.TLSUpstreamAllowRenegotiation.ValueBoolPointer(),
-		TlsUpstreamServerName:             src.TLSUpstreamServerName.ValueStringPointer(),
-		To:                                c.StringSliceFromSet(path.Root("to"), src.To),
+		EnforcedPolicyIds:                         nil, // computed
+		EnforcedPolicyNames:                       nil, // computed
+		From:                                      src.From.ValueString(),
+		HealthChecks:                              fromSetOfObjects(src.HealthChecks, HealthCheckObjectType(), c.HealthCheck),
+		HealthyPanicThreshold:                     src.HealthyPanicThreshold.ValueInt32Pointer(),
+		HostPathRegexRewritePattern:               src.HostPathRegexRewritePattern.ValueStringPointer(),
+		HostPathRegexRewriteSubstitution:          src.HostPathRegexRewriteSubstitution.ValueStringPointer(),
+		HostRewrite:                               src.HostRewrite.ValueStringPointer(),
+		HostRewriteHeader:                         src.HostRewriteHeader.ValueStringPointer(),
+		Id:                                        src.ID.ValueString(),
+		IdleTimeout:                               c.Duration(path.Root("idle_timeout"), src.IdleTimeout),
+		IdpAccessTokenAllowedAudiences:            c.RouteStringList(path.Root("idp_access_token_allowed_audiences"), src.IDPAccessTokenAllowedAudiences),
+		IdpClientId:                               src.IDPClientID.ValueStringPointer(),
+		IdpClientSecret:                           src.IDPClientSecret.ValueStringPointer(),
+		JwtGroupsFilter:                           c.JWTGroupsFilter(src.JWTGroupsFilter),
+		JwtIssuerFormat:                           c.IssuerFormat(path.Root("jwt_issuer_format"), src.JWTIssuerFormat),
+		KubernetesServiceAccountToken:             src.KubernetesServiceAccountToken.ValueStringPointer(),
+		KubernetesServiceAccountTokenFile:         src.KubernetesServiceAccountTokenFile.ValueStringPointer(),
+		LoadBalancingPolicy:                       c.LoadBalancingPolicy(path.Root("load_balancing_policy"), src.LoadBalancingPolicy),
+		LogoUrl:                                   src.LogoURL.ValueStringPointer(),
+		Mcp:                                       c.RouteMCP(path.Root("mcp"), src.MCP),
+		ModifiedAt:                                nil, // computed
+		Name:                                      src.Name.ValueString(),
+		NamespaceId:                               src.NamespaceID.ValueString(),
+		NamespaceName:                             "", // computed
+		OriginatorId:                              OriginatorID,
+		PassIdentityHeaders:                       src.PassIdentityHeaders.ValueBoolPointer(),
+		Path:                                      src.Path.ValueStringPointer(),
+		PolicyIds:                                 c.StringSliceFromSet(path.Root("policies"), src.Policies),
+		PolicyNames:                               nil, // computed
+		Prefix:                                    src.Prefix.ValueStringPointer(),
+		PrefixRewrite:                             src.PrefixRewrite.ValueStringPointer(),
+		PreserveHostHeader:                        src.PreserveHostHeader.ValueBoolPointer(),
+		Redirect:                                  nil, // not supported
+		Regex:                                     src.Regex.ValueStringPointer(),
+		RegexPriorityOrder:                        src.RegexPriorityOrder.ValueInt64Pointer(),
+		RegexRewritePattern:                       src.RegexRewritePattern.ValueStringPointer(),
+		RegexRewriteSubstitution:                  src.RegexRewriteSubstitution.ValueStringPointer(),
+		RemoveRequestHeaders:                      c.StringSliceFromSet(path.Root("remove_request_headers"), src.RemoveRequestHeaders),
+		Response:                                  nil, // not supported
+		RewriteResponseHeaders:                    fromSetOfObjects(src.RewriteResponseHeaders, RewriteHeaderObjectType(), c.RouteRewriteHeader),
+		SetRequestHeaders:                         c.StringMap(path.Root("set_request_headers"), src.SetRequestHeaders),
+		SetResponseHeaders:                        c.StringMap(path.Root("set_response_headers"), src.SetResponseHeaders),
+		ShowErrorDetails:                          src.ShowErrorDetails.ValueBool(),
+		StatName:                                  src.StatName.ValueString(),
+		Timeout:                                   c.Duration(path.Root("timeout"), src.Timeout),
+		TlsClientKeyPairId:                        src.TLSClientKeyPairID.ValueStringPointer(),
+		TlsCustomCaKeyPairId:                      src.TLSCustomCAKeyPairID.ValueStringPointer(),
+		TlsDownstreamClientCaKeyPairId:            nil, // not supported
+		TlsDownstreamServerName:                   src.TLSDownstreamServerName.ValueStringPointer(),
+		TlsSkipVerify:                             src.TLSSkipVerify.ValueBoolPointer(),
+		TlsUpstreamAllowRenegotiation:             src.TLSUpstreamAllowRenegotiation.ValueBoolPointer(),
+		TlsUpstreamServerName:                     src.TLSUpstreamServerName.ValueStringPointer(),
+		To:                                        c.StringSliceFromSet(path.Root("to"), src.To),
+		UpstreamTunnel:                            c.UpstreamTunnel(path.Root("upstream_tunnel"), src.UpstreamTunnel),
 	}
 }
 
@@ -445,8 +485,9 @@ func (c *ModelToEnterpriseConverter) RouteRewriteHeader(src types.Object) *enter
 
 	prefixAttr := src.Attributes()["prefix"].(types.String)
 	dst := &enterprise.RouteRewriteHeader{
-		Header: src.Attributes()["header"].(types.String).ValueString(),
-		Value:  src.Attributes()["value"].(types.String).ValueString(),
+		Header:  src.Attributes()["header"].(types.String).ValueString(),
+		Matcher: nil, // set below
+		Value:   src.Attributes()["value"].(types.String).ValueString(),
 	}
 	if !prefixAttr.IsNull() && prefixAttr.ValueString() != "" {
 		dst.Matcher = &enterprise.RouteRewriteHeader_Prefix{Prefix: prefixAttr.ValueString()}
@@ -483,15 +524,18 @@ func (c *ModelToEnterpriseConverter) Settings(src SettingsModel) *enterprise.Set
 		AuthenticateServiceUrl:        src.AuthenticateServiceURL.ValueStringPointer(),
 		AuthorizeLogFields:            c.SettingsStringList(path.Root("authorize_log_fields"), src.AuthorizeLogFields),
 		AuthorizeServiceUrl:           src.AuthorizeServiceURL.ValueStringPointer(),
+		AutoApplyChangesets:           src.AutoApplyChangesets.ValueBoolPointer(),
 		Autocert:                      src.Autocert.ValueBoolPointer(),
 		AutocertDir:                   src.AutocertDir.ValueStringPointer(),
 		AutocertMustStaple:            src.AutocertMustStaple.ValueBoolPointer(),
 		AutocertUseStaging:            src.AutocertUseStaging.ValueBoolPointer(),
 		BearerTokenFormat:             c.BearerTokenFormat(path.Root("bearer_token_format"), src.BearerTokenFormat),
+		BlobStorage:                   c.BlobStorage(src.BlobStorage),
 		CacheServiceUrl:               src.CacheServiceURL.ValueStringPointer(),
 		CertificateAuthority:          src.CertificateAuthority.ValueStringPointer(),
 		CertificateAuthorityFile:      src.CertificateAuthorityFile.ValueStringPointer(),
 		CertificateAuthorityKeyPairId: src.CertificateAuthorityKeyPairID.ValueStringPointer(),
+		Certificates:                  nil, // sent as key pairs
 		CircuitBreakerThresholds:      c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
 		ClientCa:                      src.ClientCA.ValueStringPointer(),
 		ClientCaFile:                  src.ClientCAFile.ValueStringPointer(),
@@ -545,6 +589,7 @@ func (c *ModelToEnterpriseConverter) Settings(src SettingsModel) *enterprise.Set
 		McpAllowedAsMetadataDomains:     c.SettingsStringList(path.Root("mcp_allowed_as_metadata_domains"), src.MCPAllowedAsMetadataDomains),
 		McpAllowedClientIdDomains:       c.SettingsStringList(path.Root("mcp_allowed_client_id_domains"), src.MCPAllowedClientIDDomains),
 		MetricsAddress:                  src.MetricsAddress.ValueStringPointer(),
+		ModifiedAt:                      nil, // computed
 		OriginatorId:                    OriginatorID,
 		OtelAttributeValueLengthLimit:   c.NullableInt32(src.OtelAttributeValueLengthLimit),
 		OtelBspMaxExportBatchSize:       c.NullableInt32(src.OtelBspMaxExportBatchSize),
@@ -567,7 +612,10 @@ func (c *ModelToEnterpriseConverter) Settings(src SettingsModel) *enterprise.Set
 		RequestParams:                   c.StringMap(path.Root("request_params"), src.RequestParams),
 		Scopes:                          c.StringSliceFromSet(path.Root("scopes"), src.Scopes),
 		SecondaryColor:                  src.SecondaryColor.ValueStringPointer(),
+		Services:                        nil, // not supported
+		SessionRecordingEnabled:         nil, // not supported
 		SetResponseHeaders:              c.StringMap(path.Root("set_response_headers"), src.SetResponseHeaders),
+		SharedSecret:                    nil, // not supported
 		SkipXffAppend:                   src.SkipXFFAppend.ValueBoolPointer(),
 		SshAddress:                      src.SSHAddress.ValueStringPointer(),
 		SshHostKeyFiles:                 c.SettingsStringList(path.Root("ssh_host_key_files"), src.SSHHostKeyFiles),
@@ -598,4 +646,26 @@ func (c *ModelToEnterpriseConverter) UpdateKeyPairRequest(src KeyPairModel) *ent
 		Name:         c.NullableString(src.Name),
 		OriginatorId: OriginatorID,
 	}
+}
+
+func (c *ModelToEnterpriseConverter) UpstreamTunnel(p path.Path, src types.Object) *enterprise.UpstreamTunnel {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	dst := new(enterprise.UpstreamTunnel)
+	for k, v := range src.Attributes() {
+		switch k {
+		case "ssh_policy":
+			str, ok := v.(types.String)
+			if ok {
+				dst.SshPolicyId = str.ValueStringPointer()
+			} else {
+				c.diagnostics.AddAttributeError(p.AtName("ssh_policy"), "unexpected type for field", fmt.Sprintf("unexpected type for field: %T", v))
+			}
+		default:
+			c.diagnostics.AddAttributeError(p, "unknown object field", fmt.Sprintf("unknown object field: %s", k))
+		}
+	}
+	return dst
 }

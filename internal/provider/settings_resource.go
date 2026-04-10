@@ -13,13 +13,13 @@ import (
 	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
-var (
-	_ resource.Resource                = &SettingsResource{}
-	_ resource.ResourceWithImportState = &SettingsResource{}
-)
+var _ interface {
+	resource.Resource
+	resource.ResourceWithImportState
+} = (*SettingsResource)(nil)
 
 func NewSettingsResource() resource.Resource {
-	return &SettingsResource{}
+	return new(SettingsResource)
 }
 
 type SettingsResource struct {

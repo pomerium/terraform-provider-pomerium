@@ -164,7 +164,8 @@ func (c *APIToModelConverter) KeyPair(src *pomerium.KeyPair) KeyPairModel {
 }
 
 func (c *APIToModelConverter) Policy(src *pomerium.Policy) PolicyModel {
-	ppl, err := PolicyLanguageType{}.Parse(types.StringPointerValue(src.SourcePpl))
+	var policyLanguageType PolicyLanguageType
+	ppl, err := policyLanguageType.Parse(types.StringPointerValue(src.SourcePpl))
 	if err != nil {
 		c.diagnostics.AddError("error parsing ppl", err.Error())
 	}

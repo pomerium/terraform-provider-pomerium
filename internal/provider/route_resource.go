@@ -27,13 +27,13 @@ import (
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
-var (
-	_ resource.Resource                = &RouteResource{}
-	_ resource.ResourceWithImportState = &RouteResource{}
-)
+var _ interface {
+	resource.Resource
+	resource.ResourceWithImportState
+} = (*RouteResource)(nil)
 
 func NewRouteResource() resource.Resource {
-	return &RouteResource{}
+	return new(RouteResource)
 }
 
 // RouteResource defines the resource implementation.

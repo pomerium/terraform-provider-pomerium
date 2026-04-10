@@ -15,10 +15,12 @@ import (
 	"github.com/pomerium/sdk-go"
 )
 
-var _ datasource.DataSource = &RoutesDataSource{}
+var _ interface {
+	datasource.DataSource
+} = (*RoutesDataSource)(nil)
 
 func NewRoutesDataSource() datasource.DataSource {
-	return &RoutesDataSource{}
+	return new(RoutesDataSource)
 }
 
 type RoutesDataSource struct {

@@ -57,7 +57,10 @@ func NewClient(apiURL, serviceAccountToken, sharedSecretB64 string, tlsConfig *t
 	httpTransport.ForceAttemptHTTP2 = true
 	httpTransport.TLSClientConfig = tlsConfig
 	httpClient := &http.Client{
-		Transport: httpTransport,
+		CheckRedirect: nil,
+		Jar:           nil,
+		Timeout:       0,
+		Transport:     httpTransport,
 	}
 
 	consolidatedClient := sdk.NewClient(

@@ -16,13 +16,13 @@ import (
 	"github.com/pomerium/sdk-go"
 )
 
-var (
-	_ datasource.DataSource              = &ExternalDataSourceDataSource{}
-	_ datasource.DataSourceWithConfigure = &ExternalDataSourceDataSource{}
-)
+var _ interface {
+	datasource.DataSource
+	datasource.DataSourceWithConfigure
+} = (*ExternalDataSourceDataSource)(nil)
 
 func NewExternalDataSourceDataSource() datasource.DataSource {
-	return &ExternalDataSourceDataSource{}
+	return new(ExternalDataSourceDataSource)
 }
 
 // ExternalDataSourceDataSource defines the data source implementation.

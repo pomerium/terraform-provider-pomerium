@@ -110,13 +110,24 @@ func (c *ModelToAPIConverter) HealthCheck(src types.Object) *pomerium.HealthChec
 	healthyThreshold := attrs["healthy_threshold"].(types.Int64)
 
 	dst := &pomerium.HealthCheck{
-		Timeout:               c.Duration(path.Root("timeout"), timeout),
-		Interval:              c.Duration(path.Root("interval"), interval),
-		InitialJitter:         c.Duration(path.Root("initial_jitter"), initialJitter),
-		IntervalJitter:        c.Duration(path.Root("interval_jitter"), intervalJitter),
-		IntervalJitterPercent: uint32(intervalJitterPercent.ValueInt64()),
-		UnhealthyThreshold:    c.WrappedUint32(unhealthyThreshold),
-		HealthyThreshold:      c.WrappedUint32(healthyThreshold),
+		AltPort:                      nil,   // not supported
+		AlwaysLogHealthCheckFailures: false, // not supported
+		AlwaysLogHealthCheckSuccess:  false, // not supported
+		HealthChecker:                nil,   // set below
+		HealthyEdgeInterval:          nil,   // not supported
+		HealthyThreshold:             c.WrappedUint32(healthyThreshold),
+		InitialJitter:                c.Duration(path.Root("initial_jitter"), initialJitter),
+		Interval:                     c.Duration(path.Root("interval"), interval),
+		IntervalJitter:               c.Duration(path.Root("interval_jitter"), intervalJitter),
+		IntervalJitterPercent:        uint32(intervalJitterPercent.ValueInt64()),
+		NoTrafficHealthyInterval:     nil, // not supported
+		NoTrafficInterval:            nil, // not supported
+		ReuseConnection:              nil, // not supported
+		Timeout:                      c.Duration(path.Root("timeout"), timeout),
+		TransportSocketMatchCriteria: nil, // not supported
+		UnhealthyEdgeInterval:        nil, // not supported
+		UnhealthyInterval:            nil, // not supported
+		UnhealthyThreshold:           c.WrappedUint32(unhealthyThreshold),
 	}
 
 	httpHc := attrs["http_health_check"].(types.Object)
@@ -125,7 +136,17 @@ func (c *ModelToAPIConverter) HealthCheck(src types.Object) *pomerium.HealthChec
 
 	if !httpHc.IsNull() {
 		httpAttrs := httpHc.Attributes()
-		httpHealthCheck := &pomerium.HealthCheck_HttpHealthCheck{}
+		httpHealthCheck := &pomerium.HealthCheck_HttpHealthCheck{
+			CodecClientType:        0,   // set below
+			ExpectedStatuses:       nil, // set below
+			Host:                   "",  // set below
+			Path:                   "",  // set below
+			Receive:                nil, // not supported
+			RequestHeadersToRemove: nil, // not supported
+			ResponseBufferSize:     nil, // not supported
+			RetriableStatuses:      nil, // set below
+			Send:                   nil, // not supported
+		}
 
 		host := httpAttrs["host"].(types.String)
 		httpPath := httpAttrs["path"].(types.String)
@@ -164,7 +185,10 @@ func (c *ModelToAPIConverter) HealthCheck(src types.Object) *pomerium.HealthChec
 		}
 	} else if !tcpHc.IsNull() {
 		tcpAttrs := tcpHc.Attributes()
-		tcpHealthCheck := &pomerium.HealthCheck_TcpHealthCheck{}
+		tcpHealthCheck := &pomerium.HealthCheck_TcpHealthCheck{
+			Receive: nil, // set below
+			Send:    nil, // set below
+		}
 
 		send := tcpAttrs["send"].(types.Object)
 		receive := tcpAttrs["receive"].(types.Set)
@@ -185,7 +209,10 @@ func (c *ModelToAPIConverter) HealthCheck(src types.Object) *pomerium.HealthChec
 		}
 	} else if !grpcHc.IsNull() {
 		grpcAttrs := grpcHc.Attributes()
-		grpcHealthCheck := &pomerium.HealthCheck_GrpcHealthCheck{}
+		grpcHealthCheck := &pomerium.HealthCheck_GrpcHealthCheck{
+			Authority:   "", // set below
+			ServiceName: "", // set below
+		}
 
 		serviceName := grpcAttrs["service_name"].(types.String)
 		authority := grpcAttrs["authority"].(types.String)
@@ -359,62 +386,89 @@ func (c *ModelToAPIConverter) Policy(src PolicyModel) *pomerium.Policy {
 
 func (c *ModelToAPIConverter) Route(src RouteModel) *pomerium.Route {
 	return &pomerium.Route{
-		AllowSpdy:                src.AllowSPDY.ValueBool(),
-		AllowWebsockets:          src.AllowWebsockets.ValueBool(),
-		AssignedPolicies:         c.EntityInfosFromIDs(c.StringSliceFromSet(path.Root("policies"), src.Policies)),
-		BearerTokenFormat:        c.BearerTokenFormat(path.Root("bearer_token_format"), src.BearerTokenFormat),
-		CircuitBreakerThresholds: c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
-		DependsOn:                c.StringSliceFromSet(path.Root("depends_on"), src.DependsOnHosts),
-		Description:              src.Description.ValueStringPointer(),
+		AllowAnyAuthenticatedUser:        false, // not supported
+		AllowedDomains:                   nil,   // not supported
+		AllowedIdpClaims:                 nil,   // not supported
+		AllowedUsers:                     nil,   // not supported
+		AllowPublicUnauthenticatedAccess: false, // not supported
+		AllowSpdy:                        src.AllowSPDY.ValueBool(),
+		AllowWebsockets:                  src.AllowWebsockets.ValueBool(),
+		AssignedPolicies:                 c.EntityInfosFromIDs(c.StringSliceFromSet(path.Root("policies"), src.Policies)),
+		BearerTokenFormat:                c.BearerTokenFormat(path.Root("bearer_token_format"), src.BearerTokenFormat),
+		CircuitBreakerThresholds:         c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
+		CorsAllowPreflight:               false, // not supported
+		CreatedAt:                        nil,   // computed
+		DependsOn:                        c.StringSliceFromSet(path.Root("depends_on"), src.DependsOnHosts),
+		Description:                      src.Description.ValueStringPointer(),
 		EnableGoogleCloudServerlessAuthentication: src.EnableGoogleCloudServerlessAuthentication.ValueBool(),
-		From:                              src.From.ValueString(),
-		HealthChecks:                      fromSetOfObjects(src.HealthChecks, HealthCheckObjectType(), c.HealthCheck),
-		HealthyPanicThreshold:             src.HealthyPanicThreshold.ValueInt32Pointer(),
-		HostPathRegexRewritePattern:       src.HostPathRegexRewritePattern.ValueStringPointer(),
-		HostPathRegexRewriteSubstitution:  src.HostPathRegexRewriteSubstitution.ValueStringPointer(),
-		HostRewrite:                       src.HostRewrite.ValueStringPointer(),
-		HostRewriteHeader:                 src.HostRewriteHeader.ValueStringPointer(),
-		Id:                                c.NullableString(src.ID),
-		IdleTimeout:                       c.Duration(path.Root("idle_timeout"), src.IdleTimeout),
-		IdpAccessTokenAllowedAudiences:    c.RouteStringList(path.Root("idp_access_token_allowed_audiences"), src.IDPAccessTokenAllowedAudiences),
-		IdpClientId:                       src.IDPClientID.ValueStringPointer(),
-		IdpClientSecret:                   src.IDPClientSecret.ValueStringPointer(),
-		JwtGroupsFilter:                   c.JWTGroupsFilter(src.JWTGroupsFilter),
-		JwtGroupsFilterInferFromPpl:       c.JWTGroupsFilterInferFromPpl(src.JWTGroupsFilter),
-		JwtIssuerFormat:                   c.IssuerFormat(path.Root("jwt_issuer_format"), src.JWTIssuerFormat),
-		KubernetesServiceAccountToken:     src.KubernetesServiceAccountToken.ValueString(),
-		KubernetesServiceAccountTokenFile: src.KubernetesServiceAccountTokenFile.ValueString(),
-		LoadBalancingPolicy:               c.LoadBalancingPolicy(path.Root("load_balancing_policy"), src.LoadBalancingPolicy),
-		LogoUrl:                           src.LogoURL.ValueStringPointer(),
-		Mcp:                               c.RouteMCP(path.Root("mcp"), src.MCP),
-		Name:                              c.NullableString(src.Name),
-		NamespaceId:                       c.NullableString(src.NamespaceID),
-		OriginatorId:                      new(OriginatorID),
-		PassIdentityHeaders:               src.PassIdentityHeaders.ValueBoolPointer(),
-		Path:                              src.Path.ValueString(),
-		PolicyIds:                         c.StringSliceFromSet(path.Root("policies"), src.Policies),
-		Prefix:                            src.Prefix.ValueString(),
-		PrefixRewrite:                     src.PrefixRewrite.ValueString(),
-		PreserveHostHeader:                src.PreserveHostHeader.ValueBool(),
-		Regex:                             src.Regex.ValueString(),
-		RegexPriorityOrder:                src.RegexPriorityOrder.ValueInt64Pointer(),
-		RegexRewritePattern:               src.RegexRewritePattern.ValueString(),
-		RegexRewriteSubstitution:          src.RegexRewriteSubstitution.ValueString(),
-		RemoveRequestHeaders:              c.StringSliceFromSet(path.Root("remove_request_headers"), src.RemoveRequestHeaders),
-		RewriteResponseHeaders:            fromSetOfObjects(src.RewriteResponseHeaders, RewriteHeaderObjectType(), c.RouteRewriteHeader),
-		SetRequestHeaders:                 c.StringMap(path.Root("set_request_headers"), src.SetRequestHeaders),
-		SetResponseHeaders:                c.StringMap(path.Root("set_response_headers"), src.SetResponseHeaders),
-		ShowErrorDetails:                  src.ShowErrorDetails.ValueBool(),
-		StatName:                          c.NullableString(src.StatName),
-		Timeout:                           c.Duration(path.Root("timeout"), src.Timeout),
-		TlsClientKeyPairId:                src.TLSClientKeyPairID.ValueStringPointer(),
-		TlsCustomCaKeyPairId:              src.TLSCustomCAKeyPairID.ValueStringPointer(),
-		TlsDownstreamServerName:           src.TLSDownstreamServerName.ValueString(),
-		TlsSkipVerify:                     src.TLSSkipVerify.ValueBool(),
-		TlsUpstreamAllowRenegotiation:     src.TLSUpstreamAllowRenegotiation.ValueBool(),
-		TlsUpstreamServerName:             src.TLSUpstreamServerName.ValueString(),
-		To:                                c.StringSliceFromSet(path.Root("to"), src.To),
-		UpstreamTunnel:                    c.UpstreamTunnel(path.Root("upstream_tunnel"), src.UpstreamTunnel),
+		EnforcedPolicies:                       nil, // computed
+		From:                                   src.From.ValueString(),
+		HealthChecks:                           fromSetOfObjects(src.HealthChecks, HealthCheckObjectType(), c.HealthCheck),
+		HealthyPanicThreshold:                  src.HealthyPanicThreshold.ValueInt32Pointer(),
+		HostPathRegexRewritePattern:            src.HostPathRegexRewritePattern.ValueStringPointer(),
+		HostPathRegexRewriteSubstitution:       src.HostPathRegexRewriteSubstitution.ValueStringPointer(),
+		HostRewrite:                            src.HostRewrite.ValueStringPointer(),
+		HostRewriteHeader:                      src.HostRewriteHeader.ValueStringPointer(),
+		Id:                                     c.NullableString(src.ID),
+		IdleTimeout:                            c.Duration(path.Root("idle_timeout"), src.IdleTimeout),
+		IdpAccessTokenAllowedAudiences:         c.RouteStringList(path.Root("idp_access_token_allowed_audiences"), src.IDPAccessTokenAllowedAudiences),
+		IdpClientId:                            src.IDPClientID.ValueStringPointer(),
+		IdpClientSecret:                        src.IDPClientSecret.ValueStringPointer(),
+		JwtGroupsFilter:                        c.JWTGroupsFilter(src.JWTGroupsFilter),
+		JwtGroupsFilterInferFromPpl:            c.JWTGroupsFilterInferFromPpl(src.JWTGroupsFilter),
+		JwtIssuerFormat:                        c.IssuerFormat(path.Root("jwt_issuer_format"), src.JWTIssuerFormat),
+		KubernetesServiceAccountToken:          src.KubernetesServiceAccountToken.ValueString(),
+		KubernetesServiceAccountTokenFile:      src.KubernetesServiceAccountTokenFile.ValueString(),
+		KubernetesServiceAccountTokenKeyPairId: nil, // not supported
+		LoadBalancingPolicy:                    c.LoadBalancingPolicy(path.Root("load_balancing_policy"), src.LoadBalancingPolicy),
+		LoadBalancingWeights:                   nil, // not supported
+		LogoUrl:                                src.LogoURL.ValueStringPointer(),
+		Mcp:                                    c.RouteMCP(path.Root("mcp"), src.MCP),
+		ModifiedAt:                             nil, // computed
+		Name:                                   c.NullableString(src.Name),
+		NamespaceId:                            c.NullableString(src.NamespaceID),
+		NamespaceName:                          nil, // computed
+		OriginatorId:                           new(OriginatorID),
+		OutlierDetection:                       nil, // not supported
+		PassIdentityHeaders:                    src.PassIdentityHeaders.ValueBoolPointer(),
+		Path:                                   src.Path.ValueString(),
+		Policies:                               nil, // not supported (uses PolicyIds)
+		PolicyIds:                              c.StringSliceFromSet(path.Root("policies"), src.Policies),
+		PplPolicies:                            nil, // not supported (uses PolicyIds)
+		Prefix:                                 src.Prefix.ValueString(),
+		PrefixRewrite:                          src.PrefixRewrite.ValueString(),
+		PreserveHostHeader:                     src.PreserveHostHeader.ValueBool(),
+		Redirect:                               nil, // not supported
+		Regex:                                  src.Regex.ValueString(),
+		RegexPriorityOrder:                     src.RegexPriorityOrder.ValueInt64Pointer(),
+		RegexRewritePattern:                    src.RegexRewritePattern.ValueString(),
+		RegexRewriteSubstitution:               src.RegexRewriteSubstitution.ValueString(),
+		RemoveRequestHeaders:                   c.StringSliceFromSet(path.Root("remove_request_headers"), src.RemoveRequestHeaders),
+		Response:                               nil, // not supported
+		RewriteResponseHeaders:                 fromSetOfObjects(src.RewriteResponseHeaders, RewriteHeaderObjectType(), c.RouteRewriteHeader),
+		SetRequestHeaders:                      c.StringMap(path.Root("set_request_headers"), src.SetRequestHeaders),
+		SetResponseHeaders:                     c.StringMap(path.Root("set_response_headers"), src.SetResponseHeaders),
+		ShowErrorDetails:                       src.ShowErrorDetails.ValueBool(),
+		StatName:                               c.NullableString(src.StatName),
+		Timeout:                                c.Duration(path.Root("timeout"), src.Timeout),
+		TlsClientCert:                          "", // not supported
+		TlsClientCertFile:                      "", // not supported
+		TlsClientKey:                           "", // not supported
+		TlsClientKeyFile:                       "", // not supported
+		TlsClientKeyPairId:                     src.TLSClientKeyPairID.ValueStringPointer(),
+		TlsCustomCa:                            "", // not supported
+		TlsCustomCaFile:                        "", // not supported
+		TlsCustomCaKeyPairId:                   src.TLSCustomCAKeyPairID.ValueStringPointer(),
+		TlsDownstreamClientCa:                  "",  // not supported
+		TlsDownstreamClientCaFile:              "",  // not supported
+		TlsDownstreamClientCaKeyPairId:         nil, // not supported
+		TlsDownstreamServerName:                src.TLSDownstreamServerName.ValueString(),
+		TlsServerName:                          "", // not supported
+		TlsSkipVerify:                          src.TLSSkipVerify.ValueBool(),
+		TlsUpstreamAllowRenegotiation:          src.TLSUpstreamAllowRenegotiation.ValueBool(),
+		TlsUpstreamServerName:                  src.TLSUpstreamServerName.ValueString(),
+		To:                                     c.StringSliceFromSet(path.Root("to"), src.To),
+		UpstreamTunnel:                         c.UpstreamTunnel(path.Root("upstream_tunnel"), src.UpstreamTunnel),
 	}
 }
 
@@ -489,8 +543,9 @@ func (c *ModelToAPIConverter) RouteRewriteHeader(src types.Object) *pomerium.Rou
 
 	prefixAttr := src.Attributes()["prefix"].(types.String)
 	dst := &pomerium.RouteRewriteHeader{
-		Header: src.Attributes()["header"].(types.String).ValueString(),
-		Value:  src.Attributes()["value"].(types.String).ValueString(),
+		Header:  src.Attributes()["header"].(types.String).ValueString(),
+		Matcher: nil, // set below
+		Value:   src.Attributes()["value"].(types.String).ValueString(),
 	}
 	if !prefixAttr.IsNull() && prefixAttr.ValueString() != "" {
 		dst.Matcher = &pomerium.RouteRewriteHeader_Prefix{Prefix: prefixAttr.ValueString()}

@@ -11,10 +11,12 @@ import (
 	"github.com/pomerium/sdk-go"
 )
 
-var _ datasource.DataSource = &NamespaceDataSource{}
+var _ interface {
+	datasource.DataSource
+} = (*NamespaceDataSource)(nil)
 
 func NewNamespaceDataSource() datasource.DataSource {
-	return &NamespaceDataSource{}
+	return new(NamespaceDataSource)
 }
 
 type NamespaceDataSource struct {

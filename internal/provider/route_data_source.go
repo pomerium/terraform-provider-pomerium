@@ -17,7 +17,9 @@ import (
 	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
-var _ datasource.DataSource = &RouteDataSource{}
+var _ interface {
+	datasource.DataSource
+} = (*RouteDataSource)(nil)
 
 func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 	return map[string]schema.Attribute{
@@ -404,7 +406,7 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 }
 
 func NewRouteDataSource() datasource.DataSource {
-	return &RouteDataSource{}
+	return new(RouteDataSource)
 }
 
 type RouteDataSource struct {

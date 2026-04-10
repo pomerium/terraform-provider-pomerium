@@ -24,6 +24,18 @@ func NewEnterpriseToModelConverter(diagnostics *diag.Diagnostics) *EnterpriseToM
 	}
 }
 
+func (c *EnterpriseToModelConverter) BlobStorageSettings(src *enterprise.BlobStorageSettings) types.Object {
+	if src == nil {
+		return types.ObjectNull(BlobStorageSettingsObjectType().AttrTypes)
+	}
+	dst, diagnostics := types.ObjectValue(BlobStorageSettingsObjectType().AttrTypes, map[string]attr.Value{
+		"bucket_uri":     types.StringPointerValue(src.BucketUri),
+		"managed_prefix": types.StringNull(),
+	})
+	c.diagnostics.Append(diagnostics...)
+	return dst
+}
+
 func (c *EnterpriseToModelConverter) CircuitBreakerThresholds(src *enterprise.CircuitBreakerThresholds) types.Object {
 	if src == nil {
 		return types.ObjectNull(CircuitBreakerThresholdsObjectType().AttrTypes)
@@ -220,7 +232,8 @@ func (c *EnterpriseToModelConverter) NamespacePermission(src *enterprise.Namespa
 }
 
 func (c *EnterpriseToModelConverter) Policy(src *enterprise.Policy) PolicyModel {
-	ppl, err := PolicyLanguageType{}.Parse(types.StringValue(src.Ppl))
+	var policyLanguageType PolicyLanguageType
+	ppl, err := policyLanguageType.Parse(types.StringValue(src.Ppl))
 	if err != nil {
 		c.diagnostics.AddError("error parsing ppl", err.Error())
 	}
@@ -246,7 +259,7 @@ func (c *EnterpriseToModelConverter) Route(src *enterprise.Route) RouteModel {
 		CircuitBreakerThresholds: c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
 		DependsOnHosts:           FromStringSliceToSet(src.DependsOn),
 		Description:              types.StringPointerValue(src.Description),
-		EnableGoogleCloudServerlessAuthentication: types.BoolPointerValue(zeroToNil(src.EnableGoogleCloudServerlessAuthentication)),
+		EnableGoogleCloudServerlessAuthentication: types.BoolValue(src.EnableGoogleCloudServerlessAuthentication),
 		From:                              types.StringValue(src.From),
 		HealthChecks:                      toSetOfObjects(src.HealthChecks, HealthCheckObjectType(), c.HealthCheck),
 		HealthyPanicThreshold:             types.Int32PointerValue(src.HealthyPanicThreshold),
@@ -292,6 +305,7 @@ func (c *EnterpriseToModelConverter) Route(src *enterprise.Route) RouteModel {
 		TLSUpstreamAllowRenegotiation:     types.BoolPointerValue(src.TlsUpstreamAllowRenegotiation),
 		TLSUpstreamServerName:             types.StringPointerValue(src.TlsUpstreamServerName),
 		To:                                FromStringSliceToSet(src.To),
+		UpstreamTunnel:                    c.UpstreamTunnel(src.UpstreamTunnel),
 	}
 }
 
@@ -383,46 +397,49 @@ func (c *EnterpriseToModelConverter) ServiceAccount(src *enterprise.PomeriumServ
 
 func (c *EnterpriseToModelConverter) Settings(src *enterprise.Settings) SettingsModel {
 	return SettingsModel{
-		AccessLogFields:               FromStringListToSet(src.AccessLogFields),
-		Address:                       types.StringPointerValue(src.Address),
-		AuthenticateServiceURL:        types.StringPointerValue(src.AuthenticateServiceUrl),
-		AuthorizeLogFields:            FromStringListToSet(src.AuthorizeLogFields),
-		AuthorizeServiceURL:           types.StringPointerValue(src.AuthorizeServiceUrl),
-		Autocert:                      types.BoolPointerValue(src.Autocert),
-		AutocertDir:                   types.StringPointerValue(src.AutocertDir),
-		AutocertMustStaple:            types.BoolPointerValue(src.AutocertMustStaple),
-		AutocertUseStaging:            types.BoolPointerValue(src.AutocertUseStaging),
-		BearerTokenFormat:             c.BearerTokenFormat(src.BearerTokenFormat),
-		CacheServiceURL:               types.StringPointerValue(src.CacheServiceUrl),
-		CertificateAuthority:          types.StringPointerValue(src.CertificateAuthority),
-		CertificateAuthorityFile:      types.StringPointerValue(src.CertificateAuthorityFile),
-		CertificateAuthorityKeyPairID: types.StringPointerValue(src.CertificateAuthorityKeyPairId),
-		CircuitBreakerThresholds:      c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
-		ClientCA:                      types.StringPointerValue(src.ClientCa),
-		ClientCAFile:                  types.StringPointerValue(src.ClientCaFile),
-		ClientCAKeyPairID:             types.StringPointerValue(src.ClientCaKeyPairId),
-		ClusterID:                     types.StringPointerValue(src.ClusterId),
-		CodecType:                     c.CodecType(src.CodecType),
-		CookieDomain:                  types.StringPointerValue(src.CookieDomain),
-		CookieExpire:                  c.Duration(src.CookieExpire),
-		CookieHTTPOnly:                types.BoolPointerValue(src.CookieHttpOnly),
-		CookieName:                    types.StringPointerValue(src.CookieName),
-		CookieSameSite:                types.StringPointerValue(src.CookieSameSite),
-		CookieSecret:                  types.StringPointerValue(src.CookieSecret),
-		CookieSecure:                  types.BoolPointerValue(src.CookieSecure),
-		DarkmodePrimaryColor:          types.StringPointerValue(src.DarkmodePrimaryColor),
-		DarkmodeSecondaryColor:        types.StringPointerValue(src.DarkmodeSecondaryColor),
-		DatabrokerServiceURL:          types.StringPointerValue(src.DatabrokerServiceUrl),
-		DefaultUpstreamTimeout:        c.Duration(src.DefaultUpstreamTimeout),
-		DNSFailureRefreshRate:         c.Duration(src.DnsFailureRefreshRate),
-		DNSLookupFamily:               types.StringPointerValue(src.DnsLookupFamily),
-		DNSQueryTimeout:               c.Duration(src.DnsQueryTimeout),
-		DNSQueryTries:                 Int64PointerValue(src.DnsQueryTries),
-		DNSRefreshRate:                c.Duration(src.DnsRefreshRate),
-		DNSUDPMaxQueries:              Int64PointerValue(src.DnsUdpMaxQueries),
-		DNSUseTCP:                     types.BoolPointerValue(src.DnsUseTcp),
-		ErrorMessageFirstParagraph:    types.StringPointerValue(src.ErrorMessageFirstParagraph),
-		FaviconURL:                    types.StringPointerValue(src.FaviconUrl),
+		AccessLogFields:                   FromStringListToSet(src.AccessLogFields),
+		Address:                           types.StringPointerValue(src.Address),
+		AuthenticateServiceURL:            types.StringPointerValue(src.AuthenticateServiceUrl),
+		AuthorizeLogFields:                FromStringListToSet(src.AuthorizeLogFields),
+		AuthorizeServiceURL:               types.StringPointerValue(src.AuthorizeServiceUrl),
+		AutoApplyChangesets:               types.BoolPointerValue(src.AutoApplyChangesets),
+		Autocert:                          types.BoolPointerValue(src.Autocert),
+		AutocertDir:                       types.StringPointerValue(src.AutocertDir),
+		AutocertMustStaple:                types.BoolPointerValue(src.AutocertMustStaple),
+		AutocertUseStaging:                types.BoolPointerValue(src.AutocertUseStaging),
+		BearerTokenFormat:                 c.BearerTokenFormat(src.BearerTokenFormat),
+		BlobStorage:                       c.BlobStorageSettings(src.BlobStorage),
+		CacheServiceURL:                   types.StringPointerValue(src.CacheServiceUrl),
+		CertificateAuthority:              types.StringPointerValue(src.CertificateAuthority),
+		CertificateAuthorityFile:          types.StringPointerValue(src.CertificateAuthorityFile),
+		CertificateAuthorityKeyPairID:     types.StringPointerValue(src.CertificateAuthorityKeyPairId),
+		CircuitBreakerThresholds:          c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
+		ClientCA:                          types.StringPointerValue(src.ClientCa),
+		ClientCAFile:                      types.StringPointerValue(src.ClientCaFile),
+		ClientCAKeyPairID:                 types.StringPointerValue(src.ClientCaKeyPairId),
+		ClusterID:                         types.StringPointerValue(src.ClusterId),
+		CodecType:                         c.CodecType(src.CodecType),
+		CookieDomain:                      types.StringPointerValue(src.CookieDomain),
+		CookieExpire:                      c.Duration(src.CookieExpire),
+		CookieHTTPOnly:                    types.BoolPointerValue(src.CookieHttpOnly),
+		CookieName:                        types.StringPointerValue(src.CookieName),
+		CookieSameSite:                    types.StringPointerValue(src.CookieSameSite),
+		CookieSecret:                      types.StringPointerValue(src.CookieSecret),
+		CookieSecure:                      types.BoolPointerValue(src.CookieSecure),
+		DarkmodePrimaryColor:              types.StringPointerValue(src.DarkmodePrimaryColor),
+		DarkmodeSecondaryColor:            types.StringPointerValue(src.DarkmodeSecondaryColor),
+		DatabrokerServiceURL:              types.StringPointerValue(src.DatabrokerServiceUrl),
+		DatabrokerStorageConnectionString: types.StringNull(), // not supported
+		DefaultUpstreamTimeout:            c.Duration(src.DefaultUpstreamTimeout),
+		DNSFailureRefreshRate:             c.Duration(src.DnsFailureRefreshRate),
+		DNSLookupFamily:                   types.StringPointerValue(src.DnsLookupFamily),
+		DNSQueryTimeout:                   c.Duration(src.DnsQueryTimeout),
+		DNSQueryTries:                     Int64PointerValue(src.DnsQueryTries),
+		DNSRefreshRate:                    c.Duration(src.DnsRefreshRate),
+		DNSUDPMaxQueries:                  Int64PointerValue(src.DnsUdpMaxQueries),
+		DNSUseTCP:                         types.BoolPointerValue(src.DnsUseTcp),
+		ErrorMessageFirstParagraph:        types.StringPointerValue(src.ErrorMessageFirstParagraph),
+		FaviconURL:                        types.StringPointerValue(src.FaviconUrl),
 		GoogleCloudServerlessAuthenticationServiceAccount: types.StringPointerValue(src.GoogleCloudServerlessAuthenticationServiceAccount),
 		GRPCAddress:                     types.StringPointerValue(src.GrpcAddress),
 		GRPCInsecure:                    types.BoolPointerValue(src.GrpcInsecure),
@@ -458,6 +475,7 @@ func (c *EnterpriseToModelConverter) Settings(src *enterprise.Settings) Settings
 		MCPAllowedAsMetadataDomains:     FromStringList(src.McpAllowedAsMetadataDomains),
 		MCPAllowedClientIDDomains:       FromStringList(src.McpAllowedClientIdDomains),
 		MetricsAddress:                  types.StringPointerValue(src.MetricsAddress),
+		NamespaceID:                     types.StringNull(), // not supported
 		OtelAttributeValueLengthLimit:   Int64PointerValue(src.OtelAttributeValueLengthLimit),
 		OtelBspMaxExportBatchSize:       Int64PointerValue(src.OtelBspMaxExportBatchSize),
 		OtelBspScheduleDelay:            c.Duration(src.OtelBspScheduleDelay),
@@ -479,6 +497,7 @@ func (c *EnterpriseToModelConverter) Settings(src *enterprise.Settings) Settings
 		RequestParams:                   FromStringMap(src.RequestParams),
 		Scopes:                          FromStringSliceToSet(src.Scopes),
 		SecondaryColor:                  types.StringPointerValue(src.SecondaryColor),
+		SessionRecordingEnabled:         types.BoolNull(), // not supported
 		SetResponseHeaders:              FromStringMap(src.SetResponseHeaders),
 		SkipXFFAppend:                   types.BoolPointerValue(src.SkipXffAppend),
 		SSHAddress:                      types.StringPointerValue(src.SshAddress),
@@ -490,4 +509,13 @@ func (c *EnterpriseToModelConverter) Settings(src *enterprise.Settings) Settings
 		TimeoutRead:                     c.Duration(src.TimeoutRead),
 		TimeoutWrite:                    c.Duration(src.TimeoutWrite),
 	}
+}
+
+func (c *EnterpriseToModelConverter) UpstreamTunnel(src *enterprise.UpstreamTunnel) types.Object {
+	if src == nil {
+		return types.ObjectNull(UpstreamTunnelObjectType().AttrTypes)
+	}
+	return types.ObjectValueMust(UpstreamTunnelObjectType().AttrTypes, map[string]attr.Value{
+		"ssh_policy": types.StringPointerValue(src.SshPolicyId),
+	})
 }
