@@ -2,6 +2,7 @@ package provider_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -9,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/pomerium/enterprise-client-go/pb"
 	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
@@ -123,5 +125,26 @@ func TestEnterpriseToModelConverter(t *testing.T) {
 				assert.Empty(t, cmp.Diff(expect, actual))
 			})
 		})
+	})
+	t.Run("ServiceAccount", func(t *testing.T) {
+		t.Parallel()
+		var diagnostics diag.Diagnostics
+		expect := provider.ServiceAccountModel{
+			Description: types.StringValue("DESCRIPTION"),
+			ExpiresAt:   types.StringValue("2026-01-01T16:00:00Z"),
+			ID:          types.StringValue("ID"),
+			Name:        types.StringValue("NAME"),
+			NamespaceID: types.StringValue("NAMESPACE_ID"),
+			UserID:      types.StringValue("NAME@NAMESPACE_ID.pomerium"),
+		}
+		actual := provider.NewEnterpriseToModelConverter(&diagnostics).ServiceAccount(&pb.PomeriumServiceAccount{
+			Description: new("DESCRIPTION"),
+			ExpiresAt:   timestamppb.New(time.Date(2026, 1, 1, 16, 0, 0, 0, time.UTC)),
+			Id:          "ID",
+			NamespaceId: new("NAMESPACE_ID"),
+			UserId:      "NAME@NAMESPACE_ID.pomerium",
+		})
+		assert.Empty(t, diagnostics)
+		assert.Empty(t, cmp.Diff(expect, actual))
 	})
 }
