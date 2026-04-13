@@ -44,6 +44,7 @@ Optional:
 Read-Only:
 
 - `allow_spdy` (Boolean) Allow SPDY.
+- `allow_upgrades` (Set of String) Allow upgrade requests of the given types.
 - `allow_websockets` (Boolean) Allow websockets.
 - `bearer_token_format` (String) Bearer token format.
 - `depends_on_hosts` (Set of String) Additional login redirect hosts.

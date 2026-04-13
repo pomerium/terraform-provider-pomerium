@@ -81,6 +81,7 @@ type PolicyModel struct {
 
 type RouteModel struct {
 	AllowSPDY                                 types.Bool           `tfsdk:"allow_spdy"`
+	AllowUpgrades                             types.Set            `tfsdk:"allow_upgrades"`
 	AllowWebsockets                           types.Bool           `tfsdk:"allow_websockets"`
 	BearerTokenFormat                         types.String         `tfsdk:"bearer_token_format"`
 	CircuitBreakerThresholds                  types.Object         `tfsdk:"circuit_breaker_thresholds"`
@@ -147,6 +148,7 @@ type ServiceAccountModel struct {
 type SettingsModel struct {
 	AccessLogFields                                   types.Set            `tfsdk:"access_log_fields"`
 	Address                                           types.String         `tfsdk:"address"`
+	AllowUpgrades                                     types.Set            `tfsdk:"allow_upgrades"`
 	AuthenticateServiceURL                            types.String         `tfsdk:"authenticate_service_url"`
 	AuthorizeLogFields                                types.Set            `tfsdk:"authorize_log_fields"`
 	AuthorizeServiceURL                               types.String         `tfsdk:"authorize_service_url"`

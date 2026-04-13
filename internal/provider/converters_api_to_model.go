@@ -185,6 +185,7 @@ func (c *APIToModelConverter) Policy(src *pomerium.Policy) PolicyModel {
 func (c *APIToModelConverter) Route(src *pomerium.Route) RouteModel {
 	return RouteModel{
 		AllowSPDY:                types.BoolValue(src.AllowSpdy),
+		AllowUpgrades:            FromStringList(src.AllowUpgrades),
 		AllowWebsockets:          types.BoolValue(src.AllowWebsockets),
 		BearerTokenFormat:        c.BearerTokenFormat(src.BearerTokenFormat),
 		CircuitBreakerThresholds: c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
@@ -337,19 +338,13 @@ func (c *APIToModelConverter) SetFromStringSlice(src []string) types.Set {
 	return types.SetValueMust(types.StringType, fields)
 }
 
-func (c *APIToModelConverter) SetFromSettingsStringList(src *pomerium.Settings_StringList) types.Set {
-	if src == nil {
-		return types.SetNull(types.StringType)
-	}
-	return FromStringSliceToSet(src.Values)
-}
-
 func (c *APIToModelConverter) Settings(src *pomerium.Settings) SettingsModel {
 	return SettingsModel{
-		AccessLogFields:                   c.SetFromSettingsStringList(src.AccessLogFields),
+		AccessLogFields:                   FromStringList(src.AccessLogFields),
 		Address:                           types.StringPointerValue(src.Address),
+		AllowUpgrades:                     FromStringList(src.AllowUpgrades),
 		AuthenticateServiceURL:            types.StringPointerValue(src.AuthenticateServiceUrl),
-		AuthorizeLogFields:                c.SetFromSettingsStringList(src.AuthorizeLogFields),
+		AuthorizeLogFields:                FromStringList(src.AuthorizeLogFields),
 		AuthorizeServiceURL:               c.StringFromSingleElementSlice(path.Root("authorize_service_url"), src.AuthorizeServiceUrls),
 		AutoApplyChangesets:               types.BoolPointerValue(src.AutoApplyChangesets),
 		Autocert:                          types.BoolPointerValue(src.Autocert),

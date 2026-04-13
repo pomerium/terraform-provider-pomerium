@@ -392,6 +392,7 @@ func (c *ModelToAPIConverter) Route(src RouteModel) *pomerium.Route {
 		AllowedUsers:                     nil,   // not supported
 		AllowPublicUnauthenticatedAccess: false, // not supported
 		AllowSpdy:                        src.AllowSPDY.ValueBool(),
+		AllowUpgrades:                    c.RouteStringList(path.Root("allow_upgrades"), src.AllowUpgrades),
 		AllowWebsockets:                  src.AllowWebsockets.ValueBool(),
 		AssignedPolicies:                 c.EntityInfosFromIDs(c.StringSliceFromSet(path.Root("policies"), src.Policies)),
 		BearerTokenFormat:                c.BearerTokenFormat(path.Root("bearer_token_format"), src.BearerTokenFormat),
@@ -607,6 +608,7 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *pomerium.Settings {
 	return &pomerium.Settings{
 		AccessLogFields:                   c.SettingsStringList(path.Root("access_log_fields"), src.AccessLogFields),
 		Address:                           c.NullableString(src.Address),
+		AllowUpgrades:                     c.SettingsStringList(path.Root("allow_upgrades"), src.AllowUpgrades),
 		AuthenticateInternalServiceUrl:    nil, // not supported
 		AuthenticateServiceUrl:            c.NullableString(src.AuthenticateServiceURL),
 		AuthorizeInternalServiceUrl:       nil, // not supported

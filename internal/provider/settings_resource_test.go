@@ -6,6 +6,9 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
 func TestAccSettings(t *testing.T) {
@@ -18,6 +21,11 @@ func TestAccSettings(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSettingsConfig(t, apiURL, sharedSecret),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("pomerium_settings.test", tfjsonpath.New("allow_upgrades"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("a"), knownvalue.StringExact("b"), knownvalue.StringExact("c"),
+					})),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("pomerium_settings.test", "id"),
 				),
@@ -44,6 +52,7 @@ provider "pomerium" {
 resource "pomerium_settings" "test" {
 	grpc_address  = "0.0.0.0:5443"
 	grpc_insecure = true
+	allow_upgrades = ["a","b","c"]
 }
 `, apiURL, base64.StdEncoding.EncodeToString(sharedSecret))
 }

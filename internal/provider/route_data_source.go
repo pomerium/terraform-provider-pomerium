@@ -27,6 +27,11 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 			Computed:    true,
 			Description: "Allow SPDY.",
 		},
+		"allow_upgrades": schema.SetAttribute{
+			Computed:    true,
+			Description: "Allow upgrade requests of the given types.",
+			ElementType: types.StringType,
+		},
 		"allow_websockets": schema.BoolAttribute{
 			Computed:    true,
 			Description: "Allow websockets.",

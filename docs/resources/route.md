@@ -24,6 +24,7 @@ Route for Pomerium.
 ### Optional
 
 - `allow_spdy` (Boolean) If applied, this setting enables Pomerium to proxy SPDY protocol upgrades.
+- `allow_upgrades` (Set of String) Allow upgrade requests of the given types.
 - `allow_websockets` (Boolean) If applied, this setting enables Pomerium to proxy websocket connections.
 - `bearer_token_format` (String) Bearer token format.
 - `circuit_breaker_thresholds` (Attributes) Circuit breaker thresholds for the route. (see [below for nested schema](#nestedatt--circuit_breaker_thresholds))

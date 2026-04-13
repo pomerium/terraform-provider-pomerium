@@ -7,6 +7,9 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/knownvalue"
+	"github.com/hashicorp/terraform-plugin-testing/statecheck"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 )
 
 func TestAccRoute(t *testing.T) {
@@ -19,6 +22,11 @@ func TestAccRoute(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRouteConfig(t, apiURL, sharedSecret, "test", ""),
+				ConfigStateChecks: []statecheck.StateCheck{
+					statecheck.ExpectKnownValue("pomerium_route.test", tfjsonpath.New("allow_upgrades"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("a"), knownvalue.StringExact("b"), knownvalue.StringExact("c"),
+					})),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("pomerium_route.test", "name", "test"),
 					resource.TestCheckResourceAttrSet("pomerium_route.test", "id"),
@@ -67,6 +75,7 @@ resource "pomerium_route" "test" {
 	health_checks = [{
 		http_health_check = {}
 	}]
+	allow_upgrades = ["a","b","c"]
 	%s
 }
 

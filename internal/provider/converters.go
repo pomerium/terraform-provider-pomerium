@@ -19,8 +19,6 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"google.golang.org/protobuf/types/known/wrapperspb"
-
-	"github.com/pomerium/enterprise-client-go/pb"
 )
 
 func FromStringSliceToSet(slice []string) types.Set {
@@ -58,14 +56,6 @@ func FromStringList[T any, TMessage interface {
 		fields = append(fields, types.StringValue(v))
 	}
 	return types.SetValueMust(types.StringType, fields)
-}
-
-// FromStringListToSet converts a Settings_StringList to a types.List
-func FromStringListToSet(sl *pb.Settings_StringList) types.Set {
-	if sl == nil {
-		return types.SetNull(types.StringType)
-	}
-	return FromStringSliceToSet(sl.Values)
 }
 
 // FromStringMap converts a map[string]string to a types.Map

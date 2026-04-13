@@ -126,6 +126,7 @@ func TestAPIToModel(t *testing.T) {
 			result := provider.NewAPIToModelConverter(&diagnostics).Route(&pomerium.Route{})
 			assert.Equal(t, provider.RouteModel{
 				AllowSPDY:                types.BoolValue(false),
+				AllowUpgrades:            types.SetNull(types.StringType),
 				AllowWebsockets:          types.BoolValue(false),
 				BearerTokenFormat:        types.StringNull(),
 				CircuitBreakerThresholds: types.ObjectNull(provider.CircuitBreakerThresholdsObjectType().AttrTypes),
@@ -187,6 +188,7 @@ func TestAPIToModel(t *testing.T) {
 			var diagnostics diag.Diagnostics
 			result := provider.NewAPIToModelConverter(&diagnostics).Route(&pomerium.Route{
 				AllowSpdy:       true,
+				AllowUpgrades:   &pomerium.Route_StringList{Values: []string{"x", "y", "z"}},
 				AllowWebsockets: true,
 				DependsOn:       []string{"host1.example.com", "host2.example.com"},
 				Description:     new("DESCRIPTION"),
@@ -240,6 +242,7 @@ func TestAPIToModel(t *testing.T) {
 			})
 			assert.Equal(t, provider.RouteModel{
 				AllowSPDY:                types.BoolValue(true),
+				AllowUpgrades:            types.SetValueMust(types.StringType, []attr.Value{types.StringValue("x"), types.StringValue("y"), types.StringValue("z")}),
 				AllowWebsockets:          types.BoolValue(true),
 				BearerTokenFormat:        types.StringNull(),
 				CircuitBreakerThresholds: types.ObjectNull(provider.CircuitBreakerThresholdsObjectType().AttrTypes),
@@ -332,6 +335,7 @@ func TestAPIToModel(t *testing.T) {
 			assert.Equal(t, provider.SettingsModel{
 				AccessLogFields:                   types.SetNull(types.StringType),
 				Address:                           types.StringNull(),
+				AllowUpgrades:                     types.SetNull(types.StringType),
 				AuthenticateServiceURL:            types.StringNull(),
 				AuthorizeLogFields:                types.SetNull(types.StringType),
 				AuthorizeServiceURL:               types.StringNull(),
@@ -449,6 +453,7 @@ func TestAPIToModel(t *testing.T) {
 			var diagnostics diag.Diagnostics
 			result := provider.NewAPIToModelConverter(&diagnostics).Settings(&pomerium.Settings{
 				Address:                new(":443"),
+				AllowUpgrades:          &pomerium.Settings_StringList{Values: []string{"x", "y", "z"}},
 				AuthenticateServiceUrl: new("https://authenticate.example.com"),
 				AuthorizeServiceUrls:   []string{"https://authorize.example.com"},
 				Autocert:               new(true),
@@ -500,6 +505,7 @@ func TestAPIToModel(t *testing.T) {
 				TimeoutWrite:                      durationpb.New(30 * time.Second),
 			})
 			assert.Equal(t, types.StringValue(":443"), result.Address)
+			assert.Equal(t, types.SetValueMust(types.StringType, []attr.Value{types.StringValue("x"), types.StringValue("y"), types.StringValue("z")}), result.AllowUpgrades)
 			assert.Equal(t, types.StringValue("https://authenticate.example.com"), result.AuthenticateServiceURL)
 			assert.Equal(t, types.StringValue("https://authorize.example.com"), result.AuthorizeServiceURL)
 			assert.Equal(t, types.BoolValue(true), result.Autocert)

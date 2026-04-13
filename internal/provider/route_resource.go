@@ -58,6 +58,11 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 				Optional:    true,
 				Default:     booldefault.StaticBool(false),
 			},
+			"allow_upgrades": schema.SetAttribute{
+				Description: "Allow upgrade requests of the given types.",
+				Optional:    true,
+				ElementType: types.StringType,
+			},
 			"allow_websockets": schema.BoolAttribute{
 				Description: "If applied, this setting enables Pomerium to proxy websocket connections.",
 				Computed:    true,
