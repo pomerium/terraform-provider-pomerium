@@ -1040,6 +1040,7 @@ func TestConvertRoute(t *testing.T) {
 		},
 		DependsOn:             []string{"foo.example.com", "bar.example.com:8443"},
 		HealthyPanicThreshold: new(int32(33)),
+		AllowUpgrades:         &pb.Route_StringList{Values: []string{"x", "y", "z"}},
 	}
 
 	tfRoute := provider.RouteModel{
@@ -1230,6 +1231,7 @@ func TestConvertRoute(t *testing.T) {
 			types.StringValue("bar.example.com:8443"),
 		}),
 		HealthyPanicThreshold: types.Int32Value(33),
+		AllowUpgrades:         types.SetValueMust(types.StringType, []attr.Value{types.StringValue("x"), types.StringValue("y"), types.StringValue("z")}),
 	}
 
 	t.Run("pb to tf", func(t *testing.T) {
