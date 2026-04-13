@@ -55,6 +55,11 @@ var SettingsResourceSchema = schema.Schema{
 			Optional:    true,
 			Description: "Specifies the IP Address and Port to serve HTTP requests from.",
 		},
+		"allow_upgrades": schema.SetAttribute{
+			Description: "Allow upgrade requests of the given types.",
+			Optional:    true,
+			ElementType: types.StringType,
+		},
 		"authenticate_service_url": schema.StringAttribute{
 			Optional:    true,
 			Description: "The externally accessible URL for the authenticate service.",

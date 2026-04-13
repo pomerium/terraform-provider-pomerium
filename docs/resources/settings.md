@@ -22,6 +22,7 @@ The settings are global object.
 
 - `access_log_fields` (Set of String) Displays HTTP request logs from the Pomerium Proxy service.
 - `address` (String) Specifies the IP Address and Port to serve HTTP requests from.
+- `allow_upgrades` (Set of String) Allow upgrade requests of the given types.
 - `authenticate_service_url` (String) The externally accessible URL for the authenticate service.
 - `authorize_log_fields` (Set of String) Displays HTTP request logs from the Pomerium Authorize service.
 - `authorize_service_url` (String) Authorize service URL

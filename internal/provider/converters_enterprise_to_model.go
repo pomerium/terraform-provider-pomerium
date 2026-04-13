@@ -254,6 +254,7 @@ func (c *EnterpriseToModelConverter) Policy(src *enterprise.Policy) PolicyModel 
 func (c *EnterpriseToModelConverter) Route(src *enterprise.Route) RouteModel {
 	return RouteModel{
 		AllowSPDY:                types.BoolPointerValue(src.AllowSpdy),
+		AllowUpgrades:            FromStringList(src.AllowUpgrades),
 		AllowWebsockets:          types.BoolPointerValue(src.AllowWebsockets),
 		BearerTokenFormat:        c.BearerTokenFormat(src.BearerTokenFormat),
 		CircuitBreakerThresholds: c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
@@ -397,10 +398,11 @@ func (c *EnterpriseToModelConverter) ServiceAccount(src *enterprise.PomeriumServ
 
 func (c *EnterpriseToModelConverter) Settings(src *enterprise.Settings) SettingsModel {
 	return SettingsModel{
-		AccessLogFields:                   FromStringListToSet(src.AccessLogFields),
+		AccessLogFields:                   FromStringList(src.AccessLogFields),
 		Address:                           types.StringPointerValue(src.Address),
+		AllowUpgrades:                     FromStringList(src.AllowUpgrades),
 		AuthenticateServiceURL:            types.StringPointerValue(src.AuthenticateServiceUrl),
-		AuthorizeLogFields:                FromStringListToSet(src.AuthorizeLogFields),
+		AuthorizeLogFields:                FromStringList(src.AuthorizeLogFields),
 		AuthorizeServiceURL:               types.StringPointerValue(src.AuthorizeServiceUrl),
 		AutoApplyChangesets:               types.BoolPointerValue(src.AutoApplyChangesets),
 		Autocert:                          types.BoolPointerValue(src.Autocert),

@@ -33,8 +33,10 @@ func (c *ModelToEnterpriseConverter) BlobStorage(src types.Object) *enterprise.B
 
 	attrs := src.Attributes()
 	bucketURI, _ := attrs["bucket_uri"].(types.String)
+	managedPrefix, _ := attrs["managed_prefix"].(types.String)
 	return &enterprise.BlobStorageSettings{
-		BucketUri: c.NullableString(bucketURI),
+		BucketUri:     c.NullableString(bucketURI),
+		ManagedPrefix: c.NullableString(managedPrefix),
 	}
 }
 
@@ -348,6 +350,7 @@ func (c *ModelToEnterpriseConverter) Policy(src PolicyModel) *enterprise.Policy 
 func (c *ModelToEnterpriseConverter) Route(src RouteModel) *enterprise.Route {
 	return &enterprise.Route{
 		AllowSpdy:                src.AllowSPDY.ValueBoolPointer(),
+		AllowUpgrades:            c.RouteStringList(path.Root("allow_upgrades"), src.AllowUpgrades),
 		AllowWebsockets:          src.AllowWebsockets.ValueBoolPointer(),
 		BearerTokenFormat:        c.BearerTokenFormat(path.Root("bearer_token_format"), src.BearerTokenFormat),
 		CircuitBreakerThresholds: c.CircuitBreakerThresholds(src.CircuitBreakerThresholds),
@@ -521,6 +524,7 @@ func (c *ModelToEnterpriseConverter) Settings(src SettingsModel) *enterprise.Set
 	return &enterprise.Settings{
 		AccessLogFields:               c.SettingsStringList(path.Root("access_log_fields"), src.AccessLogFields),
 		Address:                       src.Address.ValueStringPointer(),
+		AllowUpgrades:                 c.SettingsStringList(path.Root("allow_upgrades"), src.AllowUpgrades),
 		AuthenticateServiceUrl:        src.AuthenticateServiceURL.ValueStringPointer(),
 		AuthorizeLogFields:            c.SettingsStringList(path.Root("authorize_log_fields"), src.AuthorizeLogFields),
 		AuthorizeServiceUrl:           src.AuthorizeServiceURL.ValueStringPointer(),
