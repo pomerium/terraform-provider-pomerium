@@ -61,7 +61,21 @@ func TestModelToEnterpriseConverter(t *testing.T) {
 
 	t.Run("KeyPair", func(t *testing.T) {
 		t.Parallel()
-
+		t.Run("empty", func(t *testing.T) {
+			t.Parallel()
+			expected := &pb.CreateKeyPairRequest{
+				Format:       pb.Format_PEM,
+				OriginatorId: "terraform",
+			}
+			var diagnostics diag.Diagnostics
+			actual := provider.NewModelToEnterpriseConverter(&diagnostics).CreateKeyPairRequest(provider.KeyPairModel{})
+			if !assert.Equal(t, 0, diagnostics.ErrorsCount()) {
+				t.Log(diagnostics.Errors())
+			}
+			if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
+				t.Errorf("unexpected difference: %s", diff)
+			}
+		})
 		t.Run("create", func(t *testing.T) {
 			t.Parallel()
 
@@ -120,6 +134,20 @@ func TestModelToEnterpriseConverter(t *testing.T) {
 
 	t.Run("NamespacePermission", func(t *testing.T) {
 		t.Parallel()
+		t.Run("empty", func(t *testing.T) {
+			t.Parallel()
+			expected := &pb.NamespacePermission{
+				OriginatorId: "terraform",
+			}
+			var diagnostics diag.Diagnostics
+			actual := provider.NewModelToEnterpriseConverter(&diagnostics).NamespacePermission(provider.NamespacePermissionModel{})
+			if !assert.Equal(t, 0, diagnostics.ErrorsCount()) {
+				t.Log(diagnostics.Errors())
+			}
+			if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
+				t.Errorf("unexpected difference: %s", diff)
+			}
+		})
 
 		expected := &pb.NamespacePermission{
 			Id:           "NAMESPACE_PERMISSION_ID",
@@ -147,40 +175,70 @@ func TestModelToEnterpriseConverter(t *testing.T) {
 
 	t.Run("Policy", func(t *testing.T) {
 		t.Parallel()
-
-		expected := &pb.Policy{
-			Description:  "DESCRIPTION",
-			Enforced:     true,
-			Explanation:  "EXPLANATION",
-			Id:           "ID",
-			Name:         "NAME",
-			NamespaceId:  "NAMESPACE_ID",
-			OriginatorId: "terraform",
-			Rego:         []string{"REGO"},
-			Remediation:  "REMEDIATION",
-		}
-		var diagnostics diag.Diagnostics
-		actual := provider.NewModelToEnterpriseConverter(&diagnostics).Policy(provider.PolicyModel{
-			Description: types.StringValue("DESCRIPTION"),
-			Enforced:    types.BoolValue(true),
-			Explanation: types.StringValue("EXPLANATION"),
-			ID:          types.StringValue("ID"),
-			Name:        types.StringValue("NAME"),
-			NamespaceID: types.StringValue("NAMESPACE_ID"),
-			PPL:         provider.PolicyLanguage{},
-			Rego:        types.ListValueMust(types.StringType, []attr.Value{types.StringValue("REGO")}),
-			Remediation: types.StringValue("REMEDIATION"),
+		t.Run("empty", func(t *testing.T) {
+			t.Parallel()
+			expected := &pb.Policy{
+				OriginatorId: "terraform",
+			}
+			var diagnostics diag.Diagnostics
+			actual := provider.NewModelToEnterpriseConverter(&diagnostics).Policy(provider.PolicyModel{})
+			if !assert.Equal(t, 0, diagnostics.ErrorsCount()) {
+				t.Log(diagnostics.Errors())
+			}
+			if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
+				t.Errorf("unexpected difference: %s", diff)
+			}
 		})
-		if !assert.Equal(t, 0, diagnostics.ErrorsCount()) {
-			t.Log(diagnostics.Errors())
-		}
-		if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
-			t.Errorf("unexpected difference: %s", diff)
-		}
+		t.Run("properties", func(t *testing.T) {
+			t.Parallel()
+			expected := &pb.Policy{
+				Description:  "DESCRIPTION",
+				Enforced:     true,
+				Explanation:  "EXPLANATION",
+				Id:           "ID",
+				Name:         "NAME",
+				NamespaceId:  "NAMESPACE_ID",
+				OriginatorId: "terraform",
+				Rego:         []string{"REGO"},
+				Remediation:  "REMEDIATION",
+			}
+			var diagnostics diag.Diagnostics
+			actual := provider.NewModelToEnterpriseConverter(&diagnostics).Policy(provider.PolicyModel{
+				Description: types.StringValue("DESCRIPTION"),
+				Enforced:    types.BoolValue(true),
+				Explanation: types.StringValue("EXPLANATION"),
+				ID:          types.StringValue("ID"),
+				Name:        types.StringValue("NAME"),
+				NamespaceID: types.StringValue("NAMESPACE_ID"),
+				PPL:         provider.PolicyLanguage{},
+				Rego:        types.ListValueMust(types.StringType, []attr.Value{types.StringValue("REGO")}),
+				Remediation: types.StringValue("REMEDIATION"),
+			})
+			if !assert.Equal(t, 0, diagnostics.ErrorsCount()) {
+				t.Log(diagnostics.Errors())
+			}
+			if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
+				t.Errorf("unexpected difference: %s", diff)
+			}
+		})
 	})
 
 	t.Run("Route", func(t *testing.T) {
 		t.Parallel()
+		t.Run("empty", func(t *testing.T) {
+			t.Parallel()
+			expected := &pb.Route{
+				OriginatorId: "terraform",
+			}
+			var diagnostics diag.Diagnostics
+			actual := provider.NewModelToEnterpriseConverter(&diagnostics).Route(provider.RouteModel{})
+			if !assert.Equal(t, 0, diagnostics.ErrorsCount()) {
+				t.Log(diagnostics.Errors())
+			}
+			if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
+				t.Errorf("unexpected difference: %s", diff)
+			}
+		})
 		t.Run("MCP", func(t *testing.T) {
 			t.Parallel()
 			t.Run("Client", func(t *testing.T) {
@@ -315,199 +373,226 @@ func TestModelToEnterpriseConverter(t *testing.T) {
 
 	t.Run("ServiceAccount", func(t *testing.T) {
 		t.Parallel()
-
-		expected := &pb.PomeriumServiceAccount{
-			Description:  new("DESCRIPTION"),
-			ExpiresAt:    timestamppb.New(time.Date(2026, 1, 1, 16, 0, 0, 0, time.UTC)),
-			Id:           "ID",
-			NamespaceId:  new("NAMESPACE_ID"),
-			OriginatorId: new("terraform"),
-			UserId:       "NAME",
-		}
-		var diagnostics diag.Diagnostics
-		actual := provider.NewModelToEnterpriseConverter(&diagnostics).ServiceAccount(provider.ServiceAccountModel{
-			Description: types.StringValue("DESCRIPTION"),
-			ExpiresAt:   types.StringValue("2026-01-01T16:00:00Z"),
-			ID:          types.StringValue("ID"),
-			Name:        types.StringValue("NAME"),
-			NamespaceID: types.StringValue("NAMESPACE_ID"),
-			UserID:      types.StringValue("USER_ID"),
+		t.Run("empty", func(t *testing.T) {
+			t.Parallel()
+			expected := &pb.PomeriumServiceAccount{
+				OriginatorId: new("terraform"),
+			}
+			var diagnostics diag.Diagnostics
+			actual := provider.NewModelToEnterpriseConverter(&diagnostics).ServiceAccount(provider.ServiceAccountModel{})
+			assert.Empty(t, diagnostics)
+			if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
+				t.Errorf("unexpected difference: %s", diff)
+			}
 		})
-		assert.Empty(t, diagnostics)
-		if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
-			t.Errorf("unexpected difference: %s", diff)
-		}
+		t.Run("properties", func(t *testing.T) {
+			t.Parallel()
+			expected := &pb.PomeriumServiceAccount{
+				Description:  new("DESCRIPTION"),
+				ExpiresAt:    timestamppb.New(time.Date(2026, 1, 1, 16, 0, 0, 0, time.UTC)),
+				Id:           "ID",
+				NamespaceId:  new("NAMESPACE_ID"),
+				OriginatorId: new("terraform"),
+				UserId:       "NAME",
+			}
+			var diagnostics diag.Diagnostics
+			actual := provider.NewModelToEnterpriseConverter(&diagnostics).ServiceAccount(provider.ServiceAccountModel{
+				Description: types.StringValue("DESCRIPTION"),
+				ExpiresAt:   types.StringValue("2026-01-01T16:00:00Z"),
+				ID:          types.StringValue("ID"),
+				Name:        types.StringValue("NAME"),
+				NamespaceID: types.StringValue("NAMESPACE_ID"),
+				UserID:      types.StringValue("USER_ID"),
+			})
+			assert.Empty(t, diagnostics)
+			if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
+				t.Errorf("unexpected difference: %s", diff)
+			}
+		})
 	})
 
 	t.Run("Settings", func(t *testing.T) {
 		t.Parallel()
-
-		expected := &pb.Settings{
-			AccessLogFields:               &pb.Settings_StringList{Values: []string{"authority", "duration", "path"}},
-			Address:                       new("127.0.0.1:8443"),
-			AuthenticateServiceUrl:        new("https://authenticate.example.com"),
-			AuthorizeLogFields:            &pb.Settings_StringList{Values: []string{"request-id", "path", "ip"}},
-			AuthorizeServiceUrl:           new("https://authorize.example.com"),
-			Autocert:                      new(true),
-			AutocertDir:                   new("/tmp/autocert"),
-			AutocertMustStaple:            new(true),
-			AutocertUseStaging:            new(false),
-			BearerTokenFormat:             pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_ACCESS_TOKEN.Enum(),
-			CacheServiceUrl:               new("https://cache.example.com"),
-			CertificateAuthority:          new("CERTIFICATE_AUTHORITY"),
-			CertificateAuthorityFile:      new("/tmp/certificate-authority"),
-			CertificateAuthorityKeyPairId: new("CERTIFICATE_AUTHORITY_KEY_PAIR_ID"),
-			ClientCa:                      new("CLIENT_CA"),
-			ClientCaFile:                  new("/tmp/client-ca"),
-			ClientCaKeyPairId:             new("CLIENT_CA_KEY_PAIR_ID"),
-			CodecType:                     pb.CodecType_CODEC_TYPE_HTTP2.Enum(),
-			CookieDomain:                  new("example.com"),
-			CookieExpire:                  durationpb.New(15 * time.Minute),
-			CookieHttpOnly:                new(true),
-			CookieName:                    new("COOKIE"),
-			CookieSameSite:                new("Strict"),
-			CookieSecret:                  new("COOKIE_SECRET"),
-			CookieSecure:                  new(true),
-			DarkmodePrimaryColor:          new("DARKMODE_PRIMARY_COLOR"),
-			DarkmodeSecondaryColor:        new("DARKMODE_SECONDARY_COLOR"),
-			DatabrokerServiceUrl:          new("https://databroker.example.com"),
-			DefaultUpstreamTimeout:        durationpb.New(13 * time.Second),
-			DnsFailureRefreshRate:         durationpb.New(14 * time.Second),
-			DnsLookupFamily:               new("V6_ONLY"),
-			DnsQueryTimeout:               durationpb.New(5 * time.Second),
-			DnsQueryTries:                 proto.Uint32(33),
-			DnsRefreshRate:                durationpb.New(15 * time.Second),
-			DnsUdpMaxQueries:              proto.Uint32(34),
-			DnsUseTcp:                     new(true),
-			ErrorMessageFirstParagraph:    new("ERROR_MESSAGE"),
-			FaviconUrl:                    new("https://favicon.example.com"),
-			GoogleCloudServerlessAuthenticationServiceAccount: new("GOOGLE_CLOUD_SERVERLESS_AUTHENTICATION_SERVICE_ACCOUNT"),
-			GrpcAddress:                     new("127.0.0.1:5443"),
-			GrpcInsecure:                    new(true),
-			HttpRedirectAddr:                new("127.0.0.1:8000"),
-			IdentityProviderRefreshInterval: durationpb.New(5 * time.Second),
-			IdentityProviderRefreshTimeout:  durationpb.New(6 * time.Second),
-			IdpAccessTokenAllowedAudiences:  &pb.Settings_StringList{Values: []string{"a", "b"}},
-			IdpClientId:                     new("IDP_CLIENT_ID"),
-			IdpClientSecret:                 new("IDP_CLIENT_SECRET"),
-			IdpProvider:                     new("IDP_PROVIDER"),
-			IdpProviderUrl:                  new("https://idp.example.com"),
-			IdpRefreshDirectoryInterval:     durationpb.New(7 * time.Second),
-			IdpRefreshDirectoryTimeout:      durationpb.New(8 * time.Second),
-			IdpServiceAccount:               new("IDP_SERVICE_ACCOUNT"),
-			InsecureServer:                  new(true),
-			InstallationId:                  new("INSTALLATION_ID"),
-			JwtClaimsHeaders:                map[string]string{"X": "Y"},
-			JwtGroupsFilter:                 &pb.JwtGroupsFilter{InferFromPpl: new(true), Groups: []string{"z"}},
-			JwtIssuerFormat:                 pb.IssuerFormat_IssuerURI.Enum(),
-			LogLevel:                        new("debug"),
-			LogoUrl:                         new("https://logo.example.com"),
-			McpAllowedAsMetadataDomains:     &pb.Settings_StringList{Values: []string{"domain1", "domain2"}},
-			McpAllowedClientIdDomains:       &pb.Settings_StringList{Values: []string{"domain3", "domain4"}},
-			MetricsAddress:                  new("127.0.0.1:9999"),
-			OriginatorId:                    "terraform",
-			PassIdentityHeaders:             new(true),
-			PrimaryColor:                    new("PRIMARY_COLOR"),
-			ProxyLogLevel:                   new("error"),
-			RequestParams:                   map[string]string{"C": "D"},
-			Scopes:                          []string{"SCOPE1", "SCOPE2", "SCOPE3"},
-			SecondaryColor:                  new("SECONDARY_COLOR"),
-			SetResponseHeaders:              map[string]string{"E": "F"},
-			SkipXffAppend:                   new(true),
-			SshAddress:                      new("SSH_ADDRESS"),
-			SshHostKeyFiles:                 &pb.Settings_StringList{Values: []string{"HOST1", "HOST2"}},
-			SshHostKeys:                     &pb.Settings_StringList{Values: []string{"HOST3", "HOST4"}},
-			SshUserCaKey:                    new("SSH_USER_CA_KEY"),
-			SshUserCaKeyFile:                new("SSH_USER_CA_KEY_FILE"),
-			TimeoutIdle:                     durationpb.New(3 * time.Minute),
-			TimeoutRead:                     durationpb.New(4 * time.Minute),
-			TimeoutWrite:                    durationpb.New(5 * time.Minute),
-		}
-		var diagnostics diag.Diagnostics
-		actual := provider.NewModelToEnterpriseConverter(&diagnostics).Settings(provider.SettingsModel{
-			AccessLogFields:               types.SetValueMust(types.StringType, []attr.Value{types.StringValue("authority"), types.StringValue("duration"), types.StringValue("path")}),
-			Address:                       types.StringValue("127.0.0.1:8443"),
-			AuthenticateServiceURL:        types.StringValue("https://authenticate.example.com"),
-			AuthorizeLogFields:            types.SetValueMust(types.StringType, []attr.Value{types.StringValue("request-id"), types.StringValue("path"), types.StringValue("ip")}),
-			AuthorizeServiceURL:           types.StringValue("https://authorize.example.com"),
-			Autocert:                      types.BoolValue(true),
-			AutocertDir:                   types.StringValue("/tmp/autocert"),
-			AutocertMustStaple:            types.BoolValue(true),
-			AutocertUseStaging:            types.BoolValue(false),
-			BearerTokenFormat:             types.StringValue("idp_access_token"),
-			CacheServiceURL:               types.StringValue("https://cache.example.com"),
-			CertificateAuthority:          types.StringValue("CERTIFICATE_AUTHORITY"),
-			CertificateAuthorityFile:      types.StringValue("/tmp/certificate-authority"),
-			CertificateAuthorityKeyPairID: types.StringValue("CERTIFICATE_AUTHORITY_KEY_PAIR_ID"),
-			ClientCA:                      types.StringValue("CLIENT_CA"),
-			ClientCAFile:                  types.StringValue("/tmp/client-ca"),
-			ClientCAKeyPairID:             types.StringValue("CLIENT_CA_KEY_PAIR_ID"),
-			CodecType:                     types.StringValue("http2"),
-			CookieDomain:                  types.StringValue("example.com"),
-			CookieExpire:                  timetypes.NewGoDurationValue(15 * time.Minute),
-			CookieHTTPOnly:                types.BoolValue(true),
-			CookieName:                    types.StringValue("COOKIE"),
-			CookieSameSite:                types.StringValue("Strict"),
-			CookieSecret:                  types.StringValue("COOKIE_SECRET"),
-			CookieSecure:                  types.BoolValue(true),
-			DarkmodePrimaryColor:          types.StringValue("DARKMODE_PRIMARY_COLOR"),
-			DarkmodeSecondaryColor:        types.StringValue("DARKMODE_SECONDARY_COLOR"),
-			DatabrokerServiceURL:          types.StringValue("https://databroker.example.com"),
-			DefaultUpstreamTimeout:        timetypes.NewGoDurationValue(13 * time.Second),
-			DNSFailureRefreshRate:         timetypes.NewGoDurationValue(14 * time.Second),
-			DNSLookupFamily:               types.StringValue("V6_ONLY"),
-			DNSQueryTimeout:               timetypes.NewGoDurationValue(5 * time.Second),
-			DNSQueryTries:                 types.Int64Value(33),
-			DNSRefreshRate:                timetypes.NewGoDurationValue(15 * time.Second),
-			DNSUDPMaxQueries:              types.Int64Value(34),
-			DNSUseTCP:                     types.BoolValue(true),
-			ErrorMessageFirstParagraph:    types.StringValue("ERROR_MESSAGE"),
-			FaviconURL:                    types.StringValue("https://favicon.example.com"),
-			GoogleCloudServerlessAuthenticationServiceAccount: types.StringValue("GOOGLE_CLOUD_SERVERLESS_AUTHENTICATION_SERVICE_ACCOUNT"),
-			GRPCAddress:                     types.StringValue("127.0.0.1:5443"),
-			GRPCInsecure:                    types.BoolValue(true),
-			HTTPRedirectAddr:                types.StringValue("127.0.0.1:8000"),
-			IdentityProviderRefreshInterval: timetypes.NewGoDurationValue(5 * time.Second),
-			IdentityProviderRefreshTimeout:  timetypes.NewGoDurationValue(6 * time.Second),
-			IDPAccessTokenAllowedAudiences:  types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a"), types.StringValue("b")}),
-			IdpClientID:                     types.StringValue("IDP_CLIENT_ID"),
-			IdpClientSecret:                 types.StringValue("IDP_CLIENT_SECRET"),
-			IdpProvider:                     types.StringValue("IDP_PROVIDER"),
-			IdpProviderURL:                  types.StringValue("https://idp.example.com"),
-			IdpRefreshDirectoryInterval:     timetypes.NewGoDurationValue(7 * time.Second),
-			IdpRefreshDirectoryTimeout:      timetypes.NewGoDurationValue(8 * time.Second),
-			IdpServiceAccount:               types.StringValue("IDP_SERVICE_ACCOUNT"),
-			InsecureServer:                  types.BoolValue(true),
-			InstallationID:                  types.StringValue("INSTALLATION_ID"),
-			JWTClaimsHeaders:                types.MapValueMust(types.StringType, map[string]attr.Value{"X": types.StringValue("Y")}),
-			JWTGroupsFilter:                 types.ObjectValueMust(map[string]attr.Type{"infer_from_ppl": types.BoolType, "groups": types.ListType{ElemType: types.StringType}}, map[string]attr.Value{"infer_from_ppl": types.BoolValue(true), "groups": types.ListValueMust(types.StringType, []attr.Value{types.StringValue("z")})}),
-			JWTIssuerFormat:                 types.StringValue("IssuerURI"),
-			LogLevel:                        types.StringValue("debug"),
-			LogoURL:                         types.StringValue("https://logo.example.com"),
-			MCPAllowedAsMetadataDomains:     types.SetValueMust(types.StringType, []attr.Value{types.StringValue("domain1"), types.StringValue("domain2")}),
-			MCPAllowedClientIDDomains:       types.SetValueMust(types.StringType, []attr.Value{types.StringValue("domain3"), types.StringValue("domain4")}),
-			MetricsAddress:                  types.StringValue("127.0.0.1:9999"),
-			PassIdentityHeaders:             types.BoolValue(true),
-			PrimaryColor:                    types.StringValue("PRIMARY_COLOR"),
-			ProxyLogLevel:                   types.StringValue("error"),
-			RequestParams:                   types.MapValueMust(types.StringType, map[string]attr.Value{"C": types.StringValue("D")}),
-			Scopes:                          types.SetValueMust(types.StringType, []attr.Value{types.StringValue("SCOPE1"), types.StringValue("SCOPE2"), types.StringValue("SCOPE3")}),
-			SecondaryColor:                  types.StringValue("SECONDARY_COLOR"),
-			SetResponseHeaders:              types.MapValueMust(types.StringType, map[string]attr.Value{"E": types.StringValue("F")}),
-			SkipXFFAppend:                   types.BoolValue(true),
-			SSHAddress:                      types.StringValue("SSH_ADDRESS"),
-			SSHHostKeyFiles:                 types.SetValueMust(types.StringType, []attr.Value{types.StringValue("HOST1"), types.StringValue("HOST2")}),
-			SSHHostKeys:                     types.SetValueMust(types.StringType, []attr.Value{types.StringValue("HOST3"), types.StringValue("HOST4")}),
-			SSHUserCAKey:                    types.StringValue("SSH_USER_CA_KEY"),
-			SSHUserCAKeyFile:                types.StringValue("SSH_USER_CA_KEY_FILE"),
-			TimeoutIdle:                     timetypes.NewGoDurationValue(3 * time.Minute),
-			TimeoutRead:                     timetypes.NewGoDurationValue(4 * time.Minute),
-			TimeoutWrite:                    timetypes.NewGoDurationValue(5 * time.Minute),
+		t.Run("empty", func(t *testing.T) {
+			t.Parallel()
+			expected := &pb.Settings{
+				OriginatorId: "terraform",
+			}
+			var diagnostics diag.Diagnostics
+			actual := provider.NewModelToEnterpriseConverter(&diagnostics).Settings(provider.SettingsModel{})
+			assert.Empty(t, diagnostics)
+			if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
+				t.Errorf("unexpected difference: %s", diff)
+			}
 		})
-		assert.Empty(t, diagnostics)
-		if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
-			t.Errorf("unexpected difference: %s", diff)
-		}
+		t.Run("properties", func(t *testing.T) {
+			expected := &pb.Settings{
+				AccessLogFields:               &pb.Settings_StringList{Values: []string{"authority", "duration", "path"}},
+				Address:                       new("127.0.0.1:8443"),
+				AuthenticateServiceUrl:        new("https://authenticate.example.com"),
+				AuthorizeLogFields:            &pb.Settings_StringList{Values: []string{"request-id", "path", "ip"}},
+				AuthorizeServiceUrl:           new("https://authorize.example.com"),
+				Autocert:                      new(true),
+				AutocertDir:                   new("/tmp/autocert"),
+				AutocertMustStaple:            new(true),
+				AutocertUseStaging:            new(false),
+				BearerTokenFormat:             pb.BearerTokenFormat_BEARER_TOKEN_FORMAT_IDP_ACCESS_TOKEN.Enum(),
+				CacheServiceUrl:               new("https://cache.example.com"),
+				CertificateAuthority:          new("CERTIFICATE_AUTHORITY"),
+				CertificateAuthorityFile:      new("/tmp/certificate-authority"),
+				CertificateAuthorityKeyPairId: new("CERTIFICATE_AUTHORITY_KEY_PAIR_ID"),
+				ClientCa:                      new("CLIENT_CA"),
+				ClientCaFile:                  new("/tmp/client-ca"),
+				ClientCaKeyPairId:             new("CLIENT_CA_KEY_PAIR_ID"),
+				CodecType:                     pb.CodecType_CODEC_TYPE_HTTP2.Enum(),
+				CookieDomain:                  new("example.com"),
+				CookieExpire:                  durationpb.New(15 * time.Minute),
+				CookieHttpOnly:                new(true),
+				CookieName:                    new("COOKIE"),
+				CookieSameSite:                new("Strict"),
+				CookieSecret:                  new("COOKIE_SECRET"),
+				CookieSecure:                  new(true),
+				DarkmodePrimaryColor:          new("DARKMODE_PRIMARY_COLOR"),
+				DarkmodeSecondaryColor:        new("DARKMODE_SECONDARY_COLOR"),
+				DatabrokerServiceUrl:          new("https://databroker.example.com"),
+				DefaultUpstreamTimeout:        durationpb.New(13 * time.Second),
+				DnsFailureRefreshRate:         durationpb.New(14 * time.Second),
+				DnsLookupFamily:               new("V6_ONLY"),
+				DnsQueryTimeout:               durationpb.New(5 * time.Second),
+				DnsQueryTries:                 proto.Uint32(33),
+				DnsRefreshRate:                durationpb.New(15 * time.Second),
+				DnsUdpMaxQueries:              proto.Uint32(34),
+				DnsUseTcp:                     new(true),
+				ErrorMessageFirstParagraph:    new("ERROR_MESSAGE"),
+				FaviconUrl:                    new("https://favicon.example.com"),
+				GoogleCloudServerlessAuthenticationServiceAccount: new("GOOGLE_CLOUD_SERVERLESS_AUTHENTICATION_SERVICE_ACCOUNT"),
+				GrpcAddress:                     new("127.0.0.1:5443"),
+				GrpcInsecure:                    new(true),
+				HttpRedirectAddr:                new("127.0.0.1:8000"),
+				IdentityProviderRefreshInterval: durationpb.New(5 * time.Second),
+				IdentityProviderRefreshTimeout:  durationpb.New(6 * time.Second),
+				IdpAccessTokenAllowedAudiences:  &pb.Settings_StringList{Values: []string{"a", "b"}},
+				IdpClientId:                     new("IDP_CLIENT_ID"),
+				IdpClientSecret:                 new("IDP_CLIENT_SECRET"),
+				IdpProvider:                     new("IDP_PROVIDER"),
+				IdpProviderUrl:                  new("https://idp.example.com"),
+				IdpRefreshDirectoryInterval:     durationpb.New(7 * time.Second),
+				IdpRefreshDirectoryTimeout:      durationpb.New(8 * time.Second),
+				IdpServiceAccount:               new("IDP_SERVICE_ACCOUNT"),
+				InsecureServer:                  new(true),
+				InstallationId:                  new("INSTALLATION_ID"),
+				JwtClaimsHeaders:                map[string]string{"X": "Y"},
+				JwtGroupsFilter:                 &pb.JwtGroupsFilter{InferFromPpl: new(true), Groups: []string{"z"}},
+				JwtIssuerFormat:                 pb.IssuerFormat_IssuerURI.Enum(),
+				LogLevel:                        new("debug"),
+				LogoUrl:                         new("https://logo.example.com"),
+				McpAllowedAsMetadataDomains:     &pb.Settings_StringList{Values: []string{"domain1", "domain2"}},
+				McpAllowedClientIdDomains:       &pb.Settings_StringList{Values: []string{"domain3", "domain4"}},
+				MetricsAddress:                  new("127.0.0.1:9999"),
+				OriginatorId:                    "terraform",
+				PassIdentityHeaders:             new(true),
+				PrimaryColor:                    new("PRIMARY_COLOR"),
+				ProxyLogLevel:                   new("error"),
+				RequestParams:                   map[string]string{"C": "D"},
+				Scopes:                          []string{"SCOPE1", "SCOPE2", "SCOPE3"},
+				SecondaryColor:                  new("SECONDARY_COLOR"),
+				SetResponseHeaders:              map[string]string{"E": "F"},
+				SkipXffAppend:                   new(true),
+				SshAddress:                      new("SSH_ADDRESS"),
+				SshHostKeyFiles:                 &pb.Settings_StringList{Values: []string{"HOST1", "HOST2"}},
+				SshHostKeys:                     &pb.Settings_StringList{Values: []string{"HOST3", "HOST4"}},
+				SshUserCaKey:                    new("SSH_USER_CA_KEY"),
+				SshUserCaKeyFile:                new("SSH_USER_CA_KEY_FILE"),
+				TimeoutIdle:                     durationpb.New(3 * time.Minute),
+				TimeoutRead:                     durationpb.New(4 * time.Minute),
+				TimeoutWrite:                    durationpb.New(5 * time.Minute),
+			}
+			var diagnostics diag.Diagnostics
+			actual := provider.NewModelToEnterpriseConverter(&diagnostics).Settings(provider.SettingsModel{
+				AccessLogFields:               types.SetValueMust(types.StringType, []attr.Value{types.StringValue("authority"), types.StringValue("duration"), types.StringValue("path")}),
+				Address:                       types.StringValue("127.0.0.1:8443"),
+				AuthenticateServiceURL:        types.StringValue("https://authenticate.example.com"),
+				AuthorizeLogFields:            types.SetValueMust(types.StringType, []attr.Value{types.StringValue("request-id"), types.StringValue("path"), types.StringValue("ip")}),
+				AuthorizeServiceURL:           types.StringValue("https://authorize.example.com"),
+				Autocert:                      types.BoolValue(true),
+				AutocertDir:                   types.StringValue("/tmp/autocert"),
+				AutocertMustStaple:            types.BoolValue(true),
+				AutocertUseStaging:            types.BoolValue(false),
+				BearerTokenFormat:             types.StringValue("idp_access_token"),
+				CacheServiceURL:               types.StringValue("https://cache.example.com"),
+				CertificateAuthority:          types.StringValue("CERTIFICATE_AUTHORITY"),
+				CertificateAuthorityFile:      types.StringValue("/tmp/certificate-authority"),
+				CertificateAuthorityKeyPairID: types.StringValue("CERTIFICATE_AUTHORITY_KEY_PAIR_ID"),
+				ClientCA:                      types.StringValue("CLIENT_CA"),
+				ClientCAFile:                  types.StringValue("/tmp/client-ca"),
+				ClientCAKeyPairID:             types.StringValue("CLIENT_CA_KEY_PAIR_ID"),
+				CodecType:                     types.StringValue("http2"),
+				CookieDomain:                  types.StringValue("example.com"),
+				CookieExpire:                  timetypes.NewGoDurationValue(15 * time.Minute),
+				CookieHTTPOnly:                types.BoolValue(true),
+				CookieName:                    types.StringValue("COOKIE"),
+				CookieSameSite:                types.StringValue("Strict"),
+				CookieSecret:                  types.StringValue("COOKIE_SECRET"),
+				CookieSecure:                  types.BoolValue(true),
+				DarkmodePrimaryColor:          types.StringValue("DARKMODE_PRIMARY_COLOR"),
+				DarkmodeSecondaryColor:        types.StringValue("DARKMODE_SECONDARY_COLOR"),
+				DatabrokerServiceURL:          types.StringValue("https://databroker.example.com"),
+				DefaultUpstreamTimeout:        timetypes.NewGoDurationValue(13 * time.Second),
+				DNSFailureRefreshRate:         timetypes.NewGoDurationValue(14 * time.Second),
+				DNSLookupFamily:               types.StringValue("V6_ONLY"),
+				DNSQueryTimeout:               timetypes.NewGoDurationValue(5 * time.Second),
+				DNSQueryTries:                 types.Int64Value(33),
+				DNSRefreshRate:                timetypes.NewGoDurationValue(15 * time.Second),
+				DNSUDPMaxQueries:              types.Int64Value(34),
+				DNSUseTCP:                     types.BoolValue(true),
+				ErrorMessageFirstParagraph:    types.StringValue("ERROR_MESSAGE"),
+				FaviconURL:                    types.StringValue("https://favicon.example.com"),
+				GoogleCloudServerlessAuthenticationServiceAccount: types.StringValue("GOOGLE_CLOUD_SERVERLESS_AUTHENTICATION_SERVICE_ACCOUNT"),
+				GRPCAddress:                     types.StringValue("127.0.0.1:5443"),
+				GRPCInsecure:                    types.BoolValue(true),
+				HTTPRedirectAddr:                types.StringValue("127.0.0.1:8000"),
+				IdentityProviderRefreshInterval: timetypes.NewGoDurationValue(5 * time.Second),
+				IdentityProviderRefreshTimeout:  timetypes.NewGoDurationValue(6 * time.Second),
+				IDPAccessTokenAllowedAudiences:  types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a"), types.StringValue("b")}),
+				IdpClientID:                     types.StringValue("IDP_CLIENT_ID"),
+				IdpClientSecret:                 types.StringValue("IDP_CLIENT_SECRET"),
+				IdpProvider:                     types.StringValue("IDP_PROVIDER"),
+				IdpProviderURL:                  types.StringValue("https://idp.example.com"),
+				IdpRefreshDirectoryInterval:     timetypes.NewGoDurationValue(7 * time.Second),
+				IdpRefreshDirectoryTimeout:      timetypes.NewGoDurationValue(8 * time.Second),
+				IdpServiceAccount:               types.StringValue("IDP_SERVICE_ACCOUNT"),
+				InsecureServer:                  types.BoolValue(true),
+				InstallationID:                  types.StringValue("INSTALLATION_ID"),
+				JWTClaimsHeaders:                types.MapValueMust(types.StringType, map[string]attr.Value{"X": types.StringValue("Y")}),
+				JWTGroupsFilter:                 types.ObjectValueMust(map[string]attr.Type{"infer_from_ppl": types.BoolType, "groups": types.ListType{ElemType: types.StringType}}, map[string]attr.Value{"infer_from_ppl": types.BoolValue(true), "groups": types.ListValueMust(types.StringType, []attr.Value{types.StringValue("z")})}),
+				JWTIssuerFormat:                 types.StringValue("IssuerURI"),
+				LogLevel:                        types.StringValue("debug"),
+				LogoURL:                         types.StringValue("https://logo.example.com"),
+				MCPAllowedAsMetadataDomains:     types.SetValueMust(types.StringType, []attr.Value{types.StringValue("domain1"), types.StringValue("domain2")}),
+				MCPAllowedClientIDDomains:       types.SetValueMust(types.StringType, []attr.Value{types.StringValue("domain3"), types.StringValue("domain4")}),
+				MetricsAddress:                  types.StringValue("127.0.0.1:9999"),
+				PassIdentityHeaders:             types.BoolValue(true),
+				PrimaryColor:                    types.StringValue("PRIMARY_COLOR"),
+				ProxyLogLevel:                   types.StringValue("error"),
+				RequestParams:                   types.MapValueMust(types.StringType, map[string]attr.Value{"C": types.StringValue("D")}),
+				Scopes:                          types.SetValueMust(types.StringType, []attr.Value{types.StringValue("SCOPE1"), types.StringValue("SCOPE2"), types.StringValue("SCOPE3")}),
+				SecondaryColor:                  types.StringValue("SECONDARY_COLOR"),
+				SetResponseHeaders:              types.MapValueMust(types.StringType, map[string]attr.Value{"E": types.StringValue("F")}),
+				SkipXFFAppend:                   types.BoolValue(true),
+				SSHAddress:                      types.StringValue("SSH_ADDRESS"),
+				SSHHostKeyFiles:                 types.SetValueMust(types.StringType, []attr.Value{types.StringValue("HOST1"), types.StringValue("HOST2")}),
+				SSHHostKeys:                     types.SetValueMust(types.StringType, []attr.Value{types.StringValue("HOST3"), types.StringValue("HOST4")}),
+				SSHUserCAKey:                    types.StringValue("SSH_USER_CA_KEY"),
+				SSHUserCAKeyFile:                types.StringValue("SSH_USER_CA_KEY_FILE"),
+				TimeoutIdle:                     timetypes.NewGoDurationValue(3 * time.Minute),
+				TimeoutRead:                     timetypes.NewGoDurationValue(4 * time.Minute),
+				TimeoutWrite:                    timetypes.NewGoDurationValue(5 * time.Minute),
+			})
+			assert.Empty(t, diagnostics)
+			if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
+				t.Errorf("unexpected difference: %s", diff)
+			}
+		})
 	})
 
 	t.Run("SettingsStringList", func(t *testing.T) {
