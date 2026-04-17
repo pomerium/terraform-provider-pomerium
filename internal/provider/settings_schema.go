@@ -53,7 +53,11 @@ var SettingsResourceSchema = schema.Schema{
 		},
 		"address": schema.StringAttribute{
 			Optional:    true,
+			Computed:    true,
 			Description: "Specifies the IP Address and Port to serve HTTP requests from.",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"allow_upgrades": schema.SetAttribute{
 			Description: "Allow upgrade requests of the given types.",
@@ -171,16 +175,28 @@ var SettingsResourceSchema = schema.Schema{
 		},
 		"cookie_expire": schema.StringAttribute{
 			Optional:    true,
+			Computed:    true,
 			Description: "Cookie expire",
 			CustomType:  timetypes.GoDurationType{},
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"cookie_http_only": schema.BoolAttribute{
 			Optional:    true,
+			Computed:    true,
 			Description: "Cookie HTTP only",
+			PlanModifiers: []planmodifier.Bool{
+				boolplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"cookie_name": schema.StringAttribute{
 			Optional:    true,
+			Computed:    true,
 			Description: "Cookie name",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"cookie_same_site": schema.StringAttribute{
 			Optional:    true,
@@ -214,8 +230,12 @@ var SettingsResourceSchema = schema.Schema{
 		},
 		"default_upstream_timeout": schema.StringAttribute{
 			Optional:    true,
+			Computed:    true,
 			Description: "Default upstream timeout",
 			CustomType:  timetypes.GoDurationType{},
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"dns_failure_refresh_rate": schema.StringAttribute{
 			Optional:    true,
@@ -224,7 +244,11 @@ var SettingsResourceSchema = schema.Schema{
 		},
 		"dns_lookup_family": schema.StringAttribute{
 			Optional:    true,
+			Computed:    true,
 			Description: "DNS lookup family",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"dns_query_timeout": schema.StringAttribute{
 			Optional:    true,
@@ -522,7 +546,11 @@ var SettingsResourceSchema = schema.Schema{
 		},
 		"log_level": schema.StringAttribute{
 			Optional:    true,
+			Computed:    true,
 			Description: "Log level",
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"logo_url": schema.StringAttribute{
 			Optional:    true,
@@ -534,6 +562,7 @@ var SettingsResourceSchema = schema.Schema{
 		},
 		"mcp_allowed_client_id_domains": schema.SetAttribute{
 			Optional:    true,
+			Computed:    true,
 			ElementType: types.StringType,
 		},
 		"metrics_address": schema.StringAttribute{
@@ -655,7 +684,11 @@ var SettingsResourceSchema = schema.Schema{
 		},
 		"skip_xff_append": schema.BoolAttribute{
 			Optional:    true,
+			Computed:    true,
 			Description: "Skip XFF append",
+			PlanModifiers: []planmodifier.Bool{
+				boolplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"ssh_address": schema.StringAttribute{
 			Optional:    true,
@@ -681,18 +714,30 @@ var SettingsResourceSchema = schema.Schema{
 		},
 		"timeout_idle": schema.StringAttribute{
 			Optional:    true,
+			Computed:    true,
 			Description: "Sets the time at which a downstream or upstream connection will be terminated if no active streams.",
 			CustomType:  timetypes.GoDurationType{},
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"timeout_read": schema.StringAttribute{
 			Optional:    true,
+			Computed:    true,
 			Description: "Sets the amount of time for the client to receive the entire request stream.",
 			CustomType:  timetypes.GoDurationType{},
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 		"timeout_write": schema.StringAttribute{
 			Optional:    true,
+			Computed:    true,
 			Description: "Sets max stream duration of an HTTP request/response exchange. Must be greater than read timeout.",
 			CustomType:  timetypes.GoDurationType{},
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
 		},
 	},
 }
