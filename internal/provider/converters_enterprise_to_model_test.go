@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/protobuf/proto"
+	"google.golang.org/protobuf/testing/protocmp"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
 	"github.com/pomerium/enterprise-client-go/pb"
@@ -146,5 +147,35 @@ func TestEnterpriseToModelConverter(t *testing.T) {
 		})
 		assert.Empty(t, diagnostics)
 		assert.Empty(t, cmp.Diff(expect, actual))
+	})
+	t.Run("Settings", func(t *testing.T) {
+		t.Parallel()
+		t.Run("empty", func(t *testing.T) {
+			t.Parallel()
+			expected := provider.SettingsModel{
+				AccessLogFields:                types.SetNull(types.StringType),
+				AllowUpgrades:                  types.SetNull(types.StringType),
+				AuthorizeLogFields:             types.SetNull(types.StringType),
+				ID:                             types.StringValue(""),
+				IDPAccessTokenAllowedAudiences: types.SetNull(types.StringType),
+				JWTClaimsHeaders:               types.MapNull(types.StringType),
+				MCPAllowedAsMetadataDomains:    types.SetNull(types.StringType),
+				MCPAllowedClientIDDomains:      types.SetNull(types.StringType),
+				OtelExporterOtlpHeaders:        types.SetNull(types.StringType),
+				OtelExporterOtlpTracesHeaders:  types.SetNull(types.StringType),
+				OtelResourceAttributes:         types.SetNull(types.StringType),
+				RequestParams:                  types.MapNull(types.StringType),
+				Scopes:                         types.SetNull(types.StringType),
+				SetResponseHeaders:             types.MapNull(types.StringType),
+				SSHHostKeyFiles:                types.SetNull(types.StringType),
+				SSHHostKeys:                    types.SetNull(types.StringType),
+			}
+			var diagnostics diag.Diagnostics
+			actual := provider.NewEnterpriseToModelConverter(&diagnostics).Settings(&pb.Settings{}, nil)
+			assert.Empty(t, diagnostics)
+			if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
+				t.Errorf("unexpected difference: %s", diff)
+			}
+		})
 	})
 }

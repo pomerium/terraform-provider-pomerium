@@ -84,7 +84,7 @@ func (r *SettingsResource) Create(ctx context.Context, req resource.CreateReques
 				return
 			}
 
-			plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Settings(setRes.GetSettings())
+			plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Settings(setRes.GetSettings(), plan.NamespaceID.ValueStringPointer())
 		})...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -129,7 +129,7 @@ func (r *SettingsResource) Read(ctx context.Context, req resource.ReadRequest, r
 				return
 			}
 
-			state = NewEnterpriseToModelConverter(&resp.Diagnostics).Settings(getRes.GetSettings())
+			state = NewEnterpriseToModelConverter(&resp.Diagnostics).Settings(getRes.GetSettings(), state.NamespaceID.ValueStringPointer())
 		})...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -180,7 +180,7 @@ func (r *SettingsResource) Update(ctx context.Context, req resource.UpdateReques
 				return
 			}
 
-			plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Settings(setRes.GetSettings())
+			plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Settings(setRes.GetSettings(), plan.NamespaceID.ValueStringPointer())
 		})...)
 	if resp.Diagnostics.HasError() {
 		return

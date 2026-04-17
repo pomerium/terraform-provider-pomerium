@@ -396,7 +396,7 @@ func (c *EnterpriseToModelConverter) ServiceAccount(src *enterprise.PomeriumServ
 	}
 }
 
-func (c *EnterpriseToModelConverter) Settings(src *enterprise.Settings) SettingsModel {
+func (c *EnterpriseToModelConverter) Settings(src *enterprise.Settings, namespaceID *string) SettingsModel {
 	return SettingsModel{
 		AccessLogFields:                   FromStringList(src.AccessLogFields),
 		Address:                           types.StringPointerValue(src.Address),
@@ -477,7 +477,7 @@ func (c *EnterpriseToModelConverter) Settings(src *enterprise.Settings) Settings
 		MCPAllowedAsMetadataDomains:     FromStringList(src.McpAllowedAsMetadataDomains),
 		MCPAllowedClientIDDomains:       FromStringList(src.McpAllowedClientIdDomains),
 		MetricsAddress:                  types.StringPointerValue(src.MetricsAddress),
-		NamespaceID:                     types.StringNull(), // not supported
+		NamespaceID:                     types.StringPointerValue(namespaceID),
 		OtelAttributeValueLengthLimit:   Int64PointerValue(src.OtelAttributeValueLengthLimit),
 		OtelBspMaxExportBatchSize:       Int64PointerValue(src.OtelBspMaxExportBatchSize),
 		OtelBspScheduleDelay:            c.Duration(src.OtelBspScheduleDelay),
@@ -499,7 +499,7 @@ func (c *EnterpriseToModelConverter) Settings(src *enterprise.Settings) Settings
 		RequestParams:                   FromStringMap(src.RequestParams),
 		Scopes:                          FromStringSliceToSet(src.Scopes),
 		SecondaryColor:                  types.StringPointerValue(src.SecondaryColor),
-		SessionRecordingEnabled:         types.BoolNull(), // not supported
+		SessionRecordingEnabled:         types.BoolPointerValue(src.SessionRecordingEnabled),
 		SetResponseHeaders:              FromStringMap(src.SetResponseHeaders),
 		SkipXFFAppend:                   types.BoolPointerValue(src.SkipXffAppend),
 		SSHAddress:                      types.StringPointerValue(src.SshAddress),
