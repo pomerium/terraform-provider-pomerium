@@ -31,6 +31,9 @@ update-tools() {
 	asdf set golang latest:1.26
 	asdf install golangci-lint latest:2
 	asdf set golangci-lint latest:2
+	asdf plugin add terraform https://github.com/asdf-community/asdf-hashicorp.git
+	asdf install terraform latest
+	asdf set terraform latest
 
 	popd
 }
