@@ -22,6 +22,8 @@ jobs:
         with:
           go-version-file: .tool-versions
 
+      - uses: hashicorp/setup-terraform@5e8dbf3c6d9deaf4193ca7a8fb23f2ac83bb6c85
+
       - name: Test
         run: make test
 
