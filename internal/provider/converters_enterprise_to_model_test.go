@@ -20,6 +20,28 @@ import (
 func TestEnterpriseToModelConverter(t *testing.T) {
 	t.Parallel()
 
+	t.Run("BlobStorageSettings", func(t *testing.T) {
+		t.Parallel()
+
+		for _, tc := range []struct {
+			src    *pb.BlobStorageSettings
+			expect types.Object
+		}{
+			{nil, types.ObjectNull(provider.BlobStorageSettingsObjectType().AttrTypes)},
+			{&pb.BlobStorageSettings{
+				BucketUri:     new("s3://example-bucket"),
+				ManagedPrefix: new("tenants/acme/"),
+			}, types.ObjectValueMust(provider.BlobStorageSettingsObjectType().AttrTypes, map[string]attr.Value{
+				"bucket_uri":     types.StringValue("s3://example-bucket"),
+				"managed_prefix": types.StringValue("tenants/acme/"),
+			})},
+		} {
+			var diagnostics diag.Diagnostics
+			actual := provider.NewEnterpriseToModelConverter(&diagnostics).BlobStorageSettings(tc.src)
+			assert.Empty(t, diagnostics)
+			assert.Equal(t, tc.expect, actual)
+		}
+	})
 	t.Run("CircuitBreakerThresholds", func(t *testing.T) {
 		t.Parallel()
 

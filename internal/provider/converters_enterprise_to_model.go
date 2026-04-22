@@ -30,7 +30,7 @@ func (c *EnterpriseToModelConverter) BlobStorageSettings(src *enterprise.BlobSto
 	}
 	dst, diagnostics := types.ObjectValue(BlobStorageSettingsObjectType().AttrTypes, map[string]attr.Value{
 		"bucket_uri":     types.StringPointerValue(src.BucketUri),
-		"managed_prefix": types.StringNull(),
+		"managed_prefix": types.StringPointerValue(src.ManagedPrefix),
 	})
 	c.diagnostics.Append(diagnostics...)
 	return dst
