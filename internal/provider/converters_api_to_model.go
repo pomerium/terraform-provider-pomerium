@@ -32,8 +32,7 @@ func (c *APIToModelConverter) BlobStorageSettings(src *pomerium.BlobStorageSetti
 		return types.ObjectNull(BlobStorageSettingsObjectType().AttrTypes)
 	}
 	dst, diagnostics := types.ObjectValue(BlobStorageSettingsObjectType().AttrTypes, map[string]attr.Value{
-		"bucket_uri":     types.StringPointerValue(src.BucketUri),
-		"managed_prefix": types.StringPointerValue(src.ManagedPrefix),
+		"bucket_uri": types.StringPointerValue(src.BucketUri),
 	})
 	c.diagnostics.Append(diagnostics...)
 	return dst

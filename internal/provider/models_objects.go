@@ -9,8 +9,7 @@ import (
 func BlobStorageSettingsObjectType() types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
-			"bucket_uri":     types.StringType,
-			"managed_prefix": types.StringType,
+			"bucket_uri": types.StringType,
 		},
 	}
 }

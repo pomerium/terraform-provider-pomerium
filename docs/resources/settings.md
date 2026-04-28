@@ -139,7 +139,6 @@ The settings are global object.
 Optional:
 
 - `bucket_uri` (String, Sensitive)
-- `managed_prefix` (String)
 
 
 <a id="nestedatt--circuit_breaker_thresholds"></a>

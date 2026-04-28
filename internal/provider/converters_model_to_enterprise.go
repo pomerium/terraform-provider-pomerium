@@ -33,10 +33,9 @@ func (c *ModelToEnterpriseConverter) BlobStorage(src types.Object) *enterprise.B
 
 	attrs := src.Attributes()
 	bucketURI, _ := attrs["bucket_uri"].(types.String)
-	managedPrefix, _ := attrs["managed_prefix"].(types.String)
 	return &enterprise.BlobStorageSettings{
 		BucketUri:     c.NullableString(bucketURI),
-		ManagedPrefix: c.NullableString(managedPrefix),
+		ManagedPrefix: nil,
 	}
 }
 

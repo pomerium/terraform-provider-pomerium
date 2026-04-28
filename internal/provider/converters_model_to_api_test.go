@@ -279,8 +279,7 @@ func TestModelToAPI(t *testing.T) {
 				AuthorizeServiceURL:    types.StringValue("https://authorize.example.com"),
 				Autocert:               types.BoolValue(true),
 				BlobStorage: types.ObjectValueMust(provider.BlobStorageSettingsObjectType().AttrTypes, map[string]attr.Value{
-					"bucket_uri":     types.StringValue("BUCKET_URI"),
-					"managed_prefix": types.StringValue("MANAGED_PREFIX"),
+					"bucket_uri": types.StringValue("BUCKET_URI"),
 				}),
 				CertificateAuthority:              types.StringValue("CA_CERT"),
 				ClusterID:                         types.StringValue("CLUSTER_ID"),
@@ -328,7 +327,7 @@ func TestModelToAPI(t *testing.T) {
 			assert.Equal(t, new("https://authenticate.example.com"), result.AuthenticateServiceUrl)
 			assert.Equal(t, []string{"https://authorize.example.com"}, result.AuthorizeServiceUrls)
 			assert.Equal(t, new(true), result.Autocert)
-			assert.Empty(t, cmp.Diff(&pomerium.BlobStorageSettings{BucketUri: new("BUCKET_URI"), ManagedPrefix: new("MANAGED_PREFIX")}, result.BlobStorage, protocmp.Transform()))
+			assert.Empty(t, cmp.Diff(&pomerium.BlobStorageSettings{BucketUri: new("BUCKET_URI")}, result.BlobStorage, protocmp.Transform()))
 			assert.Equal(t, new("CA_CERT"), result.CertificateAuthority)
 			assert.Equal(t, new("CLUSTER_ID"), result.ClusterId)
 			assert.Equal(t, new(".example.com"), result.CookieDomain)

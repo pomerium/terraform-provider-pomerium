@@ -36,10 +36,9 @@ func (c *ModelToAPIConverter) BlobStorageSettings(src types.Object) *pomerium.Bl
 
 	attrs := src.Attributes()
 	bucketURI, _ := attrs["bucket_uri"].(types.String)
-	managedPrefix, _ := attrs["managed_prefix"].(types.String)
 	return &pomerium.BlobStorageSettings{
 		BucketUri:     c.NullableString(bucketURI),
-		ManagedPrefix: c.NullableString(managedPrefix),
+		ManagedPrefix: nil,
 	}
 }
 
