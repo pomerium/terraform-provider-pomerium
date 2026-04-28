@@ -458,8 +458,7 @@ func TestAPIToModel(t *testing.T) {
 				AuthorizeServiceUrls:   []string{"https://authorize.example.com"},
 				Autocert:               new(true),
 				BlobStorage: &pomerium.BlobStorageSettings{
-					BucketUri:     new("BUCKET_URI"),
-					ManagedPrefix: new("MANAGED_PREFIX"),
+					BucketUri: new("BUCKET_URI"),
 				},
 				CertificateAuthority:              new("CA_CERT"),
 				ClusterId:                         new("CLUSTER_ID"),
@@ -510,8 +509,7 @@ func TestAPIToModel(t *testing.T) {
 			assert.Equal(t, types.StringValue("https://authorize.example.com"), result.AuthorizeServiceURL)
 			assert.Equal(t, types.BoolValue(true), result.Autocert)
 			assert.Equal(t, types.ObjectValueMust(provider.BlobStorageSettingsObjectType().AttrTypes, map[string]attr.Value{
-				"bucket_uri":     types.StringValue("BUCKET_URI"),
-				"managed_prefix": types.StringValue("MANAGED_PREFIX"),
+				"bucket_uri": types.StringValue("BUCKET_URI"),
 			}), result.BlobStorage)
 			assert.Equal(t, types.StringValue("CA_CERT"), result.CertificateAuthority)
 			assert.Equal(t, types.StringValue("CLUSTER_ID"), result.ClusterID)

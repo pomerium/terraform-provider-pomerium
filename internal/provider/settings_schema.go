@@ -119,9 +119,6 @@ var SettingsResourceSchema = schema.Schema{
 					Optional:  true,
 					Sensitive: true,
 				},
-				"managed_prefix": schema.StringAttribute{
-					Optional: true,
-				},
 			},
 		},
 		"cache_service_url": schema.StringAttribute{
