@@ -6,16 +6,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
-func RecordingDataSourceObejctType() types.ObjectType {
-	return types.ObjectType{
-		AttrTypes: map[string]attr.Type{
-			"name":       types.StringType,
-			"namespace":  types.StringType,
-			"bucket_uri": types.StringType,
-		},
-	}
-}
-
 func BlobStorageSettingsObjectType() types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{
