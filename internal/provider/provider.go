@@ -134,6 +134,7 @@ func (p *PomeriumProvider) Resources(_ context.Context) []func() resource.Resour
 		NewRouteResource,
 		NewServiceAccountResource,
 		NewSettingsResource,
+		NewRecordingDatasourceResource,
 	}
 }
 
@@ -150,6 +151,7 @@ func (p *PomeriumProvider) DataSources(_ context.Context) []func() datasource.Da
 		NewRoutesDataSource,
 		NewServiceAccountDataSource,
 		NewServiceAccountsDataSource,
+		NewRecordingDatasource,
 	}
 }
 

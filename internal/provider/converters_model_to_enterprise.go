@@ -108,6 +108,16 @@ func (c *ModelToEnterpriseConverter) ExternalDataSource(src ExternalDataSourceMo
 	}
 }
 
+func (c *ModelToEnterpriseConverter) RecordingDataSource(src RecordingDataSourceModel) *enterprise.Datasource {
+	return &enterprise.Datasource{
+		Namespace: src.Namespace.ValueString(),
+		Entry: &enterprise.DatasourceEntry{
+			Name:      src.Name.ValueString(),
+			BucketURI: src.BucketURI.ValueString(),
+		},
+	}
+}
+
 func (c *ModelToEnterpriseConverter) HealthCheck(src types.Object) *enterprise.HealthCheck {
 	if src.IsNull() || src.IsUnknown() {
 		return nil

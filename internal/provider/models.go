@@ -44,6 +44,12 @@ type ExternalDataSourceModel struct {
 	URL              types.String         `tfsdk:"url"`
 }
 
+type RecordingDataSourceModel struct {
+	Name      types.String `tfsdk:"name"`
+	Namespace types.String `tfsdk:"namespace"`
+	BucketURI types.String `tfsdk:"bucket_uri"`
+}
+
 type KeyPairModel struct {
 	Certificate types.String `tfsdk:"certificate"`
 	ID          types.String `tfsdk:"id"`
