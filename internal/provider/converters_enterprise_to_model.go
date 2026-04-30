@@ -35,6 +35,14 @@ func (c *EnterpriseToModelConverter) BlobStorageSettings(src *enterprise.BlobSto
 	return dst
 }
 
+func (c *EnterpriseToModelConverter) RecordingDatasource(src *enterprise.Datasource) RecordingDataSourceModel {
+	return RecordingDataSourceModel{
+		Namespace: types.StringValue(src.GetNamespace()),
+		Name:      types.StringValue(src.GetEntry().GetName()),
+		BucketURI: types.StringValue(src.Entry.GetBucketURI()),
+	}
+}
+
 func (c *EnterpriseToModelConverter) CircuitBreakerThresholds(src *enterprise.CircuitBreakerThresholds) types.Object {
 	if src == nil {
 		return types.ObjectNull(CircuitBreakerThresholdsObjectType().AttrTypes)

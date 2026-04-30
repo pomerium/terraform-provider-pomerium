@@ -178,4 +178,45 @@ func TestEnterpriseToModelConverter(t *testing.T) {
 			}
 		})
 	})
+	t.Run("RecordingDataSource", func(t *testing.T) {
+		t.Parallel()
+
+		for _, tc := range []struct {
+			name   string
+			src    *pb.Datasource
+			expect provider.RecordingDataSourceModel
+		}{
+			{
+				name: "all set",
+				src: &pb.Datasource{
+					Namespace: "default",
+					Entry: &pb.DatasourceEntry{
+						Name:      "ds-a",
+						BucketURI: "s3://bucket",
+					},
+				},
+				expect: provider.RecordingDataSourceModel{
+					Name:      types.StringValue("ds-a"),
+					Namespace: types.StringValue("default"),
+					BucketURI: types.StringValue("s3://bucket"),
+				},
+			},
+			{
+				name: "empty values",
+				src:  &pb.Datasource{},
+				expect: provider.RecordingDataSourceModel{
+					Name:      types.StringValue(""),
+					Namespace: types.StringValue(""),
+					BucketURI: types.StringValue(""),
+				},
+			},
+		} {
+			t.Run(tc.name, func(t *testing.T) {
+				var diagnostics diag.Diagnostics
+				actual := provider.NewEnterpriseToModelConverter(&diagnostics).RecordingDatasource(tc.src)
+				assert.Empty(t, diagnostics)
+				assert.Empty(t, cmp.Diff(tc.expect, actual))
+			})
+		}
+	})
 }

@@ -197,8 +197,8 @@ github.com/jackc/pgpassfile v1.0.0 h1:/6Hmqy13Ss2zCq62VdNG8tM1wchn8zjSGOBJ6icpsI
 github.com/jackc/pgpassfile v1.0.0/go.mod h1:CEx0iS5ambNFdcRtxPj5JhEz+xB6uRky5eyVu/W2HEg=
 github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 h1:iCEnooe7UlwOQYpKFhBabPMi4aNAfoODPEFNiAnClxo=
 github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761/go.mod h1:5TJZWKEWniPve33vlWYSoGYefn3gLQRzjfDlhSJ9ZKM=
-github.com/jackc/pgx/v5 v5.9.2 h1:3ZhOzMWnR4yJ+RW1XImIPsD1aNSz4T4fyP7zlQb56hw=
-github.com/jackc/pgx/v5 v5.9.2/go.mod h1:mal1tBGAFfLHvZzaYh77YS/eC6IX9OWbRV1QIIM0Jn4=
+github.com/jackc/pgx/v5 v5.9.1 h1:uwrxJXBnx76nyISkhr33kQLlUqjv7et7b9FjCen/tdc=
+github.com/jackc/pgx/v5 v5.9.1/go.mod h1:mal1tBGAFfLHvZzaYh77YS/eC6IX9OWbRV1QIIM0Jn4=
 github.com/jackc/puddle/v2 v2.2.2 h1:PR8nw+E/1w0GLuRFSmiioY6UooMp6KJv0/61nB7icHo=
 github.com/jackc/puddle/v2 v2.2.2/go.mod h1:vriiEXHvEE654aYKXXjOvZM39qJ0q+azkZFrfEOc3H4=
 github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99 h1:BQSFePA1RWJOlocH6Fxy8MmwDt+yVQYULKfN0RoTN8A=
@@ -306,8 +306,8 @@ github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 h1:Jamvg5psRI
 github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/pomerium/enterprise-client-go v0.32.1-0.20260429170712-022a9e849ddd h1:U5QeQJ4qMQgOibCH3O7VwICtr6tggw9ENqXl/D0zDCc=
 github.com/pomerium/enterprise-client-go v0.32.1-0.20260429170712-022a9e849ddd/go.mod h1:zoj5Lwd40mGZUs/o47zqd7gO9al6ZegVMKl9noVvNYU=
-github.com/pomerium/pomerium v0.32.5-rc.1.0.20260429171459-0fa9b392ebe8 h1:RZs/5Sj5MYTjbK9q3WI6W1gjt6H0JsZxKLdp3inWNgg=
-github.com/pomerium/pomerium v0.32.5-rc.1.0.20260429171459-0fa9b392ebe8/go.mod h1:3NdG7cTusJeMcmlMUzSTvaLcF+adTIYPbxwBxC7YHNc=
+github.com/pomerium/pomerium v0.32.5-rc.1.0.20260417203220-54aab0ae8f98 h1:I2MHkfbux1hnfB8mQEFPqrQRLTD7R3ACbD5APMghm24=
+github.com/pomerium/pomerium v0.32.5-rc.1.0.20260417203220-54aab0ae8f98/go.mod h1:BplyT6QkG3SmdqAzM5T9qcP8hvITfaQHG+j1xbwUWtc=
 github.com/pomerium/protoutil v0.0.0-20260409020752-3f215632cd09 h1:m2hAj5/Csh/SR2R8Y1DwDO3cz6WWpPqKHwxF55NS9h8=
 github.com/pomerium/protoutil v0.0.0-20260409020752-3f215632cd09/go.mod h1:Z2DdXU7Y2Vqj45ynjJMJGRYxs5sb17f7I1dFVA+sKQs=
 github.com/pomerium/sdk-go v0.0.10-0.20260410163827-54fee984f200 h1:6kfDBIunAnJUHo9DB9FroOURJNG1w5D5GjxYcDWGfVo=
