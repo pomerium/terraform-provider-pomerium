@@ -15,8 +15,8 @@ require (
 	github.com/hashicorp/terraform-plugin-log v0.10.0
 	github.com/hashicorp/terraform-plugin-testing v1.16.0
 	github.com/iancoleman/strcase v0.3.0
-	github.com/pomerium/enterprise-client-go v0.32.1-0.20260501181536-1f3cf617e654
-	github.com/pomerium/pomerium v0.32.5-rc.1.0.20260501202659-66a954ea4a59
+	github.com/pomerium/enterprise-client-go v0.32.1-0.20260504135814-ba10d92402fd
+	github.com/pomerium/pomerium v0.32.5-rc.1.0.20260507184406-053e5b5c172a
 	github.com/pomerium/sdk-go v0.0.10-0.20260410163827-54fee984f200
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
@@ -109,7 +109,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/pomerium/protoutil v0.0.0-20260409020752-3f215632cd09 // indirect
+	github.com/pomerium/protoutil v0.0.0-20260501181431-db111ff7faab // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
 	github.com/shirou/gopsutil/v4 v4.26.3 // indirect
@@ -141,9 +141,9 @@ require (
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.43.0 // indirect
 	golang.org/x/text v0.36.0 // indirect
-	golang.org/x/tools v0.43.0 // indirect
+	golang.org/x/tools v0.44.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260427160629-7cedc36a6bc4 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260504160031-60b97b32f348 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
