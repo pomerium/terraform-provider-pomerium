@@ -345,6 +345,7 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 				},
 			},
 		},
+		"session_recording": RouteSessionRecordingSchema,
 		"set_request_headers": schema.MapAttribute{
 			Computed:    true,
 			ElementType: types.StringType,

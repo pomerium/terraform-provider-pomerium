@@ -409,6 +409,7 @@ func (c *ModelToEnterpriseConverter) Route(src RouteModel) *enterprise.Route {
 		RemoveRequestHeaders:                      c.StringSliceFromSet(path.Root("remove_request_headers"), src.RemoveRequestHeaders),
 		Response:                                  nil, // not supported
 		RewriteResponseHeaders:                    fromSetOfObjects(src.RewriteResponseHeaders, RewriteHeaderObjectType(), c.RouteRewriteHeader),
+		SessionRecording:                          c.RouteSessionRecording(src.SessionRecording),
 		SetRequestHeaders:                         c.StringMap(path.Root("set_request_headers"), src.SetRequestHeaders),
 		SetResponseHeaders:                        c.StringMap(path.Root("set_response_headers"), src.SetResponseHeaders),
 		ShowErrorDetails:                          src.ShowErrorDetails.ValueBool(),
@@ -423,6 +424,15 @@ func (c *ModelToEnterpriseConverter) Route(src RouteModel) *enterprise.Route {
 		TlsUpstreamServerName:                     src.TLSUpstreamServerName.ValueStringPointer(),
 		To:                                        c.StringSliceFromSet(path.Root("to"), src.To),
 		UpstreamTunnel:                            c.UpstreamTunnel(path.Root("upstream_tunnel"), src.UpstreamTunnel),
+	}
+}
+
+func (c *ModelToEnterpriseConverter) RouteSessionRecording(src *RouteSessionRecordingModel) *enterprise.SessionRecording {
+	if src == nil {
+		return nil
+	}
+	return &enterprise.SessionRecording{
+		Enabled: src.Enabled.ValueBoolPointer(),
 	}
 }
 
@@ -573,6 +583,7 @@ func (c *ModelToEnterpriseConverter) Settings(src SettingsModel) *enterprise.Set
 		DnsRefreshRate:                c.Duration(path.Root("dns_refresh_rate"), src.DNSRefreshRate),
 		DnsUdpMaxQueries:              c.NullableUint32(src.DNSUDPMaxQueries),
 		DnsUseTcp:                     c.NullableBool(src.DNSUseTCP),
+		EnvoyDynamicExtensions:        c.SettingsStringList(path.Root("envoy_dynamic_extensions"), src.EnvoyDynamicExtensions),
 		ErrorMessageFirstParagraph:    c.NullableString(src.ErrorMessageFirstParagraph),
 		FaviconUrl:                    c.NullableString(src.FaviconURL),
 		GoogleCloudServerlessAuthenticationServiceAccount: c.NullableString(src.GoogleCloudServerlessAuthenticationServiceAccount),
@@ -626,6 +637,7 @@ func (c *ModelToEnterpriseConverter) Settings(src SettingsModel) *enterprise.Set
 		Scopes:                          c.StringSliceFromSet(path.Root("scopes"), src.Scopes),
 		SecondaryColor:                  c.NullableString(src.SecondaryColor),
 		Services:                        nil, // not supported
+		SessionRecordingConcurrency:     c.NullableUint32(src.SessionRecordingConcurrency),
 		SessionRecordingEnabled:         c.NullableBool(src.SessionRecordingEnabled),
 		SetResponseHeaders:              c.StringMap(path.Root("set_response_headers"), src.SetResponseHeaders),
 		SharedSecret:                    nil, // not supported

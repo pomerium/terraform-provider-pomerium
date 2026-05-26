@@ -181,6 +181,9 @@ func TestModelToAPI(t *testing.T) {
 				Prefix:              types.StringValue("/prefix"),
 				PrefixRewrite:       types.StringValue("/new-prefix"),
 				Regex:               types.StringValue(`\.example\.com`),
+				SessionRecording: &provider.RouteSessionRecordingModel{
+					Enabled: types.BoolValue(true),
+				},
 				SetRequestHeaders: types.MapValueMust(types.StringType, map[string]attr.Value{
 					"X-Custom": types.StringValue("value"),
 				}),
@@ -239,6 +242,7 @@ func TestModelToAPI(t *testing.T) {
 				Prefix:              "/prefix",
 				PrefixRewrite:       "/new-prefix",
 				Regex:               `\.example\.com`,
+				SessionRecording:    &pomerium.SessionRecording{Enabled: true},
 				SetRequestHeaders: map[string]string{
 					"X-Custom": "value",
 				},
@@ -291,6 +295,7 @@ func TestModelToAPI(t *testing.T) {
 				CookieSecret:                      types.StringValue("SECRET"),
 				DatabrokerStorageConnectionString: types.StringValue("DSN"),
 				DefaultUpstreamTimeout:            timetypes.NewGoDurationValue(30 * time.Second),
+				EnvoyDynamicExtensions:            types.SetValueMust(types.StringType, []attr.Value{types.StringValue("/etc/envoy/ext1.so"), types.StringValue("/etc/envoy/ext2.so")}),
 				ErrorMessageFirstParagraph:        types.StringValue("ACCESS_DENIED"),
 				GRPCAddress:                       types.StringValue(":5443"),
 				GRPCInsecure:                      types.BoolValue(false),
@@ -314,6 +319,7 @@ func TestModelToAPI(t *testing.T) {
 				RequestParams:                     types.MapValueMust(types.StringType, map[string]attr.Value{"param1": types.StringValue("value1")}),
 				Scopes:                            types.SetValueMust(types.StringType, []attr.Value{types.StringValue("openid"), types.StringValue("profile")}),
 				SecondaryColor:                    types.StringValue("#FFFFFF"),
+				SessionRecordingConcurrency:       types.Int64Value(4),
 				SessionRecordingEnabled:           types.BoolValue(true),
 				SetResponseHeaders:                types.MapValueMust(types.StringType, map[string]attr.Value{"X-Frame-Options": types.StringValue("DENY")}),
 				SkipXFFAppend:                     types.BoolValue(false),
@@ -338,6 +344,7 @@ func TestModelToAPI(t *testing.T) {
 			assert.Equal(t, new("SECRET"), result.CookieSecret)
 			assert.Equal(t, new("DSN"), result.DatabrokerStorageConnectionString)
 			assert.Empty(t, cmp.Diff(durationpb.New(30*time.Second), result.DefaultUpstreamTimeout, protocmp.Transform()))
+			assert.Empty(t, cmp.Diff(&pomerium.Settings_StringList{Values: []string{"/etc/envoy/ext1.so", "/etc/envoy/ext2.so"}}, result.EnvoyDynamicExtensions, protocmp.Transform()))
 			assert.Equal(t, new("ACCESS_DENIED"), result.ErrorMessageFirstParagraph)
 			assert.Equal(t, new(":5443"), result.GrpcAddress)
 			assert.Equal(t, new(false), result.GrpcInsecure)
@@ -362,7 +369,7 @@ func TestModelToAPI(t *testing.T) {
 			assert.Equal(t, map[string]string{"param1": "value1"}, result.RequestParams)
 			assert.ElementsMatch(t, []string{"openid", "profile"}, result.Scopes)
 			assert.Equal(t, new("#FFFFFF"), result.SecondaryColor)
-			assert.Equal(t, new(true), result.SessionRecordingEnabled)
+			assert.Equal(t, new(uint32(4)), result.SessionRecordingConcurrency)
 			assert.Equal(t, map[string]string{"X-Frame-Options": "DENY"}, result.SetResponseHeaders)
 			assert.Equal(t, new(false), result.SkipXffAppend)
 			assert.Equal(t, new(":22"), result.SshAddress)

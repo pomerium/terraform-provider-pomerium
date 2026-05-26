@@ -58,6 +58,18 @@ func TestEnterpriseToModelConverter(t *testing.T) {
 	})
 	t.Run("Route", func(t *testing.T) {
 		t.Parallel()
+		t.Run("SessionRecording", func(t *testing.T) {
+			t.Parallel()
+			var diagnostics diag.Diagnostics
+			expect := &provider.RouteSessionRecordingModel{
+				Enabled: types.BoolValue(true),
+			}
+			actual := provider.NewEnterpriseToModelConverter(&diagnostics).RouteSessionRecording(&pb.SessionRecording{
+				Enabled: new(true),
+			})
+			assert.Empty(t, diagnostics)
+			assert.Empty(t, cmp.Diff(expect, actual))
+		})
 		t.Run("MCP", func(t *testing.T) {
 			t.Parallel()
 			t.Run("Client", func(t *testing.T) {
@@ -156,6 +168,7 @@ func TestEnterpriseToModelConverter(t *testing.T) {
 				AccessLogFields:                types.SetNull(types.StringType),
 				AllowUpgrades:                  types.SetNull(types.StringType),
 				AuthorizeLogFields:             types.SetNull(types.StringType),
+				EnvoyDynamicExtensions:         types.SetNull(types.StringType),
 				ID:                             types.StringValue(""),
 				IDPAccessTokenAllowedAudiences: types.SetNull(types.StringType),
 				JWTClaimsHeaders:               types.MapNull(types.StringType),

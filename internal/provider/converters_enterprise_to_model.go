@@ -301,6 +301,7 @@ func (c *EnterpriseToModelConverter) Route(src *enterprise.Route) RouteModel {
 		RegexRewriteSubstitution:          types.StringPointerValue(src.RegexRewriteSubstitution),
 		RemoveRequestHeaders:              FromStringSliceToSet(src.RemoveRequestHeaders),
 		RewriteResponseHeaders:            toSetOfObjects(src.RewriteResponseHeaders, RewriteHeaderObjectType(), c.RouteRewriteHeader),
+		SessionRecording:                  c.RouteSessionRecording(src.SessionRecording),
 		SetRequestHeaders:                 FromStringMap(src.SetRequestHeaders),
 		SetResponseHeaders:                FromStringMap(src.SetResponseHeaders),
 		ShowErrorDetails:                  types.BoolValue(src.ShowErrorDetails),
@@ -314,6 +315,15 @@ func (c *EnterpriseToModelConverter) Route(src *enterprise.Route) RouteModel {
 		TLSUpstreamServerName:             types.StringPointerValue(src.TlsUpstreamServerName),
 		To:                                FromStringSliceToSet(src.To),
 		UpstreamTunnel:                    c.UpstreamTunnel(src.UpstreamTunnel),
+	}
+}
+
+func (c *EnterpriseToModelConverter) RouteSessionRecording(src *enterprise.SessionRecording) *RouteSessionRecordingModel {
+	if src == nil {
+		return nil
+	}
+	return &RouteSessionRecordingModel{
+		Enabled: types.BoolPointerValue(src.Enabled),
 	}
 }
 
@@ -447,6 +457,7 @@ func (c *EnterpriseToModelConverter) Settings(src *enterprise.Settings, namespac
 		DNSRefreshRate:                    c.Duration(src.DnsRefreshRate),
 		DNSUDPMaxQueries:                  Int64PointerValue(src.DnsUdpMaxQueries),
 		DNSUseTCP:                         types.BoolPointerValue(src.DnsUseTcp),
+		EnvoyDynamicExtensions:            FromStringList(src.EnvoyDynamicExtensions),
 		ErrorMessageFirstParagraph:        types.StringPointerValue(src.ErrorMessageFirstParagraph),
 		FaviconURL:                        types.StringPointerValue(src.FaviconUrl),
 		GoogleCloudServerlessAuthenticationServiceAccount: types.StringPointerValue(src.GoogleCloudServerlessAuthenticationServiceAccount),
@@ -506,6 +517,7 @@ func (c *EnterpriseToModelConverter) Settings(src *enterprise.Settings, namespac
 		RequestParams:                   FromStringMap(src.RequestParams),
 		Scopes:                          FromStringSliceToSet(src.Scopes),
 		SecondaryColor:                  types.StringPointerValue(src.SecondaryColor),
+		SessionRecordingConcurrency:     Int64PointerValue(src.SessionRecordingConcurrency),
 		SessionRecordingEnabled:         types.BoolPointerValue(src.SessionRecordingEnabled),
 		SetResponseHeaders:              FromStringMap(src.SetResponseHeaders),
 		SkipXFFAppend:                   types.BoolPointerValue(src.SkipXffAppend),

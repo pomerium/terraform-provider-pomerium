@@ -239,6 +239,25 @@ func TestModelToEnterpriseConverter(t *testing.T) {
 				t.Errorf("unexpected difference: %s", diff)
 			}
 		})
+		t.Run("SessionRecording", func(t *testing.T) {
+			t.Parallel()
+			expected := &pb.Route{
+				OriginatorId:     provider.OriginatorID,
+				SessionRecording: &pb.SessionRecording{Enabled: new(true)},
+			}
+			var diagnostics diag.Diagnostics
+			actual := provider.NewModelToEnterpriseConverter(&diagnostics).Route(provider.RouteModel{
+				SessionRecording: &provider.RouteSessionRecordingModel{
+					Enabled: types.BoolValue(true),
+				},
+			})
+			if !assert.Equal(t, 0, diagnostics.ErrorsCount()) {
+				t.Log(diagnostics.Errors())
+			}
+			if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
+				t.Errorf("unexpected difference: %s", diff)
+			}
+		})
 		t.Run("MCP", func(t *testing.T) {
 			t.Parallel()
 			t.Run("Client", func(t *testing.T) {
@@ -463,6 +482,7 @@ func TestModelToEnterpriseConverter(t *testing.T) {
 				DnsRefreshRate:                durationpb.New(15 * time.Second),
 				DnsUdpMaxQueries:              proto.Uint32(34),
 				DnsUseTcp:                     new(true),
+				EnvoyDynamicExtensions:        &pb.Settings_StringList{Values: []string{"/etc/envoy/ext1.so", "/etc/envoy/ext2.so"}},
 				ErrorMessageFirstParagraph:    new("ERROR_MESSAGE"),
 				FaviconUrl:                    new("https://favicon.example.com"),
 				GoogleCloudServerlessAuthenticationServiceAccount: new("GOOGLE_CLOUD_SERVERLESS_AUTHENTICATION_SERVICE_ACCOUNT"),
@@ -496,6 +516,7 @@ func TestModelToEnterpriseConverter(t *testing.T) {
 				RequestParams:                   map[string]string{"C": "D"},
 				Scopes:                          []string{"SCOPE1", "SCOPE2", "SCOPE3"},
 				SecondaryColor:                  new("SECONDARY_COLOR"),
+				SessionRecordingConcurrency:     proto.Uint32(4),
 				SetResponseHeaders:              map[string]string{"E": "F"},
 				SkipXffAppend:                   new(true),
 				SshAddress:                      new("SSH_ADDRESS"),
@@ -545,6 +566,7 @@ func TestModelToEnterpriseConverter(t *testing.T) {
 				DNSRefreshRate:                timetypes.NewGoDurationValue(15 * time.Second),
 				DNSUDPMaxQueries:              types.Int64Value(34),
 				DNSUseTCP:                     types.BoolValue(true),
+				EnvoyDynamicExtensions:        types.SetValueMust(types.StringType, []attr.Value{types.StringValue("/etc/envoy/ext1.so"), types.StringValue("/etc/envoy/ext2.so")}),
 				ErrorMessageFirstParagraph:    types.StringValue("ERROR_MESSAGE"),
 				FaviconURL:                    types.StringValue("https://favicon.example.com"),
 				GoogleCloudServerlessAuthenticationServiceAccount: types.StringValue("GOOGLE_CLOUD_SERVERLESS_AUTHENTICATION_SERVICE_ACCOUNT"),
@@ -577,6 +599,7 @@ func TestModelToEnterpriseConverter(t *testing.T) {
 				RequestParams:                   types.MapValueMust(types.StringType, map[string]attr.Value{"C": types.StringValue("D")}),
 				Scopes:                          types.SetValueMust(types.StringType, []attr.Value{types.StringValue("SCOPE1"), types.StringValue("SCOPE2"), types.StringValue("SCOPE3")}),
 				SecondaryColor:                  types.StringValue("SECONDARY_COLOR"),
+				SessionRecordingConcurrency:     types.Int64Value(4),
 				SetResponseHeaders:              types.MapValueMust(types.StringType, map[string]attr.Value{"E": types.StringValue("F")}),
 				SkipXFFAppend:                   types.BoolValue(true),
 				SSHAddress:                      types.StringValue("SSH_ADDRESS"),

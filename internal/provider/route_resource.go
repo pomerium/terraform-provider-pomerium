@@ -438,6 +438,7 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 					},
 				},
 			},
+			"session_recording": RouteSessionRecordingSchema,
 			"set_request_headers": schema.MapAttribute{
 				ElementType: types.StringType,
 				Description: "Sets static and dynamic values for given request headers. Available substitutions: ${pomerium.id_token}, ${pomerium.access_token}, ${pomerium.client_cert_fingerprint}.",
