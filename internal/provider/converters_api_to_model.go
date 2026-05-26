@@ -224,6 +224,7 @@ func (c *APIToModelConverter) Route(src *pomerium.Route) RouteModel {
 		RegexRewriteSubstitution:          types.StringValue(src.RegexRewriteSubstitution),
 		RemoveRequestHeaders:              FromStringSliceToSet(src.RemoveRequestHeaders),
 		RewriteResponseHeaders:            toSetOfObjects(src.RewriteResponseHeaders, RewriteHeaderObjectType(), c.RouteRewriteHeader),
+		SessionRecording:                  c.RouteSessionRecording(src.SessionRecording),
 		SetRequestHeaders:                 FromStringMap(src.SetRequestHeaders),
 		SetResponseHeaders:                FromStringMap(src.SetResponseHeaders),
 		ShowErrorDetails:                  types.BoolValue(src.ShowErrorDetails),
@@ -237,6 +238,15 @@ func (c *APIToModelConverter) Route(src *pomerium.Route) RouteModel {
 		TLSUpstreamServerName:             types.StringValue(src.TlsUpstreamServerName),
 		To:                                FromStringSliceToSet(src.To),
 		UpstreamTunnel:                    c.UpstreamTunnel(src.UpstreamTunnel),
+	}
+}
+
+func (c *APIToModelConverter) RouteSessionRecording(src *pomerium.SessionRecording) *RouteSessionRecordingModel {
+	if src == nil {
+		return nil
+	}
+	return &RouteSessionRecordingModel{
+		Enabled: types.BoolValue(src.GetEnabled()),
 	}
 }
 
@@ -381,6 +391,7 @@ func (c *APIToModelConverter) Settings(src *pomerium.Settings) SettingsModel {
 		DNSRefreshRate:                    c.Duration(src.DnsRefreshRate),
 		DNSUDPMaxQueries:                  Int64PointerValue(src.DnsUdpMaxQueries),
 		DNSUseTCP:                         types.BoolPointerValue(src.DnsUseTcp),
+		EnvoyDynamicExtensions:            FromStringList(src.EnvoyDynamicExtensions),
 		ErrorMessageFirstParagraph:        types.StringPointerValue(src.ErrorMessageFirstParagraph),
 		FaviconURL:                        types.StringPointerValue(src.FaviconUrl),
 		GoogleCloudServerlessAuthenticationServiceAccount: types.StringPointerValue(src.GoogleCloudServerlessAuthenticationServiceAccount),
@@ -440,7 +451,8 @@ func (c *APIToModelConverter) Settings(src *pomerium.Settings) SettingsModel {
 		RequestParams:                   FromStringMap(src.RequestParams),
 		Scopes:                          FromStringSliceToSet(src.Scopes),
 		SecondaryColor:                  types.StringPointerValue(src.SecondaryColor),
-		SessionRecordingEnabled:         types.BoolPointerValue(src.SessionRecordingEnabled),
+		SessionRecordingConcurrency:     Int64PointerValue(src.SessionRecordingConcurrency),
+		SessionRecordingEnabled:         types.BoolNull(),
 		SetResponseHeaders:              FromStringMap(src.SetResponseHeaders),
 		SkipXFFAppend:                   types.BoolPointerValue(src.SkipXffAppend),
 		SSHAddress:                      types.StringPointerValue(src.SshAddress),

@@ -86,60 +86,65 @@ type PolicyModel struct {
 }
 
 type RouteModel struct {
-	AllowSPDY                                 types.Bool           `tfsdk:"allow_spdy"`
-	AllowUpgrades                             types.Set            `tfsdk:"allow_upgrades"`
-	AllowWebsockets                           types.Bool           `tfsdk:"allow_websockets"`
-	BearerTokenFormat                         types.String         `tfsdk:"bearer_token_format"`
-	CircuitBreakerThresholds                  types.Object         `tfsdk:"circuit_breaker_thresholds"`
-	DependsOnHosts                            types.Set            `tfsdk:"depends_on_hosts"`
-	Description                               types.String         `tfsdk:"description"`
-	EnableGoogleCloudServerlessAuthentication types.Bool           `tfsdk:"enable_google_cloud_serverless_authentication"`
-	From                                      types.String         `tfsdk:"from"`
-	HealthChecks                              types.Set            `tfsdk:"health_checks"`
-	HealthyPanicThreshold                     types.Int32          `tfsdk:"healthy_panic_threshold"`
-	HostPathRegexRewritePattern               types.String         `tfsdk:"host_path_regex_rewrite_pattern"`
-	HostPathRegexRewriteSubstitution          types.String         `tfsdk:"host_path_regex_rewrite_substitution"`
-	HostRewrite                               types.String         `tfsdk:"host_rewrite"`
-	HostRewriteHeader                         types.String         `tfsdk:"host_rewrite_header"`
-	ID                                        types.String         `tfsdk:"id"`
-	IdleTimeout                               timetypes.GoDuration `tfsdk:"idle_timeout"`
-	IDPAccessTokenAllowedAudiences            types.Set            `tfsdk:"idp_access_token_allowed_audiences"`
-	IDPClientID                               types.String         `tfsdk:"idp_client_id"`
-	IDPClientSecret                           types.String         `tfsdk:"idp_client_secret"`
-	JWTGroupsFilter                           types.Object         `tfsdk:"jwt_groups_filter"`
-	JWTIssuerFormat                           types.String         `tfsdk:"jwt_issuer_format"`
-	KubernetesServiceAccountToken             types.String         `tfsdk:"kubernetes_service_account_token"`
-	KubernetesServiceAccountTokenFile         types.String         `tfsdk:"kubernetes_service_account_token_file"`
-	LoadBalancingPolicy                       types.String         `tfsdk:"load_balancing_policy"`
-	LogoURL                                   types.String         `tfsdk:"logo_url"`
-	MCP                                       types.Object         `tfsdk:"mcp"`
-	Name                                      types.String         `tfsdk:"name"`
-	NamespaceID                               types.String         `tfsdk:"namespace_id"`
-	PassIdentityHeaders                       types.Bool           `tfsdk:"pass_identity_headers"`
-	Path                                      types.String         `tfsdk:"path"`
-	Policies                                  types.Set            `tfsdk:"policies"`
-	Prefix                                    types.String         `tfsdk:"prefix"`
-	PrefixRewrite                             types.String         `tfsdk:"prefix_rewrite"`
-	PreserveHostHeader                        types.Bool           `tfsdk:"preserve_host_header"`
-	Regex                                     types.String         `tfsdk:"regex"`
-	RegexPriorityOrder                        types.Int64          `tfsdk:"regex_priority_order"`
-	RegexRewritePattern                       types.String         `tfsdk:"regex_rewrite_pattern"`
-	RegexRewriteSubstitution                  types.String         `tfsdk:"regex_rewrite_substitution"`
-	RemoveRequestHeaders                      types.Set            `tfsdk:"remove_request_headers"`
-	RewriteResponseHeaders                    types.Set            `tfsdk:"rewrite_response_headers"`
-	SetRequestHeaders                         types.Map            `tfsdk:"set_request_headers"`
-	SetResponseHeaders                        types.Map            `tfsdk:"set_response_headers"`
-	ShowErrorDetails                          types.Bool           `tfsdk:"show_error_details"`
-	StatName                                  types.String         `tfsdk:"stat_name"`
-	Timeout                                   timetypes.GoDuration `tfsdk:"timeout"`
-	TLSClientKeyPairID                        types.String         `tfsdk:"tls_client_key_pair_id"`
-	TLSCustomCAKeyPairID                      types.String         `tfsdk:"tls_custom_ca_key_pair_id"`
-	TLSDownstreamServerName                   types.String         `tfsdk:"tls_downstream_server_name"`
-	TLSSkipVerify                             types.Bool           `tfsdk:"tls_skip_verify"`
-	TLSUpstreamAllowRenegotiation             types.Bool           `tfsdk:"tls_upstream_allow_renegotiation"`
-	TLSUpstreamServerName                     types.String         `tfsdk:"tls_upstream_server_name"`
-	To                                        types.Set            `tfsdk:"to"`
-	UpstreamTunnel                            types.Object         `tfsdk:"upstream_tunnel"`
+	AllowSPDY                                 types.Bool                  `tfsdk:"allow_spdy"`
+	AllowUpgrades                             types.Set                   `tfsdk:"allow_upgrades"`
+	AllowWebsockets                           types.Bool                  `tfsdk:"allow_websockets"`
+	BearerTokenFormat                         types.String                `tfsdk:"bearer_token_format"`
+	CircuitBreakerThresholds                  types.Object                `tfsdk:"circuit_breaker_thresholds"`
+	DependsOnHosts                            types.Set                   `tfsdk:"depends_on_hosts"`
+	Description                               types.String                `tfsdk:"description"`
+	EnableGoogleCloudServerlessAuthentication types.Bool                  `tfsdk:"enable_google_cloud_serverless_authentication"`
+	From                                      types.String                `tfsdk:"from"`
+	HealthChecks                              types.Set                   `tfsdk:"health_checks"`
+	HealthyPanicThreshold                     types.Int32                 `tfsdk:"healthy_panic_threshold"`
+	HostPathRegexRewritePattern               types.String                `tfsdk:"host_path_regex_rewrite_pattern"`
+	HostPathRegexRewriteSubstitution          types.String                `tfsdk:"host_path_regex_rewrite_substitution"`
+	HostRewrite                               types.String                `tfsdk:"host_rewrite"`
+	HostRewriteHeader                         types.String                `tfsdk:"host_rewrite_header"`
+	ID                                        types.String                `tfsdk:"id"`
+	IdleTimeout                               timetypes.GoDuration        `tfsdk:"idle_timeout"`
+	IDPAccessTokenAllowedAudiences            types.Set                   `tfsdk:"idp_access_token_allowed_audiences"`
+	IDPClientID                               types.String                `tfsdk:"idp_client_id"`
+	IDPClientSecret                           types.String                `tfsdk:"idp_client_secret"`
+	JWTGroupsFilter                           types.Object                `tfsdk:"jwt_groups_filter"`
+	JWTIssuerFormat                           types.String                `tfsdk:"jwt_issuer_format"`
+	KubernetesServiceAccountToken             types.String                `tfsdk:"kubernetes_service_account_token"`
+	KubernetesServiceAccountTokenFile         types.String                `tfsdk:"kubernetes_service_account_token_file"`
+	LoadBalancingPolicy                       types.String                `tfsdk:"load_balancing_policy"`
+	LogoURL                                   types.String                `tfsdk:"logo_url"`
+	MCP                                       types.Object                `tfsdk:"mcp"`
+	Name                                      types.String                `tfsdk:"name"`
+	NamespaceID                               types.String                `tfsdk:"namespace_id"`
+	PassIdentityHeaders                       types.Bool                  `tfsdk:"pass_identity_headers"`
+	Path                                      types.String                `tfsdk:"path"`
+	Policies                                  types.Set                   `tfsdk:"policies"`
+	Prefix                                    types.String                `tfsdk:"prefix"`
+	PrefixRewrite                             types.String                `tfsdk:"prefix_rewrite"`
+	PreserveHostHeader                        types.Bool                  `tfsdk:"preserve_host_header"`
+	Regex                                     types.String                `tfsdk:"regex"`
+	RegexPriorityOrder                        types.Int64                 `tfsdk:"regex_priority_order"`
+	RegexRewritePattern                       types.String                `tfsdk:"regex_rewrite_pattern"`
+	RegexRewriteSubstitution                  types.String                `tfsdk:"regex_rewrite_substitution"`
+	RemoveRequestHeaders                      types.Set                   `tfsdk:"remove_request_headers"`
+	RewriteResponseHeaders                    types.Set                   `tfsdk:"rewrite_response_headers"`
+	SessionRecording                          *RouteSessionRecordingModel `tfsdk:"session_recording"`
+	SetRequestHeaders                         types.Map                   `tfsdk:"set_request_headers"`
+	SetResponseHeaders                        types.Map                   `tfsdk:"set_response_headers"`
+	ShowErrorDetails                          types.Bool                  `tfsdk:"show_error_details"`
+	StatName                                  types.String                `tfsdk:"stat_name"`
+	Timeout                                   timetypes.GoDuration        `tfsdk:"timeout"`
+	TLSClientKeyPairID                        types.String                `tfsdk:"tls_client_key_pair_id"`
+	TLSCustomCAKeyPairID                      types.String                `tfsdk:"tls_custom_ca_key_pair_id"`
+	TLSDownstreamServerName                   types.String                `tfsdk:"tls_downstream_server_name"`
+	TLSSkipVerify                             types.Bool                  `tfsdk:"tls_skip_verify"`
+	TLSUpstreamAllowRenegotiation             types.Bool                  `tfsdk:"tls_upstream_allow_renegotiation"`
+	TLSUpstreamServerName                     types.String                `tfsdk:"tls_upstream_server_name"`
+	To                                        types.Set                   `tfsdk:"to"`
+	UpstreamTunnel                            types.Object                `tfsdk:"upstream_tunnel"`
+}
+
+type RouteSessionRecordingModel struct {
+	Enabled types.Bool `tfsdk:"enabled"`
 }
 
 type ServiceAccountModel struct {
@@ -194,6 +199,7 @@ type SettingsModel struct {
 	DNSRefreshRate                                    timetypes.GoDuration `tfsdk:"dns_refresh_rate"`
 	DNSUDPMaxQueries                                  types.Int64          `tfsdk:"dns_udp_max_queries"`
 	DNSUseTCP                                         types.Bool           `tfsdk:"dns_use_tcp"`
+	EnvoyDynamicExtensions                            types.Set            `tfsdk:"envoy_dynamic_extensions"`
 	ErrorMessageFirstParagraph                        types.String         `tfsdk:"error_message_first_paragraph"`
 	FaviconURL                                        types.String         `tfsdk:"favicon_url"`
 	GoogleCloudServerlessAuthenticationServiceAccount types.String         `tfsdk:"google_cloud_serverless_authentication_service_account"`
@@ -253,6 +259,7 @@ type SettingsModel struct {
 	RequestParams                                     types.Map            `tfsdk:"request_params"`
 	Scopes                                            types.Set            `tfsdk:"scopes"`
 	SecondaryColor                                    types.String         `tfsdk:"secondary_color"`
+	SessionRecordingConcurrency                       types.Int64          `tfsdk:"session_recording_concurrency"`
 	SessionRecordingEnabled                           types.Bool           `tfsdk:"session_recording_enabled"`
 	SetResponseHeaders                                types.Map            `tfsdk:"set_response_headers"`
 	SkipXFFAppend                                     types.Bool           `tfsdk:"skip_xff_append"`

@@ -269,6 +269,11 @@ var SettingsResourceSchema = schema.Schema{
 			Optional:    true,
 			Description: "Use TCP for all DNS queries instead of the default protocol UDP.",
 		},
+		"envoy_dynamic_extensions": schema.SetAttribute{
+			Optional:    true,
+			Description: "File paths to the extensions to be loaded by envoy at runtime.",
+			ElementType: types.StringType,
+		},
 		"error_message_first_paragraph": schema.StringAttribute{
 			Optional:    true,
 			Description: "A paragraph that will appear on all Route Error Pages in the top section.",
@@ -670,6 +675,10 @@ var SettingsResourceSchema = schema.Schema{
 		"secondary_color": schema.StringAttribute{
 			Optional:    true,
 			Description: "A hex code that determines the secondary color for the Enterprise Console and Route Error Details pages.",
+		},
+		"session_recording_concurrency": schema.Int64Attribute{
+			Optional:    true,
+			Description: "Tunes the maximum number of worker threads that envoy allocates for session recording.",
 		},
 		"session_recording_enabled": schema.BoolAttribute{
 			Optional: true,

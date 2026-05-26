@@ -62,6 +62,7 @@ The settings are global object.
 - `dns_refresh_rate` (String) The rate at which DNS lookups are refreshed.
 - `dns_udp_max_queries` (Number) Caps the number of UDP based DNS queries on a single port.
 - `dns_use_tcp` (Boolean) Use TCP for all DNS queries instead of the default protocol UDP.
+- `envoy_dynamic_extensions` (Set of String) File paths to the extensions to be loaded by envoy at runtime.
 - `error_message_first_paragraph` (String) A paragraph that will appear on all Route Error Pages in the top section.
 - `favicon_url` (String) A Url pointing to your favicon. Defaults to Pomerium's Favicon.
 - `google_cloud_serverless_authentication_service_account` (String) Google Cloud Serverless Authentication service account credentials.
@@ -121,6 +122,7 @@ The settings are global object.
 - `request_params` (Map of String) The identity provider parameters you want to include as part of a sign-in request using the OAuth 2.0 code flow.
 - `scopes` (Set of String) Scopes
 - `secondary_color` (String) A hex code that determines the secondary color for the Enterprise Console and Route Error Details pages.
+- `session_recording_concurrency` (Number) Tunes the maximum number of worker threads that envoy allocates for session recording.
 - `session_recording_enabled` (Boolean)
 - `set_response_headers` (Map of String) Response headers to set
 - `skip_xff_append` (Boolean) Skip XFF append

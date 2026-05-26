@@ -61,6 +61,17 @@ var JWTGroupsFilterSchema = schema.SingleNestedAttribute{
 	},
 }
 
+var RouteSessionRecordingSchema = schema.SingleNestedAttribute{
+	Optional:    true,
+	Description: "Session recording configuration for this route.",
+	Attributes: map[string]schema.Attribute{
+		"enabled": schema.BoolAttribute{
+			Optional:    true,
+			Description: "Toggle to enable/disable session recording for this route.",
+		},
+	},
+}
+
 func Int64RangeSchema() schema.NestedAttributeObject {
 	return schema.NestedAttributeObject{
 		Attributes: map[string]schema.Attribute{

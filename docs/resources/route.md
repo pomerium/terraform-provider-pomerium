@@ -66,6 +66,7 @@ Route for Pomerium.
 - `regex_rewrite_substitution` (String) Rewrites the URL path according to the regex rewrite substitution.
 - `remove_request_headers` (Set of String) Removes given request headers so they do not reach the upstream server.
 - `rewrite_response_headers` (Attributes Set) Modifies response headers before they are returned to the client. 'Header' matches the HTTP header name; 'prefix' will be replaced with 'value'. (see [below for nested schema](#nestedatt--rewrite_response_headers))
+- `session_recording` (Attributes) Session recording configuration for this route. (see [below for nested schema](#nestedatt--session_recording))
 - `set_request_headers` (Map of String) Sets static and dynamic values for given request headers. Available substitutions: ${pomerium.id_token}, ${pomerium.access_token}, ${pomerium.client_cert_fingerprint}.
 - `set_response_headers` (Map of String) Sets static HTTP Response Header values for a route. These headers take precedence over globally set response headers.
 - `show_error_details` (Boolean) If applied, shows error details, including policy explanation and remediation for 403 Forbidden responses.
@@ -244,6 +245,14 @@ Required:
 Optional:
 
 - `prefix` (String) Prefix matcher for the header
+
+
+<a id="nestedatt--session_recording"></a>
+### Nested Schema for `session_recording`
+
+Optional:
+
+- `enabled` (Boolean) Toggle to enable/disable session recording for this route.
 
 
 <a id="nestedatt--upstream_tunnel"></a>

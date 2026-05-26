@@ -27,6 +27,7 @@ Route data source
 - `jwt_issuer_format` (String) Format for JWT issuer strings. Use 'IssuerHostOnly' for hostname without scheme or trailing slash, or 'IssuerURI' for complete URI including scheme and trailing slash.
 - `load_balancing_policy` (String) Load balancing policy.
 - `mcp` (Attributes) Model Context Protocol configuration for this route. (see [below for nested schema](#nestedatt--mcp))
+- `session_recording` (Attributes) Session recording configuration for this route. (see [below for nested schema](#nestedatt--session_recording))
 
 ### Read-Only
 
@@ -143,6 +144,14 @@ Optional:
 
 
 
+
+
+<a id="nestedatt--session_recording"></a>
+### Nested Schema for `session_recording`
+
+Optional:
+
+- `enabled` (Boolean) Toggle to enable/disable session recording for this route.
 
 
 <a id="nestedatt--health_checks"></a>

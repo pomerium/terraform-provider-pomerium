@@ -446,6 +446,7 @@ func (c *ModelToAPIConverter) Route(src RouteModel) *pomerium.Route {
 		RemoveRequestHeaders:                   c.StringSliceFromSet(path.Root("remove_request_headers"), src.RemoveRequestHeaders),
 		Response:                               nil, // not supported
 		RewriteResponseHeaders:                 fromSetOfObjects(src.RewriteResponseHeaders, RewriteHeaderObjectType(), c.RouteRewriteHeader),
+		SessionRecording:                       c.RouteSessionRecording(src.SessionRecording),
 		SetRequestHeaders:                      c.StringMap(path.Root("set_request_headers"), src.SetRequestHeaders),
 		SetResponseHeaders:                     c.StringMap(path.Root("set_response_headers"), src.SetResponseHeaders),
 		ShowErrorDetails:                       src.ShowErrorDetails.ValueBool(),
@@ -469,6 +470,15 @@ func (c *ModelToAPIConverter) Route(src RouteModel) *pomerium.Route {
 		TlsUpstreamServerName:                  src.TLSUpstreamServerName.ValueString(),
 		To:                                     c.StringSliceFromSet(path.Root("to"), src.To),
 		UpstreamTunnel:                         c.UpstreamTunnel(path.Root("upstream_tunnel"), src.UpstreamTunnel),
+	}
+}
+
+func (c *ModelToAPIConverter) RouteSessionRecording(src *RouteSessionRecordingModel) *pomerium.SessionRecording {
+	if src == nil {
+		return nil
+	}
+	return &pomerium.SessionRecording{
+		Enabled: src.Enabled.ValueBool(),
 	}
 }
 
@@ -671,6 +681,7 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *pomerium.Settings {
 		EnvoyAdminProfilePath:             nil, // not supported
 		EnvoyBindConfigFreebind:           nil, // not supported
 		EnvoyBindConfigSourceAddress:      nil, // not supported
+		EnvoyDynamicExtensions:            c.SettingsStringList(path.Root("envoy_dynamic_extensions"), src.EnvoyDynamicExtensions),
 		ErrorMessageFirstParagraph:        c.NullableString(src.ErrorMessageFirstParagraph),
 		FaviconUrl:                        c.NullableString(src.FaviconURL),
 		GoogleCloudServerlessAuthenticationServiceAccount: c.NullableString(src.GoogleCloudServerlessAuthenticationServiceAccount),
@@ -729,7 +740,7 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *pomerium.Settings {
 		Scopes:                              c.StringSliceFromSet(path.Root("scopes"), src.Scopes),
 		SecondaryColor:                      c.NullableString(src.SecondaryColor),
 		Services:                            nil, // not supported
-		SessionRecordingEnabled:             c.NullableBool(src.SessionRecordingEnabled),
+		SessionRecordingConcurrency:         c.NullableUint32(src.SessionRecordingConcurrency),
 		SetResponseHeaders:                  c.StringMap(path.Root("set_response_headers"), src.SetResponseHeaders),
 		SharedSecret:                        nil, // not supported
 		SigningKey:                          nil, // not supported
