@@ -39,7 +39,7 @@ func (c *EnterpriseToModelConverter) RecordingDatasource(src *enterprise.Datasou
 	return RecordingDataSourceModel{
 		Namespace: types.StringValue(src.GetNamespace()),
 		Name:      types.StringValue(src.GetEntry().GetName()),
-		BucketURI: types.StringValue(src.Entry.GetBucketURI()),
+		BucketURI: types.StringValue(src.GetEntry().GetBucketURI()),
 	}
 }
 
