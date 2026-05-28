@@ -16,8 +16,8 @@ import (
 
 	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
 	"github.com/pomerium/pomerium/pkg/cryptutil"
+	configpb "github.com/pomerium/pomerium/pkg/grpc/config"
 	"github.com/pomerium/sdk-go"
-	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 var testAccProtoV6ProviderFactories = map[string]func() (tfprotov6.ProviderServer, error){
@@ -54,7 +54,7 @@ func startTestPomeriumCore(t *testing.T) (apiURL string, sharedSecret []byte) {
 		_, err = sdk.NewClient(
 			sdk.WithAPIToken(base64.StdEncoding.EncodeToString(sharedSecret)),
 			sdk.WithURL(apiURL),
-		).GetServerInfo(t.Context(), connect.NewRequest(&pomerium.GetServerInfoRequest{}))
+		).GetServerInfo(t.Context(), connect.NewRequest(&configpb.GetServerInfoRequest{}))
 		if err == nil {
 			break
 		}

@@ -10,12 +10,12 @@ import (
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 
-	"github.com/pomerium/sdk-go/proto/pomerium"
+	databrokerpb "github.com/pomerium/pomerium/pkg/grpc/databroker"
 )
 
 func databrokerDelete(
 	ctx context.Context,
-	client pomerium.DataBrokerServiceClient,
+	client databrokerpb.DataBrokerServiceClient,
 	recordType string,
 	recordID string,
 ) error {
@@ -23,8 +23,8 @@ func databrokerDelete(
 	if err != nil {
 		return err
 	}
-	_, err = client.Put(ctx, &pomerium.PutRequest{
-		Records: []*pomerium.Record{{
+	_, err = client.Put(ctx, &databrokerpb.PutRequest{
+		Records: []*databrokerpb.Record{{
 			Type:      recordType,
 			Id:        recordID,
 			Data:      anyData,
@@ -36,11 +36,11 @@ func databrokerDelete(
 
 func databrokerGet(
 	ctx context.Context,
-	client pomerium.DataBrokerServiceClient,
+	client databrokerpb.DataBrokerServiceClient,
 	recordType string,
 	recordID string,
 ) (*structpb.Struct, error) {
-	res, err := client.Get(ctx, &pomerium.GetRequest{
+	res, err := client.Get(ctx, &databrokerpb.GetRequest{
 		Type: recordType,
 		Id:   recordID,
 	})
@@ -57,13 +57,13 @@ func databrokerGet(
 
 func databrokerList(
 	ctx context.Context,
-	client pomerium.DataBrokerServiceClient,
+	client databrokerpb.DataBrokerServiceClient,
 	recordType string,
 ) ([]*structpb.Struct, error) {
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
-	stream, err := client.SyncLatest(ctx, &pomerium.SyncLatestRequest{
+	stream, err := client.SyncLatest(ctx, &databrokerpb.SyncLatestRequest{
 		Type: recordType,
 	})
 	if err != nil {
@@ -80,7 +80,7 @@ func databrokerList(
 		}
 
 		switch res := res.Response.(type) {
-		case *pomerium.SyncLatestResponse_Record:
+		case *databrokerpb.SyncLatestResponse_Record:
 			var d structpb.Struct
 			err = res.Record.GetData().UnmarshalTo(&d)
 			if err != nil {
@@ -94,7 +94,7 @@ func databrokerList(
 
 func databrokerPut(
 	ctx context.Context,
-	client pomerium.DataBrokerServiceClient,
+	client databrokerpb.DataBrokerServiceClient,
 	recordType string,
 	recordID string,
 	data *structpb.Struct,
@@ -103,8 +103,8 @@ func databrokerPut(
 	if err != nil {
 		return err
 	}
-	_, err = client.Put(ctx, &pomerium.PutRequest{
-		Records: []*pomerium.Record{{
+	_, err = client.Put(ctx, &databrokerpb.PutRequest{
+		Records: []*databrokerpb.Record{{
 			Type: recordType,
 			Id:   recordID,
 			Data: anyData,

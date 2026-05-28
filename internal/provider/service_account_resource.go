@@ -16,8 +16,8 @@ import (
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	configpb "github.com/pomerium/pomerium/pkg/grpc/config"
 	"github.com/pomerium/sdk-go"
-	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 var _ interface {
@@ -112,7 +112,7 @@ func (r *ServiceAccountResource) Create(ctx context.Context, req resource.Create
 				return
 			}
 
-			createReq := newConnectRequest(&pomerium.CreateServiceAccountRequest{
+			createReq := newConnectRequest(&configpb.CreateServiceAccountRequest{
 				ServiceAccount: apiServiceAccount,
 			}, apiServiceAccount)
 			createRes, err := client.CreateServiceAccount(ctx, createReq)
@@ -169,7 +169,7 @@ func (r *ServiceAccountResource) Read(ctx context.Context, req resource.ReadRequ
 
 	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
-			getReq := connect.NewRequest(&pomerium.GetServiceAccountRequest{
+			getReq := connect.NewRequest(&configpb.GetServiceAccountRequest{
 				Id: state.ID.ValueString(),
 			})
 			getRes, err := client.GetServiceAccount(ctx, getReq)
@@ -222,7 +222,7 @@ func (r *ServiceAccountResource) Update(ctx context.Context, req resource.Update
 				return
 			}
 
-			updateReq := newConnectRequest(&pomerium.UpdateServiceAccountRequest{
+			updateReq := newConnectRequest(&configpb.UpdateServiceAccountRequest{
 				ServiceAccount: apiServiceAccount,
 			}, apiServiceAccount)
 			updateRes, err := client.UpdateServiceAccount(ctx, updateReq)
@@ -266,7 +266,7 @@ func (r *ServiceAccountResource) Delete(ctx context.Context, req resource.Delete
 
 	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
-			deleteReq := connect.NewRequest(&pomerium.DeleteServiceAccountRequest{
+			deleteReq := connect.NewRequest(&configpb.DeleteServiceAccountRequest{
 				Id: state.ID.ValueString(),
 			})
 			_, err := client.DeleteServiceAccount(ctx, deleteReq)

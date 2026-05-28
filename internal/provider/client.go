@@ -19,9 +19,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 
 	client "github.com/pomerium/enterprise-client-go"
+	configpb "github.com/pomerium/pomerium/pkg/grpc/config"
 	"github.com/pomerium/sdk-go"
 	"github.com/pomerium/sdk-go/pkg/zeroapi"
-	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 type serverType string
@@ -109,7 +109,7 @@ func NewClient(apiURL, serviceAccountToken, sharedSecretB64 string, tlsConfig *t
 		getServerType: sync.OnceValues(func() (serverType, error) {
 			ctx := context.Background()
 
-			res, err := consolidatedClient.GetServerInfo(ctx, connect.NewRequest(&pomerium.GetServerInfoRequest{}))
+			res, err := consolidatedClient.GetServerInfo(ctx, connect.NewRequest(&configpb.GetServerInfoRequest{}))
 			if err != nil {
 				if strings.Contains(err.Error(), "415 Unsupported Media Type") {
 					return serverTypeLegacy, nil
@@ -118,11 +118,11 @@ func NewClient(apiURL, serviceAccountToken, sharedSecretB64 string, tlsConfig *t
 			}
 
 			switch res.Msg.GetServerType() {
-			case pomerium.ServerType_SERVER_TYPE_CORE:
+			case configpb.ServerType_SERVER_TYPE_CORE:
 				return serverTypeCore, nil
-			case pomerium.ServerType_SERVER_TYPE_ENTERPRISE:
+			case configpb.ServerType_SERVER_TYPE_ENTERPRISE:
 				return serverTypeEnterprise, nil
-			case pomerium.ServerType_SERVER_TYPE_ZERO:
+			case configpb.ServerType_SERVER_TYPE_ZERO:
 				return serverTypeZero, nil
 			default:
 				return serverTypeLegacy, nil

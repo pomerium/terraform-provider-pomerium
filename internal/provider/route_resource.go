@@ -22,8 +22,8 @@ import (
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	configpb "github.com/pomerium/pomerium/pkg/grpc/config"
 	"github.com/pomerium/sdk-go"
-	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 // Ensure provider defined types fully satisfy framework interfaces.
@@ -542,7 +542,7 @@ func (r *RouteResource) Create(ctx context.Context, req resource.CreateRequest, 
 				return
 			}
 
-			createReq := newConnectRequest(&pomerium.CreateRouteRequest{
+			createReq := newConnectRequest(&configpb.CreateRouteRequest{
 				Route: apiRoute,
 			}, apiRoute)
 			createRes, err := client.CreateRoute(ctx, createReq)
@@ -592,7 +592,7 @@ func (r *RouteResource) Read(ctx context.Context, req resource.ReadRequest, resp
 
 	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
-			getReq := connect.NewRequest(&pomerium.GetRouteRequest{
+			getReq := connect.NewRequest(&configpb.GetRouteRequest{
 				Id: state.ID.ValueString(),
 			})
 			getRes, err := client.GetRoute(ctx, getReq)
@@ -644,7 +644,7 @@ func (r *RouteResource) Update(ctx context.Context, req resource.UpdateRequest, 
 				return
 			}
 
-			updateReq := newConnectRequest(&pomerium.UpdateRouteRequest{
+			updateReq := newConnectRequest(&configpb.UpdateRouteRequest{
 				Route: apiRoute,
 			}, apiRoute)
 			updateRes, err := client.UpdateRoute(ctx, updateReq)
@@ -689,7 +689,7 @@ func (r *RouteResource) Delete(ctx context.Context, req resource.DeleteRequest, 
 
 	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
-			deleteReq := connect.NewRequest(&pomerium.DeleteRouteRequest{
+			deleteReq := connect.NewRequest(&configpb.DeleteRouteRequest{
 				Id: data.ID.ValueString(),
 			})
 			_, err := client.DeleteRoute(ctx, deleteReq)

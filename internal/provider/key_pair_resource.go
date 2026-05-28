@@ -16,8 +16,8 @@ import (
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	configpb "github.com/pomerium/pomerium/pkg/grpc/config"
 	"github.com/pomerium/sdk-go"
-	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 var _ interface {
@@ -91,7 +91,7 @@ func (r *KeyPairResource) Create(ctx context.Context, req resource.CreateRequest
 				return
 			}
 
-			createReq := newConnectRequest(&pomerium.CreateKeyPairRequest{
+			createReq := newConnectRequest(&configpb.CreateKeyPairRequest{
 				KeyPair: apiKeyPair,
 			}, apiKeyPair)
 			createRes, err := client.CreateKeyPair(ctx, createReq)
@@ -138,7 +138,7 @@ func (r *KeyPairResource) Read(ctx context.Context, req resource.ReadRequest, re
 
 	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
-			getReq := connect.NewRequest(&pomerium.GetKeyPairRequest{
+			getReq := connect.NewRequest(&configpb.GetKeyPairRequest{
 				Id: state.ID.ValueString(),
 			})
 			getRes, err := client.GetKeyPair(ctx, getReq)
@@ -193,7 +193,7 @@ func (r *KeyPairResource) Update(ctx context.Context, req resource.UpdateRequest
 				return
 			}
 
-			updateReq := newConnectRequest(&pomerium.UpdateKeyPairRequest{
+			updateReq := newConnectRequest(&configpb.UpdateKeyPairRequest{
 				KeyPair: apiKeyPair,
 			}, apiKeyPair)
 			updateRes, err := client.UpdateKeyPair(ctx, updateReq)
@@ -233,7 +233,7 @@ func (r *KeyPairResource) Delete(ctx context.Context, req resource.DeleteRequest
 
 	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
-			deleteReq := connect.NewRequest(&pomerium.DeleteKeyPairRequest{
+			deleteReq := connect.NewRequest(&configpb.DeleteKeyPairRequest{
 				Id: state.ID.ValueString(),
 			})
 			_, err := client.DeleteKeyPair(ctx, deleteReq)
