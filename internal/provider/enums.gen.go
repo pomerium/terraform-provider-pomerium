@@ -7,9 +7,11 @@ var (
 	CodecTypeValues                       = []string{"auto", "http1", "http2", "http3"}
 	DeviceKindValues                      = []string{"fido_u2f", "android", "apple", "tpm", "windows"}
 	FormatValues                          = []string{"pem"}
+	HeadersWithUnderscoresActionValues    = []string{"allow", "reject_request", "drop_header"}
 	IssuerFormatValues                    = []string{"IssuerHostOnly", "IssuerURI"}
 	LoadBalancingPolicyValues             = []string{"round_robin", "maglev", "random", "ring_hash", "least_request"}
 	OAuth2AuthStyleValues                 = []string{"in_params", "in_header"}
+	PathWithEscapedSlashesActionValues    = []string{"keep_unchanged", "reject_request", "unescape_and_redirect", "unescape_and_forward"}
 	PublicKeyAlgorithmValues              = []string{"rsa", "dsa", "ecdsa", "ed25519"}
 	RedirectResponseCodeValues            = []string{"moved_permanently", "found", "see_other", "temporary_redirect", "permanent_redirect"}
 	AttestationConveyancePreferenceValues = []string{"none", "indirect", "direct", "enterprise"}

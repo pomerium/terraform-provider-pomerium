@@ -93,6 +93,23 @@ func (c *EnterpriseToModelConverter) Format(src *pb.Format) types.String {
 	}
 }
 
+func (c *EnterpriseToModelConverter) HeadersWithUnderscoresAction(src *pb.HeadersWithUnderscoresAction) types.String {
+	if src == nil {
+		return types.StringNull()
+	}
+
+	switch src.Number() {
+	case 1:
+		return types.StringValue("allow")
+	case 2:
+		return types.StringValue("reject_request")
+	case 3:
+		return types.StringValue("drop_header")
+	default:
+		return types.StringNull()
+	}
+}
+
 func (c *EnterpriseToModelConverter) IssuerFormat(src *pb.IssuerFormat) types.String {
 	if src == nil {
 		return types.StringNull()
@@ -139,6 +156,25 @@ func (c *EnterpriseToModelConverter) OAuth2AuthStyle(src *pb.OAuth2AuthStyle) ty
 		return types.StringValue("in_params")
 	case 2:
 		return types.StringValue("in_header")
+	default:
+		return types.StringNull()
+	}
+}
+
+func (c *EnterpriseToModelConverter) PathWithEscapedSlashesAction(src *pb.PathWithEscapedSlashesAction) types.String {
+	if src == nil {
+		return types.StringNull()
+	}
+
+	switch src.Number() {
+	case 1:
+		return types.StringValue("keep_unchanged")
+	case 2:
+		return types.StringValue("reject_request")
+	case 3:
+		return types.StringValue("unescape_and_redirect")
+	case 4:
+		return types.StringValue("unescape_and_forward")
 	default:
 		return types.StringNull()
 	}

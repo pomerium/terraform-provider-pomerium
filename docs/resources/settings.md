@@ -68,6 +68,7 @@ The settings are global object.
 - `google_cloud_serverless_authentication_service_account` (String) Google Cloud Serverless Authentication service account credentials.
 - `grpc_address` (String) gRPC address
 - `grpc_insecure` (Boolean) gRPC insecure
+- `headers_with_underscores_action` (String) Headers with underscores action.
 - `http_redirect_addr` (String) HTTP redirect address
 - `id` (String) ID of settings
 - `identity_provider_auth0` (Attributes) Auth0 directory sync options (see [below for nested schema](#nestedatt--identity_provider_auth0))
@@ -99,8 +100,10 @@ The settings are global object.
 - `logo_url` (String) A URL pointing to your logo. Defaults to Pomerium's Logo.
 - `mcp_allowed_as_metadata_domains` (Set of String)
 - `mcp_allowed_client_id_domains` (Set of String)
+- `merge_slashes` (Boolean)
 - `metrics_address` (String) Metrics address
 - `namespace_id` (String) Namespace ID of settings
+- `normalize_path` (Boolean)
 - `otel_attribute_value_length_limit` (Number) OpenTelemetry attribute value length limit
 - `otel_bsp_max_export_batch_size` (Number) OpenTelemetry BSP max export batch size
 - `otel_bsp_schedule_delay` (String) OpenTelemetry BSP schedule delay
@@ -117,6 +120,7 @@ The settings are global object.
 - `otel_traces_exporter` (String) OpenTelemetry traces exporter type
 - `otel_traces_sampler_arg` (Number) OpenTelemetry traces sampler argument
 - `pass_identity_headers` (Boolean) If applied, passes X-Pomerium-Jwt-Assertion header and JWT Claims Headers to all upstream applications.
+- `path_with_escaped_slashes_actions` (String) Path with escaled slashes action.
 - `primary_color` (String) A hex code that determines the primary color for the Enterprise Console and Route Error Details pages.
 - `proxy_log_level` (String) Proxy log level
 - `request_params` (Map of String) The identity provider parameters you want to include as part of a sign-in request using the OAuth 2.0 code flow.
