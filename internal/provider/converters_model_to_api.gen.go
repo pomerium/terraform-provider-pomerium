@@ -47,6 +47,24 @@ func (c *ModelToAPIConverter) CodecType(p path.Path, src types.String) *pomerium
 	}
 }
 
+func (c *ModelToAPIConverter) HeadersWithUnderscoresAction(p path.Path, src types.String) *pomerium.HeadersWithUnderscoresAction {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	switch strings.ToLower(src.ValueString()) {
+	case "allow":
+		return pomerium.HeadersWithUnderscoresAction(1).Enum()
+	case "reject_request":
+		return pomerium.HeadersWithUnderscoresAction(2).Enum()
+	case "drop_header":
+		return pomerium.HeadersWithUnderscoresAction(3).Enum()
+	default:
+		c.diagnostics.AddAttributeError(p, "unknown HeadersWithUnderscoresAction", fmt.Sprintf("unknown HeadersWithUnderscoresAction: %s", src.ValueString()))
+		return nil
+	}
+}
+
 func (c *ModelToAPIConverter) HealthCheckCodecClientType(p path.Path, src types.String) *pomerium.HealthCheck_CodecClientType {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
@@ -187,6 +205,26 @@ func (c *ModelToAPIConverter) OAuth2AuthStyle(p path.Path, src types.String) *po
 		return pomerium.OAuth2AuthStyle(2).Enum()
 	default:
 		c.diagnostics.AddAttributeError(p, "unknown OAuth2AuthStyle", fmt.Sprintf("unknown OAuth2AuthStyle: %s", src.ValueString()))
+		return nil
+	}
+}
+
+func (c *ModelToAPIConverter) PathWithEscapedSlashesAction(p path.Path, src types.String) *pomerium.PathWithEscapedSlashesAction {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	switch strings.ToLower(src.ValueString()) {
+	case "keep_unchanged":
+		return pomerium.PathWithEscapedSlashesAction(1).Enum()
+	case "reject_request":
+		return pomerium.PathWithEscapedSlashesAction(2).Enum()
+	case "unescape_and_redirect":
+		return pomerium.PathWithEscapedSlashesAction(3).Enum()
+	case "unescape_and_forward":
+		return pomerium.PathWithEscapedSlashesAction(4).Enum()
+	default:
+		c.diagnostics.AddAttributeError(p, "unknown PathWithEscapedSlashesAction", fmt.Sprintf("unknown PathWithEscapedSlashesAction: %s", src.ValueString()))
 		return nil
 	}
 }

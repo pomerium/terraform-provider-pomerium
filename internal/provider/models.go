@@ -205,6 +205,7 @@ type SettingsModel struct {
 	GoogleCloudServerlessAuthenticationServiceAccount types.String         `tfsdk:"google_cloud_serverless_authentication_service_account"`
 	GRPCAddress                                       types.String         `tfsdk:"grpc_address"`
 	GRPCInsecure                                      types.Bool           `tfsdk:"grpc_insecure"`
+	HeadersWithUnderscoresAction                      types.String         `tfsdk:"headers_with_underscores_action"`
 	HTTPRedirectAddr                                  types.String         `tfsdk:"http_redirect_addr"`
 	ID                                                types.String         `tfsdk:"id"`
 	IdentityProviderAuth0                             types.Object         `tfsdk:"identity_provider_auth0"`
@@ -236,8 +237,10 @@ type SettingsModel struct {
 	LogoURL                                           types.String         `tfsdk:"logo_url"`
 	MCPAllowedAsMetadataDomains                       types.Set            `tfsdk:"mcp_allowed_as_metadata_domains"`
 	MCPAllowedClientIDDomains                         types.Set            `tfsdk:"mcp_allowed_client_id_domains"`
+	MergeSlashes                                      types.Bool           `tfsdk:"merge_slashes"`
 	MetricsAddress                                    types.String         `tfsdk:"metrics_address"`
 	NamespaceID                                       types.String         `tfsdk:"namespace_id"`
+	NormalizePath                                     types.Bool           `tfsdk:"normalize_path"`
 	OtelAttributeValueLengthLimit                     types.Int64          `tfsdk:"otel_attribute_value_length_limit"`
 	OtelBspMaxExportBatchSize                         types.Int64          `tfsdk:"otel_bsp_max_export_batch_size"`
 	OtelBspScheduleDelay                              timetypes.GoDuration `tfsdk:"otel_bsp_schedule_delay"`
@@ -254,6 +257,7 @@ type SettingsModel struct {
 	OtelTracesExporter                                types.String         `tfsdk:"otel_traces_exporter"`
 	OtelTracesSamplerArg                              types.Float64        `tfsdk:"otel_traces_sampler_arg"`
 	PassIdentityHeaders                               types.Bool           `tfsdk:"pass_identity_headers"`
+	PathWithEscapedSlashesAction                      types.String         `tfsdk:"path_with_escaped_slashes_actions"`
 	PrimaryColor                                      types.String         `tfsdk:"primary_color"`
 	ProxyLogLevel                                     types.String         `tfsdk:"proxy_log_level"`
 	RequestParams                                     types.Map            `tfsdk:"request_params"`

@@ -42,6 +42,23 @@ func (c *APIToModelConverter) CodecType(src *pomerium.CodecType) types.String {
 	}
 }
 
+func (c *APIToModelConverter) HeadersWithUnderscoresAction(src *pomerium.HeadersWithUnderscoresAction) types.String {
+	if src == nil {
+		return types.StringNull()
+	}
+
+	switch src.Number() {
+	case 1:
+		return types.StringValue("allow")
+	case 2:
+		return types.StringValue("reject_request")
+	case 3:
+		return types.StringValue("drop_header")
+	default:
+		return types.StringNull()
+	}
+}
+
 func (c *APIToModelConverter) HealthCheckCodecClientType(src *pomerium.HealthCheck_CodecClientType) types.String {
 	if src == nil {
 		return types.StringNull()
@@ -173,6 +190,25 @@ func (c *APIToModelConverter) OAuth2AuthStyle(src *pomerium.OAuth2AuthStyle) typ
 		return types.StringValue("in_params")
 	case 2:
 		return types.StringValue("in_header")
+	default:
+		return types.StringNull()
+	}
+}
+
+func (c *APIToModelConverter) PathWithEscapedSlashesAction(src *pomerium.PathWithEscapedSlashesAction) types.String {
+	if src == nil {
+		return types.StringNull()
+	}
+
+	switch src.Number() {
+	case 1:
+		return types.StringValue("keep_unchanged")
+	case 2:
+		return types.StringValue("reject_request")
+	case 3:
+		return types.StringValue("unescape_and_redirect")
+	case 4:
+		return types.StringValue("unescape_and_forward")
 	default:
 		return types.StringNull()
 	}

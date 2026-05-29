@@ -688,6 +688,7 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *pomerium.Settings {
 		GrpcAddress:                         c.NullableString(src.GRPCAddress),
 		GrpcClientTimeout:                   nil, // not supported
 		GrpcInsecure:                        c.NullableBool(src.GRPCInsecure),
+		HeadersWithUnderscoresAction:        c.HeadersWithUnderscoresAction(path.Root("headers_with_underscores_action"), src.HeadersWithUnderscoresAction),
 		Http3AdvertisePort:                  nil, // not supported
 		HttpRedirectAddr:                    c.NullableString(src.HTTPRedirectAddr),
 		Id:                                  c.NullableString(src.ID),
@@ -706,6 +707,7 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *pomerium.Settings {
 		LogoUrl:                             c.NullableString(src.LogoURL),
 		McpAllowedAsMetadataDomains:         c.StringSliceFromSet(path.Root("mcp_allowed_as_metadata_domains"), src.MCPAllowedAsMetadataDomains),
 		McpAllowedClientIdDomains:           c.StringSliceFromSet(path.Root("mcp_allowed_client_id_domains"), src.MCPAllowedClientIDDomains),
+		MergeSlashes:                        c.NullableBool(src.MergeSlashes),
 		MetricsAddress:                      c.NullableString(src.MetricsAddress),
 		MetricsBasicAuth:                    nil, // not supported
 		MetricsCertificate:                  nil, // not supported
@@ -714,6 +716,7 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *pomerium.Settings {
 		ModifiedAt:                          nil, // not supported
 		Name:                                nil, // not supported
 		NamespaceId:                         c.NullableString(src.NamespaceID),
+		NormalizePath:                       c.NullableBool(src.NormalizePath),
 		OriginatorId:                        new(OriginatorID),
 		OtelAttributeValueLengthLimit:       c.NullableInt32(src.OtelAttributeValueLengthLimit),
 		OtelBspMaxExportBatchSize:           c.NullableInt32(src.OtelBspMaxExportBatchSize),
@@ -732,6 +735,7 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *pomerium.Settings {
 		OtelTracesSamplerArg:                c.NullableFloat64(src.OtelTracesSamplerArg),
 		OverrideCertificateName:             nil, // not supported
 		PassIdentityHeaders:                 c.NullableBool(src.PassIdentityHeaders),
+		PathWithEscapedSlashesAction:        c.PathWithEscapedSlashesAction(path.Root("path_with_escaped_slashes_action"), src.PathWithEscapedSlashesAction),
 		PrimaryColor:                        c.NullableString(src.PrimaryColor),
 		ProgrammaticRedirectDomainWhitelist: nil, // not supported
 		ProxyLogLevel:                       c.NullableString(src.ProxyLogLevel),

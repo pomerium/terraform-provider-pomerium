@@ -224,6 +224,7 @@ func (r *ServiceAccountResource) Update(ctx context.Context, req resource.Update
 
 			updateReq := newConnectRequest(&pomerium.UpdateServiceAccountRequest{
 				ServiceAccount: apiServiceAccount,
+				UpdateMask:     nil,
 			}, apiServiceAccount)
 			updateRes, err := client.UpdateServiceAccount(ctx, updateReq)
 			if err != nil {

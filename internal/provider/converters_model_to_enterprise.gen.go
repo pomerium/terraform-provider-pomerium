@@ -101,6 +101,24 @@ func (c *ModelToEnterpriseConverter) Format(p path.Path, src types.String) *pb.F
 	}
 }
 
+func (c *ModelToEnterpriseConverter) HeadersWithUnderscoresAction(p path.Path, src types.String) *pb.HeadersWithUnderscoresAction {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	switch strings.ToLower(src.ValueString()) {
+	case "allow":
+		return pb.HeadersWithUnderscoresAction(1).Enum()
+	case "reject_request":
+		return pb.HeadersWithUnderscoresAction(2).Enum()
+	case "drop_header":
+		return pb.HeadersWithUnderscoresAction(3).Enum()
+	default:
+		c.diagnostics.AddAttributeError(p, "unknown HeadersWithUnderscoresAction", fmt.Sprintf("unknown HeadersWithUnderscoresAction: %s", src.ValueString()))
+		return nil
+	}
+}
+
 func (c *ModelToEnterpriseConverter) IssuerFormat(p path.Path, src types.String) *pb.IssuerFormat {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
@@ -151,6 +169,26 @@ func (c *ModelToEnterpriseConverter) OAuth2AuthStyle(p path.Path, src types.Stri
 		return pb.OAuth2AuthStyle(2).Enum()
 	default:
 		c.diagnostics.AddAttributeError(p, "unknown OAuth2AuthStyle", fmt.Sprintf("unknown OAuth2AuthStyle: %s", src.ValueString()))
+		return nil
+	}
+}
+
+func (c *ModelToEnterpriseConverter) PathWithEscapedSlashesAction(p path.Path, src types.String) *pb.PathWithEscapedSlashesAction {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	switch strings.ToLower(src.ValueString()) {
+	case "keep_unchanged":
+		return pb.PathWithEscapedSlashesAction(1).Enum()
+	case "reject_request":
+		return pb.PathWithEscapedSlashesAction(2).Enum()
+	case "unescape_and_redirect":
+		return pb.PathWithEscapedSlashesAction(3).Enum()
+	case "unescape_and_forward":
+		return pb.PathWithEscapedSlashesAction(4).Enum()
+	default:
+		c.diagnostics.AddAttributeError(p, "unknown PathWithEscapedSlashesAction", fmt.Sprintf("unknown PathWithEscapedSlashesAction: %s", src.ValueString()))
 		return nil
 	}
 }
