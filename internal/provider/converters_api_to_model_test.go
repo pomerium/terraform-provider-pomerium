@@ -15,7 +15,7 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
-	"github.com/pomerium/sdk-go/proto/pomerium"
+	configpb "github.com/pomerium/pomerium/pkg/grpc/config"
 )
 
 func TestAPIToModel(t *testing.T) {
@@ -27,7 +27,7 @@ func TestAPIToModel(t *testing.T) {
 			t.Parallel()
 
 			var diagnostics diag.Diagnostics
-			result := provider.NewAPIToModelConverter(&diagnostics).KeyPair(&pomerium.KeyPair{})
+			result := provider.NewAPIToModelConverter(&diagnostics).KeyPair(&configpb.KeyPair{})
 			assert.Equal(t, provider.KeyPairModel{
 				Certificate: types.StringNull(),
 				ID:          types.StringNull(),
@@ -41,7 +41,7 @@ func TestAPIToModel(t *testing.T) {
 			t.Parallel()
 
 			var diagnostics diag.Diagnostics
-			result := provider.NewAPIToModelConverter(&diagnostics).KeyPair(&pomerium.KeyPair{
+			result := provider.NewAPIToModelConverter(&diagnostics).KeyPair(&configpb.KeyPair{
 				Certificate: []byte("CERTIFICATE"),
 				Id:          new("ID"),
 				Key:         []byte("KEY"),
@@ -63,7 +63,7 @@ func TestAPIToModel(t *testing.T) {
 
 		t.Run("empty", func(t *testing.T) {
 			var diagnostics diag.Diagnostics
-			result := provider.NewAPIToModelConverter(&diagnostics).Policy(&pomerium.Policy{})
+			result := provider.NewAPIToModelConverter(&diagnostics).Policy(&configpb.Policy{})
 			assert.Equal(t, provider.PolicyModel{
 				Description: types.StringValue(""),
 				Enforced:    types.BoolValue(false),
@@ -101,7 +101,7 @@ func TestAPIToModel(t *testing.T) {
 				}),
 				Remediation: types.StringValue("REMEDIATION"),
 			})
-			assert.Empty(t, cmp.Diff(&pomerium.Policy{
+			assert.Empty(t, cmp.Diff(&configpb.Policy{
 				Description:  new("DESCRIPTION"),
 				Enforced:     new(true),
 				Explanation:  new("EXPLANATION"),
@@ -123,7 +123,7 @@ func TestAPIToModel(t *testing.T) {
 			t.Parallel()
 
 			var diagnostics diag.Diagnostics
-			result := provider.NewAPIToModelConverter(&diagnostics).Route(&pomerium.Route{})
+			result := provider.NewAPIToModelConverter(&diagnostics).Route(&configpb.Route{})
 			assert.Equal(t, provider.RouteModel{
 				AllowSPDY:                types.BoolValue(false),
 				AllowUpgrades:            types.SetNull(types.StringType),
@@ -187,9 +187,9 @@ func TestAPIToModel(t *testing.T) {
 			t.Parallel()
 
 			var diagnostics diag.Diagnostics
-			result := provider.NewAPIToModelConverter(&diagnostics).Route(&pomerium.Route{
+			result := provider.NewAPIToModelConverter(&diagnostics).Route(&configpb.Route{
 				AllowSpdy:       true,
-				AllowUpgrades:   &pomerium.Route_StringList{Values: []string{"x", "y", "z"}},
+				AllowUpgrades:   &configpb.Route_StringList{Values: []string{"x", "y", "z"}},
 				AllowWebsockets: true,
 				DependsOn:       []string{"host1.example.com", "host2.example.com"},
 				Description:     new("DESCRIPTION"),
@@ -198,20 +198,20 @@ func TestAPIToModel(t *testing.T) {
 				Id:              new("ID"),
 				IdleTimeout:     durationpb.New(30 * time.Second),
 				IdpClientId:     new("IDP_CLIENT_ID"),
-				Mcp: &pomerium.MCP{
-					Mode: &pomerium.MCP_Server{
-						Server: &pomerium.MCPServer{
+				Mcp: &configpb.MCP{
+					Mode: &configpb.MCP_Server{
+						Server: &configpb.MCPServer{
 							AuthorizationServerUrl: new("AUTHORIZATION_SERVER_URL"),
 							MaxRequestBytes:        new(uint32(1234)),
 							Path:                   new("PATH"),
-							UpstreamOauth2: &pomerium.UpstreamOAuth2{
+							UpstreamOauth2: &configpb.UpstreamOAuth2{
 								AuthorizationUrlParams: map[string]string{
 									"x": "y",
 								},
 								ClientId:     "CLIENT_ID",
 								ClientSecret: "CLIENT_SECRET",
-								Oauth2Endpoint: &pomerium.OAuth2Endpoint{
-									AuthStyle: pomerium.OAuth2AuthStyle_OAUTH2_AUTH_STYLE_IN_HEADER.Enum(),
+								Oauth2Endpoint: &configpb.OAuth2Endpoint{
+									AuthStyle: configpb.OAuth2AuthStyle_OAUTH2_AUTH_STYLE_IN_HEADER.Enum(),
 									AuthUrl:   "AUTH_URL",
 									TokenUrl:  "TOKEN_URL",
 								},
@@ -227,7 +227,7 @@ func TestAPIToModel(t *testing.T) {
 				Prefix:           "/prefix",
 				PrefixRewrite:    "/new-prefix",
 				Regex:            `\.example\.com`,
-				SessionRecording: &pomerium.SessionRecording{Enabled: true},
+				SessionRecording: &configpb.SessionRecording{Enabled: true},
 				SetRequestHeaders: map[string]string{
 					"X-Custom": "value",
 				},
@@ -238,7 +238,7 @@ func TestAPIToModel(t *testing.T) {
 				TlsSkipVerify:         true,
 				TlsUpstreamServerName: "upstream.example.com",
 				To:                    []string{"https://to1.example.com", "https://to2.example.com"},
-				UpstreamTunnel: &pomerium.UpstreamTunnel{
+				UpstreamTunnel: &configpb.UpstreamTunnel{
 					SshPolicyId: new("SSH_POLICY"),
 				},
 			})
@@ -336,7 +336,7 @@ func TestAPIToModel(t *testing.T) {
 			t.Parallel()
 
 			var diagnostics diag.Diagnostics
-			result := provider.NewAPIToModelConverter(&diagnostics).Settings(&pomerium.Settings{})
+			result := provider.NewAPIToModelConverter(&diagnostics).Settings(&configpb.Settings{})
 			assert.Equal(t, provider.SettingsModel{
 				AccessLogFields:                   types.SetNull(types.StringType),
 				Address:                           types.StringNull(),
@@ -458,13 +458,13 @@ func TestAPIToModel(t *testing.T) {
 			t.Parallel()
 
 			var diagnostics diag.Diagnostics
-			result := provider.NewAPIToModelConverter(&diagnostics).Settings(&pomerium.Settings{
+			result := provider.NewAPIToModelConverter(&diagnostics).Settings(&configpb.Settings{
 				Address:                new(":443"),
-				AllowUpgrades:          &pomerium.Settings_StringList{Values: []string{"x", "y", "z"}},
+				AllowUpgrades:          &configpb.Settings_StringList{Values: []string{"x", "y", "z"}},
 				AuthenticateServiceUrl: new("https://authenticate.example.com"),
 				AuthorizeServiceUrls:   []string{"https://authorize.example.com"},
 				Autocert:               new(true),
-				BlobStorage: &pomerium.BlobStorageSettings{
+				BlobStorage: &configpb.BlobStorageSettings{
 					BucketUri: new("BUCKET_URI"),
 				},
 				CertificateAuthority:              new("CA_CERT"),
@@ -477,7 +477,7 @@ func TestAPIToModel(t *testing.T) {
 				CookieSecret:                      new("SECRET"),
 				DatabrokerStorageConnectionString: new("DSN"),
 				DefaultUpstreamTimeout:            durationpb.New(30 * time.Second),
-				EnvoyDynamicExtensions:            &pomerium.Settings_StringList{Values: []string{"/etc/envoy/ext1.so", "/etc/envoy/ext2.so"}},
+				EnvoyDynamicExtensions:            &configpb.Settings_StringList{Values: []string{"/etc/envoy/ext1.so", "/etc/envoy/ext2.so"}},
 				ErrorMessageFirstParagraph:        new("ACCESS_DENIED"),
 				GrpcAddress:                       new(":5443"),
 				GrpcInsecure:                      new(false),

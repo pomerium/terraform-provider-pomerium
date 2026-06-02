@@ -13,8 +13,8 @@ import (
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	configpb "github.com/pomerium/pomerium/pkg/grpc/config"
 	"github.com/pomerium/sdk-go"
-	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 var _ interface {
@@ -58,7 +58,7 @@ func (r *SettingsResource) Create(ctx context.Context, req resource.CreateReques
 				return
 			}
 
-			updateReq := newConnectRequest(&pomerium.UpdateSettingsRequest{
+			updateReq := newConnectRequest(&configpb.UpdateSettingsRequest{
 				Settings:   apiSettings,
 				UpdateMask: nil,
 			}, apiSettings)
@@ -104,8 +104,8 @@ func (r *SettingsResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
-			getReq := connect.NewRequest(&pomerium.GetSettingsRequest{
-				For: &pomerium.GetSettingsRequest_Id{
+			getReq := connect.NewRequest(&configpb.GetSettingsRequest{
+				For: &configpb.GetSettingsRequest_Id{
 					Id: state.ID.ValueString(),
 				},
 			})
@@ -154,7 +154,7 @@ func (r *SettingsResource) Update(ctx context.Context, req resource.UpdateReques
 				return
 			}
 
-			updateReq := newConnectRequest(&pomerium.UpdateSettingsRequest{
+			updateReq := newConnectRequest(&configpb.UpdateSettingsRequest{
 				Settings:   apiSettings,
 				UpdateMask: nil,
 			}, apiSettings)
@@ -206,8 +206,8 @@ func (r *SettingsResource) Delete(ctx context.Context, req resource.DeleteReques
 				return
 			}
 
-			updateReq := newConnectRequest(&pomerium.UpdateSettingsRequest{
-				Settings:   new(pomerium.Settings),
+			updateReq := newConnectRequest(&configpb.UpdateSettingsRequest{
+				Settings:   new(configpb.Settings),
 				UpdateMask: nil,
 			}, apiSettings)
 			_, err := client.UpdateSettings(ctx, updateReq)

@@ -3,10 +3,10 @@ package provider
 
 import (
 	types "github.com/hashicorp/terraform-plugin-framework/types"
-	pomerium "github.com/pomerium/sdk-go/proto/pomerium"
+	config "github.com/pomerium/pomerium/pkg/grpc/config"
 )
 
-func (c *APIToModelConverter) BearerTokenFormat(src *pomerium.BearerTokenFormat) types.String {
+func (c *APIToModelConverter) BearerTokenFormat(src *config.BearerTokenFormat) types.String {
 	if src == nil {
 		return types.StringNull()
 	}
@@ -23,7 +23,7 @@ func (c *APIToModelConverter) BearerTokenFormat(src *pomerium.BearerTokenFormat)
 	}
 }
 
-func (c *APIToModelConverter) CodecType(src *pomerium.CodecType) types.String {
+func (c *APIToModelConverter) CodecType(src *config.CodecType) types.String {
 	if src == nil {
 		return types.StringNull()
 	}
@@ -42,7 +42,7 @@ func (c *APIToModelConverter) CodecType(src *pomerium.CodecType) types.String {
 	}
 }
 
-func (c *APIToModelConverter) HeadersWithUnderscoresAction(src *pomerium.HeadersWithUnderscoresAction) types.String {
+func (c *APIToModelConverter) HeadersWithUnderscoresAction(src *config.HeadersWithUnderscoresAction) types.String {
 	if src == nil {
 		return types.StringNull()
 	}
@@ -59,7 +59,7 @@ func (c *APIToModelConverter) HeadersWithUnderscoresAction(src *pomerium.Headers
 	}
 }
 
-func (c *APIToModelConverter) HealthCheckCodecClientType(src *pomerium.HealthCheck_CodecClientType) types.String {
+func (c *APIToModelConverter) HealthCheckCodecClientType(src *config.HealthCheck_CodecClientType) types.String {
 	if src == nil {
 		return types.StringNull()
 	}
@@ -76,7 +76,7 @@ func (c *APIToModelConverter) HealthCheckCodecClientType(src *pomerium.HealthChe
 	}
 }
 
-func (c *APIToModelConverter) HealthCheckHealthStatus(src *pomerium.HealthCheck_HealthStatus) types.String {
+func (c *APIToModelConverter) HealthCheckHealthStatus(src *config.HealthCheck_HealthStatus) types.String {
 	if src == nil {
 		return types.StringNull()
 	}
@@ -97,7 +97,7 @@ func (c *APIToModelConverter) HealthCheckHealthStatus(src *pomerium.HealthCheck_
 	}
 }
 
-func (c *APIToModelConverter) IssuerFormat(src *pomerium.IssuerFormat) types.String {
+func (c *APIToModelConverter) IssuerFormat(src *config.IssuerFormat) types.String {
 	if src == nil {
 		return types.StringNull()
 	}
@@ -112,7 +112,7 @@ func (c *APIToModelConverter) IssuerFormat(src *pomerium.IssuerFormat) types.Str
 	}
 }
 
-func (c *APIToModelConverter) KeyPairOrigin(src *pomerium.KeyPairOrigin) types.String {
+func (c *APIToModelConverter) KeyPairOrigin(src *config.KeyPairOrigin) types.String {
 	if src == nil {
 		return types.StringNull()
 	}
@@ -127,7 +127,7 @@ func (c *APIToModelConverter) KeyPairOrigin(src *pomerium.KeyPairOrigin) types.S
 	}
 }
 
-func (c *APIToModelConverter) KeyPairStatus(src *pomerium.KeyPairStatus) types.String {
+func (c *APIToModelConverter) KeyPairStatus(src *config.KeyPairStatus) types.String {
 	if src == nil {
 		return types.StringNull()
 	}
@@ -142,7 +142,7 @@ func (c *APIToModelConverter) KeyPairStatus(src *pomerium.KeyPairStatus) types.S
 	}
 }
 
-func (c *APIToModelConverter) LoadBalancingPolicy(src *pomerium.LoadBalancingPolicy) types.String {
+func (c *APIToModelConverter) LoadBalancingPolicy(src *config.LoadBalancingPolicy) types.String {
 	if src == nil {
 		return types.StringNull()
 	}
@@ -163,7 +163,7 @@ func (c *APIToModelConverter) LoadBalancingPolicy(src *pomerium.LoadBalancingPol
 	}
 }
 
-func (c *APIToModelConverter) MtlsEnforcementMode(src *pomerium.MtlsEnforcementMode) types.String {
+func (c *APIToModelConverter) MtlsEnforcementMode(src *config.MtlsEnforcementMode) types.String {
 	if src == nil {
 		return types.StringNull()
 	}
@@ -180,7 +180,7 @@ func (c *APIToModelConverter) MtlsEnforcementMode(src *pomerium.MtlsEnforcementM
 	}
 }
 
-func (c *APIToModelConverter) OAuth2AuthStyle(src *pomerium.OAuth2AuthStyle) types.String {
+func (c *APIToModelConverter) OAuth2AuthStyle(src *config.OAuth2AuthStyle) types.String {
 	if src == nil {
 		return types.StringNull()
 	}
@@ -195,7 +195,7 @@ func (c *APIToModelConverter) OAuth2AuthStyle(src *pomerium.OAuth2AuthStyle) typ
 	}
 }
 
-func (c *APIToModelConverter) PathWithEscapedSlashesAction(src *pomerium.PathWithEscapedSlashesAction) types.String {
+func (c *APIToModelConverter) PathWithEscapedSlashesAction(src *config.PathWithEscapedSlashesAction) types.String {
 	if src == nil {
 		return types.StringNull()
 	}
@@ -214,7 +214,7 @@ func (c *APIToModelConverter) PathWithEscapedSlashesAction(src *pomerium.PathWit
 	}
 }
 
-func (c *APIToModelConverter) SANMatcherSANType(src *pomerium.SANMatcher_SANType) types.String {
+func (c *APIToModelConverter) SANMatcherSANType(src *config.SANMatcher_SANType) types.String {
 	if src == nil {
 		return types.StringNull()
 	}
@@ -235,7 +235,7 @@ func (c *APIToModelConverter) SANMatcherSANType(src *pomerium.SANMatcher_SANType
 	}
 }
 
-func (c *APIToModelConverter) ServerType(src *pomerium.ServerType) types.String {
+func (c *APIToModelConverter) ServerType(src *config.ServerType) types.String {
 	if src == nil {
 		return types.StringNull()
 	}

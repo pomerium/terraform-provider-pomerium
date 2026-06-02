@@ -9,8 +9,8 @@ import (
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	configpb "github.com/pomerium/pomerium/pkg/grpc/config"
 	"github.com/pomerium/sdk-go"
-	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 var _ interface {
@@ -75,7 +75,7 @@ func (d *ServiceAccountDataSource) Read(ctx context.Context, req datasource.Read
 
 	resp.Diagnostics.Append(d.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
-			getReq := connect.NewRequest(&pomerium.GetServiceAccountRequest{
+			getReq := connect.NewRequest(&configpb.GetServiceAccountRequest{
 				Id: data.ID.ValueString(),
 			})
 			getRes, err := client.GetServiceAccount(ctx, getReq)

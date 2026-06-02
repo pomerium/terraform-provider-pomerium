@@ -15,7 +15,7 @@ import (
 	"google.golang.org/protobuf/types/known/durationpb"
 
 	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
-	"github.com/pomerium/sdk-go/proto/pomerium"
+	configpb "github.com/pomerium/pomerium/pkg/grpc/config"
 )
 
 func TestModelToAPI(t *testing.T) {
@@ -28,10 +28,10 @@ func TestModelToAPI(t *testing.T) {
 
 			var diagnostics diag.Diagnostics
 			result := provider.NewModelToAPIConverter(&diagnostics).KeyPair(provider.KeyPairModel{})
-			assert.Empty(t, cmp.Diff(&pomerium.KeyPair{
-				Origin:       pomerium.KeyPairOrigin_KEY_PAIR_ORIGIN_USER,
+			assert.Empty(t, cmp.Diff(&configpb.KeyPair{
+				Origin:       configpb.KeyPairOrigin_KEY_PAIR_ORIGIN_USER,
 				OriginatorId: proto.String(provider.OriginatorID),
-				Status:       pomerium.KeyPairStatus_KEY_PAIR_STATUS_READY,
+				Status:       configpb.KeyPairStatus_KEY_PAIR_STATUS_READY,
 			}, result, protocmp.Transform()))
 			assert.Empty(t, diagnostics)
 		})
@@ -46,15 +46,15 @@ func TestModelToAPI(t *testing.T) {
 				Name:        types.StringValue("NAME"),
 				NamespaceID: types.StringValue("NAMESPACE_ID"),
 			})
-			assert.Empty(t, cmp.Diff(&pomerium.KeyPair{
+			assert.Empty(t, cmp.Diff(&configpb.KeyPair{
 				Certificate:  []byte("CERTIFICATE"),
 				Id:           new("ID"),
 				Key:          []byte("KEY"),
 				Name:         new("NAME"),
 				NamespaceId:  new("NAMESPACE_ID"),
-				Origin:       pomerium.KeyPairOrigin_KEY_PAIR_ORIGIN_USER,
+				Origin:       configpb.KeyPairOrigin_KEY_PAIR_ORIGIN_USER,
 				OriginatorId: proto.String(provider.OriginatorID),
-				Status:       pomerium.KeyPairStatus_KEY_PAIR_STATUS_READY,
+				Status:       configpb.KeyPairStatus_KEY_PAIR_STATUS_READY,
 			}, result, protocmp.Transform()))
 			assert.Empty(t, diagnostics)
 		})
@@ -65,7 +65,7 @@ func TestModelToAPI(t *testing.T) {
 		t.Run("empty", func(t *testing.T) {
 			var diagnostics diag.Diagnostics
 			result := provider.NewModelToAPIConverter(&diagnostics).Policy(provider.PolicyModel{})
-			assert.Empty(t, cmp.Diff(&pomerium.Policy{
+			assert.Empty(t, cmp.Diff(&configpb.Policy{
 				Description:  new(""),
 				Enforced:     new(false),
 				Explanation:  new(""),
@@ -100,7 +100,7 @@ func TestModelToAPI(t *testing.T) {
 				}),
 				Remediation: types.StringValue("REMEDIATION"),
 			})
-			assert.Empty(t, cmp.Diff(&pomerium.Policy{
+			assert.Empty(t, cmp.Diff(&configpb.Policy{
 				Description:  new("DESCRIPTION"),
 				Enforced:     new(true),
 				Explanation:  new("EXPLANATION"),
@@ -123,7 +123,7 @@ func TestModelToAPI(t *testing.T) {
 
 			var diagnostics diag.Diagnostics
 			result := provider.NewModelToAPIConverter(&diagnostics).Route(provider.RouteModel{})
-			assert.Empty(t, cmp.Diff(&pomerium.Route{
+			assert.Empty(t, cmp.Diff(&configpb.Route{
 				OriginatorId: proto.String(provider.OriginatorID),
 			}, result, protocmp.Transform()))
 			assert.Empty(t, diagnostics)
@@ -198,10 +198,10 @@ func TestModelToAPI(t *testing.T) {
 					"ssh_policy": types.StringValue("SSH_POLICY"),
 				}),
 			})
-			assert.Empty(t, cmp.Diff(&pomerium.Route{
+			assert.Empty(t, cmp.Diff(&configpb.Route{
 				AllowSpdy:       true,
 				AllowWebsockets: true,
-				AssignedPolicies: []*pomerium.EntityInfo{
+				AssignedPolicies: []*configpb.EntityInfo{
 					{Id: new("POLICY1")}, {Id: new("POLICY2")},
 				},
 				DependsOn:                   []string{"host1.example.com", "host2.example.com"},
@@ -213,18 +213,18 @@ func TestModelToAPI(t *testing.T) {
 				IdpClientId:                 new("IDP_CLIENT_ID"),
 				JwtGroupsFilter:             []string{"group1"},
 				JwtGroupsFilterInferFromPpl: new(true),
-				Mcp: &pomerium.MCP{
-					Mode: &pomerium.MCP_Server{
-						Server: &pomerium.MCPServer{
+				Mcp: &configpb.MCP{
+					Mode: &configpb.MCP_Server{
+						Server: &configpb.MCPServer{
 							AuthorizationServerUrl: new("AUTHORIZATION_SERVER_URL"),
 							MaxRequestBytes:        new(uint32(1234)),
 							Path:                   new("PATH"),
-							UpstreamOauth2: &pomerium.UpstreamOAuth2{
+							UpstreamOauth2: &configpb.UpstreamOAuth2{
 								AuthorizationUrlParams: map[string]string{"x": "y"},
 								ClientId:               "CLIENT_ID",
 								ClientSecret:           "CLIENT_SECRET",
-								Oauth2Endpoint: &pomerium.OAuth2Endpoint{
-									AuthStyle: pomerium.OAuth2AuthStyle_OAUTH2_AUTH_STYLE_IN_HEADER.Enum(),
+								Oauth2Endpoint: &configpb.OAuth2Endpoint{
+									AuthStyle: configpb.OAuth2AuthStyle_OAUTH2_AUTH_STYLE_IN_HEADER.Enum(),
 									AuthUrl:   "AUTH_URL",
 									TokenUrl:  "TOKEN_URL",
 								},
@@ -242,7 +242,7 @@ func TestModelToAPI(t *testing.T) {
 				Prefix:              "/prefix",
 				PrefixRewrite:       "/new-prefix",
 				Regex:               `\.example\.com`,
-				SessionRecording:    &pomerium.SessionRecording{Enabled: true},
+				SessionRecording:    &configpb.SessionRecording{Enabled: true},
 				SetRequestHeaders: map[string]string{
 					"X-Custom": "value",
 				},
@@ -253,7 +253,7 @@ func TestModelToAPI(t *testing.T) {
 				TlsSkipVerify:         true,
 				TlsUpstreamServerName: "upstream.example.com",
 				To:                    []string{"https://to1.example.com", "https://to2.example.com"},
-				UpstreamTunnel: &pomerium.UpstreamTunnel{
+				UpstreamTunnel: &configpb.UpstreamTunnel{
 					SshPolicyId: new("SSH_POLICY"),
 				},
 			}, result, protocmp.Transform()))
@@ -268,7 +268,7 @@ func TestModelToAPI(t *testing.T) {
 
 			var diagnostics diag.Diagnostics
 			result := provider.NewModelToAPIConverter(&diagnostics).Settings(provider.SettingsModel{})
-			assert.Empty(t, cmp.Diff(&pomerium.Settings{
+			assert.Empty(t, cmp.Diff(&configpb.Settings{
 				OriginatorId: proto.String(provider.OriginatorID),
 			}, result, protocmp.Transform()))
 			assert.Empty(t, diagnostics)
@@ -333,7 +333,7 @@ func TestModelToAPI(t *testing.T) {
 			assert.Equal(t, new("https://authenticate.example.com"), result.AuthenticateServiceUrl)
 			assert.Equal(t, []string{"https://authorize.example.com"}, result.AuthorizeServiceUrls)
 			assert.Equal(t, new(true), result.Autocert)
-			assert.Empty(t, cmp.Diff(&pomerium.BlobStorageSettings{BucketUri: new("BUCKET_URI")}, result.BlobStorage, protocmp.Transform()))
+			assert.Empty(t, cmp.Diff(&configpb.BlobStorageSettings{BucketUri: new("BUCKET_URI")}, result.BlobStorage, protocmp.Transform()))
 			assert.Equal(t, new("CA_CERT"), result.CertificateAuthority)
 			assert.Equal(t, new("CLUSTER_ID"), result.ClusterId)
 			assert.Equal(t, new(".example.com"), result.CookieDomain)
@@ -344,7 +344,7 @@ func TestModelToAPI(t *testing.T) {
 			assert.Equal(t, new("SECRET"), result.CookieSecret)
 			assert.Equal(t, new("DSN"), result.DatabrokerStorageConnectionString)
 			assert.Empty(t, cmp.Diff(durationpb.New(30*time.Second), result.DefaultUpstreamTimeout, protocmp.Transform()))
-			assert.Empty(t, cmp.Diff(&pomerium.Settings_StringList{Values: []string{"/etc/envoy/ext1.so", "/etc/envoy/ext2.so"}}, result.EnvoyDynamicExtensions, protocmp.Transform()))
+			assert.Empty(t, cmp.Diff(&configpb.Settings_StringList{Values: []string{"/etc/envoy/ext1.so", "/etc/envoy/ext2.so"}}, result.EnvoyDynamicExtensions, protocmp.Transform()))
 			assert.Equal(t, new("ACCESS_DENIED"), result.ErrorMessageFirstParagraph)
 			assert.Equal(t, new(":5443"), result.GrpcAddress)
 			assert.Equal(t, new(false), result.GrpcInsecure)

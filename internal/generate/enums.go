@@ -12,7 +12,7 @@ import (
 	"google.golang.org/protobuf/reflect/protoregistry"
 
 	_ "github.com/pomerium/enterprise-client-go/pb"
-	_ "github.com/pomerium/sdk-go/proto/pomerium"
+	_ "github.com/pomerium/pomerium/pkg/grpc/config"
 )
 
 func generateEnums(ctx context.Context) error {
@@ -93,7 +93,7 @@ func generateAPIToModelEnums(_ context.Context) error {
 			}).
 			Id(methodName).
 			ParamsFunc(func(g *jen.Group) {
-				g.Id("src").Op("*").Qual("github.com/pomerium/sdk-go/proto/pomerium", typeName)
+				g.Id("src").Op("*").Qual("github.com/pomerium/pomerium/pkg/grpc/config", typeName)
 			}).
 			Qual("github.com/hashicorp/terraform-plugin-framework/types", "String").
 			BlockFunc(func(g *jen.Group) {
@@ -218,7 +218,7 @@ func generateModelToAPIEnums(_ context.Context) error {
 				g.Id("p").Qual("github.com/hashicorp/terraform-plugin-framework/path", "Path")
 				g.Id("src").Qual("github.com/hashicorp/terraform-plugin-framework/types", "String")
 			}).
-			Op("*").Qual("github.com/pomerium/sdk-go/proto/pomerium", typeName).
+			Op("*").Qual("github.com/pomerium/pomerium/pkg/grpc/config", typeName).
 			BlockFunc(func(g *jen.Group) {
 				g.If(jen.Id("src").Dot("IsNull").Call().Op("||").Id("src").Dot("IsUnknown").Call()).Block(
 					jen.Return(jen.Nil()),
@@ -232,7 +232,7 @@ func generateModelToAPIEnums(_ context.Context) error {
 							continue
 						}
 						g.Case(jen.Lit(name)).Block(
-							jen.Return(jen.Qual("github.com/pomerium/sdk-go/proto/pomerium", typeName).Call(jen.Lit(int(valueDesc.Number()))).Dot("Enum").Call()),
+							jen.Return(jen.Qual("github.com/pomerium/pomerium/pkg/grpc/config", typeName).Call(jen.Lit(int(valueDesc.Number()))).Dot("Enum").Call()),
 						)
 					}
 					g.Default().BlockFunc(func(g *jen.Group) {

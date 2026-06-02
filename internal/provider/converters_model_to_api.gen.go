@@ -5,264 +5,264 @@ import (
 	"fmt"
 	path "github.com/hashicorp/terraform-plugin-framework/path"
 	types "github.com/hashicorp/terraform-plugin-framework/types"
-	pomerium "github.com/pomerium/sdk-go/proto/pomerium"
+	config "github.com/pomerium/pomerium/pkg/grpc/config"
 	"strings"
 )
 
-func (c *ModelToAPIConverter) BearerTokenFormat(p path.Path, src types.String) *pomerium.BearerTokenFormat {
+func (c *ModelToAPIConverter) BearerTokenFormat(p path.Path, src types.String) *config.BearerTokenFormat {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 
 	switch strings.ToLower(src.ValueString()) {
 	case "default":
-		return pomerium.BearerTokenFormat(1).Enum()
+		return config.BearerTokenFormat(1).Enum()
 	case "idp_access_token":
-		return pomerium.BearerTokenFormat(2).Enum()
+		return config.BearerTokenFormat(2).Enum()
 	case "idp_identity_token":
-		return pomerium.BearerTokenFormat(3).Enum()
+		return config.BearerTokenFormat(3).Enum()
 	default:
 		c.diagnostics.AddAttributeError(p, "unknown BearerTokenFormat", fmt.Sprintf("unknown BearerTokenFormat: %s", src.ValueString()))
 		return nil
 	}
 }
 
-func (c *ModelToAPIConverter) CodecType(p path.Path, src types.String) *pomerium.CodecType {
+func (c *ModelToAPIConverter) CodecType(p path.Path, src types.String) *config.CodecType {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 
 	switch strings.ToLower(src.ValueString()) {
 	case "auto":
-		return pomerium.CodecType(0).Enum()
+		return config.CodecType(0).Enum()
 	case "http1":
-		return pomerium.CodecType(1).Enum()
+		return config.CodecType(1).Enum()
 	case "http2":
-		return pomerium.CodecType(2).Enum()
+		return config.CodecType(2).Enum()
 	case "http3":
-		return pomerium.CodecType(3).Enum()
+		return config.CodecType(3).Enum()
 	default:
 		c.diagnostics.AddAttributeError(p, "unknown CodecType", fmt.Sprintf("unknown CodecType: %s", src.ValueString()))
 		return nil
 	}
 }
 
-func (c *ModelToAPIConverter) HeadersWithUnderscoresAction(p path.Path, src types.String) *pomerium.HeadersWithUnderscoresAction {
+func (c *ModelToAPIConverter) HeadersWithUnderscoresAction(p path.Path, src types.String) *config.HeadersWithUnderscoresAction {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 
 	switch strings.ToLower(src.ValueString()) {
 	case "allow":
-		return pomerium.HeadersWithUnderscoresAction(1).Enum()
+		return config.HeadersWithUnderscoresAction(1).Enum()
 	case "reject_request":
-		return pomerium.HeadersWithUnderscoresAction(2).Enum()
+		return config.HeadersWithUnderscoresAction(2).Enum()
 	case "drop_header":
-		return pomerium.HeadersWithUnderscoresAction(3).Enum()
+		return config.HeadersWithUnderscoresAction(3).Enum()
 	default:
 		c.diagnostics.AddAttributeError(p, "unknown HeadersWithUnderscoresAction", fmt.Sprintf("unknown HeadersWithUnderscoresAction: %s", src.ValueString()))
 		return nil
 	}
 }
 
-func (c *ModelToAPIConverter) HealthCheckCodecClientType(p path.Path, src types.String) *pomerium.HealthCheck_CodecClientType {
+func (c *ModelToAPIConverter) HealthCheckCodecClientType(p path.Path, src types.String) *config.HealthCheck_CodecClientType {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 
 	switch strings.ToLower(src.ValueString()) {
 	case "http1":
-		return pomerium.HealthCheck_CodecClientType(0).Enum()
+		return config.HealthCheck_CodecClientType(0).Enum()
 	case "http2":
-		return pomerium.HealthCheck_CodecClientType(1).Enum()
+		return config.HealthCheck_CodecClientType(1).Enum()
 	case "http3":
-		return pomerium.HealthCheck_CodecClientType(2).Enum()
+		return config.HealthCheck_CodecClientType(2).Enum()
 	default:
 		c.diagnostics.AddAttributeError(p, "unknown HealthCheck_CodecClientType", fmt.Sprintf("unknown HealthCheck_CodecClientType: %s", src.ValueString()))
 		return nil
 	}
 }
 
-func (c *ModelToAPIConverter) HealthCheckHealthStatus(p path.Path, src types.String) *pomerium.HealthCheck_HealthStatus {
+func (c *ModelToAPIConverter) HealthCheckHealthStatus(p path.Path, src types.String) *config.HealthCheck_HealthStatus {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 
 	switch strings.ToLower(src.ValueString()) {
 	case "healthy":
-		return pomerium.HealthCheck_HealthStatus(1).Enum()
+		return config.HealthCheck_HealthStatus(1).Enum()
 	case "unhealthy":
-		return pomerium.HealthCheck_HealthStatus(2).Enum()
+		return config.HealthCheck_HealthStatus(2).Enum()
 	case "draining":
-		return pomerium.HealthCheck_HealthStatus(3).Enum()
+		return config.HealthCheck_HealthStatus(3).Enum()
 	case "timeout":
-		return pomerium.HealthCheck_HealthStatus(4).Enum()
+		return config.HealthCheck_HealthStatus(4).Enum()
 	case "degraded":
-		return pomerium.HealthCheck_HealthStatus(5).Enum()
+		return config.HealthCheck_HealthStatus(5).Enum()
 	default:
 		c.diagnostics.AddAttributeError(p, "unknown HealthCheck_HealthStatus", fmt.Sprintf("unknown HealthCheck_HealthStatus: %s", src.ValueString()))
 		return nil
 	}
 }
 
-func (c *ModelToAPIConverter) IssuerFormat(p path.Path, src types.String) *pomerium.IssuerFormat {
+func (c *ModelToAPIConverter) IssuerFormat(p path.Path, src types.String) *config.IssuerFormat {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 
 	switch strings.ToLower(src.ValueString()) {
 	case "issuerhostonly":
-		return pomerium.IssuerFormat(0).Enum()
+		return config.IssuerFormat(0).Enum()
 	case "issueruri":
-		return pomerium.IssuerFormat(1).Enum()
+		return config.IssuerFormat(1).Enum()
 	default:
 		c.diagnostics.AddAttributeError(p, "unknown IssuerFormat", fmt.Sprintf("unknown IssuerFormat: %s", src.ValueString()))
 		return nil
 	}
 }
 
-func (c *ModelToAPIConverter) KeyPairOrigin(p path.Path, src types.String) *pomerium.KeyPairOrigin {
+func (c *ModelToAPIConverter) KeyPairOrigin(p path.Path, src types.String) *config.KeyPairOrigin {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 
 	switch strings.ToLower(src.ValueString()) {
 	case "user":
-		return pomerium.KeyPairOrigin(1).Enum()
+		return config.KeyPairOrigin(1).Enum()
 	case "system":
-		return pomerium.KeyPairOrigin(2).Enum()
+		return config.KeyPairOrigin(2).Enum()
 	default:
 		c.diagnostics.AddAttributeError(p, "unknown KeyPairOrigin", fmt.Sprintf("unknown KeyPairOrigin: %s", src.ValueString()))
 		return nil
 	}
 }
 
-func (c *ModelToAPIConverter) KeyPairStatus(p path.Path, src types.String) *pomerium.KeyPairStatus {
+func (c *ModelToAPIConverter) KeyPairStatus(p path.Path, src types.String) *config.KeyPairStatus {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 
 	switch strings.ToLower(src.ValueString()) {
 	case "ready":
-		return pomerium.KeyPairStatus(1).Enum()
+		return config.KeyPairStatus(1).Enum()
 	case "pending":
-		return pomerium.KeyPairStatus(2).Enum()
+		return config.KeyPairStatus(2).Enum()
 	default:
 		c.diagnostics.AddAttributeError(p, "unknown KeyPairStatus", fmt.Sprintf("unknown KeyPairStatus: %s", src.ValueString()))
 		return nil
 	}
 }
 
-func (c *ModelToAPIConverter) LoadBalancingPolicy(p path.Path, src types.String) *pomerium.LoadBalancingPolicy {
+func (c *ModelToAPIConverter) LoadBalancingPolicy(p path.Path, src types.String) *config.LoadBalancingPolicy {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 
 	switch strings.ToLower(src.ValueString()) {
 	case "round_robin":
-		return pomerium.LoadBalancingPolicy(1).Enum()
+		return config.LoadBalancingPolicy(1).Enum()
 	case "maglev":
-		return pomerium.LoadBalancingPolicy(2).Enum()
+		return config.LoadBalancingPolicy(2).Enum()
 	case "random":
-		return pomerium.LoadBalancingPolicy(3).Enum()
+		return config.LoadBalancingPolicy(3).Enum()
 	case "ring_hash":
-		return pomerium.LoadBalancingPolicy(4).Enum()
+		return config.LoadBalancingPolicy(4).Enum()
 	case "least_request":
-		return pomerium.LoadBalancingPolicy(5).Enum()
+		return config.LoadBalancingPolicy(5).Enum()
 	default:
 		c.diagnostics.AddAttributeError(p, "unknown LoadBalancingPolicy", fmt.Sprintf("unknown LoadBalancingPolicy: %s", src.ValueString()))
 		return nil
 	}
 }
 
-func (c *ModelToAPIConverter) MtlsEnforcementMode(p path.Path, src types.String) *pomerium.MtlsEnforcementMode {
+func (c *ModelToAPIConverter) MtlsEnforcementMode(p path.Path, src types.String) *config.MtlsEnforcementMode {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 
 	switch strings.ToLower(src.ValueString()) {
 	case "policy":
-		return pomerium.MtlsEnforcementMode(1).Enum()
+		return config.MtlsEnforcementMode(1).Enum()
 	case "policy_with_default_deny":
-		return pomerium.MtlsEnforcementMode(2).Enum()
+		return config.MtlsEnforcementMode(2).Enum()
 	case "reject_connection":
-		return pomerium.MtlsEnforcementMode(3).Enum()
+		return config.MtlsEnforcementMode(3).Enum()
 	default:
 		c.diagnostics.AddAttributeError(p, "unknown MtlsEnforcementMode", fmt.Sprintf("unknown MtlsEnforcementMode: %s", src.ValueString()))
 		return nil
 	}
 }
 
-func (c *ModelToAPIConverter) OAuth2AuthStyle(p path.Path, src types.String) *pomerium.OAuth2AuthStyle {
+func (c *ModelToAPIConverter) OAuth2AuthStyle(p path.Path, src types.String) *config.OAuth2AuthStyle {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 
 	switch strings.ToLower(src.ValueString()) {
 	case "in_params":
-		return pomerium.OAuth2AuthStyle(1).Enum()
+		return config.OAuth2AuthStyle(1).Enum()
 	case "in_header":
-		return pomerium.OAuth2AuthStyle(2).Enum()
+		return config.OAuth2AuthStyle(2).Enum()
 	default:
 		c.diagnostics.AddAttributeError(p, "unknown OAuth2AuthStyle", fmt.Sprintf("unknown OAuth2AuthStyle: %s", src.ValueString()))
 		return nil
 	}
 }
 
-func (c *ModelToAPIConverter) PathWithEscapedSlashesAction(p path.Path, src types.String) *pomerium.PathWithEscapedSlashesAction {
+func (c *ModelToAPIConverter) PathWithEscapedSlashesAction(p path.Path, src types.String) *config.PathWithEscapedSlashesAction {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 
 	switch strings.ToLower(src.ValueString()) {
 	case "keep_unchanged":
-		return pomerium.PathWithEscapedSlashesAction(1).Enum()
+		return config.PathWithEscapedSlashesAction(1).Enum()
 	case "reject_request":
-		return pomerium.PathWithEscapedSlashesAction(2).Enum()
+		return config.PathWithEscapedSlashesAction(2).Enum()
 	case "unescape_and_redirect":
-		return pomerium.PathWithEscapedSlashesAction(3).Enum()
+		return config.PathWithEscapedSlashesAction(3).Enum()
 	case "unescape_and_forward":
-		return pomerium.PathWithEscapedSlashesAction(4).Enum()
+		return config.PathWithEscapedSlashesAction(4).Enum()
 	default:
 		c.diagnostics.AddAttributeError(p, "unknown PathWithEscapedSlashesAction", fmt.Sprintf("unknown PathWithEscapedSlashesAction: %s", src.ValueString()))
 		return nil
 	}
 }
 
-func (c *ModelToAPIConverter) SANMatcherSANType(p path.Path, src types.String) *pomerium.SANMatcher_SANType {
+func (c *ModelToAPIConverter) SANMatcherSANType(p path.Path, src types.String) *config.SANMatcher_SANType {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 
 	switch strings.ToLower(src.ValueString()) {
 	case "email":
-		return pomerium.SANMatcher_SANType(1).Enum()
+		return config.SANMatcher_SANType(1).Enum()
 	case "dns":
-		return pomerium.SANMatcher_SANType(2).Enum()
+		return config.SANMatcher_SANType(2).Enum()
 	case "uri":
-		return pomerium.SANMatcher_SANType(3).Enum()
+		return config.SANMatcher_SANType(3).Enum()
 	case "ip_address":
-		return pomerium.SANMatcher_SANType(4).Enum()
+		return config.SANMatcher_SANType(4).Enum()
 	case "user_principal_name":
-		return pomerium.SANMatcher_SANType(5).Enum()
+		return config.SANMatcher_SANType(5).Enum()
 	default:
 		c.diagnostics.AddAttributeError(p, "unknown SANMatcher_SANType", fmt.Sprintf("unknown SANMatcher_SANType: %s", src.ValueString()))
 		return nil
 	}
 }
 
-func (c *ModelToAPIConverter) ServerType(p path.Path, src types.String) *pomerium.ServerType {
+func (c *ModelToAPIConverter) ServerType(p path.Path, src types.String) *config.ServerType {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 
 	switch strings.ToLower(src.ValueString()) {
 	case "core":
-		return pomerium.ServerType(1).Enum()
+		return config.ServerType(1).Enum()
 	case "enterprise":
-		return pomerium.ServerType(2).Enum()
+		return config.ServerType(2).Enum()
 	case "zero":
-		return pomerium.ServerType(3).Enum()
+		return config.ServerType(3).Enum()
 	default:
 		c.diagnostics.AddAttributeError(p, "unknown ServerType", fmt.Sprintf("unknown ServerType: %s", src.ValueString()))
 		return nil

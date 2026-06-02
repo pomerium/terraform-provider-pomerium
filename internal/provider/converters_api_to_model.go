@@ -10,7 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 
-	"github.com/pomerium/sdk-go/proto/pomerium"
+	configpb "github.com/pomerium/pomerium/pkg/grpc/config"
 )
 
 type APIToModelConverter struct {
@@ -27,7 +27,7 @@ func NewAPIToModelConverter(diagnostics *diag.Diagnostics) *APIToModelConverter 
 	}
 }
 
-func (c *APIToModelConverter) BlobStorageSettings(src *pomerium.BlobStorageSettings) types.Object {
+func (c *APIToModelConverter) BlobStorageSettings(src *configpb.BlobStorageSettings) types.Object {
 	if src == nil {
 		return types.ObjectNull(BlobStorageSettingsObjectType().AttrTypes)
 	}
@@ -38,7 +38,7 @@ func (c *APIToModelConverter) BlobStorageSettings(src *pomerium.BlobStorageSetti
 	return dst
 }
 
-func (c *APIToModelConverter) CircuitBreakerThresholds(src *pomerium.CircuitBreakerThresholds) types.Object {
+func (c *APIToModelConverter) CircuitBreakerThresholds(src *configpb.CircuitBreakerThresholds) types.Object {
 	if src == nil {
 		return types.ObjectNull(CircuitBreakerThresholdsObjectType().AttrTypes)
 	}
@@ -54,7 +54,7 @@ func (c *APIToModelConverter) CircuitBreakerThresholds(src *pomerium.CircuitBrea
 	return dst
 }
 
-func (c *APIToModelConverter) GRPCHealthCheck(src *pomerium.HealthCheck_GrpcHealthCheck) types.Object {
+func (c *APIToModelConverter) GRPCHealthCheck(src *configpb.HealthCheck_GrpcHealthCheck) types.Object {
 	if src == nil {
 		return types.ObjectNull(GRPCHealthCheckObjectType().AttrTypes)
 	}
@@ -66,7 +66,7 @@ func (c *APIToModelConverter) GRPCHealthCheck(src *pomerium.HealthCheck_GrpcHeal
 	return dst
 }
 
-func (c *APIToModelConverter) HealthCheck(src *pomerium.HealthCheck) types.Object {
+func (c *APIToModelConverter) HealthCheck(src *configpb.HealthCheck) types.Object {
 	if src == nil {
 		return types.ObjectNull(HealthCheckObjectType().AttrTypes)
 	}
@@ -86,7 +86,7 @@ func (c *APIToModelConverter) HealthCheck(src *pomerium.HealthCheck) types.Objec
 	return dst
 }
 
-func (c *APIToModelConverter) HealthCheckPayload(src *pomerium.HealthCheck_Payload) types.Object {
+func (c *APIToModelConverter) HealthCheckPayload(src *configpb.HealthCheck_Payload) types.Object {
 	if src == nil {
 		return types.ObjectNull(HealthCheckPayloadObjectType().AttrTypes)
 	}
@@ -97,16 +97,16 @@ func (c *APIToModelConverter) HealthCheckPayload(src *pomerium.HealthCheck_Paylo
 	}
 
 	switch p := src.GetPayload().(type) {
-	case *pomerium.HealthCheck_Payload_Text:
+	case *configpb.HealthCheck_Payload_Text:
 		attrs["text"] = types.StringValue(p.Text)
-	case *pomerium.HealthCheck_Payload_Binary:
+	case *configpb.HealthCheck_Payload_Binary:
 		attrs["binary_b64"] = types.StringValue(base64.StdEncoding.EncodeToString(p.Binary))
 	}
 
 	return types.ObjectValueMust(HealthCheckPayloadObjectType().AttrTypes, attrs)
 }
 
-func (c *APIToModelConverter) HealthCheckInt64Range(src *pomerium.HealthCheck_Int64Range) types.Object {
+func (c *APIToModelConverter) HealthCheckInt64Range(src *configpb.HealthCheck_Int64Range) types.Object {
 	if src == nil {
 		return types.ObjectNull(Int64RangeObjectType().AttrTypes)
 	}
@@ -116,7 +116,7 @@ func (c *APIToModelConverter) HealthCheckInt64Range(src *pomerium.HealthCheck_In
 	})
 }
 
-func (c *APIToModelConverter) HTTPHealthCheck(src *pomerium.HealthCheck_HttpHealthCheck) types.Object {
+func (c *APIToModelConverter) HTTPHealthCheck(src *configpb.HealthCheck_HttpHealthCheck) types.Object {
 	if src == nil {
 		return types.ObjectNull(HTTPHealthCheckObjectType().AttrTypes)
 	}
@@ -152,7 +152,7 @@ func (c *APIToModelConverter) JWTGroupsFilter(src []string, inferFromPPL *bool) 
 	return types.ObjectValueMust(JWTGroupsFilterObjectType().AttrTypes, attrs)
 }
 
-func (c *APIToModelConverter) KeyPair(src *pomerium.KeyPair) KeyPairModel {
+func (c *APIToModelConverter) KeyPair(src *configpb.KeyPair) KeyPairModel {
 	return KeyPairModel{
 		Certificate: c.StringFromBytes(src.Certificate),
 		ID:          types.StringPointerValue(src.Id),
@@ -162,7 +162,7 @@ func (c *APIToModelConverter) KeyPair(src *pomerium.KeyPair) KeyPairModel {
 	}
 }
 
-func (c *APIToModelConverter) Policy(src *pomerium.Policy) PolicyModel {
+func (c *APIToModelConverter) Policy(src *configpb.Policy) PolicyModel {
 	var policyLanguageType PolicyLanguageType
 	ppl, err := policyLanguageType.Parse(types.StringPointerValue(src.SourcePpl))
 	if err != nil {
@@ -181,7 +181,7 @@ func (c *APIToModelConverter) Policy(src *pomerium.Policy) PolicyModel {
 	}
 }
 
-func (c *APIToModelConverter) Route(src *pomerium.Route) RouteModel {
+func (c *APIToModelConverter) Route(src *configpb.Route) RouteModel {
 	return RouteModel{
 		AllowSPDY:                types.BoolValue(src.AllowSpdy),
 		AllowUpgrades:            FromStringList(src.AllowUpgrades),
@@ -241,7 +241,7 @@ func (c *APIToModelConverter) Route(src *pomerium.Route) RouteModel {
 	}
 }
 
-func (c *APIToModelConverter) RouteSessionRecording(src *pomerium.SessionRecording) *RouteSessionRecordingModel {
+func (c *APIToModelConverter) RouteSessionRecording(src *configpb.SessionRecording) *RouteSessionRecordingModel {
 	if src == nil {
 		return nil
 	}
@@ -250,7 +250,7 @@ func (c *APIToModelConverter) RouteSessionRecording(src *pomerium.SessionRecordi
 	}
 }
 
-func (c *APIToModelConverter) RouteMCP(src *pomerium.MCP) types.Object {
+func (c *APIToModelConverter) RouteMCP(src *configpb.MCP) types.Object {
 	if src == nil {
 		return types.ObjectNull(RouteMCPObjectType().AttrTypes)
 	}
@@ -262,7 +262,7 @@ func (c *APIToModelConverter) RouteMCP(src *pomerium.MCP) types.Object {
 	return dst
 }
 
-func (c *APIToModelConverter) RouteMCPClient(src *pomerium.MCPClient) types.Object {
+func (c *APIToModelConverter) RouteMCPClient(src *configpb.MCPClient) types.Object {
 	if src == nil {
 		return types.ObjectNull(RouteMCPClientObjectType().AttrTypes)
 	}
@@ -271,7 +271,7 @@ func (c *APIToModelConverter) RouteMCPClient(src *pomerium.MCPClient) types.Obje
 	return dst
 }
 
-func (c *APIToModelConverter) RouteMCPServer(src *pomerium.MCPServer) types.Object {
+func (c *APIToModelConverter) RouteMCPServer(src *configpb.MCPServer) types.Object {
 	if src == nil {
 		return types.ObjectNull(RouteMCPServerObjectType().AttrTypes)
 	}
@@ -285,7 +285,7 @@ func (c *APIToModelConverter) RouteMCPServer(src *pomerium.MCPServer) types.Obje
 	return dst
 }
 
-func (c *APIToModelConverter) RouteMCPServerUpstreamOAuth2(src *pomerium.UpstreamOAuth2) types.Object {
+func (c *APIToModelConverter) RouteMCPServerUpstreamOAuth2(src *configpb.UpstreamOAuth2) types.Object {
 	if src == nil {
 		return types.ObjectNull(RouteMCPServerUpstreamOAuth2ObjectType().AttrTypes)
 	}
@@ -300,7 +300,7 @@ func (c *APIToModelConverter) RouteMCPServerUpstreamOAuth2(src *pomerium.Upstrea
 	return dst
 }
 
-func (c *APIToModelConverter) RouteMCPServerUpstreamOAuth2OAuth2Endpoint(src *pomerium.OAuth2Endpoint) types.Object {
+func (c *APIToModelConverter) RouteMCPServerUpstreamOAuth2OAuth2Endpoint(src *configpb.OAuth2Endpoint) types.Object {
 	if src == nil {
 		return types.ObjectNull(RouteMCPServerUpstreamOAuth2OAuth2EndpointObjectType().AttrTypes)
 	}
@@ -313,7 +313,7 @@ func (c *APIToModelConverter) RouteMCPServerUpstreamOAuth2OAuth2Endpoint(src *po
 	return dst
 }
 
-func (c *APIToModelConverter) RouteRewriteHeader(src *pomerium.RouteRewriteHeader) types.Object {
+func (c *APIToModelConverter) RouteRewriteHeader(src *configpb.RouteRewriteHeader) types.Object {
 	if src == nil {
 		return types.ObjectNull(RewriteHeaderObjectType().AttrTypes)
 	}
@@ -325,7 +325,7 @@ func (c *APIToModelConverter) RouteRewriteHeader(src *pomerium.RouteRewriteHeade
 	})
 }
 
-func (c *APIToModelConverter) ServiceAccount(src *pomerium.ServiceAccount) ServiceAccountModel {
+func (c *APIToModelConverter) ServiceAccount(src *configpb.ServiceAccount) ServiceAccountModel {
 	return ServiceAccountModel{
 		Description: types.StringPointerValue(src.Description),
 		ExpiresAt:   c.Timestamp(src.ExpiresAt),
@@ -347,7 +347,7 @@ func (c *APIToModelConverter) SetFromStringSlice(src []string) types.Set {
 	return types.SetValueMust(types.StringType, fields)
 }
 
-func (c *APIToModelConverter) Settings(src *pomerium.Settings) SettingsModel {
+func (c *APIToModelConverter) Settings(src *configpb.Settings) SettingsModel {
 	return SettingsModel{
 		AccessLogFields:                   FromStringList(src.AccessLogFields),
 		Address:                           types.StringPointerValue(src.Address),
@@ -482,7 +482,7 @@ func (c *APIToModelConverter) StringFromSingleElementSlice(p path.Path, src []st
 	return types.StringValue(src[0])
 }
 
-func (c *APIToModelConverter) TCPHealthCheck(src *pomerium.HealthCheck_TcpHealthCheck) types.Object {
+func (c *APIToModelConverter) TCPHealthCheck(src *configpb.HealthCheck_TcpHealthCheck) types.Object {
 	if src == nil {
 		return types.ObjectNull(TCPHealthCheckObjectType().AttrTypes)
 	}
@@ -494,7 +494,7 @@ func (c *APIToModelConverter) TCPHealthCheck(src *pomerium.HealthCheck_TcpHealth
 	return dst
 }
 
-func (c *APIToModelConverter) UpstreamTunnel(src *pomerium.UpstreamTunnel) types.Object {
+func (c *APIToModelConverter) UpstreamTunnel(src *configpb.UpstreamTunnel) types.Object {
 	if src == nil {
 		return types.ObjectNull(UpstreamTunnelObjectType().AttrTypes)
 	}

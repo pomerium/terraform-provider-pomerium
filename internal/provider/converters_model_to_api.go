@@ -12,7 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"google.golang.org/protobuf/types/known/structpb"
 
-	"github.com/pomerium/sdk-go/proto/pomerium"
+	configpb "github.com/pomerium/pomerium/pkg/grpc/config"
 )
 
 type ModelToAPIConverter struct {
@@ -29,20 +29,20 @@ func NewModelToAPIConverter(diagnostics *diag.Diagnostics) *ModelToAPIConverter 
 	}
 }
 
-func (c *ModelToAPIConverter) BlobStorageSettings(src types.Object) *pomerium.BlobStorageSettings {
+func (c *ModelToAPIConverter) BlobStorageSettings(src types.Object) *configpb.BlobStorageSettings {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 
 	attrs := src.Attributes()
 	bucketURI, _ := attrs["bucket_uri"].(types.String)
-	return &pomerium.BlobStorageSettings{
+	return &configpb.BlobStorageSettings{
 		BucketUri:     c.NullableString(bucketURI),
 		ManagedPrefix: nil,
 	}
 }
 
-func (c *ModelToAPIConverter) CircuitBreakerThresholds(src types.Object) *pomerium.CircuitBreakerThresholds {
+func (c *ModelToAPIConverter) CircuitBreakerThresholds(src types.Object) *configpb.CircuitBreakerThresholds {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
@@ -54,7 +54,7 @@ func (c *ModelToAPIConverter) CircuitBreakerThresholds(src types.Object) *pomeri
 	maxRequests, _ := attrs["max_requests"].(types.Int64)
 	maxRetries, _ := attrs["max_retries"].(types.Int64)
 
-	return &pomerium.CircuitBreakerThresholds{
+	return &configpb.CircuitBreakerThresholds{
 		MaxConnectionPools: c.NullableUint32(maxConnectionPools),
 		MaxConnections:     c.NullableUint32(maxConnections),
 		MaxPendingRequests: c.NullableUint32(maxPendingRequests),
@@ -63,13 +63,13 @@ func (c *ModelToAPIConverter) CircuitBreakerThresholds(src types.Object) *pomeri
 	}
 }
 
-func (c *ModelToAPIConverter) EntityInfosFromIDs(src []string) []*pomerium.EntityInfo {
+func (c *ModelToAPIConverter) EntityInfosFromIDs(src []string) []*configpb.EntityInfo {
 	if src == nil {
 		return nil
 	}
-	dst := make([]*pomerium.EntityInfo, len(src))
+	dst := make([]*configpb.EntityInfo, len(src))
 	for i := range src {
-		dst[i] = &pomerium.EntityInfo{
+		dst[i] = &configpb.EntityInfo{
 			Id:         new(src[i]),
 			Name:       nil,
 			ModifiedAt: nil,
@@ -92,7 +92,7 @@ func (c *ModelToAPIConverter) Filter(src map[string]types.String) *structpb.Stru
 	return dst
 }
 
-func (c *ModelToAPIConverter) HealthCheck(src types.Object) *pomerium.HealthCheck {
+func (c *ModelToAPIConverter) HealthCheck(src types.Object) *configpb.HealthCheck {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
@@ -108,7 +108,7 @@ func (c *ModelToAPIConverter) HealthCheck(src types.Object) *pomerium.HealthChec
 	unhealthyThreshold := attrs["unhealthy_threshold"].(types.Int64)
 	healthyThreshold := attrs["healthy_threshold"].(types.Int64)
 
-	dst := &pomerium.HealthCheck{
+	dst := &configpb.HealthCheck{
 		AltPort:                      nil,   // not supported
 		AlwaysLogHealthCheckFailures: false, // not supported
 		AlwaysLogHealthCheckSuccess:  false, // not supported
@@ -135,7 +135,7 @@ func (c *ModelToAPIConverter) HealthCheck(src types.Object) *pomerium.HealthChec
 
 	if !httpHc.IsNull() {
 		httpAttrs := httpHc.Attributes()
-		httpHealthCheck := &pomerium.HealthCheck_HttpHealthCheck{
+		httpHealthCheck := &configpb.HealthCheck_HttpHealthCheck{
 			CodecClientType:        0,   // set below
 			ExpectedStatuses:       nil, // set below
 			Host:                   "",  // set below
@@ -162,7 +162,7 @@ func (c *ModelToAPIConverter) HealthCheck(src types.Object) *pomerium.HealthChec
 		if codecClientType := c.HealthCheckCodecClientType(path.Root("codec_client_type"), codecType); codecClientType != nil {
 			httpHealthCheck.CodecClientType = *codecClientType
 		} else {
-			httpHealthCheck.CodecClientType = pomerium.HealthCheck_HTTP1
+			httpHealthCheck.CodecClientType = configpb.HealthCheck_HTTP1
 		}
 
 		if !expectedStatuses.IsNull() {
@@ -179,12 +179,12 @@ func (c *ModelToAPIConverter) HealthCheck(src types.Object) *pomerium.HealthChec
 			}
 		}
 
-		dst.HealthChecker = &pomerium.HealthCheck_HttpHealthCheck_{
+		dst.HealthChecker = &configpb.HealthCheck_HttpHealthCheck_{
 			HttpHealthCheck: httpHealthCheck,
 		}
 	} else if !tcpHc.IsNull() {
 		tcpAttrs := tcpHc.Attributes()
-		tcpHealthCheck := &pomerium.HealthCheck_TcpHealthCheck{
+		tcpHealthCheck := &configpb.HealthCheck_TcpHealthCheck{
 			Receive: nil, // set below
 			Send:    nil, // set below
 		}
@@ -203,12 +203,12 @@ func (c *ModelToAPIConverter) HealthCheck(src types.Object) *pomerium.HealthChec
 			}
 		}
 
-		dst.HealthChecker = &pomerium.HealthCheck_TcpHealthCheck_{
+		dst.HealthChecker = &configpb.HealthCheck_TcpHealthCheck_{
 			TcpHealthCheck: tcpHealthCheck,
 		}
 	} else if !grpcHc.IsNull() {
 		grpcAttrs := grpcHc.Attributes()
-		grpcHealthCheck := &pomerium.HealthCheck_GrpcHealthCheck{
+		grpcHealthCheck := &configpb.HealthCheck_GrpcHealthCheck{
 			Authority:   "", // set below
 			ServiceName: "", // set below
 		}
@@ -223,7 +223,7 @@ func (c *ModelToAPIConverter) HealthCheck(src types.Object) *pomerium.HealthChec
 			grpcHealthCheck.Authority = authority.ValueString()
 		}
 
-		dst.HealthChecker = &pomerium.HealthCheck_GrpcHealthCheck_{
+		dst.HealthChecker = &configpb.HealthCheck_GrpcHealthCheck_{
 			GrpcHealthCheck: grpcHealthCheck,
 		}
 	} else {
@@ -233,19 +233,19 @@ func (c *ModelToAPIConverter) HealthCheck(src types.Object) *pomerium.HealthChec
 	return dst
 }
 
-func (c *ModelToAPIConverter) HealthCheckPayload(src types.Object) *pomerium.HealthCheck_Payload {
+func (c *ModelToAPIConverter) HealthCheckPayload(src types.Object) *configpb.HealthCheck_Payload {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 
 	attrs := src.Attributes()
-	payload := new(pomerium.HealthCheck_Payload)
+	payload := new(configpb.HealthCheck_Payload)
 
 	text := attrs["text"].(types.String)
 	binaryB64 := attrs["binary_b64"].(types.String)
 
 	if !text.IsNull() {
-		payload.Payload = &pomerium.HealthCheck_Payload_Text{
+		payload.Payload = &configpb.HealthCheck_Payload_Text{
 			Text: text.ValueString(),
 		}
 	} else if !binaryB64.IsNull() {
@@ -254,7 +254,7 @@ func (c *ModelToAPIConverter) HealthCheckPayload(src types.Object) *pomerium.Hea
 			c.diagnostics.AddError("Invalid base64 data", "Could not decode base64 binary payload: "+err.Error())
 			return nil
 		}
-		payload.Payload = &pomerium.HealthCheck_Payload_Binary{
+		payload.Payload = &configpb.HealthCheck_Payload_Binary{
 			Binary: binaryData,
 		}
 	}
@@ -262,13 +262,13 @@ func (c *ModelToAPIConverter) HealthCheckPayload(src types.Object) *pomerium.Hea
 	return payload
 }
 
-func (c *ModelToAPIConverter) Int64Range(src types.Object) *pomerium.HealthCheck_Int64Range {
+func (c *ModelToAPIConverter) Int64Range(src types.Object) *configpb.HealthCheck_Int64Range {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 
 	attrs := src.Attributes()
-	return &pomerium.HealthCheck_Int64Range{
+	return &configpb.HealthCheck_Int64Range{
 		Start: attrs["start"].(types.Int64).ValueInt64(),
 		End:   attrs["end"].(types.Int64).ValueInt64(),
 	}
@@ -304,8 +304,8 @@ func (c *ModelToAPIConverter) JWTGroupsFilterInferFromPpl(src types.Object) *boo
 	return obj.InferFromPpl
 }
 
-func (c *ModelToAPIConverter) KeyPair(src KeyPairModel) *pomerium.KeyPair {
-	return &pomerium.KeyPair{
+func (c *ModelToAPIConverter) KeyPair(src KeyPairModel) *configpb.KeyPair {
+	return &configpb.KeyPair{
 		Certificate:     c.Bytes(src.Certificate),
 		CertificateInfo: nil, // not supported
 		CreatedAt:       nil, // not supported
@@ -314,19 +314,19 @@ func (c *ModelToAPIConverter) KeyPair(src KeyPairModel) *pomerium.KeyPair {
 		ModifiedAt:      nil, // not supported
 		Name:            c.NullableString(src.Name),
 		NamespaceId:     c.NullableString(src.NamespaceID),
-		Origin:          pomerium.KeyPairOrigin_KEY_PAIR_ORIGIN_USER,
+		Origin:          configpb.KeyPairOrigin_KEY_PAIR_ORIGIN_USER,
 		OriginatorId:    new(OriginatorID),
-		Status:          pomerium.KeyPairStatus_KEY_PAIR_STATUS_READY,
+		Status:          configpb.KeyPairStatus_KEY_PAIR_STATUS_READY,
 	}
 }
 
-func (c *ModelToAPIConverter) ListPoliciesRequest(src PoliciesDataSourceModel) *pomerium.ListPoliciesRequest {
+func (c *ModelToAPIConverter) ListPoliciesRequest(src PoliciesDataSourceModel) *configpb.ListPoliciesRequest {
 	filter := c.Filter(map[string]types.String{
 		"cluster_id":   src.ClusterID,
 		"namespace_id": src.NamespaceID,
 		"query":        src.Query,
 	})
-	return &pomerium.ListPoliciesRequest{
+	return &configpb.ListPoliciesRequest{
 		Filter:  filter,
 		Limit:   c.NullableUint64(src.Limit),
 		Offset:  c.NullableUint64(src.Offset),
@@ -334,13 +334,13 @@ func (c *ModelToAPIConverter) ListPoliciesRequest(src PoliciesDataSourceModel) *
 	}
 }
 
-func (c *ModelToAPIConverter) ListRoutesRequest(src RoutesDataSourceModel) *pomerium.ListRoutesRequest {
+func (c *ModelToAPIConverter) ListRoutesRequest(src RoutesDataSourceModel) *configpb.ListRoutesRequest {
 	filter := c.Filter(map[string]types.String{
 		"cluster_id":   src.ClusterID,
 		"namespace_id": src.NamespaceID,
 		"query":        src.Query,
 	})
-	return &pomerium.ListRoutesRequest{
+	return &configpb.ListRoutesRequest{
 		Filter:  filter,
 		Limit:   c.NullableUint64(src.Limit),
 		Offset:  c.NullableUint64(src.Offset),
@@ -348,11 +348,11 @@ func (c *ModelToAPIConverter) ListRoutesRequest(src RoutesDataSourceModel) *pome
 	}
 }
 
-func (c *ModelToAPIConverter) ListServiceAccountsRequest(src ServiceAccountsDataSourceModel) *pomerium.ListServiceAccountsRequest {
+func (c *ModelToAPIConverter) ListServiceAccountsRequest(src ServiceAccountsDataSourceModel) *configpb.ListServiceAccountsRequest {
 	filter := c.Filter(map[string]types.String{
 		"namespace_id": src.NamespaceID,
 	})
-	return &pomerium.ListServiceAccountsRequest{
+	return &configpb.ListServiceAccountsRequest{
 		Filter:  filter,
 		Limit:   nil, // not supported
 		Offset:  nil, // not supported
@@ -360,8 +360,8 @@ func (c *ModelToAPIConverter) ListServiceAccountsRequest(src ServiceAccountsData
 	}
 }
 
-func (c *ModelToAPIConverter) Policy(src PolicyModel) *pomerium.Policy {
-	return &pomerium.Policy{
+func (c *ModelToAPIConverter) Policy(src PolicyModel) *configpb.Policy {
+	return &configpb.Policy{
 		AllowedDomains:   nil, // not supported
 		AllowedIdpClaims: nil, // not supported
 		AllowedUsers:     nil, // not supported
@@ -383,8 +383,8 @@ func (c *ModelToAPIConverter) Policy(src PolicyModel) *pomerium.Policy {
 	}
 }
 
-func (c *ModelToAPIConverter) Route(src RouteModel) *pomerium.Route {
-	return &pomerium.Route{
+func (c *ModelToAPIConverter) Route(src RouteModel) *configpb.Route {
+	return &configpb.Route{
 		AllowAnyAuthenticatedUser:        false, // not supported
 		AllowedDomains:                   nil,   // not supported
 		AllowedIdpClaims:                 nil,   // not supported
@@ -473,46 +473,46 @@ func (c *ModelToAPIConverter) Route(src RouteModel) *pomerium.Route {
 	}
 }
 
-func (c *ModelToAPIConverter) RouteSessionRecording(src *RouteSessionRecordingModel) *pomerium.SessionRecording {
+func (c *ModelToAPIConverter) RouteSessionRecording(src *RouteSessionRecordingModel) *configpb.SessionRecording {
 	if src == nil {
 		return nil
 	}
-	return &pomerium.SessionRecording{
+	return &configpb.SessionRecording{
 		Enabled: src.Enabled.ValueBool(),
 	}
 }
 
-func (c *ModelToAPIConverter) RouteMCP(p path.Path, src types.Object) *pomerium.MCP {
+func (c *ModelToAPIConverter) RouteMCP(p path.Path, src types.Object) *configpb.MCP {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 	attrs := src.Attributes()
-	dst := &pomerium.MCP{Mode: nil}
+	dst := &configpb.MCP{Mode: nil}
 	if v := getObjectAttribute(attrs, "client"); !v.IsNull() && !v.IsUnknown() {
-		dst.Mode = &pomerium.MCP_Client{
+		dst.Mode = &configpb.MCP_Client{
 			Client: c.RouteMCPClient(p.AtName("client"), v),
 		}
 	} else if v := getObjectAttribute(attrs, "server"); !v.IsNull() && !v.IsUnknown() {
-		dst.Mode = &pomerium.MCP_Server{
+		dst.Mode = &configpb.MCP_Server{
 			Server: c.RouteMCPServer(p.AtName("server"), v),
 		}
 	}
 	return dst
 }
 
-func (c *ModelToAPIConverter) RouteMCPClient(_ path.Path, src types.Object) *pomerium.MCPClient {
+func (c *ModelToAPIConverter) RouteMCPClient(_ path.Path, src types.Object) *configpb.MCPClient {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
-	return &pomerium.MCPClient{}
+	return &configpb.MCPClient{}
 }
 
-func (c *ModelToAPIConverter) RouteMCPServer(p path.Path, src types.Object) *pomerium.MCPServer {
+func (c *ModelToAPIConverter) RouteMCPServer(p path.Path, src types.Object) *configpb.MCPServer {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 	attrs := src.Attributes()
-	return &pomerium.MCPServer{
+	return &configpb.MCPServer{
 		AuthorizationServerUrl: c.NullableString(getStringAttribute(attrs, "authorization_server_url")),
 		MaxRequestBytes:        c.NullableUint32(getInt64Attribute(attrs, "max_request_bytes")),
 		Path:                   c.NullableString(getStringAttribute(attrs, "path")),
@@ -520,12 +520,12 @@ func (c *ModelToAPIConverter) RouteMCPServer(p path.Path, src types.Object) *pom
 	}
 }
 
-func (c *ModelToAPIConverter) RouteMCPServerUpstreamOAuth2(p path.Path, src types.Object) *pomerium.UpstreamOAuth2 {
+func (c *ModelToAPIConverter) RouteMCPServerUpstreamOAuth2(p path.Path, src types.Object) *configpb.UpstreamOAuth2 {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 	attrs := src.Attributes()
-	return &pomerium.UpstreamOAuth2{
+	return &configpb.UpstreamOAuth2{
 		AuthorizationUrlParams: c.StringMap(p.AtName("authorization_url_params"), getMapAttribute(attrs, "authorization_url_params")),
 		ClientId:               getStringAttribute(attrs, "client_id").ValueString(),
 		ClientSecret:           getStringAttribute(attrs, "client_secret").ValueString(),
@@ -534,46 +534,46 @@ func (c *ModelToAPIConverter) RouteMCPServerUpstreamOAuth2(p path.Path, src type
 	}
 }
 
-func (c *ModelToAPIConverter) RouteMCPServerUpstreamOAuth2OAuth2Endpoint(p path.Path, src types.Object) *pomerium.OAuth2Endpoint {
+func (c *ModelToAPIConverter) RouteMCPServerUpstreamOAuth2OAuth2Endpoint(p path.Path, src types.Object) *configpb.OAuth2Endpoint {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 	attrs := src.Attributes()
-	return &pomerium.OAuth2Endpoint{
+	return &configpb.OAuth2Endpoint{
 		AuthStyle: c.OAuth2AuthStyle(p.AtName("auth_style"), getStringAttribute(attrs, "auth_style")),
 		AuthUrl:   getStringAttribute(attrs, "auth_url").ValueString(),
 		TokenUrl:  getStringAttribute(attrs, "token_url").ValueString(),
 	}
 }
 
-func (c *ModelToAPIConverter) RouteRewriteHeader(src types.Object) *pomerium.RouteRewriteHeader {
+func (c *ModelToAPIConverter) RouteRewriteHeader(src types.Object) *configpb.RouteRewriteHeader {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 
 	prefixAttr := src.Attributes()["prefix"].(types.String)
-	dst := &pomerium.RouteRewriteHeader{
+	dst := &configpb.RouteRewriteHeader{
 		Header:  src.Attributes()["header"].(types.String).ValueString(),
 		Matcher: nil, // set below
 		Value:   src.Attributes()["value"].(types.String).ValueString(),
 	}
 	if !prefixAttr.IsNull() && prefixAttr.ValueString() != "" {
-		dst.Matcher = &pomerium.RouteRewriteHeader_Prefix{Prefix: prefixAttr.ValueString()}
+		dst.Matcher = &configpb.RouteRewriteHeader_Prefix{Prefix: prefixAttr.ValueString()}
 	}
 	return dst
 }
 
-func (c *ModelToAPIConverter) RouteStringList(p path.Path, src types.Set) *pomerium.Route_StringList {
+func (c *ModelToAPIConverter) RouteStringList(p path.Path, src types.Set) *configpb.Route_StringList {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 	var values []string
 	appendAttributeDiagnostics(c.diagnostics, p, src.ElementsAs(context.Background(), &values, false)...)
-	return &pomerium.Route_StringList{Values: values}
+	return &configpb.Route_StringList{Values: values}
 }
 
-func (c *ModelToAPIConverter) ServiceAccount(src ServiceAccountModel) *pomerium.ServiceAccount {
-	return &pomerium.ServiceAccount{
+func (c *ModelToAPIConverter) ServiceAccount(src ServiceAccountModel) *configpb.ServiceAccount {
+	return &configpb.ServiceAccount{
 		AccessedAt:   nil, // not supported
 		CreatedAt:    nil, // not supported
 		Description:  c.NullableString(src.Description),
@@ -586,7 +586,7 @@ func (c *ModelToAPIConverter) ServiceAccount(src ServiceAccountModel) *pomerium.
 	}
 }
 
-func (c *ModelToAPIConverter) Settings(src SettingsModel) *pomerium.Settings {
+func (c *ModelToAPIConverter) Settings(src SettingsModel) *configpb.Settings {
 	if !src.CacheServiceURL.IsNull() && !src.CacheServiceURL.IsUnknown() {
 		c.diagnostics.AddAttributeError(path.Root("cache_service_url"), "cache_service_url is not supported by the consolidated api", "cache_service_url is not supported by the consolidated api")
 	}
@@ -614,7 +614,7 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *pomerium.Settings {
 	if !src.IdpRefreshDirectoryTimeout.IsNull() && !src.IdpRefreshDirectoryTimeout.IsUnknown() {
 		c.diagnostics.AddAttributeError(path.Root("idp_refresh_directory_timeout"), "idp_refresh_directory_timeout is not supported by the consolidated api", "idp_refresh_directory_timeout is not supported by the consolidated api")
 	}
-	return &pomerium.Settings{
+	return &configpb.Settings{
 		AccessLogFields:                   c.SettingsStringList(path.Root("access_log_fields"), src.AccessLogFields),
 		Address:                           c.NullableString(src.Address),
 		AllowUpgrades:                     c.SettingsStringList(path.Root("allow_upgrades"), src.AllowUpgrades),
@@ -765,21 +765,21 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *pomerium.Settings {
 	}
 }
 
-func (c *ModelToAPIConverter) SettingsStringList(p path.Path, src types.Set) *pomerium.Settings_StringList {
+func (c *ModelToAPIConverter) SettingsStringList(p path.Path, src types.Set) *configpb.Settings_StringList {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 	var values []string
 	appendAttributeDiagnostics(c.diagnostics, p, src.ElementsAs(context.Background(), &values, false)...)
-	return &pomerium.Settings_StringList{Values: values}
+	return &configpb.Settings_StringList{Values: values}
 }
 
-func (c *ModelToAPIConverter) UpstreamTunnel(p path.Path, src types.Object) *pomerium.UpstreamTunnel {
+func (c *ModelToAPIConverter) UpstreamTunnel(p path.Path, src types.Object) *configpb.UpstreamTunnel {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
 	}
 
-	dst := new(pomerium.UpstreamTunnel)
+	dst := new(configpb.UpstreamTunnel)
 	for k, v := range src.Attributes() {
 		switch k {
 		case "ssh_policy":

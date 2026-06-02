@@ -19,8 +19,8 @@ import (
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
+	configpb "github.com/pomerium/pomerium/pkg/grpc/config"
 	"github.com/pomerium/sdk-go"
-	"github.com/pomerium/sdk-go/proto/pomerium"
 )
 
 // Ensure provider-defined types fully satisfy framework interfaces.
@@ -125,8 +125,8 @@ func (r *PolicyResource) Create(ctx context.Context, req resource.CreateRequest,
 			}
 
 			apiPolicy, err := createOrUpdate(
-				func() (*pomerium.Policy, error) {
-					createReq := newConnectRequest(&pomerium.CreatePolicyRequest{
+				func() (*configpb.Policy, error) {
+					createReq := newConnectRequest(&configpb.CreatePolicyRequest{
 						Policy: apiPolicy,
 					}, apiPolicy)
 					createRes, err := client.CreatePolicy(ctx, createReq)
@@ -135,8 +135,8 @@ func (r *PolicyResource) Create(ctx context.Context, req resource.CreateRequest,
 					}
 					return createRes.Msg.Policy, nil
 				},
-				func(filter *structpb.Struct) ([]*pomerium.Policy, error) {
-					listReq := newConnectRequest(&pomerium.ListPoliciesRequest{
+				func(filter *structpb.Struct) ([]*configpb.Policy, error) {
+					listReq := newConnectRequest(&configpb.ListPoliciesRequest{
 						Filter:  filter,
 						Limit:   new(uint64(1)),
 						Offset:  new(uint64(0)),
@@ -148,8 +148,8 @@ func (r *PolicyResource) Create(ctx context.Context, req resource.CreateRequest,
 					}
 					return listRes.Msg.Policies, nil
 				},
-				func() (*pomerium.Policy, error) {
-					updateReq := newConnectRequest(&pomerium.UpdatePolicyRequest{
+				func() (*configpb.Policy, error) {
+					updateReq := newConnectRequest(&configpb.UpdatePolicyRequest{
 						Policy:     apiPolicy,
 						UpdateMask: nil,
 					}, apiPolicy)
@@ -207,7 +207,7 @@ func (r *PolicyResource) Read(ctx context.Context, req resource.ReadRequest, res
 
 	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
-			getReq := connect.NewRequest(&pomerium.GetPolicyRequest{
+			getReq := connect.NewRequest(&configpb.GetPolicyRequest{
 				Id: state.ID.ValueString(),
 			})
 			getRes, err := client.GetPolicy(ctx, getReq)
@@ -259,7 +259,7 @@ func (r *PolicyResource) Update(ctx context.Context, req resource.UpdateRequest,
 				return
 			}
 
-			updateReq := newConnectRequest(&pomerium.UpdatePolicyRequest{
+			updateReq := newConnectRequest(&configpb.UpdatePolicyRequest{
 				Policy:     apiPolicy,
 				UpdateMask: nil,
 			}, apiPolicy)
@@ -303,7 +303,7 @@ func (r *PolicyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	resp.Diagnostics.Append(r.client.ConsolidatedOrLegacy(
 		func(client sdk.Client) {
-			deleteReq := connect.NewRequest(&pomerium.DeletePolicyRequest{
+			deleteReq := connect.NewRequest(&configpb.DeletePolicyRequest{
 				Id: state.ID.ValueString(),
 			})
 			_, err := client.DeletePolicy(ctx, deleteReq)
