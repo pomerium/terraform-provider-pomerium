@@ -194,7 +194,8 @@ func (r *KeyPairResource) Update(ctx context.Context, req resource.UpdateRequest
 			}
 
 			updateReq := newConnectRequest(&configpb.UpdateKeyPairRequest{
-				KeyPair: apiKeyPair,
+				KeyPair:    apiKeyPair,
+				UpdateMask: nil,
 			}, apiKeyPair)
 			updateRes, err := client.UpdateKeyPair(ctx, updateReq)
 			if err != nil {

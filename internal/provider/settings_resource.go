@@ -59,7 +59,8 @@ func (r *SettingsResource) Create(ctx context.Context, req resource.CreateReques
 			}
 
 			updateReq := newConnectRequest(&configpb.UpdateSettingsRequest{
-				Settings: apiSettings,
+				Settings:   apiSettings,
+				UpdateMask: nil,
 			}, apiSettings)
 			updateRes, err := client.UpdateSettings(ctx, updateReq)
 			if err != nil {
@@ -154,7 +155,8 @@ func (r *SettingsResource) Update(ctx context.Context, req resource.UpdateReques
 			}
 
 			updateReq := newConnectRequest(&configpb.UpdateSettingsRequest{
-				Settings: apiSettings,
+				Settings:   apiSettings,
+				UpdateMask: nil,
 			}, apiSettings)
 			newConnectRequest(updateReq, apiSettings)
 			updateRes, err := client.UpdateSettings(ctx, updateReq)
@@ -205,7 +207,8 @@ func (r *SettingsResource) Delete(ctx context.Context, req resource.DeleteReques
 			}
 
 			updateReq := newConnectRequest(&configpb.UpdateSettingsRequest{
-				Settings: new(configpb.Settings),
+				Settings:   new(configpb.Settings),
+				UpdateMask: nil,
 			}, apiSettings)
 			_, err := client.UpdateSettings(ctx, updateReq)
 			if err != nil {

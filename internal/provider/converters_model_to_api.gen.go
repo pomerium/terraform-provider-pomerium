@@ -47,6 +47,24 @@ func (c *ModelToAPIConverter) CodecType(p path.Path, src types.String) *config.C
 	}
 }
 
+func (c *ModelToAPIConverter) HeadersWithUnderscoresAction(p path.Path, src types.String) *config.HeadersWithUnderscoresAction {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	switch strings.ToLower(src.ValueString()) {
+	case "allow":
+		return config.HeadersWithUnderscoresAction(1).Enum()
+	case "reject_request":
+		return config.HeadersWithUnderscoresAction(2).Enum()
+	case "drop_header":
+		return config.HeadersWithUnderscoresAction(3).Enum()
+	default:
+		c.diagnostics.AddAttributeError(p, "unknown HeadersWithUnderscoresAction", fmt.Sprintf("unknown HeadersWithUnderscoresAction: %s", src.ValueString()))
+		return nil
+	}
+}
+
 func (c *ModelToAPIConverter) HealthCheckCodecClientType(p path.Path, src types.String) *config.HealthCheck_CodecClientType {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
@@ -187,6 +205,26 @@ func (c *ModelToAPIConverter) OAuth2AuthStyle(p path.Path, src types.String) *co
 		return config.OAuth2AuthStyle(2).Enum()
 	default:
 		c.diagnostics.AddAttributeError(p, "unknown OAuth2AuthStyle", fmt.Sprintf("unknown OAuth2AuthStyle: %s", src.ValueString()))
+		return nil
+	}
+}
+
+func (c *ModelToAPIConverter) PathWithEscapedSlashesAction(p path.Path, src types.String) *config.PathWithEscapedSlashesAction {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	switch strings.ToLower(src.ValueString()) {
+	case "keep_unchanged":
+		return config.PathWithEscapedSlashesAction(1).Enum()
+	case "reject_request":
+		return config.PathWithEscapedSlashesAction(2).Enum()
+	case "unescape_and_redirect":
+		return config.PathWithEscapedSlashesAction(3).Enum()
+	case "unescape_and_forward":
+		return config.PathWithEscapedSlashesAction(4).Enum()
+	default:
+		c.diagnostics.AddAttributeError(p, "unknown PathWithEscapedSlashesAction", fmt.Sprintf("unknown PathWithEscapedSlashesAction: %s", src.ValueString()))
 		return nil
 	}
 }

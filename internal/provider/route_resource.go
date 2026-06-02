@@ -645,7 +645,8 @@ func (r *RouteResource) Update(ctx context.Context, req resource.UpdateRequest, 
 			}
 
 			updateReq := newConnectRequest(&configpb.UpdateRouteRequest{
-				Route: apiRoute,
+				Route:      apiRoute,
+				UpdateMask: nil,
 			}, apiRoute)
 			updateRes, err := client.UpdateRoute(ctx, updateReq)
 			if err != nil {

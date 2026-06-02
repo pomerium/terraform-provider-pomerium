@@ -302,6 +302,13 @@ var SettingsResourceSchema = schema.Schema{
 				boolplanmodifier.UseStateForUnknown(),
 			},
 		},
+		"headers_with_underscores_action": schema.StringAttribute{
+			Optional:    true,
+			Description: "Headers with underscores action.",
+			Validators: []validator.String{
+				stringvalidator.OneOf("allow", "reject_request", "drop_header"),
+			},
+		},
 		"http_redirect_addr": schema.StringAttribute{
 			Optional:    true,
 			Description: "HTTP redirect address",
@@ -567,6 +574,9 @@ var SettingsResourceSchema = schema.Schema{
 			Computed:    true,
 			ElementType: types.StringType,
 		},
+		"merge_slashes": schema.BoolAttribute{
+			Optional: true,
+		},
 		"metrics_address": schema.StringAttribute{
 			Optional:    true,
 			Description: "Metrics address",
@@ -579,6 +589,9 @@ var SettingsResourceSchema = schema.Schema{
 				stringplanmodifier.RequiresReplace(),
 				stringplanmodifier.UseStateForUnknown(),
 			},
+		},
+		"normalize_path": schema.BoolAttribute{
+			Optional: true,
 		},
 		"otel_attribute_value_length_limit": schema.Int64Attribute{
 			Optional:    true,
@@ -652,6 +665,13 @@ var SettingsResourceSchema = schema.Schema{
 			Description: "If applied, passes X-Pomerium-Jwt-Assertion header and JWT Claims Headers to all upstream applications.",
 			PlanModifiers: []planmodifier.Bool{
 				boolplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"path_with_escaped_slashes_actions": schema.StringAttribute{
+			Optional:    true,
+			Description: "Path with escaled slashes action.",
+			Validators: []validator.String{
+				stringvalidator.OneOf("keep_unchanged", "reject_request", "unescape_and_redirect", "unescape_and_forward"),
 			},
 		},
 		"primary_color": schema.StringAttribute{

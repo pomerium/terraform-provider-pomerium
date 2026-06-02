@@ -150,7 +150,8 @@ func (r *PolicyResource) Create(ctx context.Context, req resource.CreateRequest,
 				},
 				func() (*configpb.Policy, error) {
 					updateReq := newConnectRequest(&configpb.UpdatePolicyRequest{
-						Policy: apiPolicy,
+						Policy:     apiPolicy,
+						UpdateMask: nil,
 					}, apiPolicy)
 					updateRes, err := client.UpdatePolicy(ctx, updateReq)
 					if err != nil {
@@ -259,7 +260,8 @@ func (r *PolicyResource) Update(ctx context.Context, req resource.UpdateRequest,
 			}
 
 			updateReq := newConnectRequest(&configpb.UpdatePolicyRequest{
-				Policy: apiPolicy,
+				Policy:     apiPolicy,
+				UpdateMask: nil,
 			}, apiPolicy)
 			updateRes, err := client.UpdatePolicy(ctx, updateReq)
 			if err != nil {
