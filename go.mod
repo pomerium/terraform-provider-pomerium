@@ -15,11 +15,11 @@ require (
 	github.com/hashicorp/terraform-plugin-log v0.10.0
 	github.com/hashicorp/terraform-plugin-testing v1.16.0
 	github.com/iancoleman/strcase v0.3.0
-	github.com/pomerium/enterprise-client-go v0.32.1-0.20260604134125-d6a0cf95fb6a
-	github.com/pomerium/pomerium v0.32.5-rc.1.0.20260612230558-d0eca80b3f7d
-	github.com/pomerium/pomerium/pkg/grpc/config v0.0.0-20260612230558-d0eca80b3f7d
-	github.com/pomerium/pomerium/pkg/grpc/databroker v0.0.0-20260612230558-d0eca80b3f7d
-	github.com/pomerium/sdk-go v0.0.10-0.20260605161428-36780b9256af
+	github.com/pomerium/enterprise-client-go v0.32.1-0.20260615145026-67ad0ef97b43
+	github.com/pomerium/pomerium v0.32.5-rc.1.0.20260616015828-5ec46be94f6d
+	github.com/pomerium/pomerium/pkg/grpc/config v0.0.0-20260616015828-5ec46be94f6d
+	github.com/pomerium/pomerium/pkg/grpc/databroker v0.0.0-20260616015828-5ec46be94f6d
+	github.com/pomerium/sdk-go v0.0.10-0.20260615144838-074b72a55886
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.42.0
@@ -64,6 +64,8 @@ require (
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
+	github.com/google/gnostic v0.7.2-0.20250814192921-e0e09f706281 // indirect
+	github.com/google/gnostic-models v0.7.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-checkpoint v0.5.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
@@ -150,8 +152,8 @@ require (
 	golang.org/x/text v0.38.0 // indirect
 	golang.org/x/tools v0.45.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260610212136-7ab31c22f7ad // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260610212136-7ab31c22f7ad // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260615183401-62b3387ff324 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260615183401-62b3387ff324 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
