@@ -16,10 +16,10 @@ require (
 	github.com/hashicorp/terraform-plugin-testing v1.16.0
 	github.com/iancoleman/strcase v0.3.0
 	github.com/pomerium/enterprise-client-go v0.32.1-0.20260617154057-3fb9460ad6de
-	github.com/pomerium/pomerium v0.32.5-rc.1.0.20260617213613-aea9e5699a22
-	github.com/pomerium/pomerium/pkg/grpc/config v0.0.0-20260617213613-aea9e5699a22
-	github.com/pomerium/pomerium/pkg/grpc/databroker v0.0.0-20260617213613-aea9e5699a22
-	github.com/pomerium/sdk-go v0.0.10-0.20260617154115-ce1b2eb6ef15
+	github.com/pomerium/pomerium v0.32.5-rc.1.0.20260618224910-de33872b3fe6
+	github.com/pomerium/pomerium/pkg/grpc/config v0.0.0-20260618224910-de33872b3fe6
+	github.com/pomerium/pomerium/pkg/grpc/databroker v0.0.0-20260618224910-de33872b3fe6
+	github.com/pomerium/sdk-go v0.0.10-0.20260618132024-97aa680ed6d0
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.42.0
@@ -111,7 +111,7 @@ require (
 	github.com/moby/sys/user v0.4.0 // indirect
 	github.com/moby/sys/userns v0.1.0 // indirect
 	github.com/moby/term v0.5.2 // indirect
-	github.com/oapi-codegen/runtime v1.4.1 // indirect
+	github.com/oapi-codegen/runtime v1.4.2 // indirect
 	github.com/oklog/run v1.2.0 // indirect
 	github.com/open-policy-agent/opa v1.15.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
@@ -152,8 +152,8 @@ require (
 	golang.org/x/text v0.38.0 // indirect
 	golang.org/x/tools v0.45.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260615183401-62b3387ff324 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260615183401-62b3387ff324 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260618152121-87f3d3e198d3 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260618152121-87f3d3e198d3 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
