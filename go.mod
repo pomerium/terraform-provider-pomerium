@@ -15,11 +15,11 @@ require (
 	github.com/hashicorp/terraform-plugin-log v0.10.0
 	github.com/hashicorp/terraform-plugin-testing v1.16.0
 	github.com/iancoleman/strcase v0.3.0
-	github.com/pomerium/enterprise-client-go v0.32.1-0.20260617154057-3fb9460ad6de
-	github.com/pomerium/pomerium v0.32.5-rc.1.0.20260618224910-de33872b3fe6
-	github.com/pomerium/pomerium/pkg/grpc/config v0.0.0-20260618224910-de33872b3fe6
-	github.com/pomerium/pomerium/pkg/grpc/databroker v0.0.0-20260618224910-de33872b3fe6
-	github.com/pomerium/sdk-go v0.0.10-0.20260618132024-97aa680ed6d0
+	github.com/pomerium/enterprise-client-go v0.32.1-0.20260622150752-4cb1a8aabf5d
+	github.com/pomerium/pomerium v0.32.5-rc.1.0.20260623212418-7565e9cafca5
+	github.com/pomerium/pomerium/pkg/grpc/config v0.0.0-20260623212418-7565e9cafca5
+	github.com/pomerium/pomerium/pkg/grpc/databroker v0.0.0-20260623212418-7565e9cafca5
+	github.com/pomerium/sdk-go v0.0.10-0.20260622150924-dab772e3ce7f
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.42.0
@@ -152,8 +152,8 @@ require (
 	golang.org/x/text v0.38.0 // indirect
 	golang.org/x/tools v0.45.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260618152121-87f3d3e198d3 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260618152121-87f3d3e198d3 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260622175928-b703f567277d // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260622175928-b703f567277d // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
