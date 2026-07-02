@@ -16,10 +16,10 @@ require (
 	github.com/hashicorp/terraform-plugin-testing v1.16.0
 	github.com/iancoleman/strcase v0.3.0
 	github.com/pomerium/enterprise-client-go v0.32.1-0.20260701193710-e4f87528f8ab
-	github.com/pomerium/pomerium v0.32.5-rc.1.0.20260701175801-95cf4c275910
-	github.com/pomerium/pomerium/pkg/grpc/config v0.0.0-20260701175801-95cf4c275910
-	github.com/pomerium/pomerium/pkg/grpc/databroker v0.0.0-20260701175801-95cf4c275910
-	github.com/pomerium/sdk-go v0.0.10-0.20260626150925-e81db9c23af8
+	github.com/pomerium/pomerium v0.32.5-rc.1.0.20260701231005-38556cde0118
+	github.com/pomerium/pomerium/pkg/grpc/config v0.0.0-20260701231005-38556cde0118
+	github.com/pomerium/pomerium/pkg/grpc/databroker v0.0.0-20260701231005-38556cde0118
+	github.com/pomerium/sdk-go v0.0.10-0.20260701210820-4bea206a982e
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.43.0
@@ -118,7 +118,7 @@ require (
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/pomerium/protoutil v0.0.0-20260701193843-f4d3164b38ef // indirect
+	github.com/pomerium/protoutil v0.0.0-20260701210746-9e630986f853 // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
 	github.com/shirou/gopsutil/v4 v4.26.5 // indirect
