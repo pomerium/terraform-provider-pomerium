@@ -305,6 +305,8 @@ func (r *PolicyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		func(client sdk.Client) {
 			deleteReq := connect.NewRequest(&configpb.DeletePolicyRequest{
 				Id: state.ID.ValueString(),
+				// Keep previous behaviour for now for compatibility
+				RemoveFromAnyAssignedRoutes: false,
 			})
 			_, err := client.DeletePolicy(ctx, deleteReq)
 			if err != nil {
