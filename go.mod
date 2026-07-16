@@ -15,16 +15,16 @@ require (
 	github.com/hashicorp/terraform-plugin-log v0.10.0
 	github.com/hashicorp/terraform-plugin-testing v1.16.0
 	github.com/iancoleman/strcase v0.3.0
-	github.com/pomerium/enterprise-client-go v0.32.1-0.20260701193710-e4f87528f8ab
-	github.com/pomerium/pomerium v0.32.5-rc.1.0.20260707215703-6d62baae72da
-	github.com/pomerium/pomerium/pkg/grpc/config v0.0.0-20260707215703-6d62baae72da
-	github.com/pomerium/pomerium/pkg/grpc/databroker v0.0.0-20260707215703-6d62baae72da
-	github.com/pomerium/sdk-go v0.0.10-0.20260701210820-4bea206a982e
+	github.com/pomerium/enterprise-client-go v0.32.1-0.20260713105933-a1dfb34e8d7c
+	github.com/pomerium/pomerium v0.32.5-rc.1.0.20260716022818-d5c380ad08d5
+	github.com/pomerium/pomerium/pkg/grpc/config v0.0.0-20260716022818-d5c380ad08d5
+	github.com/pomerium/pomerium/pkg/grpc/databroker v0.0.0-20260716022818-d5c380ad08d5
+	github.com/pomerium/sdk-go v0.0.10-0.20260714204319-d58346263bfc
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.43.0
 	golang.org/x/exp v0.0.0-20260508232706-74f9aab9d74a
-	google.golang.org/grpc v1.82.0
+	google.golang.org/grpc v1.82.1
 	google.golang.org/protobuf v1.36.11
 )
 
@@ -111,14 +111,14 @@ require (
 	github.com/moby/sys/user v0.4.0 // indirect
 	github.com/moby/sys/userns v0.1.0 // indirect
 	github.com/moby/term v0.5.2 // indirect
-	github.com/oapi-codegen/runtime v1.4.2 // indirect
+	github.com/oapi-codegen/runtime v1.5.0 // indirect
 	github.com/oklog/run v1.2.0 // indirect
 	github.com/open-policy-agent/opa v1.15.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/pomerium/protoutil v0.0.0-20260701210746-9e630986f853 // indirect
+	github.com/pomerium/protoutil v0.0.0-20260712023948-476583c4c434 // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
 	github.com/shirou/gopsutil/v4 v4.26.5 // indirect
@@ -152,8 +152,8 @@ require (
 	golang.org/x/text v0.40.0 // indirect
 	golang.org/x/tools v0.47.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260706201446-f0a921348800 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260706201446-f0a921348800 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260715232425-e75dac1f907d // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260715232425-e75dac1f907d // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
