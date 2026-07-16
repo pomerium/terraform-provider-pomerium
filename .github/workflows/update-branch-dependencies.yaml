@@ -26,9 +26,6 @@ jobs:
       - name: Update Tools
         run: ./scripts/update-dependencies tools
 
-      - name: Update Docker Dependencies
-        run: ./scripts/update-dependencies docker
-
       - name: Update Pomerium Dependencies
         if: ${{ inputs.branch == 'main' }}
         run: ./scripts/update-dependencies pomerium
