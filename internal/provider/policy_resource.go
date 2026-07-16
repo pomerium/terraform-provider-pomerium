@@ -317,6 +317,8 @@ func (r *PolicyResource) Delete(ctx context.Context, req resource.DeleteRequest,
 		func(client *client.Client) {
 			deleteReq := &pb.DeletePolicyRequest{
 				Id: state.ID.ValueString(),
+				// Keep previous behaviour for now for compatibility
+				RemoveFromAnyAssignedRoutes: false,
 			}
 			_, err := client.PolicyService.DeletePolicy(ctx, deleteReq)
 			if err != nil {
