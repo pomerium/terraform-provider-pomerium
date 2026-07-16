@@ -359,7 +359,7 @@ func (c *baseModelConverter) NullableUint32(src types.Int64) *uint32 {
 	}
 	v := src.ValueInt64()
 	if v < 0 || v > math.MaxUint32 {
-		c.diagnostics.AddError("value out of range for uint32", fmt.Sprintf("value %d is outside uint32 range [0, %d]", v, math.MaxUint32))
+		c.diagnostics.AddError("value out of range for uint32", fmt.Sprintf("value %d is outside uint32 range [0, %d]", v, int64(math.MaxUint32)))
 		return nil
 	}
 	return new(uint32(v))
