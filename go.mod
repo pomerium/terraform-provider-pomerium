@@ -19,7 +19,7 @@ require (
 	github.com/pomerium/pomerium v0.32.5-rc.1.0.20260716022818-d5c380ad08d5
 	github.com/pomerium/pomerium/pkg/grpc/config v0.0.0-20260716022818-d5c380ad08d5
 	github.com/pomerium/pomerium/pkg/grpc/databroker v0.0.0-20260716022818-d5c380ad08d5
-	github.com/pomerium/sdk-go v0.0.10-0.20260714204319-d58346263bfc
+	github.com/pomerium/sdk-go v0.0.10-0.20260716140524-6868457396d5
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.43.0

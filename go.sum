@@ -319,8 +319,8 @@ github.com/pomerium/pomerium/pkg/grpc/databroker v0.0.0-20260716022818-d5c380ad0
 github.com/pomerium/pomerium/pkg/grpc/databroker v0.0.0-20260716022818-d5c380ad08d5/go.mod h1:3+KroqGDQ6EpTFXlyKWcKc1oYcZvdLXJ2yzEe72v3S0=
 github.com/pomerium/protoutil v0.0.0-20260712023948-476583c4c434 h1:RIaEViw7WEO/xDqk/s2I3pyBQbrCjJwprKOKlLcCrjQ=
 github.com/pomerium/protoutil v0.0.0-20260712023948-476583c4c434/go.mod h1:xwCM2uuRDv4OWk/AeiEM7RYO3HQ7JaJD/Uk4mit19xc=
-github.com/pomerium/sdk-go v0.0.10-0.20260714204319-d58346263bfc h1:HHl1plVLPuuG5Gg5rRk3rxj5u/LU4ZJDjdIJNnWQ1EU=
-github.com/pomerium/sdk-go v0.0.10-0.20260714204319-d58346263bfc/go.mod h1:Ws8NQ6FtWGYhIWQQp8m1KZGlI6vSxsn46675ziUwkiY=
+github.com/pomerium/sdk-go v0.0.10-0.20260716140524-6868457396d5 h1:cUsvevXO66aGXjRSQmBFX9HCRyjzRuOwpOxnaqq+3Dk=
+github.com/pomerium/sdk-go v0.0.10-0.20260716140524-6868457396d5/go.mod h1:+IEjHjRdHom564beDgxXvqb4SnyWSB435kwrXShphmw=
 github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 h1:o4JXh1EVt9k/+g42oCprj/FisM4qX9L3sZB3upGN2ZU=
 github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55/go.mod h1:OmDBASR4679mdNQnz2pUhc2G8CO2JrUAVFDRBDP/hJE=
 github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 h1:bsUq1dX0N8AOIL7EB/X911+m4EHsnWEHeJ0c+3TTBrg=
