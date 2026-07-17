@@ -16,9 +16,9 @@ require (
 	github.com/hashicorp/terraform-plugin-testing v1.16.0
 	github.com/iancoleman/strcase v0.3.0
 	github.com/pomerium/enterprise-client-go v0.32.1-0.20260713105933-a1dfb34e8d7c
-	github.com/pomerium/pomerium v0.32.5-rc.1.0.20260716022818-d5c380ad08d5
-	github.com/pomerium/pomerium/pkg/grpc/config v0.0.0-20260716022818-d5c380ad08d5
-	github.com/pomerium/pomerium/pkg/grpc/databroker v0.0.0-20260716022818-d5c380ad08d5
+	github.com/pomerium/pomerium v0.32.5-rc.1.0.20260716174157-c51fdf6d0945
+	github.com/pomerium/pomerium/pkg/grpc/config v0.0.0-20260716174157-c51fdf6d0945
+	github.com/pomerium/pomerium/pkg/grpc/databroker v0.0.0-20260716174157-c51fdf6d0945
 	github.com/pomerium/sdk-go v0.0.10-0.20260716140524-6868457396d5
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
@@ -111,7 +111,7 @@ require (
 	github.com/moby/sys/user v0.4.0 // indirect
 	github.com/moby/sys/userns v0.1.0 // indirect
 	github.com/moby/term v0.5.2 // indirect
-	github.com/oapi-codegen/runtime v1.5.0 // indirect
+	github.com/oapi-codegen/runtime v1.6.0 // indirect
 	github.com/oklog/run v1.2.0 // indirect
 	github.com/open-policy-agent/opa v1.15.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
