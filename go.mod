@@ -15,11 +15,11 @@ require (
 	github.com/hashicorp/terraform-plugin-log v0.10.0
 	github.com/hashicorp/terraform-plugin-testing v1.16.0
 	github.com/iancoleman/strcase v0.3.0
-	github.com/pomerium/enterprise-client-go v0.32.1-0.20260717162858-5a65e38569c8
-	github.com/pomerium/pomerium v0.32.5-rc.1.0.20260722011640-c0fe8baec82f
-	github.com/pomerium/pomerium/pkg/grpc/config v0.0.0-20260722011640-c0fe8baec82f
-	github.com/pomerium/pomerium/pkg/grpc/databroker v0.0.0-20260722011640-c0fe8baec82f
-	github.com/pomerium/sdk-go v0.0.10-0.20260717162757-c07b754ff8f0
+	github.com/pomerium/enterprise-client-go v0.32.1-0.20260723192312-0c689215dbbe
+	github.com/pomerium/pomerium v0.32.5-rc.1.0.20260723204528-c0124d6c06ae
+	github.com/pomerium/pomerium/pkg/grpc/config v0.0.0-20260723204528-c0124d6c06ae
+	github.com/pomerium/pomerium/pkg/grpc/databroker v0.0.0-20260723204528-c0124d6c06ae
+	github.com/pomerium/sdk-go v0.0.10-0.20260723192408-a5b24bdac60b
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 	github.com/testcontainers/testcontainers-go v0.43.0
@@ -118,7 +118,7 @@ require (
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
-	github.com/pomerium/protoutil v0.0.0-20260712023948-476583c4c434 // indirect
+	github.com/pomerium/protoutil v0.0.0-20260723171127-8936c0a74b84 // indirect
 	github.com/power-devops/perfstat v0.0.0-20240221224432-82ca36839d55 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20250401214520-65e299d6c5c9 // indirect
 	github.com/shirou/gopsutil/v4 v4.26.5 // indirect
@@ -152,8 +152,8 @@ require (
 	golang.org/x/text v0.40.0 // indirect
 	golang.org/x/tools v0.47.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260720211330-0afa2a65878a // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260720211330-0afa2a65878a // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260723215102-3fe39f3c1018 // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260723215102-3fe39f3c1018 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
