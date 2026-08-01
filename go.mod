@@ -18,7 +18,7 @@ require (
 	github.com/pomerium/enterprise-client-go v0.32.1-0.20260730223210-769f1ee749ea
 	github.com/pomerium/pomerium v0.32.5-rc.1.0.20260731175238-396e6327102d
 	github.com/pomerium/pomerium/pkg/grpc/config v0.0.0-20260731175238-396e6327102d
-	github.com/pomerium/pomerium/pkg/grpc/databroker v0.0.0-20260731163429-55014d89c6f7
+	github.com/pomerium/pomerium/pkg/grpc/databroker v0.33.0
 	github.com/pomerium/sdk-go v0.0.10-0.20260731163531-1ca490d84c3c
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
