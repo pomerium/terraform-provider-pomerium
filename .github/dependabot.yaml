@@ -16,5 +16,9 @@ updates:
       go:
         patterns:
           - "*"
-        exclude-patterns:
-          - "github.com/pomerium/*"
+    # github.com/pomerium/* modules are managed by scripts/update-dependencies,
+    # which tracks @main on main and is not run on the release branches.
+    # Merely excluding them from the group is not enough: dependabot still opens
+    # an individual PR per module, moving main off of @main and onto a tag.
+    ignore:
+      - dependency-name: "github.com/pomerium/*"
