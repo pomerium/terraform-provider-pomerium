@@ -65,6 +65,17 @@ func HTTPHealthCheckObjectType() types.ObjectType {
 	}
 }
 
+func IdentityProviderObjectType() types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"issuer":         types.StringType,
+			"jwks_url":       types.StringType,
+			"supported_algs": types.SetType{ElemType: types.StringType},
+			"audiences":      types.SetType{ElemType: types.StringType},
+		},
+	}
+}
+
 func Int64RangeObjectType() types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{

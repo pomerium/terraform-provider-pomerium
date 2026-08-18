@@ -131,6 +131,33 @@ func (c *APIToModelConverter) HTTPHealthCheck(src *configpb.HealthCheck_HttpHeal
 	return dst
 }
 
+func (c *APIToModelConverter) IdentityProvider(src *configpb.IdentityProvider) types.Object {
+	if src == nil {
+		return types.ObjectNull(IdentityProviderObjectType().AttrTypes)
+	}
+	dst, diagnostics := types.ObjectValue(IdentityProviderObjectType().AttrTypes, map[string]attr.Value{
+		"issuer":         types.StringValue(src.Issuer),
+		"jwks_url":       types.StringValue(src.JwksUrl),
+		"supported_algs": c.SetFromStringSlice(src.SupportedAlgs),
+		"audiences":      c.SetFromStringSlice(src.Audiences),
+	})
+	c.diagnostics.Append(diagnostics...)
+	return dst
+}
+
+func (c *APIToModelConverter) IdentityProviders(src map[string]*configpb.IdentityProvider) types.Map {
+	if src == nil {
+		return types.MapNull(IdentityProviderObjectType())
+	}
+	m := make(map[string]attr.Value)
+	for k, v := range src {
+		m[k] = c.IdentityProvider(v)
+	}
+	dst, diagnostics := types.MapValue(IdentityProviderObjectType(), m)
+	c.diagnostics.Append(diagnostics...)
+	return dst
+}
+
 func (c *APIToModelConverter) JWTGroupsFilter(src []string, inferFromPPL *bool) types.Object {
 	if src == nil && inferFromPPL == nil {
 		return types.ObjectNull(JWTGroupsFilterObjectType().AttrTypes)
@@ -199,6 +226,7 @@ func (c *APIToModelConverter) Route(src *configpb.Route) RouteModel {
 		HostRewrite:                       types.StringPointerValue(src.HostRewrite),
 		HostRewriteHeader:                 types.StringPointerValue(src.HostRewriteHeader),
 		ID:                                types.StringPointerValue(src.Id),
+		IdentityProviders:                 FromStringSliceToSet(src.IdentityProviders),
 		IdleTimeout:                       c.Duration(src.IdleTimeout),
 		IDPAccessTokenAllowedAudiences:    FromStringList(src.IdpAccessTokenAllowedAudiences),
 		IDPClientID:                       types.StringPointerValue(src.IdpClientId),
@@ -412,6 +440,7 @@ func (c *APIToModelConverter) Settings(src *configpb.Settings) SettingsModel {
 		IdentityProviderPing:            c.IdentityProviderPing(src.GetDirectoryProvider(), src.GetDirectoryProviderOptions()),
 		IdentityProviderRefreshInterval: c.Duration(src.DirectoryProviderRefreshInterval),
 		IdentityProviderRefreshTimeout:  c.Duration(src.DirectoryProviderRefreshTimeout),
+		IdentityProviders:               c.IdentityProviders(src.GetIdentityProviders()),
 		IDPAccessTokenAllowedAudiences:  FromStringList(src.IdpAccessTokenAllowedAudiences),
 		IdpClientID:                     types.StringPointerValue(src.IdpClientId),
 		IdpClientSecret:                 types.StringPointerValue(src.IdpClientSecret),

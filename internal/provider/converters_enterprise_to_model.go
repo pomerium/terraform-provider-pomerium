@@ -188,6 +188,33 @@ func (c *EnterpriseToModelConverter) HealthCheckPayload(src *enterprise.HealthCh
 	return types.ObjectValueMust(HealthCheckPayloadObjectType().AttrTypes, attrs)
 }
 
+func (c *EnterpriseToModelConverter) IdentityProvider(src *enterprise.IdentityProvider) types.Object {
+	if src == nil {
+		return types.ObjectNull(IdentityProviderObjectType().AttrTypes)
+	}
+	dst, diagnostics := types.ObjectValue(IdentityProviderObjectType().AttrTypes, map[string]attr.Value{
+		"issuer":         types.StringValue(src.Issuer),
+		"jwks_url":       types.StringValue(src.JwksUrl),
+		"supported_algs": FromStringSliceToSet(src.SupportedAlgs),
+		"audiences":      FromStringSliceToSet(src.Audiences),
+	})
+	c.diagnostics.Append(diagnostics...)
+	return dst
+}
+
+func (c *EnterpriseToModelConverter) IdentityProviders(src map[string]*enterprise.IdentityProvider) types.Map {
+	if src == nil {
+		return types.MapNull(IdentityProviderObjectType())
+	}
+	m := make(map[string]attr.Value)
+	for k, v := range src {
+		m[k] = c.IdentityProvider(v)
+	}
+	dst, diagnostics := types.MapValue(IdentityProviderObjectType(), m)
+	c.diagnostics.Append(diagnostics...)
+	return dst
+}
+
 func (c *EnterpriseToModelConverter) Int64Range(src *enterprise.Int64Range) types.Object {
 	if src == nil {
 		return types.ObjectNull(Int64RangeObjectType().AttrTypes)
@@ -276,6 +303,7 @@ func (c *EnterpriseToModelConverter) Route(src *enterprise.Route) RouteModel {
 		HostRewrite:                       types.StringPointerValue(src.HostRewrite),
 		HostRewriteHeader:                 types.StringPointerValue(src.HostRewriteHeader),
 		ID:                                types.StringValue(src.Id),
+		IdentityProviders:                 FromStringSliceToSet(src.IdentityProviders),
 		IdleTimeout:                       c.Duration(src.IdleTimeout),
 		IDPAccessTokenAllowedAudiences:    FromStringList(src.IdpAccessTokenAllowedAudiences),
 		IDPClientID:                       types.StringPointerValue(src.IdpClientId),
@@ -478,6 +506,7 @@ func (c *EnterpriseToModelConverter) Settings(src *enterprise.Settings, namespac
 		IdentityProviderPing:            c.IdentityProviderPing(src.GetIdentityProvider(), src.GetIdentityProviderOptions()),
 		IdentityProviderRefreshInterval: c.Duration(src.IdentityProviderRefreshInterval),
 		IdentityProviderRefreshTimeout:  c.Duration(src.IdentityProviderRefreshTimeout),
+		IdentityProviders:               c.IdentityProviders(src.GetIdentityProviders()),
 		IDPAccessTokenAllowedAudiences:  FromStringList(src.IdpAccessTokenAllowedAudiences),
 		IdpClientID:                     types.StringPointerValue(src.IdpClientId),
 		IdpClientSecret:                 types.StringPointerValue(src.IdpClientSecret),

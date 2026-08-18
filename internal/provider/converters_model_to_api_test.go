@@ -133,15 +133,16 @@ func TestModelToAPI(t *testing.T) {
 
 			var diagnostics diag.Diagnostics
 			result := provider.NewModelToAPIConverter(&diagnostics).Route(provider.RouteModel{
-				AllowSPDY:       types.BoolValue(true),
-				AllowWebsockets: types.BoolValue(true),
-				DependsOnHosts:  types.SetValueMust(types.StringType, []attr.Value{types.StringValue("host1.example.com"), types.StringValue("host2.example.com")}),
-				Description:     types.StringValue("DESCRIPTION"),
-				From:            types.StringValue("https://from.example.com"),
-				HostRewrite:     types.StringValue("HOST_REWRITE"),
-				ID:              types.StringValue("ID"),
-				IdleTimeout:     timetypes.NewGoDurationValue(30 * time.Second),
-				IDPClientID:     types.StringValue("IDP_CLIENT_ID"),
+				AllowSPDY:         types.BoolValue(true),
+				AllowWebsockets:   types.BoolValue(true),
+				DependsOnHosts:    types.SetValueMust(types.StringType, []attr.Value{types.StringValue("host1.example.com"), types.StringValue("host2.example.com")}),
+				Description:       types.StringValue("DESCRIPTION"),
+				From:              types.StringValue("https://from.example.com"),
+				HostRewrite:       types.StringValue("HOST_REWRITE"),
+				ID:                types.StringValue("ID"),
+				IdentityProviders: types.SetValueMust(types.StringType, []attr.Value{types.StringValue("IDP1"), types.StringValue("IDP2")}),
+				IdleTimeout:       timetypes.NewGoDurationValue(30 * time.Second),
+				IDPClientID:       types.StringValue("IDP_CLIENT_ID"),
 				JWTGroupsFilter: types.ObjectValueMust(
 					provider.JWTGroupsFilterObjectType().AttrTypes,
 					map[string]attr.Value{
@@ -209,6 +210,7 @@ func TestModelToAPI(t *testing.T) {
 				From:                        "https://from.example.com",
 				HostRewrite:                 new("HOST_REWRITE"),
 				Id:                          new("ID"),
+				IdentityProviders:           []string{"IDP1", "IDP2"},
 				IdleTimeout:                 durationpb.New(30 * time.Second),
 				IdpClientId:                 new("IDP_CLIENT_ID"),
 				JwtGroupsFilter:             []string{"group1"},
@@ -301,33 +303,47 @@ func TestModelToAPI(t *testing.T) {
 				GRPCInsecure:                      types.BoolValue(false),
 				HTTPRedirectAddr:                  types.StringValue(":80"),
 				ID:                                types.StringValue("SETTINGS_ID"),
-				IdpClientID:                       types.StringValue("IDP_CLIENT_ID"),
-				IdpClientSecret:                   types.StringValue("IDP_CLIENT_SECRET"),
-				IdpProvider:                       types.StringValue("google"),
-				IdpProviderURL:                    types.StringValue("https://accounts.google.com"),
-				InsecureServer:                    types.BoolValue(false),
-				InstallationID:                    types.StringValue("INSTALLATION_ID"),
-				JWTClaimsHeaders:                  types.MapValueMust(types.StringType, map[string]attr.Value{"X-Email": types.StringValue("email")}),
-				LogLevel:                          types.StringValue("info"),
-				LogoURL:                           types.StringValue("https://example.com/logo.png"),
-				MetricsAddress:                    types.StringValue(":9090"),
-				MCPAllowedAsMetadataDomains:       types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a"), types.StringValue("b"), types.StringValue("c")}),
-				MCPAllowedClientIDDomains:         types.SetValueMust(types.StringType, []attr.Value{types.StringValue("x"), types.StringValue("y"), types.StringValue("z")}),
-				PassIdentityHeaders:               types.BoolValue(true),
-				PrimaryColor:                      types.StringValue("#000000"),
-				ProxyLogLevel:                     types.StringValue("debug"),
-				RequestParams:                     types.MapValueMust(types.StringType, map[string]attr.Value{"param1": types.StringValue("value1")}),
-				Scopes:                            types.SetValueMust(types.StringType, []attr.Value{types.StringValue("openid"), types.StringValue("profile")}),
-				SecondaryColor:                    types.StringValue("#FFFFFF"),
-				SessionRecordingConcurrency:       types.Int64Value(4),
-				SessionRecordingEnabled:           types.BoolValue(true),
-				SetResponseHeaders:                types.MapValueMust(types.StringType, map[string]attr.Value{"X-Frame-Options": types.StringValue("DENY")}),
-				SkipXFFAppend:                     types.BoolValue(false),
-				SSHAddress:                        types.StringValue(":22"),
-				SSHUserCAKey:                      types.StringValue("SSH_CA_KEY"),
-				TimeoutIdle:                       timetypes.NewGoDurationValue(5 * time.Minute),
-				TimeoutRead:                       timetypes.NewGoDurationValue(30 * time.Second),
-				TimeoutWrite:                      timetypes.NewGoDurationValue(30 * time.Second),
+				IdentityProviders: types.MapValueMust(provider.IdentityProviderObjectType(), map[string]attr.Value{
+					"idp1": types.ObjectValueMust(provider.IdentityProviderObjectType().AttrTypes, map[string]attr.Value{
+						"issuer":         types.StringValue("https://issuer1.example.com"),
+						"jwks_url":       types.StringValue("https://issuer1.example.com/.well-known/jwks.json"),
+						"supported_algs": types.SetValueMust(types.StringType, []attr.Value{types.StringValue("RS256"), types.StringValue("ES256")}),
+						"audiences":      types.SetValueMust(types.StringType, []attr.Value{types.StringValue("AUDIENCE1")}),
+					}),
+					"idp2": types.ObjectValueMust(provider.IdentityProviderObjectType().AttrTypes, map[string]attr.Value{
+						"issuer":         types.StringValue("https://issuer2.example.com"),
+						"jwks_url":       types.StringValue(""),
+						"supported_algs": types.SetNull(types.StringType),
+						"audiences":      types.SetValueMust(types.StringType, []attr.Value{types.StringValue("AUDIENCE2")}),
+					}),
+				}),
+				IdpClientID:                 types.StringValue("IDP_CLIENT_ID"),
+				IdpClientSecret:             types.StringValue("IDP_CLIENT_SECRET"),
+				IdpProvider:                 types.StringValue("google"),
+				IdpProviderURL:              types.StringValue("https://accounts.google.com"),
+				InsecureServer:              types.BoolValue(false),
+				InstallationID:              types.StringValue("INSTALLATION_ID"),
+				JWTClaimsHeaders:            types.MapValueMust(types.StringType, map[string]attr.Value{"X-Email": types.StringValue("email")}),
+				LogLevel:                    types.StringValue("info"),
+				LogoURL:                     types.StringValue("https://example.com/logo.png"),
+				MetricsAddress:              types.StringValue(":9090"),
+				MCPAllowedAsMetadataDomains: types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a"), types.StringValue("b"), types.StringValue("c")}),
+				MCPAllowedClientIDDomains:   types.SetValueMust(types.StringType, []attr.Value{types.StringValue("x"), types.StringValue("y"), types.StringValue("z")}),
+				PassIdentityHeaders:         types.BoolValue(true),
+				PrimaryColor:                types.StringValue("#000000"),
+				ProxyLogLevel:               types.StringValue("debug"),
+				RequestParams:               types.MapValueMust(types.StringType, map[string]attr.Value{"param1": types.StringValue("value1")}),
+				Scopes:                      types.SetValueMust(types.StringType, []attr.Value{types.StringValue("openid"), types.StringValue("profile")}),
+				SecondaryColor:              types.StringValue("#FFFFFF"),
+				SessionRecordingConcurrency: types.Int64Value(4),
+				SessionRecordingEnabled:     types.BoolValue(true),
+				SetResponseHeaders:          types.MapValueMust(types.StringType, map[string]attr.Value{"X-Frame-Options": types.StringValue("DENY")}),
+				SkipXFFAppend:               types.BoolValue(false),
+				SSHAddress:                  types.StringValue(":22"),
+				SSHUserCAKey:                types.StringValue("SSH_CA_KEY"),
+				TimeoutIdle:                 timetypes.NewGoDurationValue(5 * time.Minute),
+				TimeoutRead:                 timetypes.NewGoDurationValue(30 * time.Second),
+				TimeoutWrite:                timetypes.NewGoDurationValue(30 * time.Second),
 			})
 			assert.Equal(t, new(":443"), result.Address)
 			assert.Equal(t, new("https://authenticate.example.com"), result.AuthenticateServiceUrl)
@@ -350,6 +366,18 @@ func TestModelToAPI(t *testing.T) {
 			assert.Equal(t, new(false), result.GrpcInsecure)
 			assert.Equal(t, new(":80"), result.HttpRedirectAddr)
 			assert.Equal(t, new("SETTINGS_ID"), result.Id)
+			assert.Empty(t, cmp.Diff(map[string]*configpb.IdentityProvider{
+				"idp1": {
+					Issuer:        "https://issuer1.example.com",
+					JwksUrl:       "https://issuer1.example.com/.well-known/jwks.json",
+					SupportedAlgs: []string{"RS256", "ES256"},
+					Audiences:     []string{"AUDIENCE1"},
+				},
+				"idp2": {
+					Issuer:    "https://issuer2.example.com",
+					Audiences: []string{"AUDIENCE2"},
+				},
+			}, result.IdentityProviders, protocmp.Transform()))
 			assert.Equal(t, new("IDP_CLIENT_ID"), result.IdpClientId)
 			assert.Equal(t, new("IDP_CLIENT_SECRET"), result.IdpClientSecret)
 			assert.Equal(t, new("google"), result.IdpProvider)

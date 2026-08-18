@@ -223,6 +223,11 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 			Required:    idRequired,
 			Computed:    !idRequired,
 		},
+		"identity_providers": schema.SetAttribute{
+			Computed:    true,
+			Description: "Names of the identity_providers whose JWT bearer tokens this route accepts (when bearer_token_format is BEARER_TOKEN_FORMAT_JWT).",
+			ElementType: types.StringType,
+		},
 		"idle_timeout": schema.StringAttribute{
 			Computed:    true,
 			Description: "Idle timeout.",

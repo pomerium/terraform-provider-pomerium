@@ -274,6 +274,44 @@ func (c *ModelToEnterpriseConverter) HealthCheckPayload(src types.Object) *enter
 	return payload
 }
 
+func (c *ModelToEnterpriseConverter) IdentityProvider(p path.Path, src types.Object) *enterprise.IdentityProvider {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	dst := new(enterprise.IdentityProvider)
+	attrs := src.Attributes()
+	if v := getStringAttribute(attrs, "issuer"); !v.IsNull() && !v.IsUnknown() {
+		dst.Issuer = v.ValueString()
+	}
+	if v := getStringAttribute(attrs, "jwks_url"); !v.IsNull() && !v.IsUnknown() {
+		dst.JwksUrl = v.ValueString()
+	}
+	if v := getSetAttribute(attrs, "supported_algs"); !v.IsNull() && !v.IsUnknown() {
+		dst.SupportedAlgs = c.StringSliceFromSet(p.AtName("supported_algs"), v)
+	}
+	if v := getSetAttribute(attrs, "audiences"); !v.IsNull() && !v.IsUnknown() {
+		dst.Audiences = c.StringSliceFromSet(p.AtName("audiences"), v)
+	}
+	return dst
+}
+
+func (c *ModelToEnterpriseConverter) IdentityProviders(p path.Path, src types.Map) map[string]*enterprise.IdentityProvider {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	dst := make(map[string]*enterprise.IdentityProvider)
+	for k, v := range src.Elements() {
+		vv, ok := v.(types.Object)
+		if !ok {
+			c.diagnostics.AddError("Invalid identity provider attribute", "Identity providers should be objects.")
+			return nil
+		}
+		dst[k] = c.IdentityProvider(p.AtMapKey(k), vv)
+	}
+	return dst
+}
+
 func (c *ModelToEnterpriseConverter) Int64Range(src types.Object) *enterprise.Int64Range {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
@@ -378,6 +416,7 @@ func (c *ModelToEnterpriseConverter) Route(src RouteModel) *enterprise.Route {
 		HostRewrite:                               src.HostRewrite.ValueStringPointer(),
 		HostRewriteHeader:                         src.HostRewriteHeader.ValueStringPointer(),
 		Id:                                        src.ID.ValueString(),
+		IdentityProviders:                         c.StringSliceFromSet(path.Root("identity_providers"), src.IdentityProviders),
 		IdleTimeout:                               c.Duration(path.Root("idle_timeout"), src.IdleTimeout),
 		IdpAccessTokenAllowedAudiences:            c.RouteStringList(path.Root("idp_access_token_allowed_audiences"), src.IDPAccessTokenAllowedAudiences),
 		IdpClientId:                               src.IDPClientID.ValueStringPointer(),
@@ -596,6 +635,7 @@ func (c *ModelToEnterpriseConverter) Settings(src SettingsModel) *enterprise.Set
 		IdentityProviderOptions:         c.DirectoryProviderOptions(src),
 		IdentityProviderRefreshInterval: c.Duration(path.Root("identity_provider_refresh_interval"), src.IdentityProviderRefreshInterval),
 		IdentityProviderRefreshTimeout:  c.Duration(path.Root("identity_provider_refresh_timeout"), src.IdentityProviderRefreshTimeout),
+		IdentityProviders:               c.IdentityProviders(path.Root("identity_providers"), src.IdentityProviders),
 		IdpAccessTokenAllowedAudiences:  c.SettingsStringList(path.Root("idp_access_token_allowed_audiences"), src.IDPAccessTokenAllowedAudiences),
 		IdpClientId:                     c.NullableString(src.IdpClientID),
 		IdpClientSecret:                 c.NullableString(src.IdpClientSecret),

@@ -44,6 +44,7 @@ Route data source
 - `host_path_regex_rewrite_substitution` (String) Host path regex rewrite substitution.
 - `host_rewrite` (String) Host rewrite.
 - `host_rewrite_header` (String) Host rewrite header.
+- `identity_providers` (Set of String) Names of the identity_providers whose JWT bearer tokens this route accepts (when bearer_token_format is BEARER_TOKEN_FORMAT_JWT).
 - `idle_timeout` (String) Idle timeout.
 - `idp_access_token_allowed_audiences` (Set of String) IDP access token allowed audiences.
 - `idp_client_id` (String) IDP client ID.

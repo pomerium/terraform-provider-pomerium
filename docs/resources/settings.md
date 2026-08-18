@@ -83,6 +83,7 @@ The settings are global object.
 - `identity_provider_ping` (Attributes) Ping directory sync options (see [below for nested schema](#nestedatt--identity_provider_ping))
 - `identity_provider_refresh_interval` (String) Identity provider refresh interval
 - `identity_provider_refresh_timeout` (String) Identity provider refresh timeout
+- `identity_providers` (Attributes Map) Identity providers (see [below for nested schema](#nestedatt--identity_providers))
 - `idp_access_token_allowed_audiences` (Set of String) IDP access token allowed audiences.
 - `idp_client_id` (String) IDP client ID
 - `idp_client_secret` (String, Sensitive) IDP client secret
@@ -255,6 +256,20 @@ Required:
 - `client_id` (String)
 - `client_secret` (String, Sensitive)
 - `environment_id` (String)
+
+
+<a id="nestedatt--identity_providers"></a>
+### Nested Schema for `identity_providers`
+
+Required:
+
+- `audiences` (Set of String) Audiences accepted on tokens from this provider.
+- `issuer` (String) The `iss` claim tokens must carry.
+
+Optional:
+
+- `jwks_url` (String) Optional explicit JWKS URL.
+- `supported_algs` (Set of String) Allowed JWT signing algorithms.
 
 
 <a id="nestedatt--jwt_groups_filter"></a>
