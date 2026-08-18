@@ -2,7 +2,7 @@
 package provider
 
 var (
-	BearerTokenFormatValues               = []string{"default", "idp_access_token", "idp_identity_token"}
+	BearerTokenFormatValues               = []string{"default", "idp_access_token", "idp_identity_token", "jwt"}
 	CodecClientTypeValues                 = []string{"http1", "http2", "http3"}
 	CodecTypeValues                       = []string{"auto", "http1", "http2", "http3"}
 	DeviceKindValues                      = []string{"fido_u2f", "android", "apple", "tpm", "windows"}

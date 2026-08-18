@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -486,6 +487,34 @@ var SettingsResourceSchema = schema.Schema{
 			Optional:    true,
 			Description: "Identity provider refresh timeout",
 			CustomType:  timetypes.GoDurationType{},
+		},
+		"identity_providers": schema.MapNestedAttribute{
+			Optional:    true,
+			Description: "Identity providers",
+			NestedObject: schema.NestedAttributeObject{
+				Attributes: map[string]schema.Attribute{
+					"issuer": schema.StringAttribute{
+						Required:    true,
+						Description: "The `iss` claim tokens must carry.",
+					},
+					"jwks_url": schema.StringAttribute{
+						Optional:    true,
+						Computed:    true,
+						Default:     stringdefault.StaticString(""),
+						Description: "Optional explicit JWKS URL.",
+					},
+					"supported_algs": schema.SetAttribute{
+						Optional:    true,
+						Description: "Allowed JWT signing algorithms.",
+						ElementType: types.StringType,
+					},
+					"audiences": schema.SetAttribute{
+						Required:    true,
+						Description: "Audiences accepted on tokens from this provider.",
+						ElementType: types.StringType,
+					},
+				},
+			},
 		},
 		"idp_access_token_allowed_audiences": schema.SetAttribute{
 			Description: "IDP access token allowed audiences.",

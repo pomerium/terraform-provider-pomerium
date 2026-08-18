@@ -102,6 +102,7 @@ type RouteModel struct {
 	HostRewrite                               types.String                `tfsdk:"host_rewrite"`
 	HostRewriteHeader                         types.String                `tfsdk:"host_rewrite_header"`
 	ID                                        types.String                `tfsdk:"id"`
+	IdentityProviders                         types.Set                   `tfsdk:"identity_providers"`
 	IdleTimeout                               timetypes.GoDuration        `tfsdk:"idle_timeout"`
 	IDPAccessTokenAllowedAudiences            types.Set                   `tfsdk:"idp_access_token_allowed_audiences"`
 	IDPClientID                               types.String                `tfsdk:"idp_client_id"`
@@ -220,6 +221,7 @@ type SettingsModel struct {
 	IdentityProviderPing                              types.Object         `tfsdk:"identity_provider_ping"`
 	IdentityProviderRefreshInterval                   timetypes.GoDuration `tfsdk:"identity_provider_refresh_interval"`
 	IdentityProviderRefreshTimeout                    timetypes.GoDuration `tfsdk:"identity_provider_refresh_timeout"`
+	IdentityProviders                                 types.Map            `tfsdk:"identity_providers"`
 	IDPAccessTokenAllowedAudiences                    types.Set            `tfsdk:"idp_access_token_allowed_audiences"`
 	IdpClientID                                       types.String         `tfsdk:"idp_client_id"`
 	IdpClientSecret                                   types.String         `tfsdk:"idp_client_secret"`

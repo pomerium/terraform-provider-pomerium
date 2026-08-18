@@ -262,6 +262,44 @@ func (c *ModelToAPIConverter) HealthCheckPayload(src types.Object) *configpb.Hea
 	return payload
 }
 
+func (c *ModelToAPIConverter) IdentityProvider(p path.Path, src types.Object) *configpb.IdentityProvider {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	dst := new(configpb.IdentityProvider)
+	attrs := src.Attributes()
+	if v := getStringAttribute(attrs, "issuer"); !v.IsNull() && !v.IsUnknown() {
+		dst.Issuer = v.ValueString()
+	}
+	if v := getStringAttribute(attrs, "jwks_url"); !v.IsNull() && !v.IsUnknown() {
+		dst.JwksUrl = v.ValueString()
+	}
+	if v := getSetAttribute(attrs, "supported_algs"); !v.IsNull() && !v.IsUnknown() {
+		dst.SupportedAlgs = c.StringSliceFromSet(p.AtName("supported_algs"), v)
+	}
+	if v := getSetAttribute(attrs, "audiences"); !v.IsNull() && !v.IsUnknown() {
+		dst.Audiences = c.StringSliceFromSet(p.AtName("audiences"), v)
+	}
+	return dst
+}
+
+func (c *ModelToAPIConverter) IdentityProviders(p path.Path, src types.Map) map[string]*configpb.IdentityProvider {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	dst := make(map[string]*configpb.IdentityProvider)
+	for k, v := range src.Elements() {
+		vv, ok := v.(types.Object)
+		if !ok {
+			c.diagnostics.AddError("Invalid identity provider attribute", "Identity providers should be objects.")
+			return nil
+		}
+		dst[k] = c.IdentityProvider(p.AtMapKey(k), vv)
+	}
+	return dst
+}
+
 func (c *ModelToAPIConverter) Int64Range(src types.Object) *configpb.HealthCheck_Int64Range {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
@@ -410,6 +448,7 @@ func (c *ModelToAPIConverter) Route(src RouteModel) *configpb.Route {
 		HostRewrite:                            src.HostRewrite.ValueStringPointer(),
 		HostRewriteHeader:                      src.HostRewriteHeader.ValueStringPointer(),
 		Id:                                     c.NullableString(src.ID),
+		IdentityProviders:                      c.StringSliceFromSet(path.Root("identity_providers"), src.IdentityProviders),
 		IdleTimeout:                            c.Duration(path.Root("idle_timeout"), src.IdleTimeout),
 		IdpAccessTokenAllowedAudiences:         c.RouteStringList(path.Root("idp_access_token_allowed_audiences"), src.IDPAccessTokenAllowedAudiences),
 		IdpClientId:                            src.IDPClientID.ValueStringPointer(),
@@ -692,6 +731,7 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *configpb.Settings {
 		Http3AdvertisePort:                  nil, // not supported
 		HttpRedirectAddr:                    c.NullableString(src.HTTPRedirectAddr),
 		Id:                                  c.NullableString(src.ID),
+		IdentityProviders:                   c.IdentityProviders(path.Root("identity_providers"), src.IdentityProviders),
 		IdpAccessTokenAllowedAudiences:      c.SettingsStringList(path.Root("idp_access_token_allowed_audiences"), src.IDPAccessTokenAllowedAudiences),
 		IdpClientId:                         c.NullableString(src.IdpClientID),
 		IdpClientSecret:                     c.NullableString(src.IdpClientSecret),

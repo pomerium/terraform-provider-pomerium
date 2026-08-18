@@ -26,6 +26,12 @@ func TestAccRoute(t *testing.T) {
 					statecheck.ExpectKnownValue("pomerium_route.test", tfjsonpath.New("allow_upgrades"), knownvalue.SetExact([]knownvalue.Check{
 						knownvalue.StringExact("a"), knownvalue.StringExact("b"), knownvalue.StringExact("c"),
 					})),
+					statecheck.ExpectKnownValue("pomerium_route.test", tfjsonpath.New("identity_providers"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("idp1"), knownvalue.StringExact("idp2"),
+					})),
+					statecheck.ExpectKnownValue("data.pomerium_route.test", tfjsonpath.New("identity_providers"), knownvalue.SetExact([]knownvalue.Check{
+						knownvalue.StringExact("idp1"), knownvalue.StringExact("idp2"),
+					})),
 				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr("pomerium_route.test", "name", "test"),
@@ -76,6 +82,7 @@ resource "pomerium_route" "test" {
 		http_health_check = {}
 	}]
 	allow_upgrades = ["a","b","c"]
+	identity_providers = ["idp1","idp2"]
 	%s
 }
 

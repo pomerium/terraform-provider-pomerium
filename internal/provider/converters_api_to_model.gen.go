@@ -18,6 +18,8 @@ func (c *APIToModelConverter) BearerTokenFormat(src *config.BearerTokenFormat) t
 		return types.StringValue("idp_access_token")
 	case 3:
 		return types.StringValue("idp_identity_token")
+	case 4:
+		return types.StringValue("jwt")
 	default:
 		return types.StringNull()
 	}

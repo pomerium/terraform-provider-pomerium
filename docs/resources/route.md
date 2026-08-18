@@ -37,6 +37,7 @@ Route for Pomerium.
 - `host_path_regex_rewrite_substitution` (String) Rewrites the Host header according to a regular expression matching the substitution.
 - `host_rewrite` (String) Rewrites the Host header to a new literal value.
 - `host_rewrite_header` (String) Rewrites the Host header to match an incoming header value.
+- `identity_providers` (Set of String) Names of the identity_providers whose JWT bearer tokens this route accepts (when bearer_token_format is BEARER_TOKEN_FORMAT_JWT).
 - `idle_timeout` (String) Sets the time to terminate the upstream connection if there are no active streams. Defaults to 5 minutes.
 - `idp_access_token_allowed_audiences` (Set of String) IDP access token allowed audiences.
 - `idp_client_id` (String) IDP client ID.

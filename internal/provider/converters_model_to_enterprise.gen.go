@@ -21,6 +21,8 @@ func (c *ModelToEnterpriseConverter) BearerTokenFormat(p path.Path, src types.St
 		return pb.BearerTokenFormat(2).Enum()
 	case "idp_identity_token":
 		return pb.BearerTokenFormat(3).Enum()
+	case "jwt":
+		return pb.BearerTokenFormat(4).Enum()
 	default:
 		c.diagnostics.AddAttributeError(p, "unknown BearerTokenFormat", fmt.Sprintf("unknown BearerTokenFormat: %s", src.ValueString()))
 		return nil

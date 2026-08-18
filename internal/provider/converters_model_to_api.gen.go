@@ -21,6 +21,8 @@ func (c *ModelToAPIConverter) BearerTokenFormat(p path.Path, src types.String) *
 		return config.BearerTokenFormat(2).Enum()
 	case "idp_identity_token":
 		return config.BearerTokenFormat(3).Enum()
+	case "jwt":
+		return config.BearerTokenFormat(4).Enum()
 	default:
 		c.diagnostics.AddAttributeError(p, "unknown BearerTokenFormat", fmt.Sprintf("unknown BearerTokenFormat: %s", src.ValueString()))
 		return nil

@@ -58,6 +58,17 @@ func TestEnterpriseToModelConverter(t *testing.T) {
 	})
 	t.Run("Route", func(t *testing.T) {
 		t.Parallel()
+		t.Run("IdentityProviders", func(t *testing.T) {
+			t.Parallel()
+			var diagnostics diag.Diagnostics
+			actual := provider.NewEnterpriseToModelConverter(&diagnostics).Route(&pb.Route{
+				IdentityProviders: []string{"IDP1", "IDP2"},
+			})
+			assert.Empty(t, diagnostics)
+			assert.Equal(t, types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue("IDP1"), types.StringValue("IDP2"),
+			}), actual.IdentityProviders)
+		})
 		t.Run("SessionRecording", func(t *testing.T) {
 			t.Parallel()
 			var diagnostics diag.Diagnostics
@@ -170,6 +181,7 @@ func TestEnterpriseToModelConverter(t *testing.T) {
 				AuthorizeLogFields:             types.SetNull(types.StringType),
 				EnvoyDynamicExtensions:         types.SetNull(types.StringType),
 				ID:                             types.StringValue(""),
+				IdentityProviders:              types.MapNull(provider.IdentityProviderObjectType()),
 				IDPAccessTokenAllowedAudiences: types.SetNull(types.StringType),
 				JWTClaimsHeaders:               types.MapNull(types.StringType),
 				MCPAllowedAsMetadataDomains:    types.SetNull(types.StringType),
@@ -189,6 +201,39 @@ func TestEnterpriseToModelConverter(t *testing.T) {
 			if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
 				t.Errorf("unexpected difference: %s", diff)
 			}
+		})
+		t.Run("IdentityProviders", func(t *testing.T) {
+			t.Parallel()
+			var diagnostics diag.Diagnostics
+			actual := provider.NewEnterpriseToModelConverter(&diagnostics).Settings(&pb.Settings{
+				IdentityProviders: map[string]*pb.IdentityProvider{
+					"idp1": {
+						Issuer:        "https://issuer1.example.com",
+						JwksUrl:       "https://issuer1.example.com/.well-known/jwks.json",
+						SupportedAlgs: []string{"RS256", "ES256"},
+						Audiences:     []string{"AUDIENCE1"},
+					},
+					"idp2": {
+						Issuer:    "https://issuer2.example.com",
+						Audiences: []string{"AUDIENCE2"},
+					},
+				},
+			}, nil)
+			assert.Empty(t, diagnostics)
+			assert.Equal(t, types.MapValueMust(provider.IdentityProviderObjectType(), map[string]attr.Value{
+				"idp1": types.ObjectValueMust(provider.IdentityProviderObjectType().AttrTypes, map[string]attr.Value{
+					"issuer":         types.StringValue("https://issuer1.example.com"),
+					"jwks_url":       types.StringValue("https://issuer1.example.com/.well-known/jwks.json"),
+					"supported_algs": types.SetValueMust(types.StringType, []attr.Value{types.StringValue("RS256"), types.StringValue("ES256")}),
+					"audiences":      types.SetValueMust(types.StringType, []attr.Value{types.StringValue("AUDIENCE1")}),
+				}),
+				"idp2": types.ObjectValueMust(provider.IdentityProviderObjectType().AttrTypes, map[string]attr.Value{
+					"issuer":         types.StringValue("https://issuer2.example.com"),
+					"jwks_url":       types.StringValue(""),
+					"supported_algs": types.SetNull(types.StringType),
+					"audiences":      types.SetValueMust(types.StringType, []attr.Value{types.StringValue("AUDIENCE2")}),
+				}),
+			}), actual.IdentityProviders)
 		})
 	})
 	t.Run("RecordingDataSource", func(t *testing.T) {

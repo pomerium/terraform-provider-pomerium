@@ -265,6 +265,11 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"identity_providers": schema.SetAttribute{
+				Optional:    true,
+				Description: "Names of the identity_providers whose JWT bearer tokens this route accepts (when bearer_token_format is BEARER_TOKEN_FORMAT_JWT).",
+				ElementType: types.StringType,
+			},
 			"idle_timeout": schema.StringAttribute{
 				Description: "Sets the time to terminate the upstream connection if there are no active streams. Defaults to 5 minutes.",
 				Optional:    true,
