@@ -8,7 +8,7 @@ linters:
     - dogsled
     - errcheck
     - errorlint
-    - exhaustruct
+    - exhaustruct_v5
     - gocheckcompilerdirectives
     - goprintffuncname
     - gosec
@@ -34,7 +34,7 @@ linters:
       - linters:
           - bodyclose
           - errcheck
-          - exhaustruct
+          - exhaustruct_v5
           - gosec
           - staticcheck
           - unused
@@ -55,7 +55,7 @@ linters:
           - revive
         text: should have a package comment
       - linters:
-          - exhaustruct
+          - exhaustruct_v5
         text: ^((schema|timetypes)[.][a-zA-Z0-9]+|provider.PolicyLanguage|provider.PolicyLanguageType)[ ]is missing
     paths:
       - third_party$
