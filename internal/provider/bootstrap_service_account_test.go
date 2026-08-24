@@ -4,9 +4,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
 )
 
 func TestGenerateBootstrapServiceAccountToken(t *testing.T) {
