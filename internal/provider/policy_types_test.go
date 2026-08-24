@@ -6,9 +6,10 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/pomerium/enterprise-terraform-provider/internal/provider"
 )
 
 //go:embed testdata/ppl-object-ok.yaml
