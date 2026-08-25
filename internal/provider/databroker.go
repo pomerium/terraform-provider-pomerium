@@ -25,10 +25,12 @@ func databrokerDelete(
 	}
 	_, err = client.Put(ctx, &databrokerpb.PutRequest{
 		Records: []*databrokerpb.Record{{
-			Type:      recordType,
-			Id:        recordID,
-			Data:      anyData,
-			DeletedAt: timestamppb.Now(),
+			Version:    0,
+			Type:       recordType,
+			Id:         recordID,
+			Data:       anyData,
+			ModifiedAt: nil,
+			DeletedAt:  timestamppb.Now(),
 		}},
 	})
 	return err
@@ -105,9 +107,12 @@ func databrokerPut(
 	}
 	_, err = client.Put(ctx, &databrokerpb.PutRequest{
 		Records: []*databrokerpb.Record{{
-			Type: recordType,
-			Id:   recordID,
-			Data: anyData,
+			Version:    0,
+			Type:       recordType,
+			Id:         recordID,
+			ModifiedAt: nil,
+			DeletedAt:  nil,
+			Data:       anyData,
 		}},
 	})
 	return err
