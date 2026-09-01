@@ -52,7 +52,7 @@ func FromStringList[T any, TMessage interface {
 		return types.SetNull(types.StringType)
 	}
 	fields := make([]attr.Value, 0)
-	for _, v := range (src).GetValues() {
+	for _, v := range src.GetValues() {
 		fields = append(fields, types.StringValue(v))
 	}
 	return types.SetValueMust(types.StringType, fields)
