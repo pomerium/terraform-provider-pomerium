@@ -127,6 +127,25 @@ func (c *EnterpriseToModelConverter) IssuerFormat(src *pb.IssuerFormat) types.St
 	}
 }
 
+func (c *EnterpriseToModelConverter) LicenseStatus(src *pb.LicenseStatus) types.String {
+	if src == nil {
+		return types.StringNull()
+	}
+
+	switch src.Number() {
+	case 1:
+		return types.StringValue("ok")
+	case 2:
+		return types.StringValue("missing")
+	case 3:
+		return types.StringValue("expired")
+	case 4:
+		return types.StringValue("invalid")
+	default:
+		return types.StringNull()
+	}
+}
+
 func (c *EnterpriseToModelConverter) LoadBalancingPolicy(src *pb.LoadBalancingPolicy) types.String {
 	if src == nil {
 		return types.StringNull()
