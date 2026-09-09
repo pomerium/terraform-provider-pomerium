@@ -137,6 +137,26 @@ func (c *ModelToEnterpriseConverter) IssuerFormat(p path.Path, src types.String)
 	}
 }
 
+func (c *ModelToEnterpriseConverter) LicenseStatus(p path.Path, src types.String) *pb.LicenseStatus {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	switch strings.ToLower(src.ValueString()) {
+	case "ok":
+		return pb.LicenseStatus(1).Enum()
+	case "missing":
+		return pb.LicenseStatus(2).Enum()
+	case "expired":
+		return pb.LicenseStatus(3).Enum()
+	case "invalid":
+		return pb.LicenseStatus(4).Enum()
+	default:
+		c.diagnostics.AddAttributeError(p, "unknown LicenseStatus", fmt.Sprintf("unknown LicenseStatus: %s", src.ValueString()))
+		return nil
+	}
+}
+
 func (c *ModelToEnterpriseConverter) LoadBalancingPolicy(p path.Path, src types.String) *pb.LoadBalancingPolicy {
 	if src.IsNull() || src.IsUnknown() {
 		return nil

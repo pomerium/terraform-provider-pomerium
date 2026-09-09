@@ -9,6 +9,7 @@ var (
 	FormatValues                          = []string{"pem"}
 	HeadersWithUnderscoresActionValues    = []string{"allow", "reject_request", "drop_header"}
 	IssuerFormatValues                    = []string{"IssuerHostOnly", "IssuerURI"}
+	LicenseStatusValues                   = []string{"ok", "missing", "expired", "invalid"}
 	LoadBalancingPolicyValues             = []string{"round_robin", "maglev", "random", "ring_hash", "least_request"}
 	OAuth2AuthStyleValues                 = []string{"in_params", "in_header"}
 	PathWithEscapedSlashesActionValues    = []string{"keep_unchanged", "reject_request", "unescape_and_redirect", "unescape_and_forward"}
