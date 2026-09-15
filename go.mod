@@ -1,6 +1,6 @@
 module github.com/pomerium/enterprise-terraform-provider
 
-go 1.26.3
+go 1.27.1
 
 require (
 	connectrpc.com/connect v1.21.0
@@ -15,10 +15,10 @@ require (
 	github.com/hashicorp/terraform-plugin-log v0.11.0
 	github.com/hashicorp/terraform-plugin-testing v1.16.0
 	github.com/iancoleman/strcase v0.3.0
-	github.com/pomerium/enterprise-client-go v0.32.1-0.20260909170702-abf422f90ade
-	github.com/pomerium/pomerium v0.32.5-rc.1.0.20260909022959-b0a98b1da5f2
-	github.com/pomerium/pomerium/pkg/grpc/config v0.0.0-20260909022959-b0a98b1da5f2
-	github.com/pomerium/pomerium/pkg/grpc/databroker v0.0.0-20260909022959-b0a98b1da5f2
+	github.com/pomerium/enterprise-client-go v0.32.1-0.20260915161927-f3294541b275
+	github.com/pomerium/pomerium v0.32.5-rc.1.0.20260915183240-e16bca91a200
+	github.com/pomerium/pomerium/pkg/grpc/config v0.0.0-20260915183240-e16bca91a200
+	github.com/pomerium/pomerium/pkg/grpc/databroker v0.0.0-20260915183240-e16bca91a200
 	github.com/pomerium/sdk-go v0.0.10-0.20260909161909-2c03c4c9a9bd
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
@@ -150,8 +150,8 @@ require (
 	golang.org/x/text v0.42.0 // indirect
 	golang.org/x/tools v0.49.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260908043556-f8649ddbbfe6 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260908043556-f8649ddbbfe6 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260911204522-f61a6ca850bd // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260911204522-f61a6ca850bd // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
