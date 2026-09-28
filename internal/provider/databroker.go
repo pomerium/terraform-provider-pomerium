@@ -24,6 +24,7 @@ func databrokerDelete(
 		return err
 	}
 	_, err = client.Put(ctx, &databrokerpb.PutRequest{
+		IfMatchVersion: nil,
 		Records: []*databrokerpb.Record{{
 			Version:    0,
 			Type:       recordType,
@@ -106,6 +107,7 @@ func databrokerPut(
 		return err
 	}
 	_, err = client.Put(ctx, &databrokerpb.PutRequest{
+		IfMatchVersion: nil,
 		Records: []*databrokerpb.Record{{
 			Version:    0,
 			Type:       recordType,
