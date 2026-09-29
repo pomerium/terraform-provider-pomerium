@@ -83,7 +83,7 @@ The settings are global object.
 - `identity_provider_ping` (Attributes) Ping directory sync options (see [below for nested schema](#nestedatt--identity_provider_ping))
 - `identity_provider_refresh_interval` (String) Identity provider refresh interval
 - `identity_provider_refresh_timeout` (String) Identity provider refresh timeout
-- `identity_providers` (Attributes Map) Identity providers (see [below for nested schema](#nestedatt--identity_providers))
+- `identity_providers` (Attributes Map) JWT identity providers, keyed by name, whose bearer tokens are accepted on routes with `bearer_token_format = "jwt"`. Names must be lowercase and must not contain `/`. These do not replace the interactive SSO identity provider (the `idp_*` settings). (see [below for nested schema](#nestedatt--identity_providers))
 - `idp_access_token_allowed_audiences` (Set of String) IDP access token allowed audiences.
 - `idp_client_id` (String) IDP client ID
 - `idp_client_secret` (String, Sensitive) IDP client secret
@@ -263,13 +263,13 @@ Required:
 
 Required:
 
-- `audiences` (Set of String) Audiences accepted on tokens from this provider.
-- `issuer` (String) The `iss` claim tokens must carry.
+- `audiences` (Set of String) Audiences accepted on tokens from this provider. At least one must match the token's `aud` claim.
+- `issuer` (String) The `iss` claim tokens must carry. Must be unique across providers and an https URL (http is allowed only for loopback). The special value `kubernetes:///` selects the API server of the Kubernetes cluster Pomerium runs in.
 
 Optional:
 
-- `jwks_url` (String) Optional explicit JWKS URL.
-- `supported_algs` (Set of String) Allowed JWT signing algorithms.
+- `jwks_url` (String) Optional explicit JWKS URL. When set, OIDC discovery is skipped and keys are fetched directly from this URL. Must not be set with a `kubernetes:///` issuer.
+- `supported_algs` (Set of String) Allowed JWT signing algorithms. Defaults to `RS256`, `ES256` and `EdDSA` when unset.
 
 
 <a id="nestedatt--jwt_groups_filter"></a>
