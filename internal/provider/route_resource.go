@@ -267,7 +267,7 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 			},
 			"identity_providers": schema.SetAttribute{
 				Optional:    true,
-				Description: "Names of the identity_providers whose JWT bearer tokens this route accepts (when bearer_token_format is BEARER_TOKEN_FORMAT_JWT).",
+				Description: "Names of the `identity_providers` (from `pomerium_settings`) whose JWT bearer tokens this route accepts when `bearer_token_format` is `jwt`. Empty means all configured providers are accepted.",
 				ElementType: types.StringType,
 			},
 			"idle_timeout": schema.StringAttribute{

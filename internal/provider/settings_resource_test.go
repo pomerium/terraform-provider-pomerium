@@ -3,6 +3,7 @@ package provider_test
 import (
 	"encoding/base64"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -83,4 +84,45 @@ resource "pomerium_settings" "test" {
 	}
 }
 `, apiURL, base64.StdEncoding.EncodeToString(sharedSecret))
+}
+
+func TestSettingsIdentityProvidersValidation(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		name        string
+		idp         string
+		expectError string
+	}{
+		{"uppercase name", `IDP = { issuer = "https://issuer.example.com", audiences = ["a"] }`, `must be lowercase`},
+		{"slash in name", `"a/b" = { issuer = "https://issuer.example.com", audiences = ["a"] }`, `must be lowercase`},
+		{"empty name", `"" = { issuer = "https://issuer.example.com", audiences = ["a"] }`, `string length must be at least`},
+		{"empty audiences", `idp = { issuer = "https://issuer.example.com", audiences = [] }`, `set must contain at least`},
+		{"hmac alg", `idp = { issuer = "https://issuer.example.com", audiences = ["a"], supported_algs = ["HS256"] }`, `got: "HS256"`},
+		{"none alg", `idp = { issuer = "https://issuer.example.com", audiences = ["a"], supported_algs = ["none"] }`, `got: "none"`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			resource.UnitTest(t, resource.TestCase{
+				ProtoV6ProviderFactories: testAccProtoV6ProviderFactories,
+				Steps: []resource.TestStep{{
+					Config: fmt.Sprintf(`
+provider "pomerium" {
+  api_url           = "http://localhost:1"
+  shared_secret_b64 = "%s"
+}
+
+resource "pomerium_settings" "test" {
+	identity_providers = {
+		%s
+	}
+}
+`, base64.StdEncoding.EncodeToString(make([]byte, 32)), tc.idp),
+					PlanOnly:    true,
+					ExpectError: regexp.MustCompile(regexp.QuoteMeta(tc.expectError)),
+				}},
+			})
+		})
+	}
 }

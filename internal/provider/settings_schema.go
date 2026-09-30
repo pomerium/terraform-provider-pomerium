@@ -2,9 +2,12 @@ package provider
 
 import (
 	_ "embed"
+	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -490,28 +493,40 @@ var SettingsResourceSchema = schema.Schema{
 		},
 		"identity_providers": schema.MapNestedAttribute{
 			Optional:    true,
-			Description: "Identity providers",
+			Description: "JWT identity providers, keyed by name, whose bearer tokens are accepted on routes with `bearer_token_format = \"jwt\"`. Names must be lowercase and must not contain `/`. These do not replace the interactive SSO identity provider (the `idp_*` settings).",
+			Validators: []validator.Map{
+				mapvalidator.KeysAre(
+					stringvalidator.LengthAtLeast(1),
+					stringvalidator.RegexMatches(regexp.MustCompile(`^[^/A-Z]+$`), "must be lowercase and must not contain '/'"),
+				),
+			},
 			NestedObject: schema.NestedAttributeObject{
 				Attributes: map[string]schema.Attribute{
 					"issuer": schema.StringAttribute{
 						Required:    true,
-						Description: "The `iss` claim tokens must carry.",
+						Description: "The `iss` claim tokens must carry. Must be unique across providers and an https URL (http is allowed only for loopback). The special value `kubernetes:///` selects the API server of the Kubernetes cluster Pomerium runs in.",
 					},
 					"jwks_url": schema.StringAttribute{
 						Optional:    true,
 						Computed:    true,
 						Default:     stringdefault.StaticString(""),
-						Description: "Optional explicit JWKS URL.",
+						Description: "Optional explicit JWKS URL. When set, OIDC discovery is skipped and keys are fetched directly from this URL. Must not be set with a `kubernetes:///` issuer.",
 					},
 					"supported_algs": schema.SetAttribute{
 						Optional:    true,
-						Description: "Allowed JWT signing algorithms.",
+						Description: "Allowed JWT signing algorithms. Defaults to `RS256`, `ES256` and `EdDSA` when unset.",
 						ElementType: types.StringType,
+						Validators: []validator.Set{
+							setvalidator.ValueStringsAre(stringvalidator.OneOf(JWTSigningAlgValues...)),
+						},
 					},
 					"audiences": schema.SetAttribute{
 						Required:    true,
-						Description: "Audiences accepted on tokens from this provider.",
+						Description: "Audiences accepted on tokens from this provider. At least one must match the token's `aud` claim.",
 						ElementType: types.StringType,
+						Validators: []validator.Set{
+							setvalidator.SizeAtLeast(1),
+						},
 					},
 				},
 			},

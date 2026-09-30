@@ -64,6 +64,18 @@ resource "pomerium_settings" "settings" {
   otel_traces_exporter               = "otlp"
   otel_exporter_otlp_traces_endpoint = "http://localhost:4317"
   otel_exporter_otlp_traces_protocol = "grpc"
+
+  identity_providers = {
+    ci = {
+      issuer    = "https://token.actions.githubusercontent.com"
+      audiences = ["https://github.com/my-org"]
+    }
+    k8s = {
+      issuer         = "kubernetes:///"
+      audiences      = ["pomerium"]
+      supported_algs = ["RS256", "ES256"]
+    }
+  }
 }
 
 resource "pomerium_service_account" "test_sa" {
@@ -199,6 +211,17 @@ resource "pomerium_route" "oauth_route" {
   idp_client_id      = "custom-client-id"
   idp_client_secret  = "custom-client-secret"
   show_error_details = true
+}
+
+# Example route accepting JWT bearer tokens from specific identity providers
+resource "pomerium_route" "jwt_bearer_route" {
+  name         = "jwt-bearer-route"
+  namespace_id = pomerium_namespace.test_namespace.id
+  from         = "https://api.localhost.pomerium.io"
+  to           = ["https://api-service.internal"]
+
+  bearer_token_format = "jwt"
+  identity_providers  = ["ci", "k8s"]
 }
 
 # Example route with Kubernetes integration
