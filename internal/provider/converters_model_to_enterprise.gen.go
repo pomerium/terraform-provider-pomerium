@@ -157,6 +157,26 @@ func (c *ModelToEnterpriseConverter) LicenseStatus(p path.Path, src types.String
 	}
 }
 
+func (c *ModelToEnterpriseConverter) LicenseType(p path.Path, src types.String) *pb.LicenseType {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	switch strings.ToLower(src.ValueString()) {
+	case "open_source":
+		return pb.LicenseType(1).Enum()
+	case "community":
+		return pb.LicenseType(2).Enum()
+	case "commercial":
+		return pb.LicenseType(3).Enum()
+	case "commercial_trial":
+		return pb.LicenseType(4).Enum()
+	default:
+		c.diagnostics.AddAttributeError(p, "unknown LicenseType", fmt.Sprintf("unknown LicenseType: %s", src.ValueString()))
+		return nil
+	}
+}
+
 func (c *ModelToEnterpriseConverter) LoadBalancingPolicy(p path.Path, src types.String) *pb.LoadBalancingPolicy {
 	if src.IsNull() || src.IsUnknown() {
 		return nil

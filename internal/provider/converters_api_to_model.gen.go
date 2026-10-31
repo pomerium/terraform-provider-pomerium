@@ -44,6 +44,23 @@ func (c *APIToModelConverter) CodecType(src *config.CodecType) types.String {
 	}
 }
 
+func (c *APIToModelConverter) EnterpriseValidationMode(src *config.EnterpriseValidationMode) types.String {
+	if src == nil {
+		return types.StringNull()
+	}
+
+	switch src.Number() {
+	case 1:
+		return types.StringValue("disabled")
+	case 2:
+		return types.StringValue("static")
+	case 3:
+		return types.StringValue("full")
+	default:
+		return types.StringNull()
+	}
+}
+
 func (c *APIToModelConverter) HeadersWithUnderscoresAction(src *config.HeadersWithUnderscoresAction) types.String {
 	if src == nil {
 		return types.StringNull()
@@ -139,6 +156,25 @@ func (c *APIToModelConverter) KeyPairStatus(src *config.KeyPairStatus) types.Str
 		return types.StringValue("ready")
 	case 2:
 		return types.StringValue("pending")
+	default:
+		return types.StringNull()
+	}
+}
+
+func (c *APIToModelConverter) LicenseType(src *config.LicenseType) types.String {
+	if src == nil {
+		return types.StringNull()
+	}
+
+	switch src.Number() {
+	case 1:
+		return types.StringValue("open_source")
+	case 2:
+		return types.StringValue("community")
+	case 3:
+		return types.StringValue("commercial")
+	case 4:
+		return types.StringValue("commercial_trial")
 	default:
 		return types.StringNull()
 	}

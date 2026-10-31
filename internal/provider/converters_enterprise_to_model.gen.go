@@ -146,6 +146,25 @@ func (c *EnterpriseToModelConverter) LicenseStatus(src *pb.LicenseStatus) types.
 	}
 }
 
+func (c *EnterpriseToModelConverter) LicenseType(src *pb.LicenseType) types.String {
+	if src == nil {
+		return types.StringNull()
+	}
+
+	switch src.Number() {
+	case 1:
+		return types.StringValue("open_source")
+	case 2:
+		return types.StringValue("community")
+	case 3:
+		return types.StringValue("commercial")
+	case 4:
+		return types.StringValue("commercial_trial")
+	default:
+		return types.StringNull()
+	}
+}
+
 func (c *EnterpriseToModelConverter) LoadBalancingPolicy(src *pb.LoadBalancingPolicy) types.String {
 	if src == nil {
 		return types.StringNull()
