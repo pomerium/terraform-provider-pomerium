@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/go-jose/go-jose/v3"
-	"github.com/go-jose/go-jose/v3/jwt"
+	"github.com/go-jose/go-jose/v4"
+	"github.com/go-jose/go-jose/v4/jwt"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -38,7 +38,7 @@ func GenerateBootstrapServiceAccountToken(
 	claims.IssuedAt = jwt.NewNumericDate(now)
 	claims.NotBefore = jwt.NewNumericDate(now)
 
-	rawJWT, err := jwt.Signed(sig).Claims(claims).CompactSerialize()
+	rawJWT, err := jwt.Signed(sig).Claims(claims).Serialize()
 	if err != nil {
 		return "", status.Errorf(codes.Internal, "signing JWT: %s", err.Error())
 	}
