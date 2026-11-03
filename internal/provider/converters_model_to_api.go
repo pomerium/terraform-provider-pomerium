@@ -466,6 +466,7 @@ func (c *ModelToAPIConverter) Route(src RouteModel) *configpb.Route {
 		ModifiedAt:                             nil, // computed
 		Name:                                   c.NullableString(src.Name),
 		NamespaceId:                            c.NullableString(src.NamespaceID),
+		OidcBridge:                             nil, // not supported
 		NamespaceName:                          nil, // computed
 		OriginatorId:                           new(OriginatorID),
 		OutlierDetection:                       nil, // not supported
@@ -715,6 +716,7 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *configpb.Settings {
 		DnsUdpMaxQueries:                  c.NullableUint32(src.DNSUDPMaxQueries),
 		DnsUseTcp:                         c.NullableBool(src.DNSUseTCP),
 		DownstreamMtls:                    nil, // not supported
+		Enterprise:                        nil, // not supported
 		EnvoyAdminAccessLogPath:           nil, // not supported
 		EnvoyAdminAddress:                 nil, // not supported
 		EnvoyAdminProfilePath:             nil, // not supported
@@ -743,6 +745,7 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *configpb.Settings {
 		JwtGroupsFilter:                     c.JWTGroupsFilter(src.JWTGroupsFilter),
 		JwtGroupsFilterInferFromPpl:         c.JWTGroupsFilterInferFromPpl(src.JWTGroupsFilter),
 		JwtIssuerFormat:                     c.IssuerFormat(path.Root("jwt_issuer_format"), src.JWTIssuerFormat),
+		LicenseType:                         nil, // not supported
 		LogLevel:                            c.NullableString(src.LogLevel),
 		LogoUrl:                             c.NullableString(src.LogoURL),
 		McpAllowedAsMetadataDomains:         c.StringSliceFromSet(path.Root("mcp_allowed_as_metadata_domains"), src.MCPAllowedAsMetadataDomains),
@@ -757,6 +760,7 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *configpb.Settings {
 		Name:                                nil, // not supported
 		NamespaceId:                         c.NullableString(src.NamespaceID),
 		NormalizePath:                       c.NullableBool(src.NormalizePath),
+		OidcBridge:                          nil, // not supported
 		OriginatorId:                        new(OriginatorID),
 		OtelAttributeValueLengthLimit:       c.NullableInt32(src.OtelAttributeValueLengthLimit),
 		OtelBspMaxExportBatchSize:           c.NullableInt32(src.OtelBspMaxExportBatchSize),
@@ -779,6 +783,7 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *configpb.Settings {
 		PrimaryColor:                        c.NullableString(src.PrimaryColor),
 		ProgrammaticRedirectDomainWhitelist: nil, // not supported
 		ProxyLogLevel:                       c.NullableString(src.ProxyLogLevel),
+		ReadonlyConsoleAudiences:            nil, // not supported
 		RequestParams:                       c.StringMap(path.Root("request_params"), src.RequestParams),
 		RuntimeFlags:                        nil, // not supported
 		Scopes:                              c.StringSliceFromSet(path.Root("scopes"), src.Scopes),
