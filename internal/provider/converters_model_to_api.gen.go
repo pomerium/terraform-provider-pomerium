@@ -49,6 +49,24 @@ func (c *ModelToAPIConverter) CodecType(p path.Path, src types.String) *config.C
 	}
 }
 
+func (c *ModelToAPIConverter) EnterpriseValidationMode(p path.Path, src types.String) *config.EnterpriseValidationMode {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	switch strings.ToLower(src.ValueString()) {
+	case "disabled":
+		return config.EnterpriseValidationMode(1).Enum()
+	case "static":
+		return config.EnterpriseValidationMode(2).Enum()
+	case "full":
+		return config.EnterpriseValidationMode(3).Enum()
+	default:
+		c.diagnostics.AddAttributeError(p, "unknown EnterpriseValidationMode", fmt.Sprintf("unknown EnterpriseValidationMode: %s", src.ValueString()))
+		return nil
+	}
+}
+
 func (c *ModelToAPIConverter) HeadersWithUnderscoresAction(p path.Path, src types.String) *config.HeadersWithUnderscoresAction {
 	if src.IsNull() || src.IsUnknown() {
 		return nil
@@ -151,6 +169,26 @@ func (c *ModelToAPIConverter) KeyPairStatus(p path.Path, src types.String) *conf
 		return config.KeyPairStatus(2).Enum()
 	default:
 		c.diagnostics.AddAttributeError(p, "unknown KeyPairStatus", fmt.Sprintf("unknown KeyPairStatus: %s", src.ValueString()))
+		return nil
+	}
+}
+
+func (c *ModelToAPIConverter) LicenseType(p path.Path, src types.String) *config.LicenseType {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	switch strings.ToLower(src.ValueString()) {
+	case "open_source":
+		return config.LicenseType(1).Enum()
+	case "community":
+		return config.LicenseType(2).Enum()
+	case "commercial":
+		return config.LicenseType(3).Enum()
+	case "commercial_trial":
+		return config.LicenseType(4).Enum()
+	default:
+		c.diagnostics.AddAttributeError(p, "unknown LicenseType", fmt.Sprintf("unknown LicenseType: %s", src.ValueString()))
 		return nil
 	}
 }
