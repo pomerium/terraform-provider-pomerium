@@ -15,10 +15,10 @@ require (
 	github.com/hashicorp/terraform-plugin-log v0.11.0
 	github.com/hashicorp/terraform-plugin-testing v1.16.0
 	github.com/iancoleman/strcase v0.3.0
-	github.com/pomerium/enterprise-client-go v0.32.1-0.20261102211920-14bbd748241a
-	github.com/pomerium/pomerium v0.32.5-rc.1.0.20261103201227-29aa3449b774
-	github.com/pomerium/pomerium/pkg/grpc/config v0.0.0-20261103201227-29aa3449b774
-	github.com/pomerium/pomerium/pkg/grpc/databroker v0.0.0-20261103201227-29aa3449b774
+	github.com/pomerium/enterprise-client-go v0.32.1-0.20261103230052-b6161a56410a
+	github.com/pomerium/pomerium v0.32.5-rc.1.0.20261104122925-30a9f80310bb
+	github.com/pomerium/pomerium/pkg/grpc/config v0.0.0-20261104122925-30a9f80310bb
+	github.com/pomerium/pomerium/pkg/grpc/databroker v0.0.0-20261104122925-30a9f80310bb
 	github.com/pomerium/sdk-go v0.0.10-0.20261103211748-9dfda8063d66
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
