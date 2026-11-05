@@ -1,0 +1,29 @@
+name: Backport
+
+on:
+  pull_request_target:
+    types:
+      - closed
+      - labeled
+
+permissions:
+  contents: read
+
+jobs:
+  backport:
+    name: Backport
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate token
+        id: generate_token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ secrets.BACKPORT_APP_CLIENTID }}
+          private-key: ${{ secrets.BACKPORT_APP_PRIVATE_KEY }}
+
+      - name: Backport
+        uses: pomerium/backport@e2ffd4c5a70730dfd19046859dfaf366e3de6466 # v1.1.1
+        with:
+          github_token: ${{ steps.generate_token.outputs.token }}
+          title_template: "{{originalTitle}}"
+          copy_original_labels: true
