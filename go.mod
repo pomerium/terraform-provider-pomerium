@@ -16,14 +16,14 @@ require (
 	github.com/hashicorp/terraform-plugin-testing v1.16.0
 	github.com/iancoleman/strcase v0.3.0
 	github.com/pomerium/enterprise-client-go v0.32.1-0.20261104215908-be8e5e497846
-	github.com/pomerium/pomerium v0.34.1-0.20261105023115-7776641d1e9f
-	github.com/pomerium/pomerium/pkg/grpc/config v0.34.1-0.20261105023115-7776641d1e9f
-	github.com/pomerium/pomerium/pkg/grpc/databroker v0.34.1-0.20261105023115-7776641d1e9f
+	github.com/pomerium/pomerium v0.34.1-0.20261106175748-a04c468238de
+	github.com/pomerium/pomerium/pkg/grpc/config v0.34.1-0.20261106175748-a04c468238de
+	github.com/pomerium/pomerium/pkg/grpc/databroker v0.34.1-0.20261106175748-a04c468238de
 	github.com/pomerium/sdk-go v0.0.10-0.20261105020843-9c925563bfa0
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.12.1
 	github.com/testcontainers/testcontainers-go v0.44.0
-	golang.org/x/exp v0.0.0-20260820142414-ca536658362e
+	golang.org/x/exp v0.0.0-20260908205506-85c1c2202aba
 	google.golang.org/grpc v1.86.0-dev
 	google.golang.org/protobuf v1.36.12
 )
@@ -116,7 +116,7 @@ require (
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.1 // indirect
 	github.com/planetscale/vtprotobuf v0.6.1-0.20240319094008-0393e58bdf10 // indirect
-	github.com/pomerium/protoutil v0.0.0-20261023135301-1ce8ef91f9ec // indirect
+	github.com/pomerium/protoutil v0.0.0-20261106200515-d748e6f8aa21 // indirect
 	github.com/power-devops/perfstat v0.0.0-20260805114148-88456608a4f6 // indirect
 	github.com/shirou/gopsutil/v4 v4.26.10 // indirect
 	github.com/sirupsen/logrus v1.10.2 // indirect
@@ -132,7 +132,7 @@ require (
 	github.com/zclconf/go-cty v1.18.1 // indirect
 	github.com/zeebo/blake3 v0.2.4 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.71.0 // indirect
+	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.72.0 // indirect
 	go.opentelemetry.io/otel v1.47.0 // indirect
 	go.opentelemetry.io/otel/log v1.47.0 // indirect
 	go.opentelemetry.io/otel/metric v1.47.0 // indirect
