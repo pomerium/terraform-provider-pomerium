@@ -31,7 +31,8 @@ func startTestPomeriumCore(t *testing.T) (apiURL string, sharedSecret []byte) {
 	sharedSecret = cryptutil.NewKey()
 	apiToken := base64.StdEncoding.EncodeToString(sharedSecret)
 
-	container, err := testcontainers.Run(t.Context(), "pomerium/pomerium:main",
+	container, err := testcontainers.Run(
+		t.Context(), "pomerium/pomerium:main",
 		// logging
 		// testcontainers.WithLogger(log.TestLogger(t)),
 		// testcontainers.WithLogConsumers(testLogConsumer{t}),
@@ -44,6 +45,7 @@ func startTestPomeriumCore(t *testing.T) (apiURL string, sharedSecret []byte) {
 		testcontainers.WithEnv(map[string]string{
 			"GRPC_ADDRESS":  "0.0.0.0:" + grpcPort,
 			"SHARED_SECRET": apiToken,
+			"DO_NOT_TRACK":  "1",
 		}),
 	)
 	testcontainers.CleanupContainer(t, container)
