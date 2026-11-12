@@ -55,6 +55,7 @@ Route for Pomerium.
 - `logo_url` (String) URL to the logo image.
 - `mcp` (Attributes) Model Context Protocol configuration for this route. (see [below for nested schema](#nestedatt--mcp))
 - `namespace_id` (String) ID of the namespace the route belongs to.
+- `oidc_bridge` (Attributes) OIDC bridge configuration. (see [below for nested schema](#nestedatt--oidc_bridge))
 - `pass_identity_headers` (Boolean) If applied, passes X-Pomerium-Jwt-Assertion header and JWT Claims Headers to the upstream application.
 - `path` (String) Matches incoming requests with a path that is an exact match for the specified path.
 - `policies` (Set of String) List of policy IDs associated with the route.
@@ -233,6 +234,16 @@ Optional:
 
 
 
+
+
+<a id="nestedatt--oidc_bridge"></a>
+### Nested Schema for `oidc_bridge`
+
+Optional:
+
+- `client_secret` (String, Sensitive) Client secret to use for upstream applications that do not support public clients / PKCE.
+- `enabled` (Boolean) Whether the OIDC bridge feature should be enabled.
+- `redirect_uris` (Set of String) List of allowed redirect URIs. By default any subpath of the route's `to` address is allowed.
 
 
 <a id="nestedatt--rewrite_response_headers"></a>

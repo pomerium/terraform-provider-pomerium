@@ -174,8 +174,13 @@ func TestModelToAPI(t *testing.T) {
 						}),
 					}),
 				}),
-				Name:                types.StringValue("NAME"),
-				NamespaceID:         types.StringValue("NAMESPACE_ID"),
+				Name:        types.StringValue("NAME"),
+				NamespaceID: types.StringValue("NAMESPACE_ID"),
+				OIDCBridge: types.ObjectValueMust(provider.OIDCBridgeObjectType().AttrTypes, map[string]attr.Value{
+					"client_secret": types.StringValue("OIDC_CLIENT_SECRET"),
+					"enabled":       types.BoolValue(true),
+					"redirect_uris": types.SetValueMust(types.StringType, []attr.Value{types.StringValue("https://app.example.com/callback")}),
+				}),
 				PassIdentityHeaders: types.BoolValue(true),
 				Path:                types.StringValue("/path"),
 				Policies:            types.SetValueMust(types.StringType, []attr.Value{types.StringValue("POLICY1"), types.StringValue("POLICY2")}),
@@ -235,8 +240,13 @@ func TestModelToAPI(t *testing.T) {
 						},
 					},
 				},
-				Name:                new("NAME"),
-				NamespaceId:         new("NAMESPACE_ID"),
+				Name:        new("NAME"),
+				NamespaceId: new("NAMESPACE_ID"),
+				OidcBridge: &configpb.OIDCBridge{
+					ClientSecret: new("OIDC_CLIENT_SECRET"),
+					Enabled:      new(true),
+					RedirectUris: []string{"https://app.example.com/callback"},
+				},
 				OriginatorId:        proto.String(provider.OriginatorID),
 				PassIdentityHeaders: new(true),
 				Path:                "/path",
@@ -329,6 +339,11 @@ func TestModelToAPI(t *testing.T) {
 				MetricsAddress:              types.StringValue(":9090"),
 				MCPAllowedAsMetadataDomains: types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a"), types.StringValue("b"), types.StringValue("c")}),
 				MCPAllowedClientIDDomains:   types.SetValueMust(types.StringType, []attr.Value{types.StringValue("x"), types.StringValue("y"), types.StringValue("z")}),
+				OIDCBridge: types.ObjectValueMust(provider.OIDCBridgeObjectType().AttrTypes, map[string]attr.Value{
+					"client_secret": types.StringNull(),
+					"enabled":       types.BoolValue(true),
+					"redirect_uris": types.SetNull(types.StringType),
+				}),
 				PassIdentityHeaders:         types.BoolValue(true),
 				PrimaryColor:                types.StringValue("#000000"),
 				ProxyLogLevel:               types.StringValue("debug"),
@@ -390,6 +405,7 @@ func TestModelToAPI(t *testing.T) {
 			assert.Equal(t, new(":9090"), result.MetricsAddress)
 			assert.Equal(t, []string{"a", "b", "c"}, result.McpAllowedAsMetadataDomains)
 			assert.Equal(t, []string{"x", "y", "z"}, result.McpAllowedClientIdDomains)
+			assert.Empty(t, cmp.Diff(&configpb.OIDCBridge{Enabled: new(true)}, result.OidcBridge, protocmp.Transform()))
 			assert.Equal(t, proto.String(provider.OriginatorID), result.OriginatorId)
 			assert.Equal(t, new(true), result.PassIdentityHeaders)
 			assert.Equal(t, new("#000000"), result.PrimaryColor)

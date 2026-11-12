@@ -105,6 +105,7 @@ The settings are global object.
 - `metrics_address` (String) Metrics address
 - `namespace_id` (String) Namespace ID of settings
 - `normalize_path` (Boolean)
+- `oidc_bridge` (Attributes) OIDC bridge configuration. (see [below for nested schema](#nestedatt--oidc_bridge))
 - `otel_attribute_value_length_limit` (Number) OpenTelemetry attribute value length limit
 - `otel_bsp_max_export_batch_size` (Number) OpenTelemetry BSP max export batch size
 - `otel_bsp_schedule_delay` (String) OpenTelemetry BSP schedule delay
@@ -279,3 +280,13 @@ Optional:
 
 - `groups` (Set of String) Group IDs to include
 - `infer_from_ppl` (Boolean)
+
+
+<a id="nestedatt--oidc_bridge"></a>
+### Nested Schema for `oidc_bridge`
+
+Optional:
+
+- `client_secret` (String, Sensitive) Client secret to use for upstream applications that do not support public clients / PKCE.
+- `enabled` (Boolean) Whether the OIDC bridge feature should be enabled.
+- `redirect_uris` (Set of String) List of allowed redirect URIs. By default any subpath of the route's `to` address is allowed.

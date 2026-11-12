@@ -637,6 +637,7 @@ var SettingsResourceSchema = schema.Schema{
 		"normalize_path": schema.BoolAttribute{
 			Optional: true,
 		},
+		"oidc_bridge": OIDCBridgeSchema(),
 		"otel_attribute_value_length_limit": schema.Int64Attribute{
 			Optional:    true,
 			Description: "OpenTelemetry attribute value length limit",

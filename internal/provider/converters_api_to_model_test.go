@@ -155,6 +155,7 @@ func TestAPIToModel(t *testing.T) {
 				MCP:                               types.ObjectNull(provider.RouteMCPObjectType().AttrTypes),
 				Name:                              types.StringNull(),
 				NamespaceID:                       types.StringNull(),
+				OIDCBridge:                        types.ObjectNull(provider.OIDCBridgeObjectType().AttrTypes),
 				PassIdentityHeaders:               types.BoolNull(),
 				Path:                              types.StringValue(""),
 				Policies:                          types.SetNull(types.StringType),
@@ -222,8 +223,13 @@ func TestAPIToModel(t *testing.T) {
 						},
 					},
 				},
-				Name:             new("NAME"),
-				NamespaceId:      new("NAMESPACE_ID"),
+				Name:        new("NAME"),
+				NamespaceId: new("NAMESPACE_ID"),
+				OidcBridge: &configpb.OIDCBridge{
+					ClientSecret: new("OIDC_CLIENT_SECRET"),
+					Enabled:      new(true),
+					RedirectUris: []string{"https://app.example.com/callback"},
+				},
 				Path:             "/path",
 				PolicyIds:        []string{"POLICY1", "POLICY2"},
 				Prefix:           "/prefix",
@@ -296,8 +302,13 @@ func TestAPIToModel(t *testing.T) {
 						}),
 					}),
 				}),
-				Name:                     types.StringValue("NAME"),
-				NamespaceID:              types.StringValue("NAMESPACE_ID"),
+				Name:        types.StringValue("NAME"),
+				NamespaceID: types.StringValue("NAMESPACE_ID"),
+				OIDCBridge: types.ObjectValueMust(provider.OIDCBridgeObjectType().AttrTypes, map[string]attr.Value{
+					"client_secret": types.StringValue("OIDC_CLIENT_SECRET"),
+					"enabled":       types.BoolValue(true),
+					"redirect_uris": types.SetValueMust(types.StringType, []attr.Value{types.StringValue("https://app.example.com/callback")}),
+				}),
 				PassIdentityHeaders:      types.BoolNull(),
 				Path:                     types.StringValue("/path"),
 				Policies:                 types.SetValueMust(types.StringType, []attr.Value{types.StringValue("POLICY1"), types.StringValue("POLICY2")}),
@@ -422,6 +433,7 @@ func TestAPIToModel(t *testing.T) {
 				MCPAllowedAsMetadataDomains:     types.SetNull(types.StringType),
 				MCPAllowedClientIDDomains:       types.SetNull(types.StringType),
 				NamespaceID:                     types.StringNull(),
+				OIDCBridge:                      types.ObjectNull(provider.OIDCBridgeObjectType().AttrTypes),
 				OtelAttributeValueLengthLimit:   types.Int64Null(),
 				OtelBspMaxExportBatchSize:       types.Int64Null(),
 				OtelBspScheduleDelay:            timetypes.NewGoDurationNull(),
@@ -512,6 +524,10 @@ func TestAPIToModel(t *testing.T) {
 				McpAllowedAsMetadataDomains: []string{"a", "b", "c"},
 				McpAllowedClientIdDomains:   []string{"x", "y", "z"},
 				NamespaceId:                 new("NAMESPACE_ID"),
+				OidcBridge: &configpb.OIDCBridge{
+					Enabled:      new(true),
+					RedirectUris: []string{"https://app.example.com/callback"},
+				},
 				PassIdentityHeaders:         new(true),
 				PrimaryColor:                new("#000000"),
 				ProxyLogLevel:               new("debug"),
@@ -577,6 +593,11 @@ func TestAPIToModel(t *testing.T) {
 			assert.Equal(t, types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a"), types.StringValue("b"), types.StringValue("c")}), result.MCPAllowedAsMetadataDomains)
 			assert.Equal(t, types.SetValueMust(types.StringType, []attr.Value{types.StringValue("x"), types.StringValue("y"), types.StringValue("z")}), result.MCPAllowedClientIDDomains)
 			assert.Equal(t, types.StringValue("NAMESPACE_ID"), result.NamespaceID)
+			assert.Equal(t, types.ObjectValueMust(provider.OIDCBridgeObjectType().AttrTypes, map[string]attr.Value{
+				"client_secret": types.StringNull(),
+				"enabled":       types.BoolValue(true),
+				"redirect_uris": types.SetValueMust(types.StringType, []attr.Value{types.StringValue("https://app.example.com/callback")}),
+			}), result.OIDCBridge)
 			assert.Equal(t, types.BoolValue(true), result.PassIdentityHeaders)
 			assert.Equal(t, types.StringValue("#000000"), result.PrimaryColor)
 			assert.Equal(t, types.StringValue("debug"), result.ProxyLogLevel)

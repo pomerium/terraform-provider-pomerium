@@ -466,7 +466,7 @@ func (c *ModelToAPIConverter) Route(src RouteModel) *configpb.Route {
 		ModifiedAt:                             nil, // computed
 		Name:                                   c.NullableString(src.Name),
 		NamespaceId:                            c.NullableString(src.NamespaceID),
-		OidcBridge:                             nil, // not supported
+		OidcBridge:                             c.OIDCBridge(path.Root("oidc_bridge"), src.OIDCBridge),
 		NamespaceName:                          nil, // computed
 		OriginatorId:                           new(OriginatorID),
 		OutlierDetection:                       nil, // not supported
@@ -519,6 +519,18 @@ func (c *ModelToAPIConverter) RouteSessionRecording(src *RouteSessionRecordingMo
 	}
 	return &configpb.SessionRecording{
 		Enabled: src.Enabled.ValueBool(),
+	}
+}
+
+func (c *ModelToAPIConverter) OIDCBridge(p path.Path, src types.Object) *configpb.OIDCBridge {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	attrs := src.Attributes()
+	return &configpb.OIDCBridge{
+		ClientSecret: c.NullableString(getStringAttribute(attrs, "client_secret")),
+		Enabled:      c.NullableBool(getBoolAttribute(attrs, "enabled")),
+		RedirectUris: c.StringSliceFromSet(p.AtName("redirect_uris"), getSetAttribute(attrs, "redirect_uris")),
 	}
 }
 
@@ -760,7 +772,7 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *configpb.Settings {
 		Name:                                nil, // not supported
 		NamespaceId:                         c.NullableString(src.NamespaceID),
 		NormalizePath:                       c.NullableBool(src.NormalizePath),
-		OidcBridge:                          nil, // not supported
+		OidcBridge:                          c.OIDCBridge(path.Root("oidc_bridge"), src.OIDCBridge),
 		OriginatorId:                        new(OriginatorID),
 		OtelAttributeValueLengthLimit:       c.NullableInt32(src.OtelAttributeValueLengthLimit),
 		OtelBspMaxExportBatchSize:           c.NullableInt32(src.OtelBspMaxExportBatchSize),
