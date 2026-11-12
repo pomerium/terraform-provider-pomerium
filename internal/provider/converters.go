@@ -606,6 +606,14 @@ func fromSetOfObjects[T any](srcs types.Set, elementType types.ObjectType, fn fu
 	return dst
 }
 
+func getBoolAttribute(attrs map[string]attr.Value, key string) types.Bool {
+	v, ok := attrs[key].(types.Bool)
+	if !ok {
+		v = types.BoolNull()
+	}
+	return v
+}
+
 func getInt64Attribute(attrs map[string]attr.Value, key string) types.Int64 {
 	v, ok := attrs[key].(types.Int64)
 	if !ok {

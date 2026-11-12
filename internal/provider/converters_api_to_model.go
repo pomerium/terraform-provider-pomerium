@@ -240,6 +240,7 @@ func (c *APIToModelConverter) Route(src *configpb.Route) RouteModel {
 		MCP:                               c.RouteMCP(src.Mcp),
 		Name:                              types.StringPointerValue(src.Name),
 		NamespaceID:                       types.StringPointerValue(src.NamespaceId),
+		OIDCBridge:                        c.OIDCBridge(src.OidcBridge),
 		PassIdentityHeaders:               types.BoolPointerValue(src.PassIdentityHeaders),
 		Path:                              types.StringValue(src.Path),
 		Policies:                          c.SetFromStringSlice(src.PolicyIds),
@@ -276,6 +277,19 @@ func (c *APIToModelConverter) RouteSessionRecording(src *configpb.SessionRecordi
 	return &RouteSessionRecordingModel{
 		Enabled: types.BoolValue(src.GetEnabled()),
 	}
+}
+
+func (c *APIToModelConverter) OIDCBridge(src *configpb.OIDCBridge) types.Object {
+	if src == nil {
+		return types.ObjectNull(OIDCBridgeObjectType().AttrTypes)
+	}
+	dst, diagnostics := types.ObjectValue(OIDCBridgeObjectType().AttrTypes, map[string]attr.Value{
+		"client_secret": types.StringPointerValue(src.ClientSecret),
+		"enabled":       types.BoolPointerValue(src.Enabled),
+		"redirect_uris": FromStringSliceToSet(src.RedirectUris),
+	})
+	c.diagnostics.Append(diagnostics...)
+	return dst
 }
 
 func (c *APIToModelConverter) RouteMCP(src *configpb.MCP) types.Object {
@@ -462,6 +476,7 @@ func (c *APIToModelConverter) Settings(src *configpb.Settings) SettingsModel {
 		MetricsAddress:                  types.StringPointerValue(src.MetricsAddress),
 		NamespaceID:                     types.StringPointerValue(src.NamespaceId),
 		NormalizePath:                   types.BoolPointerValue(src.NormalizePath),
+		OIDCBridge:                      c.OIDCBridge(src.OidcBridge),
 		OtelAttributeValueLengthLimit:   Int64PointerValue(src.OtelAttributeValueLengthLimit),
 		OtelBspMaxExportBatchSize:       Int64PointerValue(src.OtelBspMaxExportBatchSize),
 		OtelBspScheduleDelay:            c.Duration(src.OtelBspScheduleDelay),

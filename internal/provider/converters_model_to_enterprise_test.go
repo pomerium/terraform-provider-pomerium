@@ -277,6 +277,29 @@ func TestModelToEnterpriseConverter(t *testing.T) {
 				t.Errorf("unexpected difference: %s", diff)
 			}
 		})
+		t.Run("OIDCBridge", func(t *testing.T) {
+			t.Parallel()
+			expected := &pb.Route{
+				OidcBridge: &pb.OIDCBridge{
+					ClientSecret: new("OIDC_CLIENT_SECRET"),
+					Enabled:      new(true),
+					RedirectUris: []string{"https://app.example.com/callback"},
+				},
+				OriginatorId: provider.OriginatorID,
+			}
+			var diagnostics diag.Diagnostics
+			actual := provider.NewModelToEnterpriseConverter(&diagnostics).Route(provider.RouteModel{
+				OIDCBridge: types.ObjectValueMust(provider.OIDCBridgeObjectType().AttrTypes, map[string]attr.Value{
+					"client_secret": types.StringValue("OIDC_CLIENT_SECRET"),
+					"enabled":       types.BoolValue(true),
+					"redirect_uris": types.SetValueMust(types.StringType, []attr.Value{types.StringValue("https://app.example.com/callback")}),
+				}),
+			})
+			if !assert.Equal(t, 0, diagnostics.ErrorsCount()) {
+				t.Log(diagnostics.Errors())
+			}
+			assert.Empty(t, cmp.Diff(expected, actual, protocmp.Transform()))
+		})
 		t.Run("MCP", func(t *testing.T) {
 			t.Parallel()
 			t.Run("Client", func(t *testing.T) {
@@ -540,24 +563,28 @@ func TestModelToEnterpriseConverter(t *testing.T) {
 				McpAllowedAsMetadataDomains:    &pb.Settings_StringList{Values: []string{"domain1", "domain2"}},
 				McpAllowedClientIdDomains:      &pb.Settings_StringList{Values: []string{"domain3", "domain4"}},
 				MetricsAddress:                 new("127.0.0.1:9999"),
-				OriginatorId:                   "terraform",
-				PassIdentityHeaders:            new(true),
-				PrimaryColor:                   new("PRIMARY_COLOR"),
-				ProxyLogLevel:                  new("error"),
-				RequestParams:                  map[string]string{"C": "D"},
-				Scopes:                         []string{"SCOPE1", "SCOPE2", "SCOPE3"},
-				SecondaryColor:                 new("SECONDARY_COLOR"),
-				SessionRecordingConcurrency:    proto.Uint32(4),
-				SetResponseHeaders:             map[string]string{"E": "F"},
-				SkipXffAppend:                  new(true),
-				SshAddress:                     new("SSH_ADDRESS"),
-				SshHostKeyFiles:                &pb.Settings_StringList{Values: []string{"HOST1", "HOST2"}},
-				SshHostKeys:                    &pb.Settings_StringList{Values: []string{"HOST3", "HOST4"}},
-				SshUserCaKey:                   new("SSH_USER_CA_KEY"),
-				SshUserCaKeyFile:               new("SSH_USER_CA_KEY_FILE"),
-				TimeoutIdle:                    durationpb.New(3 * time.Minute),
-				TimeoutRead:                    durationpb.New(4 * time.Minute),
-				TimeoutWrite:                   durationpb.New(5 * time.Minute),
+				OidcBridge: &pb.OIDCBridge{
+					Enabled:      new(true),
+					RedirectUris: []string{"https://app.example.com/callback"},
+				},
+				OriginatorId:                "terraform",
+				PassIdentityHeaders:         new(true),
+				PrimaryColor:                new("PRIMARY_COLOR"),
+				ProxyLogLevel:               new("error"),
+				RequestParams:               map[string]string{"C": "D"},
+				Scopes:                      []string{"SCOPE1", "SCOPE2", "SCOPE3"},
+				SecondaryColor:              new("SECONDARY_COLOR"),
+				SessionRecordingConcurrency: proto.Uint32(4),
+				SetResponseHeaders:          map[string]string{"E": "F"},
+				SkipXffAppend:               new(true),
+				SshAddress:                  new("SSH_ADDRESS"),
+				SshHostKeyFiles:             &pb.Settings_StringList{Values: []string{"HOST1", "HOST2"}},
+				SshHostKeys:                 &pb.Settings_StringList{Values: []string{"HOST3", "HOST4"}},
+				SshUserCaKey:                new("SSH_USER_CA_KEY"),
+				SshUserCaKeyFile:            new("SSH_USER_CA_KEY_FILE"),
+				TimeoutIdle:                 durationpb.New(3 * time.Minute),
+				TimeoutRead:                 durationpb.New(4 * time.Minute),
+				TimeoutWrite:                durationpb.New(5 * time.Minute),
 			}
 			var diagnostics diag.Diagnostics
 			actual := provider.NewModelToEnterpriseConverter(&diagnostics).Settings(provider.SettingsModel{
@@ -638,23 +665,28 @@ func TestModelToEnterpriseConverter(t *testing.T) {
 				MCPAllowedAsMetadataDomains:    types.SetValueMust(types.StringType, []attr.Value{types.StringValue("domain1"), types.StringValue("domain2")}),
 				MCPAllowedClientIDDomains:      types.SetValueMust(types.StringType, []attr.Value{types.StringValue("domain3"), types.StringValue("domain4")}),
 				MetricsAddress:                 types.StringValue("127.0.0.1:9999"),
-				PassIdentityHeaders:            types.BoolValue(true),
-				PrimaryColor:                   types.StringValue("PRIMARY_COLOR"),
-				ProxyLogLevel:                  types.StringValue("error"),
-				RequestParams:                  types.MapValueMust(types.StringType, map[string]attr.Value{"C": types.StringValue("D")}),
-				Scopes:                         types.SetValueMust(types.StringType, []attr.Value{types.StringValue("SCOPE1"), types.StringValue("SCOPE2"), types.StringValue("SCOPE3")}),
-				SecondaryColor:                 types.StringValue("SECONDARY_COLOR"),
-				SessionRecordingConcurrency:    types.Int64Value(4),
-				SetResponseHeaders:             types.MapValueMust(types.StringType, map[string]attr.Value{"E": types.StringValue("F")}),
-				SkipXFFAppend:                  types.BoolValue(true),
-				SSHAddress:                     types.StringValue("SSH_ADDRESS"),
-				SSHHostKeyFiles:                types.SetValueMust(types.StringType, []attr.Value{types.StringValue("HOST1"), types.StringValue("HOST2")}),
-				SSHHostKeys:                    types.SetValueMust(types.StringType, []attr.Value{types.StringValue("HOST3"), types.StringValue("HOST4")}),
-				SSHUserCAKey:                   types.StringValue("SSH_USER_CA_KEY"),
-				SSHUserCAKeyFile:               types.StringValue("SSH_USER_CA_KEY_FILE"),
-				TimeoutIdle:                    timetypes.NewGoDurationValue(3 * time.Minute),
-				TimeoutRead:                    timetypes.NewGoDurationValue(4 * time.Minute),
-				TimeoutWrite:                   timetypes.NewGoDurationValue(5 * time.Minute),
+				OIDCBridge: types.ObjectValueMust(provider.OIDCBridgeObjectType().AttrTypes, map[string]attr.Value{
+					"client_secret": types.StringNull(),
+					"enabled":       types.BoolValue(true),
+					"redirect_uris": types.SetValueMust(types.StringType, []attr.Value{types.StringValue("https://app.example.com/callback")}),
+				}),
+				PassIdentityHeaders:         types.BoolValue(true),
+				PrimaryColor:                types.StringValue("PRIMARY_COLOR"),
+				ProxyLogLevel:               types.StringValue("error"),
+				RequestParams:               types.MapValueMust(types.StringType, map[string]attr.Value{"C": types.StringValue("D")}),
+				Scopes:                      types.SetValueMust(types.StringType, []attr.Value{types.StringValue("SCOPE1"), types.StringValue("SCOPE2"), types.StringValue("SCOPE3")}),
+				SecondaryColor:              types.StringValue("SECONDARY_COLOR"),
+				SessionRecordingConcurrency: types.Int64Value(4),
+				SetResponseHeaders:          types.MapValueMust(types.StringType, map[string]attr.Value{"E": types.StringValue("F")}),
+				SkipXFFAppend:               types.BoolValue(true),
+				SSHAddress:                  types.StringValue("SSH_ADDRESS"),
+				SSHHostKeyFiles:             types.SetValueMust(types.StringType, []attr.Value{types.StringValue("HOST1"), types.StringValue("HOST2")}),
+				SSHHostKeys:                 types.SetValueMust(types.StringType, []attr.Value{types.StringValue("HOST3"), types.StringValue("HOST4")}),
+				SSHUserCAKey:                types.StringValue("SSH_USER_CA_KEY"),
+				SSHUserCAKeyFile:            types.StringValue("SSH_USER_CA_KEY_FILE"),
+				TimeoutIdle:                 timetypes.NewGoDurationValue(3 * time.Minute),
+				TimeoutRead:                 timetypes.NewGoDurationValue(4 * time.Minute),
+				TimeoutWrite:                timetypes.NewGoDurationValue(5 * time.Minute),
 			})
 			assert.Empty(t, diagnostics)
 			if diff := cmp.Diff(expected, actual, protocmp.Transform()); diff != "" {
