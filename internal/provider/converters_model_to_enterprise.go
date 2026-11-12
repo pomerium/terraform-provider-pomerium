@@ -421,6 +421,7 @@ func (c *ModelToEnterpriseConverter) Route(src RouteModel) *enterprise.Route {
 		IdpAccessTokenAllowedAudiences:            c.RouteStringList(path.Root("idp_access_token_allowed_audiences"), src.IDPAccessTokenAllowedAudiences),
 		IdpClientId:                               src.IDPClientID.ValueStringPointer(),
 		IdpClientSecret:                           src.IDPClientSecret.ValueStringPointer(),
+		InlinePplPolicies:                         nil, // not supported
 		JwtGroupsFilter:                           c.JWTGroupsFilter(src.JWTGroupsFilter),
 		JwtIssuerFormat:                           c.IssuerFormat(path.Root("jwt_issuer_format"), src.JWTIssuerFormat),
 		KubernetesServiceAccountToken:             src.KubernetesServiceAccountToken.ValueStringPointer(),
@@ -432,6 +433,7 @@ func (c *ModelToEnterpriseConverter) Route(src RouteModel) *enterprise.Route {
 		Name:                                      src.Name.ValueString(),
 		NamespaceId:                               src.NamespaceID.ValueString(),
 		NamespaceName:                             "", // computed
+		OidcBridge:                                c.OIDCBridge(path.Root("oidc_bridge"), src.OIDCBridge),
 		OriginatorId:                              OriginatorID,
 		PassIdentityHeaders:                       src.PassIdentityHeaders.ValueBoolPointer(),
 		Path:                                      src.Path.ValueStringPointer(),
@@ -463,6 +465,18 @@ func (c *ModelToEnterpriseConverter) Route(src RouteModel) *enterprise.Route {
 		TlsUpstreamServerName:                     src.TLSUpstreamServerName.ValueStringPointer(),
 		To:                                        c.StringSliceFromSet(path.Root("to"), src.To),
 		UpstreamTunnel:                            c.UpstreamTunnel(path.Root("upstream_tunnel"), src.UpstreamTunnel),
+	}
+}
+
+func (c *ModelToEnterpriseConverter) OIDCBridge(p path.Path, src types.Object) *enterprise.OIDCBridge {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	attrs := src.Attributes()
+	return &enterprise.OIDCBridge{
+		ClientSecret: c.NullableString(getStringAttribute(attrs, "client_secret")),
+		Enabled:      c.NullableBool(getBoolAttribute(attrs, "enabled")),
+		RedirectUris: c.StringSliceFromSet(p.AtName("redirect_uris"), getSetAttribute(attrs, "redirect_uris")),
 	}
 }
 
@@ -658,6 +672,7 @@ func (c *ModelToEnterpriseConverter) Settings(src SettingsModel) *enterprise.Set
 		MetricsAddress:                     c.NullableString(src.MetricsAddress),
 		ModifiedAt:                         nil, // computed
 		NormalizePath:                      c.NullableBool(src.NormalizePath),
+		OidcBridge:                         c.OIDCBridge(path.Root("oidc_bridge"), src.OIDCBridge),
 		OriginatorId:                       OriginatorID,
 		OtelAttributeValueLengthLimit:      c.NullableInt32(src.OtelAttributeValueLengthLimit),
 		OtelBspMaxExportBatchSize:          c.NullableInt32(src.OtelBspMaxExportBatchSize),

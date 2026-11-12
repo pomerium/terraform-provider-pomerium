@@ -89,6 +89,18 @@ func JWTGroupsFilterObjectType() types.ObjectType {
 	return JWTGroupsFilterSchema.GetType().(types.ObjectType)
 }
 
+func OIDCBridgeObjectType() types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"client_secret": types.StringType,
+			"enabled":       types.BoolType,
+			"redirect_uris": types.SetType{
+				ElemType: types.StringType,
+			},
+		},
+	}
+}
+
 func RewriteHeaderObjectType() types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{

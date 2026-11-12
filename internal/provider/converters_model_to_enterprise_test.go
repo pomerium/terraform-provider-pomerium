@@ -277,6 +277,29 @@ func TestModelToEnterpriseConverter(t *testing.T) {
 				t.Errorf("unexpected difference: %s", diff)
 			}
 		})
+		t.Run("OIDCBridge", func(t *testing.T) {
+			t.Parallel()
+			expected := &pb.Route{
+				OidcBridge: &pb.OIDCBridge{
+					ClientSecret: new("OIDC_CLIENT_SECRET"),
+					Enabled:      new(true),
+					RedirectUris: []string{"https://app.example.com/callback"},
+				},
+				OriginatorId: provider.OriginatorID,
+			}
+			var diagnostics diag.Diagnostics
+			actual := provider.NewModelToEnterpriseConverter(&diagnostics).Route(provider.RouteModel{
+				OIDCBridge: types.ObjectValueMust(provider.OIDCBridgeObjectType().AttrTypes, map[string]attr.Value{
+					"client_secret": types.StringValue("OIDC_CLIENT_SECRET"),
+					"enabled":       types.BoolValue(true),
+					"redirect_uris": types.SetValueMust(types.StringType, []attr.Value{types.StringValue("https://app.example.com/callback")}),
+				}),
+			})
+			if !assert.Equal(t, 0, diagnostics.ErrorsCount()) {
+				t.Log(diagnostics.Errors())
+			}
+			assert.Empty(t, cmp.Diff(expected, actual, protocmp.Transform()))
+		})
 		t.Run("MCP", func(t *testing.T) {
 			t.Parallel()
 			t.Run("Client", func(t *testing.T) {
@@ -522,24 +545,28 @@ func TestModelToEnterpriseConverter(t *testing.T) {
 						Audiences: []string{"AUDIENCE2"},
 					},
 				},
-				IdpAccessTokenAllowedAudiences:     &pb.Settings_StringList{Values: []string{"a", "b"}},
-				IdpClientId:                        new("IDP_CLIENT_ID"),
-				IdpClientSecret:                    new("IDP_CLIENT_SECRET"),
-				IdpProvider:                        new("IDP_PROVIDER"),
-				IdpProviderUrl:                     new("https://idp.example.com"),
-				IdpRefreshDirectoryInterval:        durationpb.New(7 * time.Second),
-				IdpRefreshDirectoryTimeout:         durationpb.New(8 * time.Second),
-				IdpServiceAccount:                  new("IDP_SERVICE_ACCOUNT"),
-				InsecureServer:                     new(true),
-				InstallationId:                     new("INSTALLATION_ID"),
-				JwtClaimsHeaders:                   map[string]string{"X": "Y"},
-				JwtGroupsFilter:                    &pb.JwtGroupsFilter{InferFromPpl: new(true), Groups: []string{"z"}},
-				JwtIssuerFormat:                    pb.IssuerFormat_IssuerURI.Enum(),
-				LogLevel:                           new("debug"),
-				LogoUrl:                            new("https://logo.example.com"),
-				McpAllowedAsMetadataDomains:        &pb.Settings_StringList{Values: []string{"domain1", "domain2"}},
-				McpAllowedClientIdDomains:          &pb.Settings_StringList{Values: []string{"domain3", "domain4"}},
-				MetricsAddress:                     new("127.0.0.1:9999"),
+				IdpAccessTokenAllowedAudiences: &pb.Settings_StringList{Values: []string{"a", "b"}},
+				IdpClientId:                    new("IDP_CLIENT_ID"),
+				IdpClientSecret:                new("IDP_CLIENT_SECRET"),
+				IdpProvider:                    new("IDP_PROVIDER"),
+				IdpProviderUrl:                 new("https://idp.example.com"),
+				IdpRefreshDirectoryInterval:    durationpb.New(7 * time.Second),
+				IdpRefreshDirectoryTimeout:     durationpb.New(8 * time.Second),
+				IdpServiceAccount:              new("IDP_SERVICE_ACCOUNT"),
+				InsecureServer:                 new(true),
+				InstallationId:                 new("INSTALLATION_ID"),
+				JwtClaimsHeaders:               map[string]string{"X": "Y"},
+				JwtGroupsFilter:                &pb.JwtGroupsFilter{InferFromPpl: new(true), Groups: []string{"z"}},
+				JwtIssuerFormat:                pb.IssuerFormat_IssuerURI.Enum(),
+				LogLevel:                       new("debug"),
+				LogoUrl:                        new("https://logo.example.com"),
+				McpAllowedAsMetadataDomains:    &pb.Settings_StringList{Values: []string{"domain1", "domain2"}},
+				McpAllowedClientIdDomains:      &pb.Settings_StringList{Values: []string{"domain3", "domain4"}},
+				MetricsAddress:                 new("127.0.0.1:9999"),
+				OidcBridge: &pb.OIDCBridge{
+					Enabled:      new(true),
+					RedirectUris: []string{"https://app.example.com/callback"},
+				},
 				OriginatorId:                       "terraform",
 				PassIdentityHeaders:                new(true),
 				PrimaryColor:                       new("PRIMARY_COLOR"),
@@ -621,24 +648,29 @@ func TestModelToEnterpriseConverter(t *testing.T) {
 						"audiences":      types.SetValueMust(types.StringType, []attr.Value{types.StringValue("AUDIENCE2")}),
 					}),
 				}),
-				IDPAccessTokenAllowedAudiences:     types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a"), types.StringValue("b")}),
-				IdpClientID:                        types.StringValue("IDP_CLIENT_ID"),
-				IdpClientSecret:                    types.StringValue("IDP_CLIENT_SECRET"),
-				IdpProvider:                        types.StringValue("IDP_PROVIDER"),
-				IdpProviderURL:                     types.StringValue("https://idp.example.com"),
-				IdpRefreshDirectoryInterval:        timetypes.NewGoDurationValue(7 * time.Second),
-				IdpRefreshDirectoryTimeout:         timetypes.NewGoDurationValue(8 * time.Second),
-				IdpServiceAccount:                  types.StringValue("IDP_SERVICE_ACCOUNT"),
-				InsecureServer:                     types.BoolValue(true),
-				InstallationID:                     types.StringValue("INSTALLATION_ID"),
-				JWTClaimsHeaders:                   types.MapValueMust(types.StringType, map[string]attr.Value{"X": types.StringValue("Y")}),
-				JWTGroupsFilter:                    types.ObjectValueMust(map[string]attr.Type{"infer_from_ppl": types.BoolType, "groups": types.ListType{ElemType: types.StringType}}, map[string]attr.Value{"infer_from_ppl": types.BoolValue(true), "groups": types.ListValueMust(types.StringType, []attr.Value{types.StringValue("z")})}),
-				JWTIssuerFormat:                    types.StringValue("IssuerURI"),
-				LogLevel:                           types.StringValue("debug"),
-				LogoURL:                            types.StringValue("https://logo.example.com"),
-				MCPAllowedAsMetadataDomains:        types.SetValueMust(types.StringType, []attr.Value{types.StringValue("domain1"), types.StringValue("domain2")}),
-				MCPAllowedClientIDDomains:          types.SetValueMust(types.StringType, []attr.Value{types.StringValue("domain3"), types.StringValue("domain4")}),
-				MetricsAddress:                     types.StringValue("127.0.0.1:9999"),
+				IDPAccessTokenAllowedAudiences: types.SetValueMust(types.StringType, []attr.Value{types.StringValue("a"), types.StringValue("b")}),
+				IdpClientID:                    types.StringValue("IDP_CLIENT_ID"),
+				IdpClientSecret:                types.StringValue("IDP_CLIENT_SECRET"),
+				IdpProvider:                    types.StringValue("IDP_PROVIDER"),
+				IdpProviderURL:                 types.StringValue("https://idp.example.com"),
+				IdpRefreshDirectoryInterval:    timetypes.NewGoDurationValue(7 * time.Second),
+				IdpRefreshDirectoryTimeout:     timetypes.NewGoDurationValue(8 * time.Second),
+				IdpServiceAccount:              types.StringValue("IDP_SERVICE_ACCOUNT"),
+				InsecureServer:                 types.BoolValue(true),
+				InstallationID:                 types.StringValue("INSTALLATION_ID"),
+				JWTClaimsHeaders:               types.MapValueMust(types.StringType, map[string]attr.Value{"X": types.StringValue("Y")}),
+				JWTGroupsFilter:                types.ObjectValueMust(map[string]attr.Type{"infer_from_ppl": types.BoolType, "groups": types.ListType{ElemType: types.StringType}}, map[string]attr.Value{"infer_from_ppl": types.BoolValue(true), "groups": types.ListValueMust(types.StringType, []attr.Value{types.StringValue("z")})}),
+				JWTIssuerFormat:                types.StringValue("IssuerURI"),
+				LogLevel:                       types.StringValue("debug"),
+				LogoURL:                        types.StringValue("https://logo.example.com"),
+				MCPAllowedAsMetadataDomains:    types.SetValueMust(types.StringType, []attr.Value{types.StringValue("domain1"), types.StringValue("domain2")}),
+				MCPAllowedClientIDDomains:      types.SetValueMust(types.StringType, []attr.Value{types.StringValue("domain3"), types.StringValue("domain4")}),
+				MetricsAddress:                 types.StringValue("127.0.0.1:9999"),
+				OIDCBridge: types.ObjectValueMust(provider.OIDCBridgeObjectType().AttrTypes, map[string]attr.Value{
+					"client_secret": types.StringNull(),
+					"enabled":       types.BoolValue(true),
+					"redirect_uris": types.SetValueMust(types.StringType, []attr.Value{types.StringValue("https://app.example.com/callback")}),
+				}),
 				PassIdentityHeaders:                types.BoolValue(true),
 				PrimaryColor:                       types.StringValue("PRIMARY_COLOR"),
 				ProxyLogLevel:                      types.StringValue("error"),

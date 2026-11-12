@@ -32,6 +32,13 @@ func FromStringSliceToSet(slice []string) types.Set {
 	return types.SetValueMust(types.StringType, fields)
 }
 
+func fromStringSliceToNonNullSet(slice []string) types.Set {
+	if len(slice) == 0 {
+		return types.SetValueMust(types.StringType, nil)
+	}
+	return FromStringSliceToSet(slice)
+}
+
 func FromStringSliceToList(slice []string) types.List {
 	if slice == nil {
 		return types.ListNull(types.StringType)
@@ -604,6 +611,14 @@ func fromSetOfObjects[T any](srcs types.Set, elementType types.ObjectType, fn fu
 		dst[i] = fn(src.(types.Object))
 	}
 	return dst
+}
+
+func getBoolAttribute(attrs map[string]attr.Value, key string) types.Bool {
+	v, ok := attrs[key].(types.Bool)
+	if !ok {
+		v = types.BoolNull()
+	}
+	return v
 }
 
 func getInt64Attribute(attrs map[string]attr.Value, key string) types.Int64 {

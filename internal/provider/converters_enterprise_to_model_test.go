@@ -81,6 +81,36 @@ func TestEnterpriseToModelConverter(t *testing.T) {
 			assert.Empty(t, diagnostics)
 			assert.Empty(t, cmp.Diff(expect, actual))
 		})
+		t.Run("OIDCBridge", func(t *testing.T) {
+			t.Parallel()
+			var diagnostics diag.Diagnostics
+			actual := provider.NewEnterpriseToModelConverter(&diagnostics).Route(&pb.Route{
+				OidcBridge: &pb.OIDCBridge{
+					ClientSecret: new("OIDC_CLIENT_SECRET"),
+					Enabled:      new(true),
+					RedirectUris: []string{"https://app.example.com/callback"},
+				},
+			})
+			assert.Empty(t, diagnostics)
+			assert.Equal(t, types.ObjectValueMust(provider.OIDCBridgeObjectType().AttrTypes, map[string]attr.Value{
+				"client_secret": types.StringValue("OIDC_CLIENT_SECRET"),
+				"enabled":       types.BoolValue(true),
+				"redirect_uris": types.SetValueMust(types.StringType, []attr.Value{types.StringValue("https://app.example.com/callback")}),
+			}), actual.OIDCBridge)
+		})
+		t.Run("OIDCBridge empty redirect uris", func(t *testing.T) {
+			t.Parallel()
+			var diagnostics diag.Diagnostics
+			actual := provider.NewEnterpriseToModelConverter(&diagnostics).OIDCBridge(&pb.OIDCBridge{
+				Enabled: new(true),
+			})
+			assert.Empty(t, diagnostics)
+			assert.Equal(t, types.ObjectValueMust(provider.OIDCBridgeObjectType().AttrTypes, map[string]attr.Value{
+				"client_secret": types.StringNull(),
+				"enabled":       types.BoolValue(true),
+				"redirect_uris": types.SetValueMust(types.StringType, nil),
+			}), actual)
+		})
 		t.Run("MCP", func(t *testing.T) {
 			t.Parallel()
 			t.Run("Client", func(t *testing.T) {
@@ -186,6 +216,7 @@ func TestEnterpriseToModelConverter(t *testing.T) {
 				JWTClaimsHeaders:               types.MapNull(types.StringType),
 				MCPAllowedAsMetadataDomains:    types.SetNull(types.StringType),
 				MCPAllowedClientIDDomains:      types.SetNull(types.StringType),
+				OIDCBridge:                     types.ObjectNull(provider.OIDCBridgeObjectType().AttrTypes),
 				OtelExporterOtlpHeaders:        types.SetNull(types.StringType),
 				OtelExporterOtlpTracesHeaders:  types.SetNull(types.StringType),
 				OtelResourceAttributes:         types.SetNull(types.StringType),
