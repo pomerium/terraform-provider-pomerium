@@ -116,6 +116,7 @@ type RouteModel struct {
 	MCP                                       types.Object                `tfsdk:"mcp"`
 	Name                                      types.String                `tfsdk:"name"`
 	NamespaceID                               types.String                `tfsdk:"namespace_id"`
+	OIDCBridge                                types.Object                `tfsdk:"oidc_bridge"`
 	PassIdentityHeaders                       types.Bool                  `tfsdk:"pass_identity_headers"`
 	Path                                      types.String                `tfsdk:"path"`
 	Policies                                  types.Set                   `tfsdk:"policies"`
@@ -243,6 +244,7 @@ type SettingsModel struct {
 	MetricsAddress                                    types.String         `tfsdk:"metrics_address"`
 	NamespaceID                                       types.String         `tfsdk:"namespace_id"`
 	NormalizePath                                     types.Bool           `tfsdk:"normalize_path"`
+	OIDCBridge                                        types.Object         `tfsdk:"oidc_bridge"`
 	OtelAttributeValueLengthLimit                     types.Int64          `tfsdk:"otel_attribute_value_length_limit"`
 	OtelBspMaxExportBatchSize                         types.Int64          `tfsdk:"otel_bsp_max_export_batch_size"`
 	OtelBspScheduleDelay                              timetypes.GoDuration `tfsdk:"otel_bsp_schedule_delay"`

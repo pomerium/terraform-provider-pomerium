@@ -284,6 +284,7 @@ func getRouteDataSourceAttributes(idRequired bool) map[string]schema.Attribute {
 			Computed:    true,
 			Description: "ID of the namespace the route belongs to.",
 		},
+		"oidc_bridge": OIDCBridgeSchema(),
 		"pass_identity_headers": schema.BoolAttribute{
 			Computed:    true,
 			Description: "Pass identity headers.",
