@@ -87,6 +87,29 @@ func Int64RangeSchema() schema.NestedAttributeObject {
 	}
 }
 
+func OIDCBridgeSchema() schema.SingleNestedAttribute {
+	return schema.SingleNestedAttribute{
+		Optional:    true,
+		Description: "OIDC bridge configuration.",
+		Attributes: map[string]schema.Attribute{
+			"client_secret": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Client secret to use for upstream applications that do not support public clients / PKCE.",
+			},
+			"enabled": schema.BoolAttribute{
+				Optional:    true,
+				Description: "Whether the OIDC bridge feature should be enabled.",
+			},
+			"redirect_uris": schema.SetAttribute{
+				Optional:    true,
+				ElementType: types.StringType,
+				Description: "List of allowed redirect URIs. By default any subpath of the route's `to` address is allowed.",
+			},
+		},
+	}
+}
+
 func RouteMCPSchema() schema.SingleNestedAttribute {
 	return schema.SingleNestedAttribute{
 		Optional:    true,

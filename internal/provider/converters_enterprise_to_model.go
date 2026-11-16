@@ -317,6 +317,7 @@ func (c *EnterpriseToModelConverter) Route(src *enterprise.Route) RouteModel {
 		MCP:                               c.RouteMCP(src.Mcp),
 		Name:                              types.StringValue(src.Name),
 		NamespaceID:                       types.StringValue(src.NamespaceId),
+		OIDCBridge:                        c.OIDCBridge(src.OidcBridge),
 		PassIdentityHeaders:               types.BoolPointerValue(src.PassIdentityHeaders),
 		Path:                              types.StringPointerValue(src.Path),
 		Policies:                          FromStringSliceToSet(StringSliceExclude(src.PolicyIds, src.EnforcedPolicyIds)),
@@ -344,6 +345,19 @@ func (c *EnterpriseToModelConverter) Route(src *enterprise.Route) RouteModel {
 		To:                                FromStringSliceToSet(src.To),
 		UpstreamTunnel:                    c.UpstreamTunnel(src.UpstreamTunnel),
 	}
+}
+
+func (c *EnterpriseToModelConverter) OIDCBridge(src *enterprise.OIDCBridge) types.Object {
+	if src == nil {
+		return types.ObjectNull(OIDCBridgeObjectType().AttrTypes)
+	}
+	dst, diagnostics := types.ObjectValue(OIDCBridgeObjectType().AttrTypes, map[string]attr.Value{
+		"client_secret": types.StringPointerValue(src.ClientSecret),
+		"enabled":       types.BoolPointerValue(src.Enabled),
+		"redirect_uris": FromStringSliceToSet(src.RedirectUris),
+	})
+	c.diagnostics.Append(diagnostics...)
+	return dst
 }
 
 func (c *EnterpriseToModelConverter) RouteSessionRecording(src *enterprise.SessionRecording) *RouteSessionRecordingModel {
@@ -528,6 +542,7 @@ func (c *EnterpriseToModelConverter) Settings(src *enterprise.Settings, namespac
 		MetricsAddress:                  types.StringPointerValue(src.MetricsAddress),
 		NamespaceID:                     types.StringPointerValue(namespaceID),
 		NormalizePath:                   types.BoolPointerValue(src.NormalizePath),
+		OIDCBridge:                      c.OIDCBridge(src.OidcBridge),
 		OtelAttributeValueLengthLimit:   Int64PointerValue(src.OtelAttributeValueLengthLimit),
 		OtelBspMaxExportBatchSize:       Int64PointerValue(src.OtelBspMaxExportBatchSize),
 		OtelBspScheduleDelay:            c.Duration(src.OtelBspScheduleDelay),
