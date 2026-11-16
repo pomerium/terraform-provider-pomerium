@@ -239,29 +239,35 @@ func addZeroResponseError(
 	diagnostics.AddError("unexpected response from zero api", buf.String())
 }
 
+// getZeroCluster gets a cluster and its namespace from the zero api. If
+// allowNotFound is true, a missing cluster is reported as found=false
+// instead of an error.
 func getZeroCluster(
 	ctx context.Context,
 	client sdk.ZeroClient,
 	diagnostics *diag.Diagnostics,
 	organizationID string,
 	clusterID string,
-) (cluster zeroapi.Cluster, namespace zeroapi.NamespaceWithRole) {
+	allowNotFound bool,
+) (cluster zeroapi.Cluster, namespace zeroapi.NamespaceWithRole, found bool) {
 	getClusterRes, err := client.GetClusterWithResponse(ctx, organizationID, clusterID)
 	if err != nil {
 		diagnostics.AddError(err.Error(), err.Error())
-		return cluster, namespace
+		return cluster, namespace, false
+	} else if allowNotFound && getClusterRes.StatusCode() == http.StatusNotFound {
+		return cluster, namespace, false
 	} else if getClusterRes.JSON200 == nil {
 		addZeroResponseError(diagnostics, getClusterRes.Body, getClusterRes.HTTPResponse)
-		return cluster, namespace
+		return cluster, namespace, false
 	}
 
 	listNamespaceRes, err := client.ListNamespacesWithResponse(ctx, organizationID)
 	if err != nil {
 		diagnostics.AddError(err.Error(), err.Error())
-		return cluster, namespace
+		return cluster, namespace, false
 	} else if listNamespaceRes.JSON200 == nil {
 		addZeroResponseError(diagnostics, listNamespaceRes.Body, listNamespaceRes.HTTPResponse)
-		return cluster, namespace
+		return cluster, namespace, false
 	}
 
 	for _, n := range *listNamespaceRes.JSON200 {
@@ -271,7 +277,7 @@ func getZeroCluster(
 		}
 	}
 
-	return *getClusterRes.JSON200, namespace
+	return *getClusterRes.JSON200, namespace, true
 }
 
 func getZeroOrganizationID(

@@ -174,6 +174,10 @@ func (r *KeyPairResource) Read(ctx context.Context, req resource.ReadRequest, re
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	// the resource was not found and removed from state inside the callback
+	if resp.State.Raw.IsNull() {
+		return
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
