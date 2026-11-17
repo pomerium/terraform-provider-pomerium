@@ -109,7 +109,7 @@ func (d *ClustersDataSource) Read(ctx context.Context, req datasource.ReadReques
 
 			data.Clusters = nil
 			for _, c := range *listRes.JSON200 {
-				cluster, namespace := getZeroCluster(ctx, client, &resp.Diagnostics, organizationID, c.Id)
+				cluster, namespace, _ := getZeroCluster(ctx, client, &resp.Diagnostics, organizationID, c.Id, false)
 				if resp.Diagnostics.HasError() {
 					return
 				}

@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	client "github.com/pomerium/enterprise-client-go"
 	"github.com/pomerium/enterprise-client-go/pb"
@@ -126,6 +128,10 @@ func (r *SettingsResource) Read(ctx context.Context, req resource.ReadRequest, r
 			}
 			getRes, err := client.SettingsService.GetSettings(ctx, getReq)
 			if err != nil {
+				if status.Code(err) == codes.NotFound {
+					resp.State.RemoveResource(ctx)
+					return
+				}
 				resp.Diagnostics.AddError("get settings", err.Error())
 				return
 			}
@@ -133,6 +139,10 @@ func (r *SettingsResource) Read(ctx context.Context, req resource.ReadRequest, r
 			state = NewEnterpriseToModelConverter(&resp.Diagnostics).Settings(getRes.GetSettings(), state.NamespaceID.ValueStringPointer())
 		})...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+	// the resource was not found and removed from state inside the callback
+	if resp.State.Raw.IsNull() {
 		return
 	}
 

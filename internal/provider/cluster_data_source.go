@@ -138,7 +138,7 @@ func (d *ClusterDataSource) Read(ctx context.Context, req datasource.ReadRequest
 				return
 			}
 
-			cluster, namespace := getZeroCluster(ctx, client, &resp.Diagnostics, organizationID, data.ID.ValueString())
+			cluster, namespace, _ := getZeroCluster(ctx, client, &resp.Diagnostics, organizationID, data.ID.ValueString(), false)
 			if resp.Diagnostics.HasError() {
 				return
 			}

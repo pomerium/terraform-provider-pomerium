@@ -247,7 +247,7 @@ func (r *ClusterResource) Create(ctx context.Context, req resource.CreateRequest
 				return
 			}
 
-			cluster, namespace := getZeroCluster(ctx, client, &resp.Diagnostics, organizationID, createRes.JSON201.Id)
+			cluster, namespace, _ := getZeroCluster(ctx, client, &resp.Diagnostics, organizationID, createRes.JSON201.Id, false)
 			if resp.Diagnostics.HasError() {
 				return
 			}
@@ -310,14 +310,21 @@ func (r *ClusterResource) Read(ctx context.Context, req resource.ReadRequest, re
 				return
 			}
 
-			cluster, namespace := getZeroCluster(ctx, client, &resp.Diagnostics, organizationID, state.ID.ValueString())
+			cluster, namespace, found := getZeroCluster(ctx, client, &resp.Diagnostics, organizationID, state.ID.ValueString(), true)
 			if resp.Diagnostics.HasError() {
+				return
+			} else if !found {
+				resp.State.RemoveResource(ctx)
 				return
 			}
 
 			state = NewZeroToModelConverter(&resp.Diagnostics).Cluster(cluster, namespace)
 		})...)
 	if resp.Diagnostics.HasError() {
+		return
+	}
+	// the resource was not found and removed from state inside the callback
+	if resp.State.Raw.IsNull() {
 		return
 	}
 
@@ -385,7 +392,7 @@ func (r *ClusterResource) Update(ctx context.Context, req resource.UpdateRequest
 				return
 			}
 
-			cluster, namespace := getZeroCluster(ctx, client, &resp.Diagnostics, organizationID, plan.ID.ValueString())
+			cluster, namespace, _ := getZeroCluster(ctx, client, &resp.Diagnostics, organizationID, plan.ID.ValueString(), false)
 			if resp.Diagnostics.HasError() {
 				return
 			}
