@@ -26,7 +26,7 @@ func TestGenerateBootstrapServiceAccountToken(t *testing.T) {
 		},
 		{
 			name:         "valid base64",
-			sharedSecret: "dGVzdC1zZWNyZXQ=", // "test-secret" in base64
+			sharedSecret: "MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTIzNDU2Nzg5MDE=", // 32-byte secret in base64
 			expectError:  false,
 			validateToken: func(t *testing.T, token string) {
 				// JWT format: header.payload.signature
