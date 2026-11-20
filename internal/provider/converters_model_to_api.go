@@ -803,6 +803,7 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *configpb.Settings {
 		SshUserCaKey:                        c.NullableString(src.SSHUserCAKey),
 		SshUserCaKeyFile:                    c.NullableString(src.SSHUserCAKeyFile),
 		SshUserCaKeyPairId:                  nil, // not supported
+		TailscaleListeners:                  c.TailscaleListeners(path.Root("tailscale_listeners"), src.TailscaleListeners),
 		TimeoutIdle:                         c.Duration(path.Root("timeout_idle"), src.TimeoutIdle),
 		TimeoutRead:                         c.Duration(path.Root("timeout_read"), src.TimeoutRead),
 		TimeoutWrite:                        c.Duration(path.Root("timeout_write"), src.TimeoutWrite),
@@ -818,6 +819,47 @@ func (c *ModelToAPIConverter) SettingsStringList(p path.Path, src types.Set) *co
 	var values []string
 	appendAttributeDiagnostics(c.diagnostics, p, src.ElementsAs(context.Background(), &values, false)...)
 	return &configpb.Settings_StringList{Values: values}
+}
+
+func (c *ModelToAPIConverter) TailscaleListener(p path.Path, src types.Object) *configpb.TailscaleListenerSettings {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+
+	attrs := src.Attributes()
+	return &configpb.TailscaleListenerSettings{
+		AuthKey:           c.NullableString(getStringAttribute(attrs, "auth_key")),
+		ControlUrl:        c.NullableString(getStringAttribute(attrs, "control_url")),
+		Ephemeral:         c.NullableBool(getBoolAttribute(attrs, "ephemeral")),
+		Hostname:          getStringAttribute(attrs, "hostname").ValueString(),
+		IdToken:           c.NullableString(getStringAttribute(attrs, "id_token")),
+		IdTokenAudience:   c.NullableString(getStringAttribute(attrs, "id_token_audience")),
+		ListenAddr:        c.NullableString(getStringAttribute(attrs, "listen_addr")),
+		ListenFunnelAddr:  c.NullableString(getStringAttribute(attrs, "listen_funnel_addr")),
+		ListenServiceName: c.NullableString(getStringAttribute(attrs, "listen_service_name")),
+		ListenServicePort: c.NullableUint32(getInt64Attribute(attrs, "listen_service_port")),
+		OauthClientId:     c.NullableString(getStringAttribute(attrs, "oauth_client_id")),
+		OauthClientSecret: c.NullableString(getStringAttribute(attrs, "oauth_client_secret")),
+		Tags:              c.StringSliceFromSet(p.AtName("tags"), getSetAttribute(attrs, "tags")),
+		TerminateTls:      c.NullableBool(getBoolAttribute(attrs, "terminate_tls")),
+	}
+}
+
+func (c *ModelToAPIConverter) TailscaleListeners(p path.Path, src types.List) []*configpb.TailscaleListenerSettings {
+	if src.IsNull() || src.IsUnknown() {
+		return nil
+	}
+	elements := src.Elements()
+	dst := make([]*configpb.TailscaleListenerSettings, 0, len(elements))
+	for i, v := range elements {
+		vv, ok := v.(types.Object)
+		if !ok {
+			c.diagnostics.AddAttributeError(p.AtListIndex(i), "Invalid tailscale listener attribute", "Tailscale listeners should be objects.")
+			return nil
+		}
+		dst = append(dst, c.TailscaleListener(p.AtListIndex(i), vv))
+	}
+	return dst
 }
 
 func (c *ModelToAPIConverter) UpstreamTunnel(p path.Path, src types.Object) *configpb.UpstreamTunnel {

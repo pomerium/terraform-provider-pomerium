@@ -341,9 +341,43 @@ func TestModelToAPI(t *testing.T) {
 				SkipXFFAppend:               types.BoolValue(false),
 				SSHAddress:                  types.StringValue(":22"),
 				SSHUserCAKey:                types.StringValue("SSH_CA_KEY"),
-				TimeoutIdle:                 timetypes.NewGoDurationValue(5 * time.Minute),
-				TimeoutRead:                 timetypes.NewGoDurationValue(30 * time.Second),
-				TimeoutWrite:                timetypes.NewGoDurationValue(30 * time.Second),
+				TailscaleListeners: types.ListValueMust(provider.TailscaleListenerObjectType(), []attr.Value{
+					types.ObjectValueMust(provider.TailscaleListenerObjectType().AttrTypes, map[string]attr.Value{
+						"auth_key":            types.StringValue("AUTH_KEY"),
+						"control_url":         types.StringValue("https://controlplane.example.com"),
+						"ephemeral":           types.BoolValue(true),
+						"hostname":            types.StringValue("pomerium"),
+						"id_token":            types.StringValue("ID_TOKEN"),
+						"id_token_audience":   types.StringValue("ID_TOKEN_AUDIENCE"),
+						"listen_addr":         types.StringValue(":443"),
+						"listen_funnel_addr":  types.StringValue(":8443"),
+						"listen_service_name": types.StringValue("svc:pomerium"),
+						"listen_service_port": types.Int64Value(443),
+						"oauth_client_id":     types.StringValue("OAUTH_CLIENT_ID"),
+						"oauth_client_secret": types.StringValue("OAUTH_CLIENT_SECRET"),
+						"tags":                types.SetValueMust(types.StringType, []attr.Value{types.StringValue("tag:a"), types.StringValue("tag:b")}),
+						"terminate_tls":       types.BoolValue(false),
+					}),
+					types.ObjectValueMust(provider.TailscaleListenerObjectType().AttrTypes, map[string]attr.Value{
+						"auth_key":            types.StringNull(),
+						"control_url":         types.StringNull(),
+						"ephemeral":           types.BoolNull(),
+						"hostname":            types.StringValue("minimal"),
+						"id_token":            types.StringNull(),
+						"id_token_audience":   types.StringNull(),
+						"listen_addr":         types.StringNull(),
+						"listen_funnel_addr":  types.StringNull(),
+						"listen_service_name": types.StringNull(),
+						"listen_service_port": types.Int64Null(),
+						"oauth_client_id":     types.StringNull(),
+						"oauth_client_secret": types.StringNull(),
+						"tags":                types.SetNull(types.StringType),
+						"terminate_tls":       types.BoolNull(),
+					}),
+				}),
+				TimeoutIdle:  timetypes.NewGoDurationValue(5 * time.Minute),
+				TimeoutRead:  timetypes.NewGoDurationValue(30 * time.Second),
+				TimeoutWrite: timetypes.NewGoDurationValue(30 * time.Second),
 			})
 			assert.Equal(t, new(":443"), result.Address)
 			assert.Equal(t, new("https://authenticate.example.com"), result.AuthenticateServiceUrl)
@@ -398,6 +432,25 @@ func TestModelToAPI(t *testing.T) {
 			assert.ElementsMatch(t, []string{"openid", "profile"}, result.Scopes)
 			assert.Equal(t, new("#FFFFFF"), result.SecondaryColor)
 			assert.Equal(t, new(uint32(4)), result.SessionRecordingConcurrency)
+			assert.Empty(t, cmp.Diff([]*configpb.TailscaleListenerSettings{
+				{
+					Hostname:          "pomerium",
+					ListenAddr:        new(":443"),
+					ListenFunnelAddr:  new(":8443"),
+					ListenServiceName: new("svc:pomerium"),
+					ListenServicePort: new(uint32(443)),
+					Ephemeral:         new(true),
+					AuthKey:           new("AUTH_KEY"),
+					OauthClientId:     new("OAUTH_CLIENT_ID"),
+					OauthClientSecret: new("OAUTH_CLIENT_SECRET"),
+					IdToken:           new("ID_TOKEN"),
+					IdTokenAudience:   new("ID_TOKEN_AUDIENCE"),
+					ControlUrl:        new("https://controlplane.example.com"),
+					Tags:              []string{"tag:a", "tag:b"},
+					TerminateTls:      new(false),
+				},
+				{Hostname: "minimal"},
+			}, result.TailscaleListeners, protocmp.Transform(), protocmp.SortRepeatedFields(&configpb.TailscaleListenerSettings{}, "tags")))
 			assert.Equal(t, map[string]string{"X-Frame-Options": "DENY"}, result.SetResponseHeaders)
 			assert.Equal(t, new(false), result.SkipXffAppend)
 			assert.Equal(t, new(":22"), result.SshAddress)

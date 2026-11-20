@@ -560,6 +560,7 @@ func (c *EnterpriseToModelConverter) Settings(src *enterprise.Settings, namespac
 		SSHUserCAKey:                       types.StringPointerValue(src.SshUserCaKey),
 		SSHUserCAKeyFile:                   types.StringPointerValue(src.SshUserCaKeyFile),
 		SSHTwoPersonApprovalRequestTimeout: c.Duration(src.SshTwoPersonApprovalRequestTimeout),
+		TailscaleListeners:                 types.ListNull(TailscaleListenerObjectType()), // not supported
 		TimeoutIdle:                        c.Duration(src.TimeoutIdle),
 		TimeoutRead:                        c.Duration(src.TimeoutRead),
 		TimeoutWrite:                       c.Duration(src.TimeoutWrite),

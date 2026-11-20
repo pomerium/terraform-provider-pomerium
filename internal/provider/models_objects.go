@@ -89,6 +89,27 @@ func JWTGroupsFilterObjectType() types.ObjectType {
 	return JWTGroupsFilterSchema.GetType().(types.ObjectType)
 }
 
+func TailscaleListenerObjectType() types.ObjectType {
+	return types.ObjectType{
+		AttrTypes: map[string]attr.Type{
+			"auth_key":            types.StringType,
+			"control_url":         types.StringType,
+			"ephemeral":           types.BoolType,
+			"hostname":            types.StringType,
+			"id_token":            types.StringType,
+			"id_token_audience":   types.StringType,
+			"listen_addr":         types.StringType,
+			"listen_funnel_addr":  types.StringType,
+			"listen_service_name": types.StringType,
+			"listen_service_port": types.Int64Type,
+			"oauth_client_id":     types.StringType,
+			"oauth_client_secret": types.StringType,
+			"tags":                types.SetType{ElemType: types.StringType},
+			"terminate_tls":       types.BoolType,
+		},
+	}
+}
+
 func RewriteHeaderObjectType() types.ObjectType {
 	return types.ObjectType{
 		AttrTypes: map[string]attr.Type{

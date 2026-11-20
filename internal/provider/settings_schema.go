@@ -5,6 +5,8 @@ import (
 	"regexp"
 
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -789,6 +791,86 @@ var SettingsResourceSchema = schema.Schema{
 			CustomType:  timetypes.GoDurationType{},
 			PlanModifiers: []planmodifier.String{
 				stringplanmodifier.UseStateForUnknown(),
+			},
+		},
+		"tailscale_listeners": schema.ListNestedAttribute{
+			Optional:    true,
+			Description: "Tailscale listeners. Each listener joins the tailnet as its own device and serves Pomerium on the tailnet, via Tailscale Funnel, and/or as a Tailscale Service. Not supported by the legacy enterprise API.",
+			Validators: []validator.List{
+				listvalidator.SizeAtLeast(1),
+			},
+			NestedObject: schema.NestedAttributeObject{
+				Attributes: map[string]schema.Attribute{
+					"hostname": schema.StringAttribute{
+						Required:    true,
+						Description: "The name of the device on the tailnet. Also used as the subdomain of the Tailscale Funnel.",
+						Validators: []validator.String{
+							stringvalidator.LengthAtLeast(1),
+						},
+					},
+					"listen_addr": schema.StringAttribute{
+						Optional:    true,
+						Description: "Start a listener on this address that is only reachable from the tailnet.",
+					},
+					"listen_funnel_addr": schema.StringAttribute{
+						Optional:    true,
+						Description: "Start a Tailscale Funnel listener on this address.",
+					},
+					"listen_service_name": schema.StringAttribute{
+						Optional:    true,
+						Description: "Start a listener for this Tailscale Service.",
+					},
+					"listen_service_port": schema.Int64Attribute{
+						Optional:    true,
+						Description: "The port for the Tailscale Service.",
+						Validators: []validator.Int64{
+							int64validator.Between(1, 65535),
+						},
+					},
+					"ephemeral": schema.BoolAttribute{
+						Optional:    true,
+						Description: "Register as an ephemeral node, which is automatically removed from the tailnet on exit.",
+					},
+					"auth_key": schema.StringAttribute{
+						Optional:    true,
+						Sensitive:   true,
+						Description: "Pre-authentication key used to register the node on the tailnet.",
+					},
+					"oauth_client_id": schema.StringAttribute{
+						Optional:    true,
+						Description: "OAuth client ID used to create a pre-authentication key for the device.",
+					},
+					"oauth_client_secret": schema.StringAttribute{
+						Optional:    true,
+						Sensitive:   true,
+						Description: "Client secret for the OAuth client ID.",
+					},
+					"id_token": schema.StringAttribute{
+						Optional:    true,
+						Sensitive:   true,
+						Description: "Identity provider token used to authenticate via workload identity federation.",
+					},
+					"id_token_audience": schema.StringAttribute{
+						Optional:    true,
+						Description: "Audience for the ID token.",
+					},
+					"control_url": schema.StringAttribute{
+						Optional:    true,
+						Description: "The coordination server URL.",
+					},
+					"tags": schema.SetAttribute{
+						Optional:    true,
+						ElementType: types.StringType,
+						Description: "Tags to apply to the node.",
+						Validators: []validator.Set{
+							setvalidator.SizeAtLeast(1),
+						},
+					},
+					"terminate_tls": schema.BoolAttribute{
+						Optional:    true,
+						Description: "Terminate TLS before proxying data to Envoy.",
+					},
+				},
 			},
 		},
 		"timeout_idle": schema.StringAttribute{

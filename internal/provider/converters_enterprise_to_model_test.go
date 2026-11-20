@@ -194,6 +194,7 @@ func TestEnterpriseToModelConverter(t *testing.T) {
 				SetResponseHeaders:             types.MapNull(types.StringType),
 				SSHHostKeyFiles:                types.SetNull(types.StringType),
 				SSHHostKeys:                    types.SetNull(types.StringType),
+				TailscaleListeners:             types.ListNull(provider.TailscaleListenerObjectType()),
 			}
 			var diagnostics diag.Diagnostics
 			actual := provider.NewEnterpriseToModelConverter(&diagnostics).Settings(&pb.Settings{}, nil)
