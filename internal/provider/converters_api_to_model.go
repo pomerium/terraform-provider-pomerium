@@ -494,6 +494,7 @@ func (c *APIToModelConverter) Settings(src *configpb.Settings) SettingsModel {
 		SSHUserCAKey:                       types.StringPointerValue(src.SshUserCaKey),
 		SSHUserCAKeyFile:                   types.StringPointerValue(src.SshUserCaKeyFile),
 		SSHTwoPersonApprovalRequestTimeout: c.Duration(src.SshTwoPersonApprovalRequestTimeout),
+		TailscaleListeners:                 c.TailscaleListeners(src.TailscaleListeners),
 		TimeoutIdle:                        c.Duration(src.TimeoutIdle),
 		TimeoutRead:                        c.Duration(src.TimeoutRead),
 		TimeoutWrite:                       c.Duration(src.TimeoutWrite),
@@ -510,6 +511,43 @@ func (c *APIToModelConverter) StringFromSingleElementSlice(p path.Path, src []st
 	}
 
 	return types.StringValue(src[0])
+}
+
+func (c *APIToModelConverter) TailscaleListener(src *configpb.TailscaleListenerSettings) types.Object {
+	if src == nil {
+		return types.ObjectNull(TailscaleListenerObjectType().AttrTypes)
+	}
+	dst, diagnostics := types.ObjectValue(TailscaleListenerObjectType().AttrTypes, map[string]attr.Value{
+		"auth_key":            types.StringPointerValue(src.AuthKey),
+		"control_url":         types.StringPointerValue(src.ControlUrl),
+		"ephemeral":           types.BoolPointerValue(src.Ephemeral),
+		"hostname":            types.StringValue(src.Hostname),
+		"id_token":            types.StringPointerValue(src.IdToken),
+		"id_token_audience":   types.StringPointerValue(src.IdTokenAudience),
+		"listen_addr":         types.StringPointerValue(src.ListenAddr),
+		"listen_funnel_addr":  types.StringPointerValue(src.ListenFunnelAddr),
+		"listen_service_name": types.StringPointerValue(src.ListenServiceName),
+		"listen_service_port": Int64PointerValue(src.ListenServicePort),
+		"oauth_client_id":     types.StringPointerValue(src.OauthClientId),
+		"oauth_client_secret": types.StringPointerValue(src.OauthClientSecret),
+		"tags":                FromStringSliceToSet(src.Tags),
+		"terminate_tls":       types.BoolPointerValue(src.TerminateTls),
+	})
+	c.diagnostics.Append(diagnostics...)
+	return dst
+}
+
+func (c *APIToModelConverter) TailscaleListeners(src []*configpb.TailscaleListenerSettings) types.List {
+	if len(src) == 0 {
+		return types.ListNull(TailscaleListenerObjectType())
+	}
+	elements := make([]attr.Value, len(src))
+	for i, v := range src {
+		elements[i] = c.TailscaleListener(v)
+	}
+	dst, diagnostics := types.ListValue(TailscaleListenerObjectType(), elements)
+	c.diagnostics.Append(diagnostics...)
+	return dst
 }
 
 func (c *APIToModelConverter) TCPHealthCheck(src *configpb.HealthCheck_TcpHealthCheck) types.Object {

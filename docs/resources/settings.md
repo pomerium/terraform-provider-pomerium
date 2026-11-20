@@ -137,6 +137,7 @@ The settings are global object.
 - `ssh_two_person_approval_request_timeout` (String) Maximum duration for pending two-person approval requests before they expire and are denied.
 - `ssh_user_ca_key` (String) SSH User CA Key
 - `ssh_user_ca_key_file` (String) SSH User CA Key File
+- `tailscale_listeners` (Attributes List) Tailscale listeners. Each listener joins the tailnet as its own device and serves Pomerium on the tailnet, via Tailscale Funnel, and/or as a Tailscale Service. Not supported by the legacy enterprise API. (see [below for nested schema](#nestedatt--tailscale_listeners))
 - `timeout_idle` (String) Sets the time at which a downstream or upstream connection will be terminated if no active streams.
 - `timeout_read` (String) Sets the amount of time for the client to receive the entire request stream.
 - `timeout_write` (String) Sets max stream duration of an HTTP request/response exchange. Must be greater than read timeout.
@@ -280,3 +281,27 @@ Optional:
 
 - `groups` (Set of String) Group IDs to include
 - `infer_from_ppl` (Boolean)
+
+
+<a id="nestedatt--tailscale_listeners"></a>
+### Nested Schema for `tailscale_listeners`
+
+Required:
+
+- `hostname` (String) The name of the device on the tailnet. Also used as the subdomain of the Tailscale Funnel.
+
+Optional:
+
+- `auth_key` (String, Sensitive) Pre-authentication key used to register the node on the tailnet.
+- `control_url` (String) The coordination server URL.
+- `ephemeral` (Boolean) Register as an ephemeral node, which is automatically removed from the tailnet on exit.
+- `id_token` (String, Sensitive) Identity provider token used to authenticate via workload identity federation.
+- `id_token_audience` (String) Audience for the ID token.
+- `listen_addr` (String) Start a listener on this address that is only reachable from the tailnet.
+- `listen_funnel_addr` (String) Start a Tailscale Funnel listener on this address.
+- `listen_service_name` (String) Start a listener for this Tailscale Service.
+- `listen_service_port` (Number) The port for the Tailscale Service.
+- `oauth_client_id` (String) OAuth client ID used to create a pre-authentication key for the device.
+- `oauth_client_secret` (String, Sensitive) Client secret for the OAuth client ID.
+- `tags` (Set of String) Tags to apply to the node.
+- `terminate_tls` (Boolean) Terminate TLS before proxying data to Envoy.

@@ -275,6 +275,7 @@ type SettingsModel struct {
 	SSHUserCAKey                                      types.String         `tfsdk:"ssh_user_ca_key"`
 	SSHUserCAKeyFile                                  types.String         `tfsdk:"ssh_user_ca_key_file"`
 	SSHTwoPersonApprovalRequestTimeout                timetypes.GoDuration `tfsdk:"ssh_two_person_approval_request_timeout"`
+	TailscaleListeners                                types.List           `tfsdk:"tailscale_listeners"`
 	TimeoutIdle                                       timetypes.GoDuration `tfsdk:"timeout_idle"`
 	TimeoutRead                                       timetypes.GoDuration `tfsdk:"timeout_read"`
 	TimeoutWrite                                      timetypes.GoDuration `tfsdk:"timeout_write"`

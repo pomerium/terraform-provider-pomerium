@@ -453,6 +453,7 @@ func TestAPIToModel(t *testing.T) {
 				SSHUserCAKey:                       types.StringNull(),
 				SSHUserCAKeyFile:                   types.StringNull(),
 				SSHTwoPersonApprovalRequestTimeout: timetypes.NewGoDurationNull(),
+				TailscaleListeners:                 types.ListNull(provider.TailscaleListenerObjectType()),
 				TimeoutIdle:                        timetypes.NewGoDurationNull(),
 				TimeoutRead:                        timetypes.NewGoDurationNull(),
 				TimeoutWrite:                       timetypes.NewGoDurationNull(),
@@ -528,6 +529,25 @@ func TestAPIToModel(t *testing.T) {
 				TimeoutRead:                        durationpb.New(30 * time.Second),
 				TimeoutWrite:                       durationpb.New(30 * time.Second),
 				SshTwoPersonApprovalRequestTimeout: durationpb.New(100 * time.Second),
+				TailscaleListeners: []*configpb.TailscaleListenerSettings{
+					{
+						Hostname:          "pomerium",
+						ListenAddr:        new(":443"),
+						ListenFunnelAddr:  new(":8443"),
+						ListenServiceName: new("svc:pomerium"),
+						ListenServicePort: new(uint32(443)),
+						Ephemeral:         new(true),
+						AuthKey:           new("AUTH_KEY"),
+						OauthClientId:     new("OAUTH_CLIENT_ID"),
+						OauthClientSecret: new("OAUTH_CLIENT_SECRET"),
+						IdToken:           new("ID_TOKEN"),
+						IdTokenAudience:   new("ID_TOKEN_AUDIENCE"),
+						ControlUrl:        new("https://controlplane.example.com"),
+						Tags:              []string{"tag:a", "tag:b"},
+						TerminateTls:      new(false),
+					},
+					{Hostname: "minimal"},
+				},
 			})
 			assert.Equal(t, types.StringValue(":443"), result.Address)
 			assert.Equal(t, types.SetValueMust(types.StringType, []attr.Value{types.StringValue("x"), types.StringValue("y"), types.StringValue("z")}), result.AllowUpgrades)
@@ -595,6 +615,40 @@ func TestAPIToModel(t *testing.T) {
 			assert.Equal(t, timetypes.NewGoDurationValue(30*time.Second), result.TimeoutRead)
 			assert.Equal(t, timetypes.NewGoDurationValue(30*time.Second), result.TimeoutWrite)
 			assert.Equal(t, timetypes.NewGoDurationValue(100*time.Second), result.SSHTwoPersonApprovalRequestTimeout)
+			assert.Equal(t, types.ListValueMust(provider.TailscaleListenerObjectType(), []attr.Value{
+				types.ObjectValueMust(provider.TailscaleListenerObjectType().AttrTypes, map[string]attr.Value{
+					"auth_key":            types.StringValue("AUTH_KEY"),
+					"control_url":         types.StringValue("https://controlplane.example.com"),
+					"ephemeral":           types.BoolValue(true),
+					"hostname":            types.StringValue("pomerium"),
+					"id_token":            types.StringValue("ID_TOKEN"),
+					"id_token_audience":   types.StringValue("ID_TOKEN_AUDIENCE"),
+					"listen_addr":         types.StringValue(":443"),
+					"listen_funnel_addr":  types.StringValue(":8443"),
+					"listen_service_name": types.StringValue("svc:pomerium"),
+					"listen_service_port": types.Int64Value(443),
+					"oauth_client_id":     types.StringValue("OAUTH_CLIENT_ID"),
+					"oauth_client_secret": types.StringValue("OAUTH_CLIENT_SECRET"),
+					"tags":                types.SetValueMust(types.StringType, []attr.Value{types.StringValue("tag:a"), types.StringValue("tag:b")}),
+					"terminate_tls":       types.BoolValue(false),
+				}),
+				types.ObjectValueMust(provider.TailscaleListenerObjectType().AttrTypes, map[string]attr.Value{
+					"auth_key":            types.StringNull(),
+					"control_url":         types.StringNull(),
+					"ephemeral":           types.BoolNull(),
+					"hostname":            types.StringValue("minimal"),
+					"id_token":            types.StringNull(),
+					"id_token_audience":   types.StringNull(),
+					"listen_addr":         types.StringNull(),
+					"listen_funnel_addr":  types.StringNull(),
+					"listen_service_name": types.StringNull(),
+					"listen_service_port": types.Int64Null(),
+					"oauth_client_id":     types.StringNull(),
+					"oauth_client_secret": types.StringNull(),
+					"tags":                types.SetNull(types.StringType),
+					"terminate_tls":       types.BoolNull(),
+				}),
+			}), result.TailscaleListeners)
 			assert.Empty(t, diagnostics)
 		})
 	})
