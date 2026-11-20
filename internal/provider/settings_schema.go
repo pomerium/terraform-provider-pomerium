@@ -782,6 +782,15 @@ var SettingsResourceSchema = schema.Schema{
 			Optional:    true,
 			Description: "SSH User CA Key File",
 		},
+		"ssh_two_person_approval_request_timeout": schema.StringAttribute{
+			Optional:    true,
+			Computed:    true,
+			Description: "Maximum duration for pending two-person approval requests before they expire and are denied.",
+			CustomType:  timetypes.GoDurationType{},
+			PlanModifiers: []planmodifier.String{
+				stringplanmodifier.UseStateForUnknown(),
+			},
+		},
 		"timeout_idle": schema.StringAttribute{
 			Optional:    true,
 			Computed:    true,

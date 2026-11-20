@@ -134,6 +134,7 @@ The settings are global object.
 - `ssh_address` (String) SSH Address
 - `ssh_host_key_files` (Set of String) SSH Host Key Files
 - `ssh_host_keys` (Set of String) SSH Host Keys
+- `ssh_two_person_approval_request_timeout` (String) Maximum duration for pending two-person approval requests before they expire and are denied.
 - `ssh_user_ca_key` (String) SSH User CA Key
 - `ssh_user_ca_key_file` (String) SSH User CA Key File
 - `timeout_idle` (String) Sets the time at which a downstream or upstream connection will be terminated if no active streams.

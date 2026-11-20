@@ -799,7 +799,7 @@ func (c *ModelToAPIConverter) Settings(src SettingsModel) *configpb.Settings {
 		SshHostKeyFiles:                     c.SettingsStringList(path.Root("ssh_host_key_files"), src.SSHHostKeyFiles),
 		SshHostKeyPairIds:                   nil, // not supported
 		SshHostKeys:                         c.SettingsStringList(path.Root("ssh_host_keys"), src.SSHHostKeys),
-		SshTwoPersonApprovalRequestTimeout:  nil, // not supported
+		SshTwoPersonApprovalRequestTimeout:  c.Duration(path.Root("ssh_two_person_approval_request_timeout"), src.SSHTwoPersonApprovalRequestTimeout),
 		SshUserCaKey:                        c.NullableString(src.SSHUserCAKey),
 		SshUserCaKeyFile:                    c.NullableString(src.SSHUserCAKeyFile),
 		SshUserCaKeyPairId:                  nil, // not supported

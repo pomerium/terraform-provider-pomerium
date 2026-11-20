@@ -691,7 +691,7 @@ func (c *ModelToEnterpriseConverter) Settings(src SettingsModel) *enterprise.Set
 		SshAddress:                         c.NullableString(src.SSHAddress),
 		SshHostKeyFiles:                    c.SettingsStringList(path.Root("ssh_host_key_files"), src.SSHHostKeyFiles),
 		SshHostKeys:                        c.SettingsStringList(path.Root("ssh_host_keys"), src.SSHHostKeys),
-		SshTwoPersonApprovalRequestTimeout: nil, // not supported
+		SshTwoPersonApprovalRequestTimeout: c.Duration(path.Root("ssh_two_person_approval_request_timeout"), src.SSHTwoPersonApprovalRequestTimeout),
 		SshUserCaKey:                       c.NullableString(src.SSHUserCAKey),
 		SshUserCaKeyFile:                   c.NullableString(src.SSHUserCAKeyFile),
 		TimeoutIdle:                        c.Duration(path.Root("timeout_idle"), src.TimeoutIdle),

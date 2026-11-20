@@ -88,7 +88,8 @@ func (r *SettingsResource) Create(ctx context.Context, req resource.CreateReques
 			}
 
 			plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Settings(setRes.GetSettings(), plan.NamespaceID.ValueStringPointer())
-		})...)
+		},
+	)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -137,7 +138,8 @@ func (r *SettingsResource) Read(ctx context.Context, req resource.ReadRequest, r
 			}
 
 			state = NewEnterpriseToModelConverter(&resp.Diagnostics).Settings(getRes.GetSettings(), state.NamespaceID.ValueStringPointer())
-		})...)
+		},
+	)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -193,7 +195,8 @@ func (r *SettingsResource) Update(ctx context.Context, req resource.UpdateReques
 			}
 
 			plan = NewEnterpriseToModelConverter(&resp.Diagnostics).Settings(setRes.GetSettings(), plan.NamespaceID.ValueStringPointer())
-		})...)
+		},
+	)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -235,7 +238,8 @@ func (r *SettingsResource) Delete(ctx context.Context, req resource.DeleteReques
 				resp.Diagnostics.AddError("set settings", err.Error())
 				return
 			}
-		})...)
+		},
+	)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -268,7 +272,8 @@ func (r *SettingsResource) ModifyPlan(ctx context.Context, req resource.ModifyPl
 		},
 		func(_ sdk.ZeroClient) {
 			setSettingsDefaults(&model, true)
-		})...)
+		},
+	)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -332,6 +337,9 @@ func setSettingsDefaults(model *SettingsModel, isZero bool) {
 		if model.TimeoutWrite.IsUnknown() {
 			model.TimeoutWrite = timetypes.NewGoDurationNull()
 		}
+		if model.SSHTwoPersonApprovalRequestTimeout.IsUnknown() {
+			model.SSHTwoPersonApprovalRequestTimeout = timetypes.NewGoDurationNull()
+		}
 	} else {
 		if model.Address.IsUnknown() {
 			model.Address = types.StringNull()
@@ -386,6 +394,9 @@ func setSettingsDefaults(model *SettingsModel, isZero bool) {
 		}
 		if model.TimeoutWrite.IsUnknown() {
 			model.TimeoutWrite = timetypes.NewGoDurationNull()
+		}
+		if model.SSHTwoPersonApprovalRequestTimeout.IsUnknown() {
+			model.SSHTwoPersonApprovalRequestTimeout = timetypes.NewGoDurationNull()
 		}
 	}
 }
