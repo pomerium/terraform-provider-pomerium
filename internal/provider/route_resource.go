@@ -337,6 +337,7 @@ func (r *RouteResource) Schema(_ context.Context, _ resource.SchemaRequest, resp
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			"oidc_bridge": OIDCBridgeSchema(),
 			"pass_identity_headers": schema.BoolAttribute{
 				Description: "If applied, passes X-Pomerium-Jwt-Assertion header and JWT Claims Headers to the upstream application.",
 				Optional:    true,

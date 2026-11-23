@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setdefault"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 )
@@ -82,6 +83,31 @@ func Int64RangeSchema() schema.NestedAttributeObject {
 			"start": schema.Int64Attribute{
 				Description: "Start of status code range.",
 				Required:    true,
+			},
+		},
+	}
+}
+
+func OIDCBridgeSchema() schema.SingleNestedAttribute {
+	return schema.SingleNestedAttribute{
+		Optional:    true,
+		Description: "OIDC bridge configuration.",
+		Attributes: map[string]schema.Attribute{
+			"client_secret": schema.StringAttribute{
+				Optional:    true,
+				Sensitive:   true,
+				Description: "Client secret to use for upstream applications that do not support public clients / PKCE.",
+			},
+			"enabled": schema.BoolAttribute{
+				Optional:    true,
+				Description: "Whether the OIDC bridge feature should be enabled.",
+			},
+			"redirect_uris": schema.SetAttribute{
+				Optional:    true,
+				Computed:    true,
+				ElementType: types.StringType,
+				Description: "List of allowed redirect URIs. By default any subpath of the route's `to` address is allowed.",
+				Default:     setdefault.StaticValue(types.SetValueMust(types.StringType, nil)),
 			},
 		},
 	}
